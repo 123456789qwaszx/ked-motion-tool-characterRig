@@ -1,4 +1,8 @@
+using Avalonia;
+using Avalonia.Headless;
+using Avalonia.Input;
 using Ked.Presentation.Core;
+using Mt.App.Views;
 using Mt.Authoring.Editing;
 using Mt.Authoring.Model;
 using Mt.Authoring.Preview;
@@ -194,6 +198,224 @@ public class ClipShellTests
                 window.Viewport.SetKey();                                                     // S
                 Assert.False(window.Viewport.HasPending);
                 Assert.Equal(revision, window.Session.Editor.Revision);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    // ── K4 — 타임라인 ─────────────────────────────────────────────────
+
+    private const float Frame = 1f / 24f;
+
+    /// <summary>clip: 배역 a(s1)·b(s2), 트랙 하나씩. 타임라인 탭이 보이는 채로 돌려준다.</summary>
+    private static ClipTimelineView PrepareTimeline(MainWindow window)
+    {
+        Prepare(window);
+        window.AddClipFromForm();
+        window.Viewport.SelectedObjectId = "s1";
+        window.AddClipRoleFromForm();
+        window.Viewport.SelectedObjectId = "s2";
+        window.AddClipRoleFromForm();
+        Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        Assert.Equal(2, window.EditorTab); // 클립을 고르면 타임라인 탭
+        Assert.True(window.Timeline.Bounds.Width > ClipTimelineView.Gutter + 100, "타임라인이 배치되지 않았다");
+        return window.Timeline;
+    }
+
+    private static Point At(MainWindow window, ClipTimelineView timeline, double x, double y)
+        => timeline.TranslatePoint(new Point(x, y), window) ?? throw new InvalidOperationException("타임라인이 창에 없다");
+
+    private static Point Center(MainWindow window, ClipTimelineView timeline, int track, int index)
+    {
+        Rect rect = timeline.BlockRect(track, index);
+        return At(window, timeline, rect.Center.X, rect.Center.Y);
+    }
+
+    private static List<(string Motion, float At)> Blocks(MainWindow window, int track)
+        => window.Session.Editor.Document.FindClip("clip")!.Tracks[track].Blocks.Select(b => (b.Motion, b.At)).ToList();
+
+    [Fact]
+    public void 타임라인에_블록을_놓고_고르고_MMB로_끌면_되돌리기_한_칸이다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                ClipTimelineView timeline = PrepareTimeline(window);
+                MotionEditor editor = window.Session.Editor;
+
+                // 놓기(메뉴의 "모션 놓기"와 같은 길) — 스냅되고, 놓은 블록이 골라진다.
+                timeline.PlaceMotion(0, "bow", 0.01);
+                timeline.PlaceMotion(1, "nod", 0.51);
+                Assert.Equal(new[] { ("bow", 0f) }, Blocks(window, 0));
+                Assert.Equal(new[] { ("nod", 12 * Frame) }, Blocks(window, 1));
+                Assert.Equal((1, 0), timeline.SelectedBlock);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+                // 막대는 시작 시각에 서고 폭은 모션 길이다.
+                Rect bow = timeline.BlockRect(0, 0);
+                Assert.Equal(timeline.XAtTime(0), bow.X, 3);
+                Assert.Equal(timeline.XAtTime(0.4), bow.Right, 3);
+                Assert.True(timeline.RowRect(0).Contains(bow.Center));
+
+                // LMB = 선택.
+                window.MouseDown(Center(window, timeline, 0, 0), MouseButton.Left);
+                window.MouseUp(Center(window, timeline, 0, 0), MouseButton.Left);
+                Assert.Equal((0, 0), timeline.SelectedBlock);
+                Assert.Equal(new[] { ("bow", 0f) }, Blocks(window, 0)); // 클릭은 안 옮긴다
+
+                // MMB 드래그 = 이동. 끄는 동안은 문서가 그대로, 놓으면 명령 하나.
+                long revision = editor.Revision;
+                Point grab = Center(window, timeline, 0, 0);
+                double dx = timeline.XAtTime(0.25) - timeline.XAtTime(0);
+                var mid = new Point(grab.X + dx / 2, grab.Y);
+                var drop = new Point(grab.X + dx, grab.Y + ClipTimelineView.RowHeight); // 아래 트랙(b)으로
+                window.MouseDown(grab, MouseButton.Middle);
+                window.MouseMove(mid, RawInputModifiers.MiddleMouseButton);
+                Assert.Equal(revision, editor.Revision);
+                window.MouseMove(drop, RawInputModifiers.MiddleMouseButton);
+                window.MouseUp(drop, MouseButton.Middle);
+
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.Empty(Blocks(window, 0));
+                Assert.Equal(new[] { ("bow", 6 * Frame), ("nod", 12 * Frame) }, Blocks(window, 1));
+                Assert.Equal((1, 0), timeline.SelectedBlock); // 선택이 옮긴 블록을 따라간다
+
+                editor.Undo();
+                Assert.Equal(new[] { ("bow", 0f) }, Blocks(window, 0));
+                Assert.Equal(new[] { ("nod", 12 * Frame) }, Blocks(window, 1));
+
+                // LMB로 끌어도 옮겨진다(도프 시트와 같다) — 이것도 한 칸.
+                grab = Center(window, timeline, 1, 0);
+                drop = new Point(grab.X + dx, grab.Y);
+                window.MouseDown(grab, MouseButton.Left);
+                window.MouseMove(drop, RawInputModifiers.LeftMouseButton);
+                window.MouseUp(drop, MouseButton.Left);
+                Assert.Equal(new[] { ("nod", 18 * Frame) }, Blocks(window, 1));
+                editor.Undo();
+                Assert.Equal(new[] { ("nod", 12 * Frame) }, Blocks(window, 1));
+
+                // 제자리에서 놓으면 아무 일도 없다.
+                revision = editor.Revision;
+                window.MouseDown(Center(window, timeline, 0, 0), MouseButton.Middle);
+                window.MouseUp(Center(window, timeline, 0, 0), MouseButton.Middle);
+                Assert.Equal(revision, editor.Revision);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void 타임라인의_빈_곳은_스크럽이고_Del과_Ctrl_D와_mode가_블록을_고친다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                ClipTimelineView timeline = PrepareTimeline(window);
+                MotionEditor editor = window.Session.Editor;
+                timeline.PlaceMotion(0, "bow", 0);
+                timeline.PlaceMotion(1, "nod", 0.5);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+                // 눈금자 LMB = 스크럽(스냅). 선택은 그대로다.
+                Point ruler = At(window, timeline, timeline.XAtTime(0.8), 5);
+                window.MouseDown(ruler, MouseButton.Left);
+                window.MouseUp(ruler, MouseButton.Left);
+                Assert.Equal(19 * Frame, window.Viewport.Time, 4);
+                Assert.Equal((1, 0), timeline.SelectedBlock);
+                Assert.Equal(8f, SwayZOf(window, "s1"), 3);
+
+                // 빈 줄 LMB = 스크럽 + 선택 풀기.
+                Point empty = At(window, timeline, timeline.XAtTime(0.2), timeline.RowRect(1).Center.Y);
+                window.MouseDown(empty, MouseButton.Left);
+                window.MouseUp(empty, MouseButton.Left);
+                Assert.Null(timeline.SelectedBlock);
+                Assert.Equal(5 * Frame, window.Viewport.Time, 4);
+
+                // Ctrl+D = 끝에 이어서 한 번 더(같은 mode), 새 블록이 골라진다.
+                timeline.Select((0, 0));
+                timeline.Focus();
+                window.KeyPressQwerty(PhysicalKey.D, RawInputModifiers.Control);
+                Assert.Equal(new[] { ("bow", 0f), ("bow", 0.4f) }, Blocks(window, 0));
+                Assert.Equal((0, 1), timeline.SelectedBlock);
+                Assert.Equal(MotionChannelMode.Absolute, editor.Document.FindClip("clip")!.Tracks[0].Blocks[1].Mode);
+
+                // mode(메뉴와 같은 길).
+                timeline.SetSelectedMode(MotionChannelMode.Relative);
+                Assert.Equal(MotionChannelMode.Relative, editor.Document.FindClip("clip")!.Tracks[0].Blocks[1].Mode);
+                window.Viewport.ScrubTo(5);
+                Assert.Equal(16f, SwayZOf(window, "s1"), 3); // 8 위에 +8
+
+                // 겹치게 옮기면 문제 칸이 알리고, Del로 지우면 사라진다.
+                timeline.MoveSelected(0.2);
+                Assert.Equal(1, window.ProblemRowsShown);
+                Assert.Contains((0, 1), Mt.Authoring.Validation.ClipValidator.OverlappingBlocks(editor.Document, editor.Document.FindClip("clip")!));
+                window.KeyPressQwerty(PhysicalKey.Delete, RawInputModifiers.None);
+                Assert.Equal(new[] { ("bow", 0f) }, Blocks(window, 0));
+                Assert.Null(timeline.SelectedBlock);
+                Assert.Equal(0, window.ProblemRowsShown);
+
+                // 고른 블록이 되돌리기로 사라져도 선택은 따라 풀린다.
+                timeline.PlaceMotion(0, "nod", 1);
+                Assert.Equal((0, 1), timeline.SelectedBlock);
+                editor.Undo();
+                Assert.Null(timeline.SelectedBlock);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void 블록을_더블클릭하면_그_모션이_열리고_맡은_오브젝트와_시각이_따라온다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                ClipTimelineView timeline = PrepareTimeline(window);
+                timeline.PlaceMotion(0, "bow", 0);
+                timeline.PlaceMotion(1, "nod", 0.5);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.Viewport.SelectedObjectId = "s1";
+                window.Viewport.ScrubTo(0.75); // nod 블록의 0.25초
+
+                Point nod = Center(window, timeline, 1, 0);
+                window.MouseDown(nod, MouseButton.Left);
+                window.MouseUp(nod, MouseButton.Left);
+                window.MouseDown(nod, MouseButton.Left); // 같은 자리의 두 번째 누름 = 더블클릭
+                window.MouseUp(nod, MouseButton.Left);
+
+                Assert.Equal("nod", window.SelectedMotion);
+                Assert.Null(window.SelectedClip);
+                Assert.Equal("nod", window.Viewport.MotionName);
+                Assert.Null(window.Viewport.ClipName);
+                Assert.Equal("s2", window.Viewport.SelectedObjectId); // 배역 b를 맡은 오브젝트
+                Assert.Equal(0.25, window.Viewport.Time, 4);
+                Assert.Equal(0, window.EditorTab); // 그래프
+
+                // 클립으로 돌아오면 다시 타임라인이고 블록은 그대로다.
+                window.SelectClip("clip");
+                Assert.Equal(2, window.EditorTab);
+                Assert.Equal(new[] { ("nod", 0.5f) }, Blocks(window, 1));
             }
             finally
             {

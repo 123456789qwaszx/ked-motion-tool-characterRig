@@ -223,6 +223,53 @@ public static class ClipValidator
             && motion.Channels.All(c => nodes.Contains(c.Node));
     }
 
+    /// <summary>
+    /// 겹치는 블록들의 (트랙, 번호) — 타임라인이 빨갛게 그린다. <see cref="ValidateClip"/>의 겹침 규칙과 같다:
+    /// 같은 배역의 같은 (노드, 종류)를 쓰는 두 블록의 시간이 겹친다(맞닿는 것은 아니다). 겹친 양쪽이 다 든다.
+    /// </summary>
+    public static HashSet<(int Track, int Index)> OverlappingBlocks(MotionDocument document, ClipAsset clip)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(clip);
+        var overlapping = new HashSet<(int, int)>();
+        var claims = new Dictionary<(string Role, string Node, MotionChannelKind Kind), List<(float Start, float End, PlacedBlock Block)>>();
+
+        foreach (PlacedBlock placed in ClipPreview.Ordered(clip))
+        {
+            if (document.Find(placed.Block.Motion) is not { } motion)
+            {
+                continue;
+            }
+
+            string role = clip.Tracks[placed.Track].Role;
+            float start = placed.Block.At;
+            float end = start + motion.Duration;
+
+            foreach (ChannelAsset channel in motion.Channels)
+            {
+                var key = (role, channel.Node, channel.Kind);
+
+                if (!claims.TryGetValue(key, out List<(float Start, float End, PlacedBlock Block)>? spans))
+                {
+                    claims[key] = spans = new List<(float, float, PlacedBlock)>();
+                }
+
+                foreach ((float otherStart, float otherEnd, PlacedBlock other) in spans)
+                {
+                    if (start < otherEnd - Tolerance && otherStart < end - Tolerance)
+                    {
+                        overlapping.Add((placed.Track, placed.Index));
+                        overlapping.Add((other.Track, other.Index));
+                    }
+                }
+
+                spans.Add((start, end, placed));
+            }
+        }
+
+        return overlapping;
+    }
+
     /// <summary>내보내기를 막는 것만.</summary>
     public static IEnumerable<ClipProblem> Blocking(IEnumerable<ClipProblem> problems)
         => problems.Where(p => p.Blocking);

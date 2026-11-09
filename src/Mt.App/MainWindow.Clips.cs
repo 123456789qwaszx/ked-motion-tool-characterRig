@@ -2,6 +2,7 @@ using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Mt.App.Views;
 using Mt.Authoring.Editing;
 using Mt.Authoring.Model;
 using Mt.Authoring.Validation;
@@ -17,6 +18,18 @@ public partial class MainWindow
     private readonly TextBox _clipName = new() { FontSize = 11 };
     private readonly TextBox _clipDuration = new() { FontSize = 11, PlaceholderText = "마지막 블록의 끝" };
     private readonly StackPanel _clipRoles = new() { Spacing = 3 };
+    private readonly ClipTimelineView _timeline = new();
+
+    /// <summary>가운데 아래 탭 — 그래프 · 도프 시트 · 타임라인.</summary>
+    private readonly TabControl _editorTabs = new() { Padding = new Avalonia.Thickness(0) };
+
+    private const int GraphTabIndex = 0;
+    private const int TimelineTabIndex = 2;
+
+    internal ClipTimelineView Timeline => _timeline;
+
+    /// <summary>테스트 손잡이 — 가운데 아래 탭 번호.</summary>
+    internal int EditorTab => _editorTabs.SelectedIndex;
 
     internal string? SelectedClip => _clipList.SelectedItem as string;
 
@@ -50,6 +63,44 @@ public partial class MainWindow
             Spacing = 4,
             Children = { add, SmallButton("클립 삭제", (_, _) => Guard("클립 삭제", RemoveClip)) },
         });
+    }
+
+    private Control BuildTimelineTab()
+    {
+        _timeline.Viewport = _viewport;
+        _timeline.BlockOpened += (_, at) => Guard("모션 편집", () => OpenClipBlock(at.Track, at.Index));
+        return _timeline;
+    }
+
+    /// <summary>
+    /// 블록의 모션을 연다 — 그 모션을 고르고(클립 선택은 풀린다), 배역을 맡은 오브젝트를 고르고, 클립에서 보던 시각을 모션의 시각으로 옮긴다.
+    /// 그래프 탭으로 간다. 클립으로 돌아오려면 왼쪽 목록에서 클립을 다시 고른다.
+    /// </summary>
+    private void OpenClipBlock(int track, int index)
+    {
+        if (CurrentClip is not { } clip || track < 0 || track >= clip.Tracks.Count || index < 0 || index >= clip.Tracks[track].Blocks.Count)
+        {
+            return;
+        }
+
+        ClipBlock block = clip.Tracks[track].Blocks[index];
+
+        if (_session.Editor.Document.Find(block.Motion) is not { } motion)
+        {
+            _session.SetStatus($"모션 '{block.Motion}'이 없다 — 블록을 지우거나 다른 모션을 놓는다.");
+            return;
+        }
+
+        double local = Math.Clamp(_viewport.Time - block.At, 0, motion.Duration);
+        string? actor = clip.FindRole(clip.Tracks[track].Role)?.Object;
+        _motionList.SelectedItem = motion.Name;
+
+        if (actor is not null && _viewport.Scene?.Find(actor) is not null)
+        {
+            _viewport.SelectedObjectId = actor;
+        }
+
+        _viewport.ScrubTo(local);
     }
 
     private Control BuildClipTab()
@@ -115,6 +166,11 @@ public partial class MainWindow
             RefreshKeyInspector();
         }
 
+        if (SelectedClip is not null)
+        {
+            _editorTabs.SelectedIndex = TimelineTabIndex;
+        }
+
         RefreshClipInspector();
     }
 
@@ -135,6 +191,12 @@ public partial class MainWindow
         finally
         {
             _refreshDepth--;
+        }
+
+        // 타임라인을 보다가 모션으로 넘어왔으면 그래프를 보인다 — 타임라인은 클립이 없으면 빈다.
+        if (_editorTabs.SelectedIndex == TimelineTabIndex)
+        {
+            _editorTabs.SelectedIndex = GraphTabIndex;
         }
 
         RefreshClipInspector();

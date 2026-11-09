@@ -600,6 +600,10 @@ public partial class MainWindow : Window
         _timeSlider.SnapEnabled = _settings.SnapEnabled;
         _timeSlider.SnapStep = _settings.SnapStep;
         _timeSlider.TimeDisplay = _settings.TimeDisplay;
+        _timeline.SnapEnabled = _settings.SnapEnabled;
+        _timeline.SnapStep = _settings.SnapStep;
+        _timeline.TimeDisplay = _settings.TimeDisplay;
+        _timeline.InvalidateVisual();
         _rangeSlider.TimeDisplay = _settings.TimeDisplay;
         _timeSlider.InvalidateVisual();
         _rangeSlider.InvalidateVisual();
@@ -912,17 +916,14 @@ public partial class MainWindow : Window
         Grid.SetRow(splitter, 1);
         grid.Children.Add(splitter);
 
-        var tabs = new TabControl
+        _editorTabs.ItemsSource = new[]
         {
-            Padding = new Avalonia.Thickness(0),
-            ItemsSource = new[]
-            {
-                new TabItem { Header = "그래프", Content = BuildGraphTab(), FontSize = 12 },
-                new TabItem { Header = "도프 시트", Content = _dope, FontSize = 12 },
-            },
+            new TabItem { Header = "그래프", Content = BuildGraphTab(), FontSize = 12 },
+            new TabItem { Header = "도프 시트", Content = _dope, FontSize = 12 },
+            new TabItem { Header = "타임라인", Content = BuildTimelineTab(), FontSize = 12 },
         };
-        Grid.SetRow(tabs, 2);
-        grid.Children.Add(tabs);
+        Grid.SetRow(_editorTabs, 2);
+        grid.Children.Add(_editorTabs);
         return grid;
     }
 
@@ -1593,6 +1594,7 @@ public partial class MainWindow : Window
         }
 
         _timeSlider.Bind(_session.Editor, name);
+        _timeline.Bind(_session.Editor);
         RefreshSelectedNode();
     }
 
@@ -2110,6 +2112,9 @@ public partial class MainWindow : Window
         "  Ctrl+B / Ctrl+Shift+B  버퍼 커브 찍기·바꾸기\n\n" +
         "도프 시트\n" +
         "  블록 드래그  시간 이동      Alt+드래그  복제      범위 띠 양끝  시간 스케일      더블클릭  키      노드 행 클릭  접기\n\n" +
+        "타임라인 (연출 클립 — 왼쪽 '클립'에서 고른다)\n" +
+        "  LMB  블록 선택 · 빈 곳/눈금자 스크럽      블록 드래그(LMB·MMB)  이동(가로 시각 · 세로 트랙)      더블클릭  그 모션 열기\n" +
+        "  우클릭  모션 놓기 · 상대값/절대값 · 트랙 추가/삭제      Ctrl+D  이어서 한 번 더      Del  삭제\n\n" +
         "타임 슬라이더\n" +
         "  클릭·드래그  스크럽      Shift+드래그  프레임 범위 선택      범위 안 MMB  범위의 키 이동      범위 밖 MMB  포즈 들고 스크럽(S로 키)\n" +
         "  우클릭  복사·붙여넣기·삭제·스냅 · 재생 범위 · 재생 모드 메뉴\n\n" +
