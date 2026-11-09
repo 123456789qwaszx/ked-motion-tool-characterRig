@@ -58,6 +58,7 @@ public sealed class ViewportView : Control
     private MotionEditor? _editor;
     private string? _motionName;
     private string? _clipName;
+    private string? _lastClipName; // 모션을 열었다 돌아와도 같은 클립이면 끈 배역이 남는다
     private RigSchemaFile? _rig;
     private DepthTuningFile? _depth;
     private FocusTuningFile? _focus;
@@ -773,6 +774,44 @@ public sealed class ViewportView : Control
     /// <summary>보고 있는 연출 클립의 이름(<see cref="BindClip"/>). 모션을 묶으면 비워진다 — 시간의 주인은 둘 중 하나다.</summary>
     public string? ClipName => _clipName;
 
+    private readonly HashSet<string> _mutedClipRoles = new(StringComparer.Ordinal);
+
+    /// <summary>배역 끄기가 바뀌었다 — 타임라인이 다시 그린다.</summary>
+    public event EventHandler? ClipMuteChanged;
+
+    /// <summary>
+    /// 끈 배역인가 — 그 배역의 블록은 미리보기에서 빠진다(마야의 뮤트). 보기 상태라 문서·되돌리기·산출물에 없고,
+    /// 다른 클립을 묶으면 비워진다.
+    /// </summary>
+    public bool IsClipRoleMuted(string role) => _mutedClipRoles.Contains(role);
+
+    public bool IsClipTrackMuted(ClipTrack track) => track is not null && _mutedClipRoles.Contains(track.Role);
+
+    public void SetClipRoleMuted(string role, bool muted)
+    {
+        if (muted ? _mutedClipRoles.Add(role) : _mutedClipRoles.Remove(role))
+        {
+            ClipMuteChanged?.Invoke(this, EventArgs.Empty);
+            InvalidateVisual();
+        }
+    }
+
+    /// <summary>끈 배역을 다 켠다 — 문서를 갈아 끼웠을 때.</summary>
+    public void ClearClipMutes()
+    {
+        _lastClipName = null;
+
+        if (_mutedClipRoles.Count > 0)
+        {
+            _mutedClipRoles.Clear();
+            ClipMuteChanged?.Invoke(this, EventArgs.Empty);
+            InvalidateVisual();
+        }
+    }
+
+    /// <summary>씬으로 세운 시작 상태의 트리(읽기 전용으로 쓴다) — 굽기가 표본을 뜨는 바탕.</summary>
+    public RectNodeTree? TemplateTree => _template;
+
     public ClipAsset? ShownClip => _editor is not null && _clipName is not null ? _editor.Document.FindClip(_clipName) : null;
 
     public bool HasRig => _template is not null;
@@ -824,8 +863,17 @@ public sealed class ViewportView : Control
     /// </summary>
     public void BindClip(MotionEditor? editor, string? clipName)
     {
+        bool same = ReferenceEquals(_editor, editor) && _lastClipName == clipName;
         Bind(editor, null);
         _clipName = clipName;
+
+        if (!same && _mutedClipRoles.Count > 0)
+        {
+            _mutedClipRoles.Clear();
+            ClipMuteChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        _lastClipName = clipName ?? _lastClipName;
         SyncDuration();
         PickSelectedObject();
         RebuildTemplate();
@@ -1063,7 +1111,7 @@ public sealed class ViewportView : Control
 
         if (_editor is not null && ShownClip is { } clip)
         {
-            return ClipPreview.Pose(_template, _editor.Document, clip, seconds);
+            return ClipPreview.Pose(_template, _editor.Document, clip, seconds, IsClipTrackMuted);
         }
 
         return motion is not null && SelectedObject is { } o && CanWear(o)

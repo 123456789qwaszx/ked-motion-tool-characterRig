@@ -345,4 +345,119 @@ public class ClipPreviewTests
         Assert.Contains(problems, p => p.Blocking && p.Message.Contains("리그(rigKind)가 없다", StringComparison.Ordinal));
         Assert.Equal("클립 'greet': 같은 이름이 둘이다", problems.First(p => p.Message.Contains("같은 이름", StringComparison.Ordinal)).ToString());
     }
+
+    // ── 배역 끄기 · 굽기 ──────────────────────────────────────────────
+
+    [Fact]
+    public void 끈_트랙의_블록은_없는_것처럼_건너뛴다()
+    {
+        MotionEditor editor = NewEditor();
+        editor.AddClipBlock("greet", 0, "bow", 0f);
+        editor.AddClipBlock("greet", 1, "nod", 0.5f);
+        ClipAsset clip = Greet(editor);
+
+        RectNodeTree pose = ClipPreview.Pose(Template(editor), editor.Document, clip, 0.8, track => track.Role == "a");
+        Near(0f, SwayZ(pose, "s1"));     // a는 꺼졌다
+        Near(-18f, MoveYOf(pose, "s2")); // b는 그대로
+    }
+
+    /// <summary>한 캐릭터(s1)에 배역 둘(a·c)을 묶어 겹쳐 놓은 클립 — bow(Sway 8) 위에 lean(+5)이 겹치고 nod가 같이 돈다.</summary>
+    private static MotionEditor Layered()
+    {
+        MotionEditor editor = NewEditor();
+        editor.AddClipRole("greet", "c", "character", "s1");
+        editor.AddClipTrack("greet", "c");                                        // 트랙 2 = c(s1)
+        editor.AddClipBlock("greet", 0, "bow", 0f);                               // a: Sway 0 → 8 (0 ~ 0.4, commit)
+        editor.AddClipBlock("greet", 2, "lean", 0.2f, MotionChannelMode.Relative);// c: Sway +5 (0.2 ~ 0.7, commit) — 같은 노드에 겹친다
+        editor.AddClipBlock("greet", 2, "nod", 0.7f);                             // c: MoveY (0.7 ~ 1.3, restore)
+        editor.AddClipBlock("greet", 1, "step", 0f);                              // b(s2): 다른 캐릭터
+        return editor;
+    }
+
+    [Fact]
+    public void 구운_모션은_한_캐릭터에_겹친_블록의_합성과_프레임마다_같다()
+    {
+        MotionEditor editor = Layered();
+        RectNodeTree template = Template(editor);
+        long revision = editor.Revision;
+
+        MotionAsset baked = ClipBake.Bake(editor, template, "greet", "s1", "greet_s1");
+
+        Assert.Equal("character", baked.Rig);
+        Assert.Equal(1.3f, baked.Duration, 4);
+        Assert.Equal(MotionEnd.Commit, baked.End); // Sway가 남는다
+        Assert.Equal(MotionChannelMode.Relative, baked.PreviewMode);
+        Assert.Equal(new[] { Sway, MoveY }, baked.Channels.Select(c => c.Node)); // s2의 TrackX는 없다
+        Assert.Null(baked.Channels[0].X);                                        // 안 움직인 성분은 싣지 않는다
+        Assert.NotNull(baked.Channels[0].Z);
+        Assert.DoesNotContain(MotionValidator.ValidateMotion(baked, RigFile.NodeIds), p => p.Blocking);
+
+        // 키는 덜어 냈다 — 프레임(32개)보다 훨씬 적다.
+        Assert.InRange(baked.Channels[0].Z!.Keys.Count, 3, 28);
+
+        // 프레임마다: 구운 모션 하나를 s1에 얹은 포즈 = 클립의 포즈.
+        ClipAsset clip = Greet(editor);
+
+        for (int k = 0; k <= 31; k++)
+        {
+            double t = k / 24.0;
+            RectNodeTree expected = ClipPreview.Pose(template, editor.Document, clip, t);
+            RectNodeTree actual = MotionPreview.Pose(template, baked, t, null, "s1/");
+            Assert.InRange(SwayZ(actual, "s1"), SwayZ(expected, "s1") - 0.01f, SwayZ(expected, "s1") + 0.01f);
+            Assert.InRange(MoveYOf(actual, "s1"), MoveYOf(expected, "s1") - 0.01f, MoveYOf(expected, "s1") + 0.01f);
+        }
+
+        // 끝난 뒤에도 같다(13이 남고 nod는 돌아왔다).
+        RectNodeTree after = MotionPreview.Pose(template, baked, 9.0, null, "s1/");
+        Near(13f, SwayZ(after, "s1"));
+        Near(0f, MoveYOf(after, "s1"));
+
+        // 한 칸이다.
+        Assert.Equal(revision + 1, editor.Revision);
+        editor.Undo();
+        Assert.Null(editor.Document.Find("greet_s1"));
+    }
+
+    [Fact]
+    public void 끈_배역은_굽지_않고_남는_것이_없으면_restore다()
+    {
+        MotionEditor editor = Layered();
+        RectNodeTree template = Template(editor);
+
+        // a(bow)를 끄면 Sway에는 lean(+5)만 남는다.
+        MotionAsset withoutA = ClipBake.Bake(editor, template, "greet", "s1", "no_a", track => track.Role == "a");
+        Near(5f, SwayZ(MotionPreview.Pose(template, withoutA, 9.0, null, "s1/"), "s1"));
+
+        // commit 블록을 다 끄면 nod만 — 남는 것이 없다.
+        editor.RemoveClipBlock("greet", 2, 0); // lean
+        MotionAsset nodOnly = ClipBake.Bake(editor, template, "greet", "s1", "nod_only", track => track.Role == "a");
+        Assert.Equal(MotionEnd.Restore, nodOnly.End);
+        Assert.Equal(new[] { MoveY }, nodOnly.Channels.Select(c => c.Node));
+        Assert.Empty(MotionValidator.ValidateMotion(nodOnly, RigFile.NodeIds)); // 경고도 없다(마지막 키가 중립값)
+    }
+
+    [Fact]
+    public void 구울_것이_없으면_던지고_흔적이_없다()
+    {
+        MotionEditor editor = Layered();
+        RectNodeTree template = Template(editor);
+        long revision = editor.Revision;
+
+        Assert.Throws<KeyNotFoundException>(() => ClipBake.Bake(editor, template, "greet", "nobody", "x"));
+        Assert.Throws<KeyNotFoundException>(() => ClipBake.Bake(editor, template, "nope", "s1", "x"));
+        Assert.Throws<InvalidOperationException>(() => ClipBake.Bake(editor, template, "greet", "s1", "x", _ => true));
+        Assert.Throws<InvalidOperationException>(() => ClipBake.Bake(editor, template, "greet", "s1", "bow")); // 이름이 이미 있다
+        Assert.Throws<InvalidOperationException>(() => ClipBake.Bake(editor, template, "greet", "s1", "Bad Name"));
+        Assert.Equal(revision, editor.Revision);
+        Assert.Equal(4, editor.Document.Motions.Count);
+    }
+
+    [Fact]
+    public void 직선_위의_표본은_덜어_낸다()
+    {
+        float[] times = { 0f, 1f, 2f, 3f, 4f };
+        Assert.Equal(new[] { 0, 4 }, ClipBake.Reduce(times, new[] { 0f, 1f, 2f, 3f, 4f }));
+        Assert.Equal(new[] { 0, 2, 4 }, ClipBake.Reduce(times, new[] { 0f, 1f, 2f, 1f, 0f }));
+        Assert.Equal(new[] { 0, 1, 2, 4 }, ClipBake.Reduce(times, new[] { 0f, 0f, 5f, 5f, 5f }));
+    }
 }

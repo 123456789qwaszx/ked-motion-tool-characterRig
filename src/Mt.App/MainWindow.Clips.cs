@@ -4,7 +4,9 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Mt.App.Views;
 using Mt.Authoring.Editing;
+using Ked.Presentation.Core;
 using Mt.Authoring.Model;
+using Mt.Authoring.Preview;
 using Mt.Authoring.Validation;
 
 namespace Mt.App;
@@ -69,6 +71,7 @@ public partial class MainWindow
     {
         _timeline.Viewport = _viewport;
         _timeline.BlockOpened += (_, at) => Guard("모션 편집", () => OpenClipBlock(at.Track, at.Index));
+        _timeline.BakeRequested += (_, track) => Guard("굽기", () => BakeClipActor(track));
         return _timeline;
     }
 
@@ -101,6 +104,35 @@ public partial class MainWindow
         }
 
         _viewport.ScrubTo(local);
+    }
+
+    /// <summary>테스트 손잡이 — 타임라인 메뉴의 "새 모션으로 굽기".</summary>
+    internal string? BakeClipActorFromMenu(int track) => BakeClipActor(track);
+
+    /// <summary>
+    /// 그 트랙의 배역을 맡은 캐릭터에게 얹힌 블록 전부(같은 캐릭터를 맡은 다른 배역 것까지, 끈 배역은 빼고)를 새 모션 하나로 굽는다.
+    /// 이름은 <c>클립_오브젝트</c>(겹치면 _2…). 클립과 블록은 그대로 둔다 — 구운 모션은 모션 목록에 생긴다. 되돌리기 한 번.
+    /// </summary>
+    private string? BakeClipActor(int track)
+    {
+        if (CurrentClip is not { } clip || track < 0 || track >= clip.Tracks.Count)
+        {
+            return null;
+        }
+
+        string role = clip.Tracks[track].Role;
+
+        if (clip.FindRole(role)?.Object is not { } actor)
+        {
+            throw new InvalidOperationException($"배역 '{role}'을 맡은 오브젝트가 없다 — '클립' 탭에서 묶는다.");
+        }
+
+        RectNodeTree template = _viewport.TemplateTree ?? throw new InvalidOperationException("리그가 없다.");
+        string name = MotionNames.Unique(_session.Editor.Document, MotionNames.Sanitize($"{clip.Name}_{actor}"));
+        MotionAsset baked = ClipBake.Bake(_session.Editor, template, clip.Name, actor, name, _viewport.IsClipTrackMuted);
+        int keys = baked.Channels.Sum(c => (c.X?.Keys.Count ?? 0) + (c.Y?.Keys.Count ?? 0) + (c.Z?.Keys.Count ?? 0));
+        _session.SetStatus($"구웠다: 모션 '{name}' — {actor}의 블록을 합친 {baked.Duration:0.###}초, 키 {keys}개, 상대값·{(baked.End == MotionEnd.Commit ? "유지(commit)" : "복원(restore)")}. 왼쪽 모션 목록에 있다.");
+        return name;
     }
 
     private Control BuildClipTab()

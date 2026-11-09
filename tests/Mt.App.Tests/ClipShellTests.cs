@@ -423,4 +423,92 @@ public class ClipShellTests
             }
         });
     }
+
+    [Fact]
+    public void 줄_머리를_누르면_배역이_꺼지고_한_캐릭터에_겹친_블록을_새_모션으로_굽는다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                ClipTimelineView timeline = PrepareTimeline(window);
+                MotionEditor editor = window.Session.Editor;
+
+                // 같은 캐릭터(s1)를 맡는 배역을 하나 더 — 그 위에 모션을 겹친다.
+                window.Viewport.SelectedObjectId = "s1";
+                Assert.Equal("c", window.AddClipRoleFromForm());
+                timeline.PlaceMotion(0, "bow", 0);   // a(s1): Sway 8
+                timeline.PlaceMotion(2, "nod", 0);   // c(s1): MoveY
+                timeline.PlaceMotion(1, "nod", 0.5); // b(s2)
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+                window.Viewport.ScrubTo(0.3);
+                Assert.Equal(-18f, MoveYOf(window, "s1"), 3);
+                Assert.InRange(SwayZOf(window, "s1"), 4f, 8f);
+
+                // 줄 머리의 🔊 = 배역 끄기. 문서는 안 바뀐다(보기 상태).
+                long revision = editor.Revision;
+                Rect mute = timeline.MuteRect(2);
+                Point click = At(window, timeline, mute.Center.X, mute.Center.Y);
+                window.MouseDown(click, MouseButton.Left);
+                window.MouseUp(click, MouseButton.Left);
+                Assert.True(window.Viewport.IsClipRoleMuted("c"));
+                Assert.Equal(revision, editor.Revision);
+                Assert.False(editor.CanRedo);
+                Assert.Equal(0f, MoveYOf(window, "s1"), 3);       // c의 nod가 빠졌다
+                Assert.InRange(SwayZOf(window, "s1"), 4f, 8f);     // a는 그대로
+                Assert.Equal(0.3, window.Viewport.Time, 4);        // 누른 자리가 스크럽으로 새지 않는다
+
+                // 끈 채로 구우면 a의 bow만 든다.
+                string? onlyBow = window.BakeClipActorFromMenu(0);
+                Assert.Equal("clip_s1", onlyBow);
+                Assert.Equal(new[] { Sway }, editor.Document.Find("clip_s1")!.Channels.Select(c => c.Node));
+                Assert.Equal("clip", window.SelectedClip); // 클립에 그대로 있다
+                Assert.Contains("clip_s1", window.Session.Status, StringComparison.Ordinal);
+
+                // 모션을 열었다 돌아와도 끈 배역은 남는다.
+                window.SelectMotion("nod");
+                window.SelectClip("clip");
+                Assert.True(window.Viewport.IsClipRoleMuted("c"));
+                window.Viewport.ScrubTo(0.3); // 묶을 때마다 시계는 처음으로 간다
+
+                // 다시 켜고 구우면 둘 다 — 이름은 겹치지 않게.
+                timeline.ToggleRoleMuted(2);
+                Assert.False(window.Viewport.IsClipRoleMuted("c"));
+                Assert.Equal(-18f, MoveYOf(window, "s1"), 3);
+                string? both = window.BakeClipActorFromMenu(2); // c의 줄에서 구워도 s1 전부다
+                Assert.Equal("clip_s1_2", both);
+                MotionAsset baked = editor.Document.Find("clip_s1_2")!;
+                Assert.Equal(new[] { Sway, MoveY }, baked.Channels.Select(c => c.Node));
+                Assert.Equal(MotionEnd.Commit, baked.End);
+                Assert.Equal(0, window.ProblemRowsShown);
+
+                // 구운 모션 하나가 같은 움직임을 낸다.
+                window.SelectMotion("clip_s1_2");
+                window.Viewport.SelectedObjectId = "s1";
+                window.Viewport.ScrubTo(0.3);
+                Assert.Equal(-18f, MoveYOf(window, "s1"), 2);
+                Assert.InRange(SwayZOf(window, "s1"), 4f, 8f);
+
+                // 굽기는 되돌리기 한 번.
+                editor.Undo();
+                Assert.Null(editor.Document.Find("clip_s1_2"));
+                Assert.NotNull(editor.Document.Find("clip_s1"));
+
+                // 새 문서에는 끈 배역이 안 남는다.
+                window.SelectClip("clip");
+                timeline.ToggleRoleMuted(0);
+                Assert.True(window.Viewport.IsClipRoleMuted("a"));
+                window.Session.New();
+                Assert.False(window.Viewport.IsClipRoleMuted("a"));
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
 }

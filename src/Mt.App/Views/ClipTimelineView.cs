@@ -81,6 +81,9 @@ public sealed class ClipTimelineView : Control
 
     public event EventHandler? SelectionChanged;
 
+    /// <summary>메뉴의 "새 모션으로 굽기" — 그 트랙의 배역을 맡은 캐릭터. 셸이 굽는다.</summary>
+    public event EventHandler<int>? BakeRequested;
+
     public ViewportView? Viewport
     {
         get => _viewport;
@@ -95,6 +98,7 @@ public sealed class ClipTimelineView : Control
             {
                 _viewport.TimeChanged -= OnViewportChanged;
                 _viewport.RangeChanged -= OnViewportChanged;
+                _viewport.ClipMuteChanged -= OnViewportChanged;
             }
 
             _viewport = value;
@@ -103,6 +107,7 @@ public sealed class ClipTimelineView : Control
             {
                 _viewport.TimeChanged += OnViewportChanged;
                 _viewport.RangeChanged += OnViewportChanged;
+                _viewport.ClipMuteChanged += OnViewportChanged;
             }
 
             InvalidateVisual();
@@ -239,6 +244,28 @@ public sealed class ClipTimelineView : Control
 
     private float SnapTime(double seconds) => (float)Math.Max(0, SnapEnabled ? TimeSnap.Snap(seconds, SnapStep) : seconds);
 
+    /// <summary>줄 머리의 끄기 표시 자리 — 누르면 그 트랙의 배역이 꺼지고 켜진다.</summary>
+    public Rect MuteRect(int track)
+    {
+        Rect row = RowRect(track);
+        return new Rect(Gutter - 24, row.Y, 22, row.Height);
+    }
+
+    /// <summary>그 트랙의 배역을 끄거나 켠다(같은 배역의 트랙이 다 같이). 보기 상태 — 문서는 안 바뀐다.</summary>
+    public void ToggleRoleMuted(int track)
+    {
+        if (_viewport is null || ShownClip is not { } clip || track < 0 || track >= clip.Tracks.Count)
+        {
+            return;
+        }
+
+        string role = clip.Tracks[track].Role;
+        _viewport.SetClipRoleMuted(role, !_viewport.IsClipRoleMuted(role));
+    }
+
+    /// <summary>그 트랙의 배역을 맡은 캐릭터를 새 모션으로 굽자고 셸에 알린다.</summary>
+    public void RequestBake(int track) => BakeRequested?.Invoke(this, track);
+
     // ── 명령 — 전부 편집기 명령 하나 ──────────────────────────────────
 
     /// <summary>모션 블록을 놓는다(메뉴의 "모션 놓기"). 놓은 블록이 골라진다.</summary>
@@ -372,6 +399,13 @@ public sealed class ClipTimelineView : Control
             return;
         }
 
+        if (TrackAtY(position.Y) is { } muteTrack && MuteRect(muteTrack).Contains(position))
+        {
+            ToggleRoleMuted(muteTrack);
+            e.Handled = true;
+            return;
+        }
+
         if (position.Y >= RulerHeight)
         {
             Select(null);
@@ -500,6 +534,11 @@ public sealed class ClipTimelineView : Control
             place.IsEnabled = place.Items.Count > 0;
             menu.Items.Add(place);
             menu.Items.Add(new Separator());
+            bool muted = _viewport?.IsClipRoleMuted(roleName) == true;
+            string? actor = clip.FindRole(roleName)?.Object;
+            menu.Items.Add(Item(muted ? $"배역 {roleName} 켜기" : $"배역 {roleName} 끄기", () => ToggleRoleMuted(track)));
+            menu.Items.Add(Item(actor is null ? "새 모션으로 굽기 (배역이 안 묶였다)" : $"{actor}의 블록 전부를 새 모션으로 굽기", () => RequestBake(track), actor is not null));
+            menu.Items.Add(new Separator());
             menu.Items.Add(Item($"트랙 추가 (배역 {roleName})", () => _editor.AddClipTrack(clip.Name, roleName)));
             menu.Items.Add(Item("트랙 삭제", () => _editor.RemoveClipTrack(clip.Name, track)));
         }
@@ -554,7 +593,10 @@ public sealed class ClipTimelineView : Control
             ClipRole? role = clip.FindRole(track.Role);
             int roleIndex = role is null ? -1 : clip.Roles.IndexOf(role);
             string label = role is null ? $"{track.Role} (배역 없음)" : role.Object is null ? $"{role.Name} · 안 묶음" : $"{role.Name} · {role.Object}";
-            Draw(context, label, new Point(8, row.Y + 6), role?.Object is null ? DimBrush : LabelBrush);
+            bool muted = _viewport.IsClipRoleMuted(track.Role);
+            Draw(context, label, new Point(8, row.Y + 6), role?.Object is null || muted ? DimBrush : LabelBrush);
+            Draw(context, muted ? "🔇" : "🔊", new Point(MuteRect(t).X + 3, row.Y + 5), muted ? DimBrush : LabelBrush);
+            using IDisposable? dim = muted ? context.PushOpacity(0.35) : null; // 끈 배역의 블록은 흐리게
 
             for (int i = 0; i < track.Blocks.Count; i++)
             {
