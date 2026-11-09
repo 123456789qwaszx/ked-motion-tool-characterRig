@@ -18,6 +18,16 @@ public static class MotionPreview
     /// <param name="keyPrefix">슬롯 접두사(예: "c1/") — 씬에서 오브젝트 하나에 얹을 때. 비면 접두사 없는 트리.</param>
     public static RectNodeTree Pose(RectNodeTree template, MotionAsset motion, double seconds, Func<Graph.CurveRef, bool>? isMuted = null, string keyPrefix = "")
     {
+        ArgumentNullException.ThrowIfNull(motion);
+        return Pose(template, motion, seconds, motion.PreviewMode, isMuted, keyPrefix);
+    }
+
+    /// <summary>
+    /// mode를 쓰는 쪽이 정하는 포즈 — 연출 클립의 블록이 그 "쓰는 쪽"이다(재생에서는 motion 커맨드의 인자).
+    /// 모션의 <see cref="MotionAsset.PreviewMode"/>는 읽지 않는다.
+    /// </summary>
+    public static RectNodeTree Pose(RectNodeTree template, MotionAsset motion, double seconds, MotionChannelMode mode, Func<Graph.CurveRef, bool>? isMuted = null, string keyPrefix = "")
+    {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(motion);
         keyPrefix ??= "";
@@ -79,7 +89,7 @@ public static class MotionPreview
 
             RectNodeState state = tree.GetState(key);
             Vec3 start = MotionMath.StartOf(channel, state);
-            Vec3 value = ended ? MotionMath.EndValue(channel, motion.PreviewMode, start) : MotionMath.Compose(channel, motion.PreviewMode, start, t);
+            Vec3 value = ended ? MotionMath.EndValue(channel, mode, start) : MotionMath.Compose(channel, mode, start, t);
             tree.SetState(key, Apply(channel.Kind, state, value));
         }
 
