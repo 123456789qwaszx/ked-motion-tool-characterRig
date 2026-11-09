@@ -170,6 +170,32 @@ public sealed class ClipStage
         return started == 0 ? _baseScene : _steps[started - 1].Scene;
     }
 
+    /// <summary>그 시각의 카메라 값 — 카메라 블록이 진행 중이면 그 사이. 카메라 모션이 이 값에서 시작한다.</summary>
+    public CameraSettings CameraAt(double seconds)
+    {
+        int started = Started(seconds);
+        CameraSettings last = (started == 0 ? _baseScene : _steps[started - 1].Scene).Camera;
+        var camera = new CameraSettings { Zoom = last.Zoom, PanX = last.PanX, PanY = last.PanY };
+
+        for (int k = 0; k < started; k++)
+        {
+            float remaining = 1f - Progress(_steps[k], seconds);
+
+            if (Math.Abs(remaining) < 1e-6f)
+            {
+                continue;
+            }
+
+            CameraSettings before = (k == 0 ? _baseScene : _steps[k - 1].Scene).Camera;
+            CameraSettings after = _steps[k].Scene.Camera;
+            camera.Zoom -= remaining * (after.Zoom - before.Zoom);
+            camera.PanX -= remaining * (after.PanX - before.PanX);
+            camera.PanY -= remaining * (after.PanY - before.PanY);
+        }
+
+        return camera;
+    }
+
     /// <summary>그 시각의 무대 트리 — 새 사본이라 받은 쪽이 고쳐도 된다.</summary>
     public RectNodeTree TreeAt(double seconds)
     {

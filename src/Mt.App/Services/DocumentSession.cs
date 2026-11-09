@@ -150,7 +150,8 @@ public sealed class DocumentSession
     /// <summary>리그 덤프·초상·기준 해상도가 바뀌었다. 뷰포트가 다시 싣는다.</summary>
     public event EventHandler? AssetsChanged;
 
-    public IReadOnlyDictionary<string, ICollection<string>>? RigNodeIds => Rig?.NodeIds;
+    /// <summary>검증에 쓰는 rigKind → 노드 표 — 덤프의 리그에 카메라 모션의 가짜 리그를 더한 것.</summary>
+    public IReadOnlyDictionary<string, ICollection<string>>? RigNodeIds => Mt.Authoring.Preview.CameraRig.WithCamera(Rig?.NodeIds);
 
     public IReadOnlyList<MotionProblem> Problems => MotionValidator.Validate(Editor.Document, RigNodeIds, Controllers);
 

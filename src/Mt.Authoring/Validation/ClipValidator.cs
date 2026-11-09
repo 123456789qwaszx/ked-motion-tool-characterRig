@@ -179,11 +179,6 @@ public static class ClipValidator
                 continue;
             }
 
-            if (track.IsCamera)
-            {
-                Block($"{where}: 카메라 트랙에는 카메라 블록만 놓는다");
-                continue;
-            }
 
             if (document.Find(block.Motion) is not { } motion)
             {
@@ -200,25 +195,33 @@ public static class ClipValidator
 
             if (checkedMotions.Add(motion.Name))
             {
-                foreach (MotionProblem p in MotionValidator.ValidateMotion(motion, rigNodeIds).Where(p => p.Blocking))
+                foreach (MotionProblem p in MotionValidator.ValidateMotion(motion, CameraRig.WithCamera(rigNodeIds)).Where(p => p.Blocking))
                 {
                     Block($"모션 '{motion.Name}': {p.Message}");
                 }
             }
 
-            if (role is null)
+            if (track.IsCamera)
+            {
+                // 카메라 트랙의 모션은 카메라 모션이어야 한다 — 겹침은 캐릭터와 같은 규칙(같은 가짜 노드를 같은 때에).
+                if (!CameraRig.IsCamera(motion))
+                {
+                    Block($"{where}: 카메라 트랙에는 카메라 블록과 카메라 모션만 놓는다");
+                    continue;
+                }
+            }
+            else if (role is null)
             {
                 continue;
             }
-
-            if (!Wears(role.Rig, motion, rigNodeIds))
+            else if (!Wears(role.Rig, motion, rigNodeIds))
             {
                 Block($"{where}: 모션의 리그 '{motion.Rig}'가 배역 '{role.Name}'의 리그 '{role.Rig}'에 안 맞는다");
             }
 
             foreach (ChannelAsset channel in motion.Channels)
             {
-                var key = (role.Name, channel.Node, channel.Kind);
+                var key = (track.Role, channel.Node, channel.Kind);
 
                 if (!claims.TryGetValue(key, out List<(float Start, float End, PlacedBlock Block)>? spans))
                 {
@@ -231,7 +234,7 @@ public static class ClipValidator
                     if (block.At < otherEnd - Tolerance && start < end - Tolerance)
                     {
                         Block(
-                            $"{where}: 배역 '{role.Name}'의 {channel.Node} {ChannelKindLabel.Of(channel.Kind)}를 " +
+                            $"{where}: {(track.IsCamera ? "카메라" : $"배역 '{track.Role}'")}의 {channel.Node} {ChannelKindLabel.Of(channel.Kind)}를 " +
                             $"트랙 {other.Track + 1} 블록 {other.Index + 1}('{other.Block.Motion}' @ {other.Block.At:0.###}s)과 같은 때에 쓴다 — 겹칠 수 없다");
                         break;
                     }

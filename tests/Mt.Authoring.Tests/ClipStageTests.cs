@@ -310,7 +310,7 @@ public class ClipStageTests
         Clip(editor).Tracks[2].Blocks.Add(new ClipBlock { Kind = ClipBlockKind.Visible, At = 0.2f, Visible = true });
         Clip(editor).Tracks[2].Blocks.Add(new ClipBlock { At = 0.3f, Motion = "nod" });
         messages = Messages();
-        Assert.Equal(2, messages.Count(m => m.Contains("카메라 트랙에는 카메라 블록만", StringComparison.Ordinal)));
+        Assert.Equal(2, messages.Count(m => m.Contains("카메라 트랙에는 카메라 블록", StringComparison.Ordinal)));
         Assert.Equal(1, ClipStage.Build(editor.Document, Clip(editor), BuildTree, t => !t.IsCamera)!.StepCount - 1); // 안 맞는 블록은 무대에 안 든다(카메라 블록 둘만)
     }
 }

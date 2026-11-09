@@ -182,12 +182,8 @@ public sealed partial class MotionEditor
         ClipAsset clip = RequireClip(clipName);
         ClipTrack target = RequireTrack(clip, track);
 
-        if (target.IsCamera)
-        {
-            throw new InvalidOperationException("카메라 트랙에는 카메라 블록만 놓는다.");
-        }
-
         MotionAsset source = Require(motion);
+        RequireFits(target, source);
         var block = new ClipBlock { At = ClampAt(at), Motion = motion, Mode = mode ?? source.PreviewMode };
         Mutate(MotionChangeKind.Clip, () => Insert(target, block));
         return target.Blocks.IndexOf(block);
@@ -225,7 +221,7 @@ public sealed partial class MotionEditor
 
         if (block.IsMotion)
         {
-            Require(value.Motion);
+            RequireFits(target, Require(value.Motion));
             next = new ClipBlock { At = ClampAt(value.At), Motion = value.Motion, Mode = value.Mode };
         }
         else
@@ -239,6 +235,22 @@ public sealed partial class MotionEditor
             Insert(target, next);
         });
         return target.Blocks.IndexOf(next);
+    }
+
+    /// <summary>카메라 모션은 카메라 트랙에만, 캐릭터 모션은 배역 트랙에만 — 놓을 자리가 없는 것은 여기서 막는다.</summary>
+    private static void RequireFits(ClipTrack track, MotionAsset motion)
+    {
+        bool camera = Preview.CameraRig.IsCamera(motion);
+
+        if (track.IsCamera && !camera)
+        {
+            throw new InvalidOperationException($"카메라 트랙에는 카메라 블록과 카메라 모션만 놓는다 ('{motion.Name}'은 {motion.Rig} 모션).");
+        }
+
+        if (!track.IsCamera && camera)
+        {
+            throw new InvalidOperationException($"카메라 모션 '{motion.Name}'은 카메라 트랙에만 놓는다.");
+        }
     }
 
     private static ClipBlock NormalizeState(ClipTrack track, ClipBlock state)
@@ -282,9 +294,13 @@ public sealed partial class MotionEditor
             throw new InvalidOperationException("상태 블록은 카메라 트랙과 배역 트랙 사이를 오갈 수 없다.");
         }
 
-        if (block.IsMotion && to.IsCamera)
+        if (block.IsMotion && Document.Find(block.Motion) is { } moved)
         {
-            throw new InvalidOperationException("카메라 트랙에는 카메라 블록만 놓는다.");
+            RequireFits(to, moved);
+        }
+        else if (block.IsMotion && to.IsCamera != from.IsCamera)
+        {
+            throw new InvalidOperationException("없는 모션의 블록은 카메라 트랙과 배역 트랙 사이를 오갈 수 없다.");
         }
 
         Mutate(MotionChangeKind.Clip, () =>
@@ -319,7 +335,7 @@ public sealed partial class MotionEditor
             throw new InvalidOperationException("상태 블록에는 모션이 없다.");
         }
 
-        Require(motion);
+        RequireFits(RequireTrack(RequireClip(clipName), track), Require(motion));
         Mutate(MotionChangeKind.Clip, () => block.Motion = motion);
     }
 
