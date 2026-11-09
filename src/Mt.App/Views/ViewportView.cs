@@ -58,6 +58,7 @@ public sealed class ViewportView : Control
     private MotionEditor? _editor;
     private string? _motionName;
     private string? _clipName;
+    private ClipStage? _clipStage;
     private string? _lastClipName; // 모션을 열었다 돌아와도 같은 클립이면 끈 배역이 남는다
     private RigSchemaFile? _rig;
     private DepthTuningFile? _depth;
@@ -791,6 +792,7 @@ public sealed class ViewportView : Control
     {
         if (muted ? _mutedClipRoles.Add(role) : _mutedClipRoles.Remove(role))
         {
+            RebuildTemplate(); // 끈 배역의 상태 블록은 무대에서도 빠진다
             ClipMuteChanged?.Invoke(this, EventArgs.Empty);
             InvalidateVisual();
         }
@@ -808,6 +810,12 @@ public sealed class ViewportView : Control
             InvalidateVisual();
         }
     }
+
+    /// <summary>클립을 보는 중일 때 그 시각의 오브젝트 불투명도(보이기 블록) — 클립이 아니면 씬의 보이기 그대로.</summary>
+    public float OpacityOf(string objectId)
+        => ShownClip is not null && _clipStage is { } stage
+            ? stage.OpacityOf(objectId, _clock.Time)
+            : Scene?.Find(objectId) is { Visible: true } ? 1f : 0f;
 
     /// <summary>씬으로 세운 시작 상태의 트리(읽기 전용으로 쓴다) — 굽기가 표본을 뜨는 바탕.</summary>
     public RectNodeTree? TemplateTree => _template;
@@ -992,6 +1000,7 @@ public sealed class ViewportView : Control
     private void RebuildTemplate()
     {
         _template = null;
+        _clipStage = null;
         SceneAsset? scene = Scene;
 
         if (_rig is null || scene is null)
@@ -1000,6 +1009,13 @@ public sealed class ViewportView : Control
         }
 
         _template = ScenePreview.Build(_rig, scene, AspectOf, null, _depth, _focus, _stage);
+
+        // 클립을 보는 중이면 상태 블록의 단계도 같이 세운다 — 문서·자산·끈 배역이 바뀔 때만 다시 세우고 프레임마다는 섞기만 한다.
+        if (_editor is not null && ShownClip is { } clip)
+        {
+            RigSchemaFile rig = _rig;
+            _clipStage = ClipStage.Build(_editor.Document, clip, s => ScenePreview.Build(rig, s, AspectOf, null, _depth, _focus, _stage), IsClipTrackMuted);
+        }
     }
 
     // ── 시계 ──────────────────────────────────────────────────────────
@@ -1111,7 +1127,8 @@ public sealed class ViewportView : Control
 
         if (_editor is not null && ShownClip is { } clip)
         {
-            return ClipPreview.Pose(_template, _editor.Document, clip, seconds, IsClipTrackMuted);
+            // 무대(상태 블록)가 먼저 서고 모션이 그 위에 얹힌다.
+            return ClipPreview.Pose(_clipStage?.TreeAt(seconds) ?? _template, _editor.Document, clip, seconds, IsClipTrackMuted);
         }
 
         return motion is not null && SelectedObject is { } o && CanWear(o)
@@ -1272,6 +1289,27 @@ public sealed class ViewportView : Control
 
         if (scene is null)
         {
+            return;
+        }
+
+        // 클립의 상태 블록이 있으면 그 시각의 씬(층·그리는 순서)과 불투명도(보이기 블록의 페이드)로 그린다.
+        if (ShownClip is not null && _clipStage is { } stage)
+        {
+            foreach (SceneObject o in stage.SceneAt(_clock.Time).DrawOrder())
+            {
+                float opacity = stage.OpacityOf(o.Id, _clock.Time);
+
+                if (opacity <= 0.001f)
+                {
+                    continue;
+                }
+
+                using (context.PushOpacity(opacity))
+                {
+                    DrawObject(context, pose, o, selected: o.Id == _selectedObjectId);
+                }
+            }
+
             return;
         }
 
@@ -1511,7 +1549,7 @@ public sealed class ViewportView : Control
 
         foreach (SceneObject o in scene.DrawOrder().Reverse())
         {
-            if (!o.Visible)
+            if (OpacityOf(o.Id) <= 0.001f)
             {
                 continue;
             }

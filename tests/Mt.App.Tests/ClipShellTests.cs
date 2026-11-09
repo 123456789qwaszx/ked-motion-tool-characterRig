@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Ked.Presentation.Core;
@@ -504,6 +505,153 @@ public class ClipShellTests
                 Assert.True(window.Viewport.IsClipRoleMuted("a"));
                 window.Session.New();
                 Assert.False(window.Viewport.IsClipRoleMuted("a"));
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    // ── K5 — 상태 블록 ────────────────────────────────────────────────
+
+    private const string SlotTrack = "CharSlot_Track";
+
+    private static float TrackXOf(MainWindow window, string slot) => window.Viewport.CurrentPose()!.GetState($"{slot}/{SlotTrack}").AnchoredPosition.X;
+
+    [Fact]
+    public void 상태_블록을_놓으면_뷰포트가_그_사이를_지나고_블록_인스펙터로_값을_고친다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                ClipTimelineView timeline = PrepareTimeline(window);
+                MotionEditor editor = window.Session.Editor;
+                window.InspectorTab = 3; // 클립 탭
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.Equal(1, window.ClipBlockRows); // "(타임라인에서 블록을 고른다)"
+
+                // 오프셋 블록(메뉴의 "상태 놓기"와 같은 길) — 놓으면 골라지고 인스펙터에 칸이 선다.
+                timeline.PlaceState(0, new ClipBlock { Kind = ClipBlockKind.Offset, Duration = 1f, X = 0f, Y = 0f, Rotation = 0f, ScaleX = 1f, ScaleY = 1f }, 0);
+                Assert.Equal((0, 0), timeline.SelectedBlock);
+                Assert.Equal(9, window.ClipBlockRows); // 제목 · 시작 · 길이 · 이징 · X · Y · 회전 · 배율 둘
+                Assert.Equal(1.0, window.Viewport.Clock.Duration, 4); // 상태 블록도 클립 길이를 민다
+
+                // 칸에 값을 넣고 Enter — 되돌리기 한 칸이고 선택은 그대로다.
+                long revision = editor.Revision;
+                TextBox x = window.ClipBlockBox("오프셋 X")!;
+                x.Focus();
+                x.Text = "200";
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal(200f, editor.Document.FindClip("clip")!.Tracks[0].Blocks[0].X);
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.Equal((0, 0), timeline.SelectedBlock);
+                Assert.Equal("200", window.ClipBlockBox("오프셋 X")!.Text);
+
+                // 빈 칸 = 그 값은 안 바뀐다.
+                window.UpdateSelectedClipBlock(b => b.Y = null);
+                Assert.Equal("", window.ClipBlockBox("오프셋 Y")!.Text);
+
+                // 뷰포트: 절반에서 100, 끝에서 200. 모션을 같이 놓으면 그 위에 얹힌다.
+                timeline.PlaceMotion(0, "nod", 0);
+                window.Viewport.ScrubTo(0.5);
+                Assert.Equal(100f, TrackXOf(window, "s1"), 2);
+                Assert.Equal(0f, TrackXOf(window, "s2"), 2);
+                window.Viewport.ScrubTo(0.3);
+                Assert.Equal(60f, TrackXOf(window, "s1"), 2);
+                Assert.Equal(-18f, MoveYOf(window, "s1"), 2);
+                window.Viewport.ScrubTo(1.0);
+                Assert.Equal(200f, TrackXOf(window, "s1"), 2);
+
+                // 시작 시각을 바꾸면 블록이 시각 순 자리로 가고 선택이 따라간다.
+                timeline.Select((0, 0));
+                Assert.Equal(ClipBlockKind.Offset, editor.Document.FindClip("clip")!.Tracks[0].Blocks[0].Kind);
+                window.UpdateSelectedClipBlock(b => b.At = 2f);
+                Assert.Equal((0, 1), timeline.SelectedBlock);
+                Assert.Equal(new[] { "nod", "오프셋" }, editor.Document.FindClip("clip")!.Tracks[0].Blocks.Select(b => b.Describe()));
+                Assert.Equal(3.0, window.Viewport.Clock.Duration, 4);
+
+                // 상태 블록은 더블클릭해도 모션으로 건너가지 않는다. Ctrl+D는 끝에 이어 놓는다.
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Point center = Center(window, timeline, 0, 1);
+                window.MouseDown(center, MouseButton.Left);
+                window.MouseUp(center, MouseButton.Left);
+                window.MouseDown(center, MouseButton.Left);
+                window.MouseUp(center, MouseButton.Left);
+                Assert.Equal("clip", window.SelectedClip);
+                timeline.DuplicateSelected();
+                Assert.Equal(3f, editor.Document.FindClip("clip")!.Tracks[0].Blocks[2].At);
+                editor.Undo();
+
+                // 모션 블록을 고르면 인스펙터는 시작·재생 기준뿐이다.
+                timeline.Select((0, 0));
+                Assert.Equal(3, window.ClipBlockRows);
+                window.UpdateSelectedClipBlock(b => b.Mode = MotionChannelMode.Absolute);
+                Assert.Equal(MotionChannelMode.Absolute, editor.Document.FindClip("clip")!.Tracks[0].Blocks[0].Mode);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void 보이기는_페이드로_층은_그리는_순서로_카메라는_카메라_트랙에서_돈다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                ClipTimelineView timeline = PrepareTimeline(window);
+                MotionEditor editor = window.Session.Editor;
+
+                // 숨기기 1초.
+                timeline.PlaceState(1, new ClipBlock { Kind = ClipBlockKind.Visible, Duration = 1f, Visible = false }, 0);
+                window.Viewport.ScrubTo(0.5);
+                Assert.Equal(0.5f, window.Viewport.OpacityOf("s2"), 2);
+                Assert.Equal(1f, window.Viewport.OpacityOf("s1"), 2);
+                window.Viewport.ScrubTo(1.0);
+                Assert.Equal(0f, window.Viewport.OpacityOf("s2"), 2);
+                Assert.True(editor.Document.ActiveSceneAsset!.Find("s2")!.Visible); // 씬은 안 바뀐다
+
+                // 카메라 트랙 — 배역 없이 서고, 카메라 블록만 받는다.
+                int camera = editor.AddClipTrack("clip", ClipTrack.CameraRole);
+                Assert.Equal(2, camera);
+                timeline.PlaceState(camera, new ClipBlock { Kind = ClipBlockKind.Camera, Duration = 1f, PanX = 100f }, 0);
+                Assert.Equal(0, window.ProblemRowsShown);
+                string pan = StageNodes.KeyOf(StageNodes.PanRoot);
+                window.Viewport.ScrubTo(0.5);
+                Assert.Equal(50f, window.Viewport.CurrentPose()!.GetState(pan).AnchoredPosition.X, 2);
+
+                // 카메라도 끌 수 있다 — 무대에서 빠진다.
+                timeline.ToggleRoleMuted(camera);
+                Assert.Equal(0f, window.Viewport.CurrentPose()!.GetState(pan).AnchoredPosition.X, 2);
+                Assert.Equal(0.5f, window.Viewport.OpacityOf("s2"), 2); // b는 그대로
+                timeline.ToggleRoleMuted(camera);
+                Assert.Equal(50f, window.Viewport.CurrentPose()!.GetState(pan).AnchoredPosition.X, 2);
+
+                // 층 — 값이 틀리면 문제 칸이 알린다.
+                timeline.PlaceState(0, new ClipBlock { Kind = ClipBlockKind.Layer, Layer = SceneLayers.Close }, 0.25);
+                Assert.Equal(0, window.ProblemRowsShown);
+                window.UpdateSelectedClipBlock(b => b.Layer = "nowhere");
+                Assert.Equal(1, window.ProblemRowsShown);
+                editor.Undo();
+                Assert.Equal(0, window.ProblemRowsShown);
+
+                // 모션으로 갔다 와도 무대는 다시 선다.
+                window.SelectMotion("nod");
+                Assert.Equal(1f, window.Viewport.OpacityOf("s2"), 2); // 모션 층에서는 씬의 보이기
+                window.SelectClip("clip");
+                window.Viewport.ScrubTo(1.0);
+                Assert.Equal(0f, window.Viewport.OpacityOf("s2"), 2);
             }
             finally
             {
