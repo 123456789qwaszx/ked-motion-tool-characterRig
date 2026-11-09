@@ -16,7 +16,7 @@ namespace Mt.Authoring.Editing;
 /// 편집 중 자연스러운 중간 상태다. 어긋남은 <c>MotionValidator</c>가 계속 알리고, 내보내기만 막는다.
 /// 단 하나, 키 목록의 시각 오름차순은 편집기가 지킨다(그래프가 그것을 전제한다).
 /// </summary>
-public sealed class MotionEditor
+public sealed partial class MotionEditor
 {
     private const int MaxHistory = 200;
 
@@ -147,7 +147,12 @@ public sealed class MotionEditor
             throw new InvalidOperationException($"오브젝트 '{newId}'가 이미 있다.");
         }
 
-        Mutate(MotionChangeKind.Scene, () => o.Id = newId);
+        // 이 오브젝트에 묶인 클립 배역도 같은 칸에서 따라온다 — 이름만 바꿨는데 묶임이 끊기지 않게.
+        Mutate(MotionChangeKind.Scene, () =>
+        {
+            o.Id = newId;
+            RetargetClipObjects(scene, id, newId);
+        });
     }
 
     /// <summary>
@@ -421,6 +426,7 @@ public sealed class MotionEditor
         bool active = Document.ActiveScene == scene.Name;
         Mutate(MotionChangeKind.Scene, () =>
         {
+            RetargetClipScenes(name, newName);
             scene.Name = newName;
 
             if (active)
@@ -506,7 +512,12 @@ public sealed class MotionEditor
             throw new InvalidOperationException($"모션 '{newName}'이 이미 있다.");
         }
 
-        Mutate(MotionChangeKind.Metadata, () => motion.Name = newName);
+        // 이 모션을 쓰는 클립 블록의 참조도 같은 칸에서 따라온다.
+        Mutate(MotionChangeKind.Metadata, () =>
+        {
+            motion.Name = newName;
+            RetargetClipMotions(name, newName);
+        });
     }
 
     /// <summary>
@@ -1393,6 +1404,9 @@ public enum MotionChangeKind
 
     /// <summary>리그 덤프·기준 해상도·미리보기 설정.</summary>
     Document,
+
+    /// <summary>연출 클립 — 클립·배역·트랙·블록(<c>PLAN-clip.md</c>). 모션의 키는 그대로다.</summary>
+    Clip,
 }
 
 public sealed class MotionChangedEventArgs : EventArgs

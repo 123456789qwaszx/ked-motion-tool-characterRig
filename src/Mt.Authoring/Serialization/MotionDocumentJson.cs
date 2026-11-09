@@ -67,6 +67,17 @@ public static class MotionDocumentJson
 
         document.EnsureDefaultScene();
 
+        foreach (ClipAsset clip in document.Clips)
+        {
+            clip.Roles ??= new List<ClipRole>();
+            clip.Tracks ??= new List<ClipTrack>();
+
+            foreach (ClipTrack track in clip.Tracks)
+            {
+                track.Blocks ??= new List<ClipBlock>();
+            }
+        }
+
         foreach (MotionAsset motion in document.Motions)
         {
             motion.Channels ??= new List<ChannelAsset>();

@@ -51,6 +51,24 @@ public sealed class MotionDocument
         ActiveScene ??= Scenes[0].Name;
     }
 
+    /// <summary>
+    /// 연출 클립들(<c>PLAN-clip.md</c>) — 씬 위의 시간표. <c>motions.json</c>에는 안 나간다.
+    /// 저작본에는 <see cref="ClipsOrNull"/>로 실린다: 클립이 없는 문서는 전과 같은 글자다.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public List<ClipAsset> Clips { get; set; } = new();
+
+    /// <summary>저작본의 <c>clips</c> 자리 — 비면 쓰지 않는다. 코드는 <see cref="Clips"/>를 쓴다.</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("clips")]
+    public List<ClipAsset>? ClipsOrNull
+    {
+        get => Clips.Count == 0 ? null : Clips;
+        set => Clips = value ?? new List<ClipAsset>();
+    }
+
+    public ClipAsset? FindClip(string? name)
+        => name is null ? null : Clips.FirstOrDefault(c => string.Equals(c.Name, name, StringComparison.Ordinal));
+
     public MotionAsset? Find(string name)
         => Motions.FirstOrDefault(m => string.Equals(m.Name, name, StringComparison.Ordinal));
 }
