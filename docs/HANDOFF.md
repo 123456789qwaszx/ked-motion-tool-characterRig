@@ -97,7 +97,7 @@ tools/  prefab-to-stage-rig.py(유니티 프리팹 → 무대 뼈대 JSON) · pr
 2. **VnTool 연결(M6 나머지).** VnTool 쪽 `<<motion>>` 자동완성이 `motions.json`의 이름·길이·end 목록만 읽게. 이 툴은 바뀔 것이 없다.
 3. **Windows 휴대용 패키지.** 지금 CI는 Linux 빌드·헤드리스 테스트뿐. VnTool처럼 `publish-windows.ps1` + windows-latest 스모크를 더할 때가 되면 `.github/workflows/test.yml`에 잡을 추가한다.
 4. **알려진 한계(`PLAN-undo.md` §4).** 설정 창·단축키 창은 헤드리스에서 두 번째 창이 멈춰 테스트하지 않는다(08df523). PNG 디코딩도 헤드리스에서 안 된다 — 초상 관련은 자리표시 사각형으로 검증한다.
-5. **v2 범위(짓지 않는다, 발목만 안 잡는다).** 카메라·깊이·shot 채널, 다중 스프라이트 리그, 연출 클립 — `PLAN.md` §8.
+5. **v2 범위.** 연출 클립은 소유자가 확장을 정했다(2026-11-09) — 계획 [`PLAN-clip.md`](PLAN-clip.md), 소유자 확인(K0) 전이라 코드는 아직 없다. 카메라·깊이·shot 채널, 다중 스프라이트 리그는 여전히 짓지 않는다(발목만 안 잡는다) — `PLAN.md` §8.
 
 ## 8. 작업 관습 (소유자와 맞춘 것)
 
