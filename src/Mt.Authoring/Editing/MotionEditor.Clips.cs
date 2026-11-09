@@ -339,6 +339,44 @@ public sealed partial class MotionEditor
         Mutate(MotionChangeKind.Clip, () => block.Motion = motion);
     }
 
+    /// <summary>
+    /// "이 블록만 따로" — 블록의 모션을 복제해 이 블록만 새 모션을 가리키게 한다(되돌리기 한 칸). 모션은 공유 자산이라, 한 블록에서만 다르게 고치려면
+    /// 먼저 떼어 내야 한다. 새 모션의 이름을 돌려준다. 그 모션을 이 블록만 쓰고 있어도 복제한다(원본을 남겨 두려는 뜻일 수 있다).
+    /// </summary>
+    public string MakeClipBlockUnique(string clipName, int track, int index, string newName)
+    {
+        ArgumentNullException.ThrowIfNull(newName);
+        ClipBlock block = RequireBlock(RequireTrack(RequireClip(clipName), track), index);
+
+        if (!block.IsMotion)
+        {
+            throw new InvalidOperationException("상태 블록에는 모션이 없다.");
+        }
+
+        MotionAsset source = Require(block.Motion);
+
+        if (!MotionNames.IsValid(newName))
+        {
+            throw new InvalidOperationException(MotionNames.RuleMessage(newName));
+        }
+
+        if (Document.Find(newName) is not null)
+        {
+            throw new InvalidOperationException($"모션 '{newName}'이 이미 있다.");
+        }
+
+        // 문서의 사본에서 떼어 온다 — 원본과 객체를 나눠 갖지 않는다.
+        MotionAsset copy = Serialization.MotionDocumentJson.Read(Serialization.MotionDocumentJson.Write(Document)).Find(source.Name)!;
+        copy.Name = newName;
+
+        Mutate(MotionChangeKind.Structure, () =>
+        {
+            Document.Motions.Insert(Document.Motions.IndexOf(source) + 1, copy);
+            block.Motion = newName;
+        });
+        return newName;
+    }
+
     public void RemoveClipBlock(string clipName, int track, int index)
     {
         ClipTrack target = RequireTrack(RequireClip(clipName), track);

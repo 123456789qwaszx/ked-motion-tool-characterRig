@@ -26,8 +26,14 @@ public partial class MainWindow
     /// <summary>가운데 아래 탭 — 그래프 · 도프 시트 · 타임라인.</summary>
     private readonly TabControl _editorTabs = new() { Padding = new Avalonia.Thickness(0) };
 
-    private const int GraphTabIndex = 0;
-    private const int TimelineTabIndex = 2;
+    /// <summary>
+    /// 클립 안에서 블록의 모션을 고치는 중일 때 그 블록의 시작 시각 — 그래프·도프 시트의 시각(모션 기준, 0부터)과 뷰포트 시계(클립 시각)의 차.
+    /// 그 밖에는 0.
+    /// </summary>
+    private double _blockOffset;
+
+    /// <summary>테스트 손잡이 — 지금 그래프가 클립의 블록 문맥에서 모션을 고치는 중인가, 그 시각 차.</summary>
+    internal (bool Active, double Offset) BlockContext => (SelectedClip is not null && _graph.MotionName is not null, _blockOffset);
 
     internal ClipTimelineView Timeline => _timeline;
 
@@ -68,13 +74,53 @@ public partial class MainWindow
         });
     }
 
-    private Control BuildTimelineTab()
+    private Control BuildTimeline()
     {
+        _timeline.IsVisible = false;
         _timeline.Viewport = _viewport;
+        _timeline.SelectionChanged += (_, _) => SyncBlockContext();
         _timeline.BlockOpened += (_, at) => Guard("모션 편집", () => OpenClipBlock(at.Track, at.Index));
         _timeline.BakeRequested += (_, track) => Guard("굽기", () => BakeClipActor(track));
         _timeline.SelectionChanged += (_, _) => RefreshClipBlockInspector();
         return _timeline;
+    }
+
+    /// <summary>
+    /// 클립 안에서 고치기(<c>PLAN-clip.md</c> K4b 1단계) — 타임라인에서 고른 모션 블록의 모션을 그래프·도프 시트에 묶는다. 클립은 고른 채로 남고
+    /// 뷰포트는 계속 클립 전체를 보이므로, 커브를 고치면 다른 출연자와 함께 바로 보인다. 그래프의 시각은 모션 기준(0부터)이고
+    /// 뷰포트 시계와는 블록의 시작 시각만큼 어긋난다(<see cref="_blockOffset"/>). 블록을 안 골랐거나 상태 블록이면 그래프는 빈다.
+    /// 문서가 바뀔 때마다 다시 맞춘다 — 블록을 옮기면 시각 차가, 모션을 바꾸면 묶인 모션이 따라간다.
+    /// </summary>
+    private void SyncBlockContext()
+    {
+        if (SelectedClip is null || _viewport.ClipName is null)
+        {
+            return; // 모션 층 — 그래프는 고른 모션의 것이다(BindMotion)
+        }
+
+        ClipBlock? block = CurrentClip is { } clip && _timeline.SelectedBlock is { } at
+            && at.Track < clip.Tracks.Count && at.Index < clip.Tracks[at.Track].Blocks.Count
+                ? clip.Tracks[at.Track].Blocks[at.Index]
+                : null;
+        string? motion = block is { IsMotion: true } && _session.Editor.Document.Find(block.Motion) is not null ? block.Motion : null;
+        _blockOffset = motion is null ? 0 : block!.At;
+
+        if (_graph.MotionName != motion)
+        {
+            _graph.Bind(_session.Editor, motion);
+            _dope.Controllers = _session.ControllersOf(motion is null ? null : _session.Editor.Document.Find(motion)?.Rig);
+            _dope.Bind(_session.Editor, motion);
+            RefreshChannels();
+            RefreshMotionInspector();
+            RefreshKeyInspector();
+        }
+
+        // 시계는 하나다 — 그래프의 현재 시각을 클립 시각에서 블록 시작을 뺀 자리로.
+        SyncTime(() =>
+        {
+            _graph.CurrentTime = _viewport.Time - _blockOffset;
+            _dope.CurrentTime = _viewport.Time - _blockOffset;
+        });
     }
 
     /// <summary>
@@ -173,6 +219,15 @@ public partial class MainWindow
         return panel;
     }
 
+    /// <summary>타임라인은 클립을 고른 동안만 보이고, 높이는 트랙 수를 따른다(여덟 줄까지).</summary>
+    private void RefreshTimelineLayout()
+    {
+        ClipAsset? clip = CurrentClip;
+        _timeline.IsVisible = clip is not null;
+        int rows = Math.Clamp(clip?.Tracks.Count ?? 0, 2, 8);
+        _timeline.Height = ClipTimelineView.RulerHeight + rows * ClipTimelineView.RowHeight + 4;
+    }
+
     private void WithClip(Action<ClipAsset> action)
     {
         if (_refreshing || CurrentClip is not { } clip)
@@ -202,11 +257,7 @@ public partial class MainWindow
             RefreshKeyInspector();
         }
 
-        if (SelectedClip is not null)
-        {
-            _editorTabs.SelectedIndex = TimelineTabIndex;
-        }
-
+        RefreshTimelineLayout();
         RefreshClipInspector();
     }
 
@@ -229,12 +280,7 @@ public partial class MainWindow
             _refreshDepth--;
         }
 
-        // 타임라인을 보다가 모션으로 넘어왔으면 그래프를 보인다 — 타임라인은 클립이 없으면 빈다.
-        if (_editorTabs.SelectedIndex == TimelineTabIndex)
-        {
-            _editorTabs.SelectedIndex = GraphTabIndex;
-        }
-
+        RefreshTimelineLayout();
         RefreshClipInspector();
     }
 
@@ -259,6 +305,9 @@ public partial class MainWindow
         {
             BindMotion(SelectedMotion);
         }
+
+        RefreshTimelineLayout();
+        SyncBlockContext();
 
         RefreshClipInspector();
     }
@@ -338,7 +387,14 @@ public partial class MainWindow
             }
 
             ClipBlock block = clip.Tracks[at.Track].Blocks[at.Index];
-            _clipBlock.Children.Add(new TextBlock { Text = block.IsMotion ? $"모션 · {block.Motion}" : $"상태 · {block.Describe()}", FontSize = 11, FontWeight = FontWeight.SemiBold });
+            int uses = block.IsMotion ? ClipTiming.UsesOf(_session.Editor.Document, block.Motion) : 0;
+            _clipBlock.Children.Add(new TextBlock
+            {
+                Text = !block.IsMotion ? $"상태 · {block.Describe()}" : uses > 1 ? $"모션 · {block.Motion} — {uses}곳에서 쓰인다(고치면 다 바뀐다)" : $"모션 · {block.Motion}",
+                FontSize = 11,
+                FontWeight = FontWeight.SemiBold,
+                TextWrapping = TextWrapping.Wrap,
+            });
             _clipBlock.Children.Add(BlockNumber("시작(초)", block.At, v => b => b.At = v ?? 0f, "블록이 시작하는 시각. 타임라인에서 끌어도 된다"));
 
             if (block.IsMotion)

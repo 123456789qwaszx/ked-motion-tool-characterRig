@@ -221,7 +221,7 @@ public class ClipShellTests
         window.Viewport.SelectedObjectId = "s2";
         window.AddClipRoleFromForm();
         Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-        Assert.Equal(2, window.EditorTab); // 클립을 고르면 타임라인 탭
+        Assert.True(window.Timeline.IsVisible); // 클립을 고르면 그래프 위에 타임라인이 선다
         Assert.True(window.Timeline.Bounds.Width > ClipTimelineView.Gutter + 100, "타임라인이 배치되지 않았다");
         return window.Timeline;
     }
@@ -411,11 +411,11 @@ public class ClipShellTests
                 Assert.Null(window.Viewport.ClipName);
                 Assert.Equal("s2", window.Viewport.SelectedObjectId); // 배역 b를 맡은 오브젝트
                 Assert.Equal(0.25, window.Viewport.Time, 4);
-                Assert.Equal(0, window.EditorTab); // 그래프
+                Assert.False(window.Timeline.IsVisible); // 모션 층에서는 타임라인이 숨는다
 
                 // 클립으로 돌아오면 다시 타임라인이고 블록은 그대로다.
                 window.SelectClip("clip");
-                Assert.Equal(2, window.EditorTab);
+                Assert.True(window.Timeline.IsVisible);
                 Assert.Equal(new[] { ("nod", 0.5f) }, Blocks(window, 1));
             }
             finally
@@ -820,6 +820,142 @@ public class ClipShellTests
                 {
                     File.Delete(export);
                 }
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    // ── K4b 1단계 — 클립 안에서 블록의 모션을 고친다 ──────────────────
+
+    [Fact]
+    public void 블록을_고르면_클립을_떠나지_않고_그래프가_그_모션을_묶고_시각은_블록_시작만큼_어긋난다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                ClipTimelineView timeline = PrepareTimeline(window);
+                MotionEditor editor = window.Session.Editor;
+                timeline.PlaceMotion(0, "bow", 0);
+                timeline.PlaceMotion(1, "nod", 0.5);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+                // 놓은 블록이 골라져 있다 — 그래프가 nod를 묶었고 클립은 그대로다.
+                Assert.Equal((1, 0), timeline.SelectedBlock);
+                Assert.Equal((true, 0.5), window.BlockContext);
+                Assert.Equal("nod", window.Graph.MotionName);
+                Assert.Equal("clip", window.SelectedClip);
+                Assert.Null(window.SelectedMotion);
+                Assert.Equal("clip", window.Viewport.ClipName);
+                Assert.True(window.Timeline.IsVisible);
+
+                // 시계는 하나: 클립 0.8초 = nod의 0.3초. 그래프에서 옮기면 뷰포트가 블록 시작만큼 더해 간다.
+                window.Viewport.ScrubTo(0.8);
+                Assert.Equal(0.3, window.Graph.CurrentTime, 4);
+                window.Graph.CurrentTime = 0.1;
+                Assert.Equal(0.6, window.Viewport.Time, 4);
+
+                // 그래프에서 키를 끼운다 — 모션이 바뀌고, 클립도 시각도 그대로다(고칠 때마다 처음으로 돌아가지 않는다).
+                window.Graph.CurrentTime = 0.15;
+                int keysBefore = editor.Document.Find("nod")!.Channels[0].Y!.Keys.Count;
+                window.Graph.InsertKeyAtCurrentTime();
+                Assert.Equal(keysBefore + 1, editor.Document.Find("nod")!.Channels[0].Y!.Keys.Count);
+                Assert.Equal("clip", window.SelectedClip);
+                Assert.Equal("clip", window.Viewport.ClipName);
+                Assert.Equal(0.65, window.Viewport.Time, 4);
+                Assert.Equal("nod", window.Graph.MotionName);
+                Assert.Equal((1, 0), timeline.SelectedBlock);
+
+                // 키 값을 고치면 뷰포트의 클립 포즈가 바로 따라온다 — 다른 출연자는 제 블록대로 서 있다.
+                window.Viewport.ScrubTo(0.8);
+                Assert.Equal(-18f, MoveYOf(window, "s2"), 2);
+                editor.SetKeys("nod", MoveY, MotionChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -40f), TestDocuments.Key(0.6f, 0f) });
+                Assert.Equal(-40f, MoveYOf(window, "s2"), 2);
+                Assert.Equal(8f, SwayZOf(window, "s1"), 2);
+                Assert.Equal(0.8, window.Viewport.Time, 4);
+
+                // 블록을 옮기면 시각 차가 따라간다.
+                timeline.MoveSelected(1.0);
+                Assert.Equal((true, 1.0), window.BlockContext);
+                window.Viewport.ScrubTo(1.25);
+                Assert.Equal(0.25, window.Graph.CurrentTime, 4);
+
+                // 다른 블록을 고르면 그 모션으로, 빈 곳을 누르면 그래프가 빈다.
+                timeline.Select((0, 0));
+                Assert.Equal("bow", window.Graph.MotionName);
+                Assert.Equal((true, 0.0), window.BlockContext);
+                timeline.Select(null);
+                Assert.Null(window.Graph.MotionName);
+                Assert.Equal("clip", window.SelectedClip);
+
+                // 상태 블록에는 커브가 없다.
+                timeline.PlaceState(0, new ClipBlock { Kind = ClipBlockKind.Visible, Visible = false }, 2);
+                Assert.Null(window.Graph.MotionName);
+
+                // 모션 이름이 바뀌어도 블록을 따라 그래프가 다시 묶인다 — 클립은 그대로다.
+                timeline.Select((1, 0));
+                editor.RenameMotion("nod", "nod_deep");
+                Assert.Equal("nod_deep", window.Graph.MotionName);
+                Assert.Equal("clip", window.SelectedClip);
+                Assert.Null(window.SelectedMotion);
+
+                // 목록에서 모션을 고르면 클립을 떠난다 — 시각 차는 없다.
+                window.SelectMotion("bow");
+                Assert.Null(window.SelectedClip);
+                Assert.Equal((false, 0.0), window.BlockContext);
+                window.Viewport.ScrubTo(0.2);
+                Assert.Equal(0.2, window.Graph.CurrentTime, 4);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void 이_블록만_따로는_모션을_복제해_그_블록만_새_모션을_가리키게_한다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                ClipTimelineView timeline = PrepareTimeline(window);
+                MotionEditor editor = window.Session.Editor;
+                timeline.PlaceMotion(0, "nod", 0);
+                timeline.PlaceMotion(1, "nod", 0.5);
+                Assert.Equal(2, ClipTiming.UsesOf(editor.Document, "nod"));
+
+                long revision = editor.Revision;
+                string? copy = timeline.MakeSelectedUnique();
+                Assert.Equal("nod_clip", copy);
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.Equal(new[] { ("nod", 0f) }, Blocks(window, 0));
+                Assert.Equal(new[] { ("nod_clip", 0.5f) }, Blocks(window, 1));
+                Assert.Equal("nod_clip", window.Graph.MotionName); // 그래프가 새 모션으로 넘어온다
+                Assert.Equal("clip", window.SelectedClip);
+
+                // 이제 이 블록만 다르게 고쳐진다.
+                editor.SetKeys("nod_clip", MoveY, MotionChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -40f), TestDocuments.Key(0.6f, 0f) });
+                window.Viewport.ScrubTo(0.8);
+                Assert.Equal(-40f, MoveYOf(window, "s2"), 2);
+                window.Viewport.ScrubTo(0.3);
+                Assert.Equal(-18f, MoveYOf(window, "s1"), 2);
+
+                editor.Undo(); // 키
+                editor.Undo(); // 따로 떼기
+                Assert.Null(editor.Document.Find("nod_clip"));
+                Assert.Equal(new[] { ("nod", 0.5f) }, Blocks(window, 1));
+                Assert.Equal("nod", window.Graph.MotionName);
             }
             finally
             {

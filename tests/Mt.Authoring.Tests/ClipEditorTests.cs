@@ -319,4 +319,31 @@ public class ClipEditorTests
         editor.Undo();
         Assert.Single(editor.Document.Clips);
     }
+
+    [Fact]
+    public void 이_블록만_따로는_모션을_복제하고_그_블록만_옮긴다()
+    {
+        MotionEditor editor = NewGreet();
+        editor.AddClipBlock("greet", 0, "nod", 2f); // nod를 두 곳에서 쓴다
+        Assert.Equal(2, ClipTiming.UsesOf(editor.Document, "nod"));
+        Assert.Equal(1, ClipTiming.UsesOf(editor.Document, "bow"));
+
+        Assert.Equal("nod_b", editor.MakeClipBlockUnique("greet", 1, 0, "nod_b"));
+        Assert.Equal("nod_b", Greet(editor).Tracks[1].Blocks[0].Motion);
+        Assert.Equal("nod", Greet(editor).Tracks[0].Blocks[1].Motion);
+        Assert.Equal(new[] { "nod", "nod_b", "bow" }, editor.Document.Motions.Select(m => m.Name)); // 원본 바로 뒤
+        MotionAsset copy = editor.Document.Find("nod_b")!;
+        Assert.NotSame(editor.Document.Find("nod"), copy);
+        Assert.Equal((0.5f, MotionEnd.Restore, "character"), (copy.Duration, copy.End, copy.Rig));
+        Assert.Equal((1, 1), (ClipTiming.UsesOf(editor.Document, "nod"), ClipTiming.UsesOf(editor.Document, "nod_b")));
+
+        long revision = editor.Revision;
+        Assert.Throws<InvalidOperationException>(() => editor.MakeClipBlockUnique("greet", 1, 0, "bow"));
+        Assert.Throws<InvalidOperationException>(() => editor.MakeClipBlockUnique("greet", 1, 0, "Bad"));
+        Assert.Equal(revision, editor.Revision);
+
+        editor.Undo();
+        Assert.Null(editor.Document.Find("nod_b"));
+        Assert.Equal("nod", Greet(editor).Tracks[1].Blocks[0].Motion);
+    }
 }

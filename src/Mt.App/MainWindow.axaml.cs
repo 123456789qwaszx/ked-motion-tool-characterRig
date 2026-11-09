@@ -228,14 +228,15 @@ public partial class MainWindow : Window
             _currentTime.Text = TimeText.Format(_graph.CurrentTime, Display);
             SyncTime(() =>
             {
-                _viewport.ScrubTo(_graph.CurrentTime);
+                // 그래프·도프 시트는 모션의 시각, 뷰포트는 시계의 시각 — 클립 안에서 블록의 모션을 고칠 때는 블록의 시작만큼 어긋난다.
+                _viewport.ScrubTo(_graph.CurrentTime + _blockOffset);
                 _dope.CurrentTime = _graph.CurrentTime;
             });
         };
         _dope.CurrentTimeChanged += (_, _) => SyncTime(() =>
         {
             _graph.CurrentTime = _dope.CurrentTime;
-            _viewport.ScrubTo(_dope.CurrentTime);
+            _viewport.ScrubTo(_dope.CurrentTime + _blockOffset);
         });
         _graph.CurvesChanged += (_, _) =>
         {
@@ -246,8 +247,8 @@ public partial class MainWindow : Window
         {
             SyncTime(() =>
             {
-                _graph.CurrentTime = _viewport.Time;
-                _dope.CurrentTime = _viewport.Time;
+                _graph.CurrentTime = _viewport.Time - _blockOffset;
+                _dope.CurrentTime = _viewport.Time - _blockOffset;
             });
             RefreshChannelBox();
             RefreshCameraPanel();
@@ -921,10 +922,16 @@ public partial class MainWindow : Window
         {
             new TabItem { Header = "그래프", Content = BuildGraphTab(), FontSize = 12 },
             new TabItem { Header = "도프 시트", Content = _dope, FontSize = 12 },
-            new TabItem { Header = "타임라인", Content = BuildTimelineTab(), FontSize = 12 },
         };
-        Grid.SetRow(_editorTabs, 2);
-        grid.Children.Add(_editorTabs);
+
+        // 타임라인은 탭이 아니라 그래프·도프 시트 **위**에 선다(클립을 고른 동안만) — 블록을 고르면 바로 아래에서 그 모션의 커브를 고친다.
+        var editors = new DockPanel();
+        Control timeline = BuildTimeline();
+        DockPanel.SetDock(timeline, Dock.Top);
+        editors.Children.Add(timeline);
+        editors.Children.Add(_editorTabs);
+        Grid.SetRow(editors, 2);
+        grid.Children.Add(editors);
         return grid;
     }
 
@@ -1596,6 +1603,8 @@ public partial class MainWindow : Window
 
         _timeSlider.Bind(_session.Editor, name);
         _timeline.Bind(_session.Editor);
+        _blockOffset = 0;
+        SyncBlockContext(); // 클립을 보는 중이면 고른 블록의 모션을 그래프에 다시 묶는다
         RefreshSelectedNode();
     }
 
@@ -1938,7 +1947,12 @@ public partial class MainWindow : Window
             if (text != m.Name)
             {
                 _session.Editor.RenameMotion(m.Name, text);
-                _motionList.SelectedItem = text;
+
+                // 클립 안에서 블록의 모션 이름을 바꾼 것이면 목록에서 고르지 않는다 — 고르면 클립이 풀린다(블록의 참조는 편집기가 따라 바꿨다).
+                if (SelectedClip is null)
+                {
+                    _motionList.SelectedItem = text;
+                }
             }
         }));
         OnCommit(_motionDuration, text => WithMotion(m => { if (TryFloat(text, out float v) && v != m.Duration) _session.Editor.SetDuration(m.Name, v); }));
@@ -2120,7 +2134,8 @@ public partial class MainWindow : Window
         "도프 시트\n" +
         "  블록 드래그  시간 이동      Alt+드래그  복제      범위 띠 양끝  시간 스케일      더블클릭  키      노드 행 클릭  접기\n\n" +
         "타임라인 (연출 클립 — 왼쪽 '클립'에서 고른다)\n" +
-        "  LMB  블록 선택 · 빈 곳/눈금자 스크럽      블록 드래그(LMB·MMB)  이동(가로 시각 · 세로 트랙)      더블클릭  그 모션 열기\n" +
+        "  LMB  블록 선택(아래 그래프가 그 모션을 묶는다 — 클립 안에서 바로 고친다) · 빈 곳/눈금자 스크럽\n" +
+        "  블록 드래그(LMB·MMB)  이동(가로 시각 · 세로 트랙)      더블클릭  그 모션만 열기(클립을 떠난다)\n" +
         "  우클릭  모션 놓기 · 상태 놓기(보이기·자리·층·오프셋) · 카메라 트랙 · 상대값/절대값 · 배역 끄기 · 새 모션으로 굽기 · 트랙 추가/삭제      Ctrl+D  이어서 한 번 더      Del  삭제\n" +
         "  줄 머리 🔊  그 배역 끄기/켜기(미리보기에서만 빠진다)\n\n" +
         "타임 슬라이더\n" +
@@ -2933,7 +2948,8 @@ public partial class MainWindow : Window
 
         try
         {
-            string? selected = SelectedMotion ?? _graph.MotionName;
+            // 클립 안에서 블록의 모션을 고치는 중이면 그래프의 모션은 "고른 모션"이 아니다 — 목록에서 골라 주지 않는다(고르면 클립이 풀린다).
+            string? selected = SelectedMotion ?? (SelectedClip is null ? _graph.MotionName : null);
             // rigKind로 묶어 보인다(모션의 주인은 rigKind) — 같은 리그끼리 이름순.
             List<string> names = _session.Editor.Document.Motions
                 .OrderBy(m => m.Rig, StringComparer.Ordinal).ThenBy(m => m.Name, StringComparer.Ordinal)
@@ -2951,7 +2967,7 @@ public partial class MainWindow : Window
             int index = selected is null ? -1 : names.IndexOf(selected);
             _motionList.SelectedIndex = index;
 
-            if (index < 0 && _graph.MotionName is not null)
+            if (index < 0 && _graph.MotionName is not null && SelectedClip is null)
             {
                 BindMotion(null);
             }

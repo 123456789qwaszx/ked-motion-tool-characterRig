@@ -155,6 +155,13 @@ public static class ClipTiming
     /// <summary>블록이 끝나는 시각.</summary>
     public static float EndOf(MotionDocument document, ClipBlock block) => block.At + LengthOf(document, block);
 
+    /// <summary>그 모션을 가리키는 블록의 수 — 문서의 모든 클립에서. 모션은 공유 자산이라 하나를 고치면 이만큼이 같이 바뀐다.</summary>
+    public static int UsesOf(MotionDocument document, string motion)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        return document.Clips.SelectMany(c => c.Tracks).SelectMany(t => t.Blocks).Count(b => b.IsMotion && string.Equals(b.Motion, motion, StringComparison.Ordinal));
+    }
+
     /// <summary>마지막 블록의 끝. 블록이 없으면 0.</summary>
     public static float EndOfBlocks(MotionDocument document, ClipAsset clip)
     {

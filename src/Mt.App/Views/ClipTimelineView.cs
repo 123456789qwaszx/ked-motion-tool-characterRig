@@ -334,6 +334,22 @@ public sealed class ClipTimelineView : Control
         Select((s.Track, index));
     }
 
+    /// <summary>
+    /// 고른 블록의 모션을 복제해 이 블록만 새 모션을 가리키게 한다 — 이름은 <c>모션_클립</c>(겹치면 _2…). 선택은 그대로다.
+    /// </summary>
+    public string? MakeSelectedUnique()
+    {
+        if (_editor is null || ShownClip is not { } clip || _selected is not { } s || Resolve(s) is not { IsMotion: true } block)
+        {
+            return null;
+        }
+
+        string name = MotionNames.Unique(_editor.Document, MotionNames.Sanitize($"{block.Motion}_{clip.Name}"));
+        _editor.MakeClipBlockUnique(clip.Name, s.Track, s.Index, name);
+        SelectionChanged?.Invoke(this, EventArgs.Empty); // 같은 블록이지만 가리키는 모션이 바뀌었다
+        return name;
+    }
+
     public void SetSelectedMode(MotionChannelMode mode)
     {
         if (_editor is null || ShownClip is not { } clip || _selected is not { } s)
@@ -548,7 +564,9 @@ public sealed class ClipTimelineView : Control
                 menu.Items.Add(Item((block.Mode == MotionChannelMode.Relative ? "● " : "○ ") + "상대값(relative)", () => SetSelectedMode(MotionChannelMode.Relative)));
                 menu.Items.Add(Item((block.Mode == MotionChannelMode.Absolute ? "● " : "○ ") + "절대값(absolute)", () => SetSelectedMode(MotionChannelMode.Absolute)));
                 menu.Items.Add(new Separator());
-                menu.Items.Add(Item("모션 편집 (더블클릭)", () => BlockOpened?.Invoke(this, h)));
+                int uses = ClipTiming.UsesOf(_editor.Document, block.Motion);
+                menu.Items.Add(Item(uses > 1 ? $"이 블록만 따로 (모션 복제 — 지금 {uses}곳에서 쓰인다)" : "이 블록만 따로 (모션 복제)", () => MakeSelectedUnique()));
+                menu.Items.Add(Item("모션만 열기 (더블클릭)", () => BlockOpened?.Invoke(this, h)));
             }
 
             menu.Items.Add(Item("이어서 한 번 더 (Ctrl+D)", DuplicateSelected));
