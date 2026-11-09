@@ -142,11 +142,23 @@ public sealed partial class MotionEditor
 
     // ── 트랙 ──────────────────────────────────────────────────────────
 
-    /// <summary>배역의 트랙을 끝에 더하고 그 번호를 돌려준다.</summary>
+    /// <summary>배역의 트랙을 끝에 더하고 그 번호를 돌려준다. <see cref="ClipTrack.CameraRole"/>이면 카메라 트랙이다(하나뿐).</summary>
     public int AddClipTrack(string clipName, string role)
     {
         ClipAsset clip = RequireClip(clipName);
-        RequireRole(clip, role);
+
+        if (string.Equals(role, ClipTrack.CameraRole, StringComparison.Ordinal))
+        {
+            if (clip.Tracks.Any(t => t.IsCamera))
+            {
+                throw new InvalidOperationException($"클립 '{clip.Name}'에 카메라 트랙이 이미 있다.");
+            }
+        }
+        else
+        {
+            RequireRole(clip, role);
+        }
+
         Mutate(MotionChangeKind.Clip, () => clip.Tracks.Add(new ClipTrack { Role = role }));
         return clip.Tracks.Count - 1;
     }
@@ -169,10 +181,89 @@ public sealed partial class MotionEditor
     {
         ClipAsset clip = RequireClip(clipName);
         ClipTrack target = RequireTrack(clip, track);
+
+        if (target.IsCamera)
+        {
+            throw new InvalidOperationException("카메라 트랙에는 카메라 블록만 놓는다.");
+        }
+
         MotionAsset source = Require(motion);
         var block = new ClipBlock { At = ClampAt(at), Motion = motion, Mode = mode ?? source.PreviewMode };
         Mutate(MotionChangeKind.Clip, () => Insert(target, block));
         return target.Blocks.IndexOf(block);
+    }
+
+    /// <summary>
+    /// 상태 블록을 놓고 트랙 안 번호를 돌려준다(<c>PLAN-clip.md</c> K5). 값은 사본으로 들어간다. 카메라 블록은 카메라 트랙에만, 나머지는 배역 트랙에만 —
+    /// 줄에 안 맞는 종류는 여기서 막는다(놓을 자리가 없다). 값의 옳고 그름(모르는 층·지점)은 검증이 알린다.
+    /// </summary>
+    public int AddClipStateBlock(string clipName, int track, ClipBlock state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ClipAsset clip = RequireClip(clipName);
+        ClipTrack target = RequireTrack(clip, track);
+        ClipBlock block = NormalizeState(target, state);
+        Mutate(MotionChangeKind.Clip, () => Insert(target, block));
+        return target.Blocks.IndexOf(block);
+    }
+
+    /// <summary>
+    /// 블록의 값을 통째로 바꾼다(인스펙터) — 종류는 못 바꾼다. 시작 시각이 바뀌면 시각 순 자리로 옮겨지고 새 번호를 돌려준다.
+    /// </summary>
+    public int UpdateClipBlock(string clipName, int track, int index, ClipBlock value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        ClipTrack target = RequireTrack(RequireClip(clipName), track);
+        ClipBlock block = RequireBlock(target, index);
+
+        if (value.Kind != block.Kind)
+        {
+            throw new InvalidOperationException("블록의 종류는 바꿀 수 없다 — 지우고 새로 놓는다.");
+        }
+
+        ClipBlock next;
+
+        if (block.IsMotion)
+        {
+            Require(value.Motion);
+            next = new ClipBlock { At = ClampAt(value.At), Motion = value.Motion, Mode = value.Mode };
+        }
+        else
+        {
+            next = NormalizeState(target, value);
+        }
+
+        Mutate(MotionChangeKind.Clip, () =>
+        {
+            target.Blocks.Remove(block);
+            Insert(target, next);
+        });
+        return target.Blocks.IndexOf(next);
+    }
+
+    private static ClipBlock NormalizeState(ClipTrack track, ClipBlock state)
+    {
+        if (state.IsMotion)
+        {
+            throw new InvalidOperationException("모션 블록은 AddClipBlock으로 놓는다.");
+        }
+
+        if (track.IsCamera != (state.Kind == ClipBlockKind.Camera))
+        {
+            throw new InvalidOperationException(track.IsCamera ? "카메라 트랙에는 카메라 블록만 놓는다." : "카메라 블록은 카메라 트랙에만 놓는다.");
+        }
+
+        if (state.Duration is { } d && (!float.IsFinite(d) || d < 0f))
+        {
+            throw new InvalidOperationException($"블록의 길이는 0 이상의 수다 ('{d}')");
+        }
+
+        ClipBlock block = state.Clone();
+        block.At = ClampAt(state.At);
+        block.Motion = "";
+        block.Mode = MotionChannelMode.Relative;
+        block.Duration = state.Duration is > 0f ? state.Duration : null; // 0과 빈 칸은 같은 뜻 — 한 가지로 적는다
+        return block;
     }
 
     /// <summary>
@@ -185,6 +276,16 @@ public sealed partial class MotionEditor
         ClipBlock block = RequireBlock(from, index);
         int destinationIndex = toTrack ?? track;
         ClipTrack to = RequireTrack(clip, destinationIndex);
+
+        if (!block.IsMotion && to.IsCamera != from.IsCamera)
+        {
+            throw new InvalidOperationException("상태 블록은 카메라 트랙과 배역 트랙 사이를 오갈 수 없다.");
+        }
+
+        if (block.IsMotion && to.IsCamera)
+        {
+            throw new InvalidOperationException("카메라 트랙에는 카메라 블록만 놓는다.");
+        }
 
         Mutate(MotionChangeKind.Clip, () =>
         {
@@ -199,6 +300,12 @@ public sealed partial class MotionEditor
     public void SetClipBlockMode(string clipName, int track, int index, MotionChannelMode mode)
     {
         ClipBlock block = RequireBlock(RequireTrack(RequireClip(clipName), track), index);
+
+        if (!block.IsMotion)
+        {
+            throw new InvalidOperationException("상태 블록에는 재생 기준이 없다.");
+        }
+
         Mutate(MotionChangeKind.Clip, () => block.Mode = mode);
     }
 
@@ -206,6 +313,12 @@ public sealed partial class MotionEditor
     public void SetClipBlockMotion(string clipName, int track, int index, string motion)
     {
         ClipBlock block = RequireBlock(RequireTrack(RequireClip(clipName), track), index);
+
+        if (!block.IsMotion)
+        {
+            throw new InvalidOperationException("상태 블록에는 모션이 없다.");
+        }
+
         Require(motion);
         Mutate(MotionChangeKind.Clip, () => block.Motion = motion);
     }
@@ -223,7 +336,7 @@ public sealed partial class MotionEditor
     {
         foreach (ClipBlock block in Document.Clips.SelectMany(c => c.Tracks).SelectMany(t => t.Blocks))
         {
-            if (string.Equals(block.Motion, name, StringComparison.Ordinal))
+            if (block.IsMotion && string.Equals(block.Motion, name, StringComparison.Ordinal))
             {
                 block.Motion = newName;
             }

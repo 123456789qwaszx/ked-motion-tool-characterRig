@@ -81,7 +81,8 @@ public static class ClipPreview
                 continue;
             }
 
-            if (document.Find(block.Motion) is not { } motion || ObjectOf(document, clip, track) is not { } target)
+            // 상태 블록은 여기서 얹지 않는다 — 무대(ClipStage)가 먼저 세우고 모션은 그 위에 얹힌다.
+            if (!block.IsMotion || document.Find(block.Motion) is not { } motion || ObjectOf(document, clip, track) is not { } target)
             {
                 continue;
             }
