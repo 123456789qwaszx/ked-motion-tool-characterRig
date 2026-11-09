@@ -560,6 +560,16 @@ public sealed class ClipTimelineView : Control
             CameraSettings camera = _viewport?.Scene?.Camera ?? new CameraSettings();
             menu.Items.Add(Item($"카메라 놓기 ({TimeText.Format(SnapTime(at), TimeDisplay)})", () =>
                 PlaceState(cameraTrack, new ClipBlock { Kind = ClipBlockKind.Camera, Duration = DefaultStateDuration, Zoom = camera.Zoom, PanX = camera.PanX, PanY = camera.PanY }, at)));
+            var cameraMotions = new MenuItem { Header = $"카메라 모션 놓기 ({TimeText.Format(SnapTime(at), TimeDisplay)})", FontSize = 11 };
+
+            foreach (MotionAsset motion in _editor.Document.Motions.Where(Mt.Authoring.Preview.CameraRig.IsCamera).OrderBy(m => m.Name, StringComparer.Ordinal))
+            {
+                string name = motion.Name;
+                cameraMotions.Items.Add(Item($"{name}  ·  {motion.Duration:0.###}s", () => PlaceMotion(cameraTrack, name, at)));
+            }
+
+            cameraMotions.IsEnabled = cameraMotions.Items.Count > 0;
+            menu.Items.Add(cameraMotions);
             menu.Items.Add(new Separator());
             bool muted = _viewport?.IsClipRoleMuted(ClipTrack.CameraRole) == true;
             menu.Items.Add(Item(muted ? "카메라 켜기" : "카메라 끄기", () => ToggleRoleMuted(cameraTrack)));
@@ -714,7 +724,9 @@ public sealed class ClipTimelineView : Control
                 Rect rect = BlockRect(t, i);
                 IBrush fill = !block.IsMotion
                     ? (track.IsCamera ? CameraBrush : roleIndex < 0 ? MissingBrush : StateBrush)
-                    : motion is null || roleIndex < 0 ? MissingBrush : RoleBrushes[roleIndex % RoleBrushes.Length];
+                    : motion is null ? MissingBrush
+                    : track.IsCamera ? CameraBrush
+                    : roleIndex < 0 ? MissingBrush : RoleBrushes[roleIndex % RoleBrushes.Length];
                 Pen? pen = _selected == (t, i) ? SelectedPen : overlapping.Contains((t, i)) ? OverlapPen : null;
                 context.DrawRectangle(fill, pen, rect, 3, 3);
 

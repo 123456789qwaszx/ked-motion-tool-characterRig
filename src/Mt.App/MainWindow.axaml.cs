@@ -250,6 +250,7 @@ public partial class MainWindow : Window
                 _dope.CurrentTime = _viewport.Time;
             });
             RefreshChannelBox();
+            RefreshCameraPanel();
         };
         _viewport.PlayStateChanged += (_, _) => _playButton.Content = _viewport.IsPlaying ? "❚❚" : "▶";
 
@@ -1741,6 +1742,10 @@ public partial class MainWindow : Window
             Children = { addMotionButton, SmallButton("모션 삭제", (_, _) => Guard("모션 삭제", RemoveMotion)) },
         });
 
+        Button addCameraButton = SmallButton("카메라 모션 추가", (_, _) => Guard("카메라 모션 추가", () => AddCameraMotion()));
+        ToolTip.SetTip(addCameraButton, "카메라(zoom·pan)를 키와 커브로 움직이는 모션 — 이름 camera, camera_2…, 길이 1초, 유지·절대값. 지금 씬 카메라 값으로 처음·끝 키가 선다. 오른쪽 '모션' 탭의 카메라 칸에 값을 넣으면 그 시각에 키, 커브는 그래프에서. 클립의 카메라 트랙에 놓는다. motions.json에는 나가지 않는다");
+        LeftPanel.Children.Add(addCameraButton);
+
         Button addPresetButton = SmallButton("프리셋에서 추가", (_, _) => Guard("프리셋에서 추가", () => AddPreset()));
         ToolTip.SetTip(addPresetButton, "컨트롤러 표 위에 지은 연기 9종(끄덕·젓기·깡충·움찔·떨림·숙임·바운스·호흡·돌아서기)을 선택 오브젝트의 리그로 더한다 — 이름은 id(겹치면 id_2…). 표가 없는 리그는 안 된다");
         _presetCombo.SelectionChanged += (_, _) =>
@@ -1925,6 +1930,8 @@ public partial class MainWindow : Window
         ToolTip.SetTip(_motionEnd, "모션이 끝난 뒤 — 복원(restore) = 시작 자세로 돌아간다 · 유지(commit) = 마지막 키 값이 남는다. 산출물(motions/2)의 end");
         panel.Children.Add(Labeled("재생 기준", _motionDefaultMode));
         ToolTip.SetTip(_motionDefaultMode, "키 값을 어떻게 읽나 — 상대값(relative) = 시작값 + 키(배율은 ×) · 절대값(absolute) = 키 그대로. 뷰포트 미리보기와 매니퓰레이터·채널 박스가 포즈를 키 값으로 바꿀 때 쓴다. 파일에는 안 나간다: 재생은 대본의 <<motion slot 이름 relative|absolute>>가 정한다(생략 = relative)");
+
+        panel.Children.Add(BuildCameraPanel());
 
         OnCommit(_motionName, text => WithMotion(m =>
         {
@@ -2935,7 +2942,7 @@ public partial class MainWindow : Window
             _motionList.ItemTemplate ??= new Avalonia.Controls.Templates.FuncDataTemplate<string>((name, _) =>
             {
                 MotionAsset? motion = _session.Editor.Document.Find(name);
-                bool fits = motion is null || _viewport.SelectedObject is not { } o || _session.Rig is null || ScenePreview.CanWear(_session.Rig, o, motion);
+                bool fits = motion is null || CameraRig.IsCamera(motion) || _viewport.SelectedObject is not { } o || _session.Rig is null || ScenePreview.CanWear(_session.Rig, o, motion);
                 var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Opacity = string.IsNullOrEmpty(name) ? 0.6 : fits ? 1 : 0.5 };
                 row.Children.Add(new TextBlock { Text = string.IsNullOrEmpty(name) ? "(이름 없음 — 아래 문제 칸의 '이름 고치기')" : name, FontSize = 11 });
                 row.Children.Add(new TextBlock { Text = motion is null ? "" : motion.Rig + (fits ? "" : " · 안 맞음"), FontSize = 10, Opacity = 0.6, VerticalAlignment = VerticalAlignment.Center });
@@ -3453,6 +3460,7 @@ public partial class MainWindow : Window
         finally
         {
             _refreshDepth--;
+            RefreshCameraPanel();
         }
     }
 

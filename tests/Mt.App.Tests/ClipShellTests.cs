@@ -659,4 +659,172 @@ public class ClipShellTests
             }
         });
     }
+
+    // ── 카메라 모션 — 카메라를 키와 커브로 ────────────────────────────
+
+    private static float ZoomScaleOf(MainWindow window) => window.Viewport.CurrentPose()!.GetState(StageNodes.KeyOf(StageNodes.ZoomRoot)).LocalScale.X;
+
+    private static float PanXOf(MainWindow window) => window.Viewport.CurrentPose()!.GetState(StageNodes.KeyOf(StageNodes.PanRoot)).AnchoredPosition.X;
+
+    [Fact]
+    public void 카메라_모션을_만들어_값_칸으로_키를_놓으면_그래프에_커브가_서고_무대가_움직인다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                Prepare(window);
+                MotionEditor editor = window.Session.Editor;
+                window.InspectorTab = 2; // 모션 탭
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.False(window.CameraBoxes.Visible);
+
+                // 만들기 — 한 칸. 골라지고, 그래프가 그 모션을 묶고, 카메라 칸이 보인다.
+                long revision = editor.Revision;
+                string name = window.AddCameraMotionFromForm();
+                Assert.Equal("camera", name);
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.Equal("camera", window.SelectedMotion);
+                Assert.Equal("camera", window.Graph.MotionName);
+                MotionAsset motion = editor.Document.Find("camera")!;
+                Assert.Equal((CameraRig.RigKind, MotionEnd.Commit, MotionChannelMode.Absolute), (motion.Rig, motion.End, motion.PreviewMode));
+                Assert.Equal(new[] { CameraRig.ZoomNode, CameraRig.PanNode }, motion.Channels.Select(c => c.Node));
+                Assert.True(window.CameraBoxes.Visible);
+                Assert.Equal("0", window.CameraBoxes.Zoom.Text);
+                Assert.Equal(0, window.ProblemRowsShown); // 가짜 리그도 검증을 지난다
+
+                // 끝(1초)에 zoom 4 — 칸에 넣고 Enter: 그 시각의 키 하나, 되돌리기 한 칸.
+                window.Viewport.ScrubTo(1.0);
+                revision = editor.Revision;
+                TextBox zoom = window.CameraBoxes.Zoom;
+                zoom.Focus();
+                zoom.Text = "4";
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal(revision + 1, editor.Revision);
+                List<KeyAsset> keys = editor.Document.Find("camera")!.FindChannel(CameraRig.ZoomNode, MotionChannelKind.Position)!.X!.Keys;
+                Assert.Equal(new[] { (0f, 0f), (1f, 4f) }, keys.Select(k => (k.T, k.V)));
+
+                // 가운데(0.5초)에 pan x 60 — 새 키가 끼어든다.
+                window.Viewport.ScrubTo(0.5);
+                window.Viewport.SetCameraValue(CameraRig.PanNode, Axis.X, 60f);
+                Assert.Equal(3, editor.Document.Find("camera")!.FindChannel(CameraRig.PanNode, MotionChannelKind.Position)!.X!.Keys.Count);
+
+                // 뷰포트: 무대의 카메라 노드가 커브대로 간다. 값 칸도 시각을 따라온다.
+                Assert.Equal(60f, PanXOf(window), 2);
+                Assert.InRange(ZoomScaleOf(window), 1.01f, 1.19f);
+                window.Viewport.ScrubTo(1.0);
+                Assert.Equal(ShotIntentMath.EvaluateCameraScale(4f), ZoomScaleOf(window), 4);
+                Assert.Equal("4", window.CameraBoxes.Zoom.Text);
+                window.Viewport.ScrubTo(0.0);
+                Assert.Equal(1f, ZoomScaleOf(window), 4);
+                Assert.Equal("0", window.CameraBoxes.Zoom.Text);
+
+                // 캐릭터의 포즈는 카메라 모션에 키되지 않는다.
+                revision = editor.Revision;
+                window.Viewport.SetComponent(MoveY, MotionChannelKind.Position, Axis.Y, 40f);
+                window.Viewport.SetKey();
+                Assert.Equal(revision, editor.Revision);
+                Assert.False(window.Viewport.HasPending);
+                Assert.Equal(2, editor.Document.Find("camera")!.Channels.Count);
+
+                // 재생 기준이 상대값이면 씬 카메라와의 차가 키 값이다.
+                editor.SetCamera(null, 2f, 0f, 0f);
+                editor.SetPreviewMode("camera", MotionChannelMode.Relative);
+                window.Viewport.ScrubTo(1.0);
+                window.Viewport.SetCameraValue(CameraRig.ZoomNode, Axis.X, 5f);
+                Assert.Equal(3f, editor.Document.Find("camera")!.FindChannel(CameraRig.ZoomNode, MotionChannelKind.Position)!.X!.Keys[^1].V);
+                Assert.Equal(5f, window.Viewport.CameraValue()!.Zoom, 3);
+
+                // 다른 모션을 고르면 카메라 칸은 숨는다.
+                window.SelectMotion("nod");
+                Assert.False(window.CameraBoxes.Visible);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void 카메라_모션은_클립의_카메라_트랙에_놓여_다른_출연자와_같이_돈다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                Prepare(window);
+                MotionEditor editor = window.Session.Editor;
+                window.AddCameraMotionFromForm();
+                window.Viewport.ScrubTo(1.0);
+                window.Viewport.SetCameraValue(CameraRig.PanNode, Axis.X, 100f); // 0 → 100, 1초
+
+                // 클립: a(s1)·b(s2) + 카메라 트랙.
+                window.AddClipFromForm();
+                window.Viewport.SelectedObjectId = "s1";
+                window.AddClipRoleFromForm();
+                int camera = editor.AddClipTrack("clip", ClipTrack.CameraRole);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                ClipTimelineView timeline = window.Timeline;
+
+                timeline.PlaceMotion(0, "nod", 0);
+                timeline.PlaceMotion(camera, "camera", 0.5); // 메뉴의 "카메라 모션 놓기"와 같은 길
+                Assert.Equal(0, window.ProblemRowsShown);
+                Assert.Equal(1.5, window.Viewport.Clock.Duration, 4);
+
+                window.Viewport.ScrubTo(0.3);
+                Assert.Equal(0f, PanXOf(window), 2);          // 아직
+                Assert.Equal(-18f, MoveYOf(window, "s1"), 2);
+                window.Viewport.ScrubTo(1.5);
+                Assert.Equal(100f, PanXOf(window), 2);        // 끝 — commit이라 남는다
+                Assert.Equal(0f, editor.Document.ActiveSceneAsset!.Camera.PanX); // 씬은 그대로
+
+                // 캐릭터 모션은 카메라 줄에 못 놓는다 — 흔적 없이.
+                long revision = editor.Revision;
+                Assert.Throws<InvalidOperationException>(() => timeline.PlaceMotion(camera, "nod", 0));
+                Assert.Equal(revision, editor.Revision);
+
+                // 카메라 줄을 끄면 무대가 제자리다.
+                timeline.ToggleRoleMuted(camera);
+                Assert.Equal(0f, PanXOf(window), 2);
+                timeline.ToggleRoleMuted(camera);
+
+                // 블록을 더블클릭하면 카메라 모션의 그래프로 들어간다.
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Point block = Center(window, timeline, camera, 0);
+                window.MouseDown(block, MouseButton.Left);
+                window.MouseUp(block, MouseButton.Left);
+                window.MouseDown(block, MouseButton.Left);
+                window.MouseUp(block, MouseButton.Left);
+                Assert.Equal("camera", window.SelectedMotion);
+                Assert.Equal("camera", window.Graph.MotionName);
+                Assert.NotNull(window.Viewport.CameraValue());
+
+                // motions.json에는 캐릭터 모션만 나간다.
+                string export = Path.Combine(Path.GetTempPath(), $"ked-motion-tool-{Guid.NewGuid():N}.json");
+
+                try
+                {
+                    Assert.True(window.Session.Export(export));
+                    string json = File.ReadAllText(export);
+                    Assert.Contains("\"nod\"", json, StringComparison.Ordinal);
+                    Assert.DoesNotContain("Camera_Pan", json, StringComparison.Ordinal);
+                }
+                finally
+                {
+                    File.Delete(export);
+                }
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
 }

@@ -475,7 +475,8 @@ public sealed class ViewportView : Control
     {
         MotionAsset? motion = Motion;
 
-        if (_editor is null || motion is null)
+        // 카메라 모션에는 캐릭터의 포즈를 키하지 않는다 — 카메라 값은 SetCameraValue로.
+        if (_editor is null || motion is null || CameraRig.IsCamera(motion))
         {
             return;
         }
@@ -612,7 +613,7 @@ public sealed class ViewportView : Control
 
         string key = Prefix + node;
 
-        if (_editor is null || motion is null || _template is null || pose is null || !pose.Contains(key) || axes.Count == 0)
+        if (_editor is null || motion is null || CameraRig.IsCamera(motion) || _template is null || pose is null || !pose.Contains(key) || axes.Count == 0)
         {
             return;
         }
@@ -816,6 +817,28 @@ public sealed class ViewportView : Control
         => ShownClip is not null && _clipStage is { } stage
             ? stage.OpacityOf(objectId, _clock.Time)
             : Scene?.Find(objectId) is { Visible: true } ? 1f : 0f;
+
+    /// <summary>카메라 모션을 보는 중일 때 지금 시각의 카메라 값(zoom·pan). 카메라 모션이 아니면 null.</summary>
+    public CameraSettings? CameraValue()
+        => Motion is { } motion && CameraRig.IsCamera(motion) && Scene is { } scene
+            ? CameraRig.Pose(scene.Camera, motion, _clock.Time, motion.PreviewMode, _flags.IsMuted)
+            : null;
+
+    /// <summary>
+    /// 카메라 값을 지금 시각에 키한다(마야 채널 박스에 값을 넣은 것) — 그 성분의 키 하나, 되돌리기 한 칸.
+    /// <paramref name="node"/>는 <see cref="CameraRig.PanNode"/>(x·y) 또는 <see cref="CameraRig.ZoomNode"/>(x). 재생 기준이 상대값이면 씬의 카메라와의 차가 키 값이다.
+    /// </summary>
+    public void SetCameraValue(string node, Axis axis, float value)
+    {
+        if (_editor is null || Motion is not { } motion || !CameraRig.IsCamera(motion) || Scene is not { } scene)
+        {
+            return;
+        }
+
+        float start = node == CameraRig.ZoomNode ? scene.Camera.Zoom : axis == Axis.X ? scene.Camera.PanX : scene.Camera.PanY;
+        float time = (float)Math.Max(0, SnapTime(_clock.Time));
+        _editor.KeyComponents(motion.Name, node, MotionChannelKind.Position, time, new[] { (axis, CameraRig.KeyValueFor(motion.PreviewMode, start, value)) }, DefaultTangent);
+    }
 
     /// <summary>씬으로 세운 시작 상태의 트리(읽기 전용으로 쓴다) — 굽기가 표본을 뜨는 바탕.</summary>
     public RectNodeTree? TemplateTree => _template;
@@ -1128,7 +1151,15 @@ public sealed class ViewportView : Control
         if (_editor is not null && ShownClip is { } clip)
         {
             // 무대(상태 블록)가 먼저 서고 모션이 그 위에 얹힌다.
-            return ClipPreview.Pose(_clipStage?.TreeAt(seconds) ?? _template, _editor.Document, clip, seconds, IsClipTrackMuted);
+            return ClipPreview.Pose(_clipStage?.TreeAt(seconds) ?? _template, _editor.Document, clip, seconds, IsClipTrackMuted, _clipStage?.CameraAt(seconds));
+        }
+
+        // 카메라 모션 — 씬의 카메라 값에 모션을 얹어 무대의 카메라 노드를 다시 세운다. 캐릭터는 시작 상태로 선다.
+        if (CameraRig.IsCamera(motion) && Scene is { } cameraScene)
+        {
+            RectNodeTree tree = _template.Clone();
+            StageShotResponse.Apply(tree, CameraRig.Pose(cameraScene.Camera, motion!, seconds, motion!.PreviewMode, _flags.IsMuted));
+            return tree;
         }
 
         return motion is not null && SelectedObject is { } o && CanWear(o)
@@ -1211,6 +1242,12 @@ public sealed class ViewportView : Control
         DrawObjects(context, pose);
         DrawOutside(context, stage);
         context.DrawRectangle(StagePen, stage);
+        if (CameraRig.IsCamera(motion) && CameraValue() is { } shot)
+        {
+            DrawLabel(context, $"카메라 모션 {motion!.Name} · zoom {shot.Zoom:0.##} · pan {shot.PanX:0.#}, {shot.PanY:0.#}", new Point(stage.X + 8, stage.Y + 6));
+            return;
+        }
+
         if (ShownClip is { } shown)
         {
             DrawLabel(context, $"클립 {shown.Name} · {_clock.Duration:0.###}s · 출연 {shown.Roles.Count}", new Point(stage.X + 8, stage.Y + 6));
@@ -1518,7 +1555,7 @@ public sealed class ViewportView : Control
         }
 
         // 클립 층에서는 포즈를 잡지 않는다 — 오브젝트 고르기만.
-        if (ShownClip is null && TryStartManipulation(position))
+        if (ShownClip is null && !CameraRig.IsCamera(Motion) && TryStartManipulation(position))
         {
             Pause();
             e.Pointer.Capture(this);
@@ -1761,7 +1798,7 @@ public sealed class ViewportView : Control
         RectNodeTree? pose = CurrentPose();
         string key = Prefix + node;
 
-        if (motion is null || pose is null || !pose.Contains(key) || MotionRules.ForbiddenNodes.Contains(node))
+        if (motion is null || CameraRig.IsCamera(motion) || pose is null || !pose.Contains(key) || MotionRules.ForbiddenNodes.Contains(node))
         {
             return;
         }
