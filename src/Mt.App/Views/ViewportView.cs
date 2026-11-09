@@ -57,6 +57,7 @@ public sealed class ViewportView : Control
 
     private MotionEditor? _editor;
     private string? _motionName;
+    private string? _clipName;
     private RigSchemaFile? _rig;
     private DepthTuningFile? _depth;
     private FocusTuningFile? _focus;
@@ -214,8 +215,10 @@ public sealed class ViewportView : Control
 
     // ── 씬·오브젝트 ───────────────────────────────────────────────────
 
-    /// <summary>뷰포트가 보여 주는 씬(문서의 활성 씬).</summary>
-    public SceneAsset? Scene => _editor?.Document.ActiveSceneAsset;
+    /// <summary>뷰포트가 보여 주는 씬 — 문서의 활성 씬. 클립을 보는 중이면 그 클립의 시작 씬.</summary>
+    public SceneAsset? Scene => _editor is null
+        ? null
+        : ShownClip is { } clip ? ClipPreview.SceneOf(_editor.Document, clip) ?? _editor.Document.ActiveSceneAsset : _editor.Document.ActiveSceneAsset;
 
     public IReadOnlyList<SceneObject> SceneObjects => Scene?.Objects ?? (IReadOnlyList<SceneObject>)Array.Empty<SceneObject>();
 
@@ -767,6 +770,11 @@ public sealed class ViewportView : Control
 
     public MotionAsset? Motion => _editor is not null && _motionName is not null ? _editor.Document.Find(_motionName) : null;
 
+    /// <summary>보고 있는 연출 클립의 이름(<see cref="BindClip"/>). 모션을 묶으면 비워진다 — 시간의 주인은 둘 중 하나다.</summary>
+    public string? ClipName => _clipName;
+
+    public ClipAsset? ShownClip => _editor is not null && _clipName is not null ? _editor.Document.FindClip(_clipName) : null;
+
     public bool HasRig => _template is not null;
 
     /// <summary>선택 오브젝트의 초상 종횡비(없으면 자리표시).</summary>
@@ -792,6 +800,7 @@ public sealed class ViewportView : Control
 
         _editor = editor;
         _motionName = motionName;
+        _clipName = null;
 
         if (_editor is not null)
         {
@@ -806,6 +815,21 @@ public sealed class ViewportView : Control
         PlayStateChanged?.Invoke(this, EventArgs.Empty);
         TimeChanged?.Invoke(this, EventArgs.Empty);
         PendingChanged?.Invoke(this, EventArgs.Empty);
+        InvalidateVisual();
+    }
+
+    /// <summary>
+    /// 연출 클립을 본다(<c>PLAN-clip.md</c> K3) — 시계의 길이는 클립 길이, 포즈는 <see cref="ClipPreview.Pose"/>(출연자 전부).
+    /// 모션은 묶이지 않는다: 클립 층에서는 포즈를 잡지 않는다(키는 모션 층에서만) — 매니퓰레이터·축을 그리지 않고 끌기도 받지 않는다.
+    /// </summary>
+    public void BindClip(MotionEditor? editor, string? clipName)
+    {
+        Bind(editor, null);
+        _clipName = clipName;
+        SyncDuration();
+        PickSelectedObject();
+        RebuildTemplate();
+        TimeChanged?.Invoke(this, EventArgs.Empty);
         InvalidateVisual();
     }
 
@@ -908,6 +932,11 @@ public sealed class ViewportView : Control
         if (Motion is { } motion)
         {
             _clock.SetDuration(motion.Duration);
+            RangeChanged?.Invoke(this, EventArgs.Empty);
+        }
+        else if (_editor is not null && ShownClip is { } clip)
+        {
+            _clock.SetDuration(ClipTiming.DurationOf(_editor.Document, clip));
             RangeChanged?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -1032,6 +1061,11 @@ public sealed class ViewportView : Control
             return null;
         }
 
+        if (_editor is not null && ShownClip is { } clip)
+        {
+            return ClipPreview.Pose(_template, _editor.Document, clip, seconds);
+        }
+
         return motion is not null && SelectedObject is { } o && CanWear(o)
             ? ScenePreview.Pose(_template, o, motion, seconds, _flags.IsMuted)
             : _template.Clone();
@@ -1112,6 +1146,12 @@ public sealed class ViewportView : Control
         DrawObjects(context, pose);
         DrawOutside(context, stage);
         context.DrawRectangle(StagePen, stage);
+        if (ShownClip is { } shown)
+        {
+            DrawLabel(context, $"클립 {shown.Name} · {_clock.Duration:0.###}s · 출연 {shown.Roles.Count}", new Point(stage.X + 8, stage.Y + 6));
+            return;
+        }
+
         DrawAxes(context, pose);
         DrawGizmo(context, pose);
 
@@ -1391,7 +1431,8 @@ public sealed class ViewportView : Control
             return;
         }
 
-        if (TryStartManipulation(position))
+        // 클립 층에서는 포즈를 잡지 않는다 — 오브젝트 고르기만.
+        if (ShownClip is null && TryStartManipulation(position))
         {
             Pause();
             e.Pointer.Capture(this);

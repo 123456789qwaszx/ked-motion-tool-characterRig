@@ -568,7 +568,7 @@ public partial class MainWindow : Window
             _showStageSkeleton.IsChecked = _settings.ShowStageSkeleton;
             _collapsedGroups.Clear();
             _collapsedGroups.UnionWith(_settings.CollapsedChannelBoxGroups);
-            _inspectorTabs.SelectedIndex = Math.Clamp(_settings.InspectorTab, 0, 2);
+            _inspectorTabs.SelectedIndex = Math.Clamp(_settings.InspectorTab, 0, 3);
             int autoSaveIndex = Array.IndexOf(AutoSaveMinutes, _settings.AutoSaveMinutes);
             _autoSaveCombo.SelectedIndex = autoSaveIndex < 0 ? 2 : autoSaveIndex;
             _timeDisplayCombo.SelectedIndex = (int)_settings.TimeDisplay;
@@ -1581,7 +1581,17 @@ public partial class MainWindow : Window
         _graph.Bind(_session.Editor, name);
         _dope.Controllers = _session.ControllersOf(name is null ? null : _session.Editor.Document.Find(name)?.Rig);
         _dope.Bind(_session.Editor, name);
-        _viewport.Bind(_session.Editor, name);
+
+        // 모션이 없고 클립을 골랐으면 뷰포트(와 그 시계)는 클립의 것이다 — 그래프·도프 시트·타임 슬라이더의 키 틱은 빈다.
+        if (name is null && SelectedClip is { } clip)
+        {
+            _viewport.BindClip(_session.Editor, clip);
+        }
+        else
+        {
+            _viewport.Bind(_session.Editor, name);
+        }
+
         _timeSlider.Bind(_session.Editor, name);
         RefreshSelectedNode();
     }
@@ -1745,6 +1755,8 @@ public partial class MainWindow : Window
             Spacing = 4,
             Children = { _presetCombo, addPresetButton },
         });
+
+        BuildClipLeft();
     }
 
     /// <summary>
@@ -1758,6 +1770,7 @@ public partial class MainWindow : Window
             new TabItem { Header = "채널 박스", Content = BuildChannelBoxTab(), FontSize = 12 },
             new TabItem { Header = "씬", Content = BuildSceneTab(), FontSize = 12 },
             new TabItem { Header = "모션", Content = BuildMotionTab(), FontSize = 12 },
+            new TabItem { Header = "클립", Content = BuildClipTab(), FontSize = 12 },
         };
         _inspectorTabs.SelectionChanged += (_, _) =>
         {
@@ -2147,6 +2160,7 @@ public partial class MainWindow : Window
     private void OnEditorChanged()
     {
         RefreshMotionList();
+        RefreshClips();
         RefreshMotionInspector();
         RefreshKeyInspector();
         RefreshProblems();
@@ -2891,6 +2905,7 @@ public partial class MainWindow : Window
     private void RefreshAll()
     {
         RefreshMotionList();
+        RefreshClips();
         RefreshChannels();
         RefreshMotionInspector();
         RefreshKeyInspector();
@@ -2942,6 +2957,11 @@ public partial class MainWindow : Window
         if (_refreshing)
         {
             return;
+        }
+
+        if (SelectedMotion is not null)
+        {
+            DeselectClip(); // 시간의 주인은 모션이나 클립 중 하나다
         }
 
         BindMotion(SelectedMotion);
@@ -3452,8 +3472,9 @@ public partial class MainWindow : Window
     private void RefreshProblems()
     {
         IReadOnlyList<MotionProblem> problems = _session.Problems;
+        IReadOnlyList<ClipProblem> clipProblems = ClipValidator.Validate(_session.Editor.Document, _session.RigNodeIds);
         ProblemsPanel.Children.Clear();
-        ProblemsPanel.IsVisible = problems.Count > 0;
+        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count > 0;
 
         foreach (MotionProblem problem in problems)
         {
@@ -3482,6 +3503,11 @@ public partial class MainWindow : Window
             }
 
             ProblemsPanel.Children.Add(row);
+        }
+
+        foreach (ClipProblem problem in clipProblems)
+        {
+            ProblemsPanel.Children.Add(ClipProblemRow(problem));
         }
     }
 
