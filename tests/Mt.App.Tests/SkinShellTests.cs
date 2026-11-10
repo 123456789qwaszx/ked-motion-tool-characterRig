@@ -603,4 +603,82 @@ public class SkinShellTests
             }
         });
     }
+
+    [Fact]
+    public void 리그_편집기에서_노드를_짓고_고치면_뷰포트의_리그가_바로_따라온다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                MotionEditor editor = window.Session.Editor;
+                window.InspectorTab = 4; // 이모지 탭
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+                // 덤프의 리그(캐릭터)는 못 고친다 — 목록이 비고 칸이 잠긴다.
+                Assert.Equal(("character", (string?)null, false), (window.RigEditorState.Rig, window.RigEditorState.Node, window.RigEditorState.Editable));
+                Assert.Empty(window.RigEditorState.Rows);
+                Assert.Null(window.AddRigNodeFromForm(image: true));
+
+                // 새 리그 — 한 칸, 그 리그가 골라지고 노드 Body가 선다.
+                long revision = editor.Revision;
+                Assert.Equal("rig", window.NewRigFromForm());
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.Equal(("rig", "Body", true), (window.RigEditorState.Rig, window.RigEditorState.Node, window.RigEditorState.Editable));
+                Assert.Equal(new[] { "· Body  α" }, window.RigEditorState.Rows);
+
+                // 그림 노드 둘 — 고른 노드 밑에 선다. 목록은 들여쓰기로 계층을 보인다.
+                Assert.Equal("Part1", window.AddRigNodeFromForm(image: true));
+                window.SelectRigNode("Body");
+                Assert.Equal("Part2", window.AddRigNodeFromForm(image: true));
+                Assert.Equal(new[] { "· Body  α", "   ▣ Part1  α", "   ▣ Part2  α" }, window.RigEditorState.Rows);
+
+                // 캐릭터에 붙여 세우면 뷰포트의 리그에 그 노드들이 선다.
+                string id = window.CreateAttachedFromMenu("rig", "s1");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.True(window.Viewport.CurrentPose()!.Contains($"{id}/Part2"));
+
+                // 칸에서 위치·크기를 고친다(Enter) — 한 칸, 뷰포트가 바로 따라온다.
+                window.SelectRigNode("Part2");
+                revision = editor.Revision;
+                window.RigNodeBoxes.X.Focus();
+                window.RigNodeBoxes.X.Text = "40";
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.Equal(40f, editor.Document.FindRig("rig")!.Find("Part2")!.X);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.Equal(40f, window.Viewport.CurrentPose()!.GetState($"{id}/Part2").AnchoredPosition.X, 3);
+
+                // 이름 바꾸기 — 고른 노드가 새 이름을 따라간다.
+                window.RigNodeBoxes.Id.Focus();
+                window.RigNodeBoxes.Id.Text = "Spark";
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal("Spark", window.RigEditorState.Node);
+                Assert.NotNull(editor.Document.FindRig("rig")!.Find("Spark"));
+
+                // 순서와 삭제.
+                window.MoveRigNodeFromForm(-1);
+                Assert.Equal(new[] { "Body", "Spark", "Part1" }, editor.Document.FindRig("rig")!.Nodes.Select(n => n.Id));
+                window.RemoveRigNodeFromForm();
+                Assert.Equal(new[] { "Body", "Part1" }, editor.Document.FindRig("rig")!.Nodes.Select(n => n.Id));
+                Assert.Equal("Body", window.RigEditorState.Node);
+
+                // 리그를 만든 것까지 되돌리면 고른 리그가 풀린다.
+                while (editor.Document.FindRig("rig") is not null)
+                {
+                    editor.Undo();
+                }
+
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.NotEqual("rig", window.RigEditorState.Rig);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
 }

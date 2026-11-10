@@ -81,6 +81,7 @@ public partial class MainWindow
         _rigFields.Children.Add(Labeled("조각 수", _rigPartCount));
         _rigFields.Children.Add(Labeled("조각 크기", _rigPartSize));
         _rigFields.Children.Add(SmallButton("rigs.json…", OnExportRigsClick));
+        BuildRigEditor(_rigFields);
         panel.Children.Add(_rigFields);
         ToolTip.SetTip(_rigPartCount, "이 리그의 조각(그림 노드) 수 — 1번부터 다시 세운다. 가장 조각이 많은 이모지에 맞춘다(안 쓰는 조각은 스킨이 그림을 안 주면 안 그려진다)");
         ToolTip.SetTip(_rigPartSize, "조각 사각형의 한 변(px) — 그림이 이 안에 종횡비로 맞춰진다");
@@ -136,7 +137,7 @@ public partial class MainWindow
     internal (TextBox Count, TextBox Size, bool Editable) RigPartBoxes => (_rigPartCount, _rigPartSize, _rigPartCount.IsEnabled);
 
     /// <summary>지금 다루는 리그 — 고른 이모지의 것, 없으면 고른 오브젝트의 것.</summary>
-    private string? RigInFocus => CurrentEmoji?.Rig ?? _viewport.SelectedObject?.Rig;
+    private string? RigInFocus => _rigPicked is { } picked && _session.Editor.Document.FindRig(picked) is not null ? picked : CurrentEmoji?.Rig ?? _viewport.SelectedObject?.Rig;
 
     private void CommitRigParts()
     {
@@ -174,6 +175,8 @@ public partial class MainWindow
             {
                 _rigPartSize.Text = rig?.Nodes.FirstOrDefault(n => n.Image) is { } part ? part.Width.ToString("0.###", CultureInfo.InvariantCulture) : "";
             }
+
+            RefreshRigEditor();
         }
         finally
         {

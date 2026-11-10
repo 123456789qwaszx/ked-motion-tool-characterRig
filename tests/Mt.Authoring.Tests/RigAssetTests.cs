@@ -167,4 +167,110 @@ public class RigAssetTests
         Assert.Equal(4, exported!["rigs"]![0]!["parts"]!.GetValue<int>());
         Assert.Contains(RigTemplates.EmojiKind, RigSchemaFile.Load(target).RigKinds);
     }
+
+    // ── 리그 편집기(PLAN-parts.md §12) ─────────────────────────────────
+
+    private static string[] Ids(MotionEditor editor, string kind = RigTemplates.EmojiKind) => editor.Document.FindRig(kind)!.Nodes.Select(n => n.Id).ToArray();
+
+    [Fact]
+    public void 노드를_짓고_지우고_옮기면_부모가_늘_자식보다_먼저_온다()
+    {
+        var editor = new MotionEditor(new MotionDocument());
+        editor.AddRig(RigTemplates.Emoji(parts: 2));
+        long revision = editor.Revision;
+
+        // 더하기 — 부모의 식구들 맨 뒤. 그림 노드는 본의 크기와 불투명도를 갖고 선다.
+        RigNodeAsset glow = editor.AddRigNode(RigTemplates.EmojiKind, "Emoji_Glow", "Emoji_Anchor", image: true);
+        Assert.Equal((160f, 160f, true, true), (glow.Width, glow.Height, glow.Image, glow.Alpha));
+        editor.AddRigNode(RigTemplates.EmojiKind, "Emoji_Spark", "Emoji_Glow");
+        editor.AddRigNode(RigTemplates.EmojiKind, "Extra"); // 루트 밑
+        Assert.Equal(revision + 3, editor.Revision);
+        Assert.Equal(new[] { "Emoji_Anchor", "Emoji_Body", "Emoji_Part1", "Emoji_Part2", "Emoji_Glow", "Emoji_Spark", "Extra" }, Ids(editor));
+
+        // 막는 것 — 기록이 안 남는다.
+        revision = editor.Revision;
+        Assert.Throws<InvalidOperationException>(() => editor.AddRigNode(RigTemplates.EmojiKind, "Emoji_Glow"));       // 이미 있다
+        Assert.Throws<InvalidOperationException>(() => editor.AddRigNode(RigTemplates.EmojiKind, "1bad"));
+        Assert.Throws<InvalidOperationException>(() => editor.AddRigNode(RigTemplates.EmojiKind, "a/b"));
+        Assert.Throws<KeyNotFoundException>(() => editor.AddRigNode(RigTemplates.EmojiKind, "X", "Nope"));
+        Assert.Throws<KeyNotFoundException>(() => editor.AddRigNode("character", "X"));                                 // 덤프의 리그는 못 고친다
+        Assert.Throws<InvalidOperationException>(() => editor.SetRigNodeParent(RigTemplates.EmojiKind, "Emoji_Glow", "Emoji_Spark")); // 제 밑으로
+        Assert.Throws<InvalidOperationException>(() => editor.UpdateRigNode(RigTemplates.EmojiKind, "Extra", new RigNodeAsset { Width = -1f }));
+        Assert.Equal(revision, editor.Revision);
+
+        // 형제 사이의 순서 — 식구째 옮긴다. 끝에서는 아무 일도 없다.
+        editor.MoveRigNode(RigTemplates.EmojiKind, "Emoji_Glow", -1);
+        Assert.Equal(new[] { "Emoji_Anchor", "Emoji_Glow", "Emoji_Spark", "Emoji_Body", "Emoji_Part1", "Emoji_Part2", "Extra" }, Ids(editor));
+        editor.MoveRigNode(RigTemplates.EmojiKind, "Emoji_Glow", -1);
+        editor.MoveRigNode(RigTemplates.EmojiKind, "Emoji_Part2", +1);
+        Assert.Equal(revision + 1, editor.Revision);
+        editor.MoveRigNode(RigTemplates.EmojiKind, "Emoji_Anchor", +1);
+        Assert.Equal(new[] { "Extra", "Emoji_Anchor", "Emoji_Glow", "Emoji_Spark", "Emoji_Body", "Emoji_Part1", "Emoji_Part2" }, Ids(editor));
+
+        // 부모 바꾸기 — 식구째, 새 부모의 맨 뒤로. 같은 부모면 무기록.
+        revision = editor.Revision;
+        editor.SetRigNodeParent(RigTemplates.EmojiKind, "Emoji_Glow", "Emoji_Body");
+        editor.SetRigNodeParent(RigTemplates.EmojiKind, "Emoji_Glow", "Emoji_Body");
+        Assert.Equal(revision + 1, editor.Revision);
+        Assert.Equal(new[] { "Extra", "Emoji_Anchor", "Emoji_Body", "Emoji_Part1", "Emoji_Part2", "Emoji_Glow", "Emoji_Spark" }, Ids(editor));
+        Assert.Equal("Emoji_Body", editor.Document.FindRig(RigTemplates.EmojiKind)!.Find("Emoji_Glow")!.Parent);
+        editor.SetRigNodeParent(RigTemplates.EmojiKind, "Emoji_Body", null); // 루트로
+        Assert.Equal(new[] { "Extra", "Emoji_Anchor", "Emoji_Body", "Emoji_Part1", "Emoji_Part2", "Emoji_Glow", "Emoji_Spark" }, Ids(editor));
+        Assert.Equal("", editor.Document.FindRig(RigTemplates.EmojiKind)!.Find("Emoji_Body")!.Parent);
+
+        // 값 — 한 칸, 같은 값은 무기록. 세운 나무에 그대로 선다.
+        revision = editor.Revision;
+        var moved = new RigNodeAsset { X = 30f, Y = -12f, Width = 80f, Height = 40f, Image = true, Alpha = false };
+        editor.UpdateRigNode(RigTemplates.EmojiKind, "Emoji_Glow", moved);
+        editor.UpdateRigNode(RigTemplates.EmojiKind, "Emoji_Glow", moved);
+        Assert.Equal(revision + 1, editor.Revision);
+        RigSchemaFile composed = RigAssets.Compose(Dump, editor.Document);
+        Assert.True(composed.TryGetRig(RigTemplates.EmojiKind, out RigSchemaRigDto dto));
+        RigSchemaNodeDto node = dto.nodes.Single(n => n.id == "Emoji_Glow");
+        Assert.Equal((30f, -12f, 80f, 40f, true, false), (node.anchoredPosition.x, node.anchoredPosition.y, node.sizeDelta.x, node.sizeDelta.y, node.hasImage, node.hasCanvasGroup));
+        Assert.Contains("Emoji_Glow", RigParts.Of(composed, RigTemplates.EmojiKind));
+
+        // 지우기 — 밑의 노드도 함께. 되돌리면 그 자리에 돌아온다.
+        editor.RemoveRigNode(RigTemplates.EmojiKind, "Emoji_Body");
+        Assert.Equal(new[] { "Extra", "Emoji_Anchor" }, Ids(editor));
+        editor.Undo();
+        Assert.Equal(7, Ids(editor).Length);
+        RigAssets.Compose(Dump, editor.Document); // 여전히 세울 수 있다
+    }
+
+    [Fact]
+    public void 노드의_이름을_바꾸면_채널과_스킨과_이모지와_붙는_노드가_따라온다()
+    {
+        var editor = new MotionEditor(new MotionDocument());
+        editor.AddRig(RigTemplates.Emoji(parts: 2));
+        editor.AddSceneObject(null, "e1", RigTemplates.EmojiKind);
+        editor.AddSkin("땀", RigTemplates.EmojiKind);
+        editor.SetSkinPart("땀", "Emoji_Part1", "art/sweat.png");
+        editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f);
+        editor.AddChannel("pop", "Emoji_Part1", MotionChannelKind.Position);
+        editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
+        editor.AddEmoji("sweat", RigTemplates.EmojiKind);
+
+        long revision = editor.Revision;
+        editor.RenameRigNode(RigTemplates.EmojiKind, "Emoji_Part1", "Drop");
+        editor.RenameRigNode(RigTemplates.EmojiKind, "Emoji_Anchor", "Pin");
+        editor.RenameRigNode(RigTemplates.EmojiKind, "Pin", "Pin"); // 같은 이름은 무기록
+        Assert.Equal(revision + 2, editor.Revision);
+
+        Assert.Equal(new[] { "Pin", "Emoji_Body", "Drop", "Emoji_Part2" }, Ids(editor));
+        Assert.Equal("Pin", editor.Document.FindRig(RigTemplates.EmojiKind)!.Find("Emoji_Body")!.Parent);
+        Assert.Equal(new[] { "Drop", "Emoji_Body" }, editor.Document.Find("pop")!.Channels.Select(c => c.Node));
+        Assert.Equal("art/sweat.png", editor.Document.FindSkin("땀")!.Parts["Drop"]);
+        Assert.False(editor.Document.FindSkin("땀")!.Parts.ContainsKey("Emoji_Part1"));
+        Assert.Equal("Pin", editor.Document.FindEmoji("sweat")!.AnchorNode);
+
+        // 이름이 겹치거나 규칙에 안 맞으면 막는다. 되돌리면 전부 함께 돌아온다.
+        Assert.Throws<InvalidOperationException>(() => editor.RenameRigNode(RigTemplates.EmojiKind, "Drop", "Emoji_Body"));
+        Assert.Throws<InvalidOperationException>(() => editor.RenameRigNode(RigTemplates.EmojiKind, "Drop", "물방울"));
+        editor.Undo();
+        editor.Undo();
+        Assert.Equal("Emoji_Part1", editor.Document.Find("pop")!.Channels[0].Node);
+        Assert.Equal("Emoji_Anchor", editor.Document.FindEmoji("sweat")!.AnchorNode);
+        Assert.True(editor.Document.FindSkin("땀")!.Parts.ContainsKey("Emoji_Part1"));
+    }
 }
