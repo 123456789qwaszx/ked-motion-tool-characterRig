@@ -158,6 +158,30 @@ public sealed class DocumentSession
         }).ToList();
     }
 
+    /// <summary>스킨의 조각 그림들 — 조각 노드 id → 파일 경로(없으면 null). 이모지 정의를 미리볼 때 정의의 스킨을 싣는다.</summary>
+    public IReadOnlyList<(string Node, string? Path)> PartImagesOfSkin(string? skinName)
+        => Editor.Document.FindSkin(skinName) is { } skin
+            ? skin.Parts.Select(p =>
+            {
+                string resolved = ResolveFromDocument(p.Value);
+                return (p.Key, File.Exists(resolved) ? resolved : (string?)null);
+            }).ToList()
+            : Array.Empty<(string, string?)>();
+
+    /// <summary>이모지 정의를 <c>emojis.json</c>(초안)으로 내보낸다 — 막는 문제가 있으면 안 나간다.</summary>
+    public bool ExportEmojis(string path)
+    {
+        if (!EmojisJson.TryExport(Editor.Document, RigNodeIds, out string json, out IReadOnlyList<string> problems, Rig?.AlphaNodeIds))
+        {
+            SetStatus($"이모지 내보내기 막힘 — 문제 {problems.Count}건을 먼저 고친다: {problems[0]}");
+            return false;
+        }
+
+        File.WriteAllBytes(path, new System.Text.UTF8Encoding(false).GetBytes(json));
+        SetStatus($"내보냈다: {path} — 이모지 {Editor.Document.Emojis.Count}개 ({EmojisJson.Schema})");
+        return true;
+    }
+
     /// <summary>스킨의 조각 그림을 파일로 정한다 — 경로는 문서 기준 상대로 적힌다. null이면 그 조각을 비운다.</summary>
     public void SetSkinPart(string skin, string node, string? path)
         => Editor.SetSkinPart(skin, node, string.IsNullOrEmpty(path) ? null : RelativeToDocument(path));

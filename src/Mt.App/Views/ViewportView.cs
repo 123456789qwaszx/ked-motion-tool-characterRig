@@ -940,6 +940,45 @@ public sealed class ViewportView : Control
 
     public MotionAsset? Motion => _editor is not null && _motionName is not null ? _editor.Document.Find(_motionName) : null;
 
+    // ── 이모지 정의의 미리보기(PLAN-parts.md §8) ─────────────────────────
+
+    private string? _emojiName;
+
+    /// <summary>보고 있는 이모지 정의의 이름(<see cref="BindEmoji"/>). 모션이나 클립을 묶으면 비워진다 — 시간의 주인은 셋 중 하나다.</summary>
+    public string? EmojiName => _emojiName;
+
+    public EmojiAsset? ShownEmoji => _editor is not null && _emojiName is not null ? _editor.Document.FindEmoji(_emojiName) : null;
+
+    /// <summary>
+    /// 이모지를 연기할 오브젝트 — 고른 오브젝트가 그 리그면 그것, 아니면 씬에서 그 리그의 첫 오브젝트. 없으면 null(미리볼 데가 없다).
+    /// </summary>
+    public SceneObject? EmojiActor
+    {
+        get
+        {
+            if (ShownEmoji is not { } emoji || Scene is not { } scene)
+            {
+                return null;
+            }
+
+            return SelectedObject is { } selected && selected.Rig == emoji.Rig ? selected : scene.Objects.FirstOrDefault(o => o.Rig == emoji.Rig);
+        }
+    }
+
+    /// <summary>
+    /// 이모지 정의를 본다 — 시계의 길이는 수명(등장 + 머묾 + 퇴장), 포즈는 <see cref="EmojiPreview.Pose"/>, 그림은 정의의 스킨.
+    /// 수명 밖에서는 그 오브젝트를 안 그린다. 포즈는 잡지 않는다(키는 모션에서).
+    /// </summary>
+    public void BindEmoji(MotionEditor? editor, string? emojiName)
+    {
+        Bind(editor, null);
+        _emojiName = emojiName;
+        SyncDuration();
+        RebuildTemplate();
+        TimeChanged?.Invoke(this, EventArgs.Empty);
+        InvalidateVisual();
+    }
+
     /// <summary>보고 있는 연출 클립의 이름(<see cref="BindClip"/>). 모션을 묶으면 비워진다 — 시간의 주인은 둘 중 하나다.</summary>
     public string? ClipName => _clipName;
 
@@ -1055,6 +1094,7 @@ public sealed class ViewportView : Control
         _editor = editor;
         _motionName = motionName;
         _clipName = null;
+        _emojiName = null;
         _contextBlock = null;
 
         if (_editor is not null)
@@ -1167,7 +1207,10 @@ public sealed class ViewportView : Control
     {
         ArgumentNullException.ThrowIfNull(o);
 
-        if (_editor?.Document.FindSkin(o.Skin) is not { } skin || !string.Equals(skin.Rig, o.Rig, StringComparison.Ordinal))
+        // 이모지 정의를 보는 중이면 그 오브젝트는 정의의 스킨을 입는다(오브젝트가 입은 것 대신).
+        string? skinName = ShownEmoji is { } emoji && EmojiActor is { } actor && actor.Id == o.Id ? emoji.Skin : o.Skin;
+
+        if (_editor?.Document.FindSkin(skinName) is not { } skin || !string.Equals(skin.Rig, o.Rig, StringComparison.Ordinal))
         {
             return Array.Empty<string>();
         }
@@ -1266,6 +1309,11 @@ public sealed class ViewportView : Control
         else if (_editor is not null && ShownClip is { } clip)
         {
             _clock.SetDuration(ClipTiming.DurationOf(_editor.Document, clip));
+            RangeChanged?.Invoke(this, EventArgs.Empty);
+        }
+        else if (_editor is not null && ShownEmoji is { } emoji)
+        {
+            _clock.SetDuration(EmojiPreview.PhasesOf(_editor.Document, emoji).Total);
             RangeChanged?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -1404,6 +1452,12 @@ public sealed class ViewportView : Control
         {
             // 무대(상태 블록)가 먼저 서고 모션이 그 위에 얹힌다.
             return ClipPreview.Pose(_clipStage?.TreeAt(seconds) ?? _template, _editor.Document, clip, seconds, IsClipTrackMuted, _clipStage?.CameraAt(seconds), null, alphas);
+        }
+
+        // 이모지 정의 — 수명 한 번(등장 → 머묾 → 퇴장)을 그 리그의 오브젝트에 얹는다.
+        if (_editor is not null && ShownEmoji is { } emoji)
+        {
+            return EmojiActor is { } actor ? EmojiPreview.Pose(_template, _editor.Document, emoji, actor, seconds, alphas) : _template.Clone();
         }
 
         // 카메라 모션 — 씬의 카메라 값에 모션을 얹어 무대의 카메라 노드를 다시 세운다. 캐릭터는 시작 상태로 선다.
@@ -1608,6 +1662,15 @@ public sealed class ViewportView : Control
         context.DrawRectangle(StagePen, stage);
         DrawRecentEvents(context, stage);
 
+        if (_editor is not null && ShownEmoji is { } previewed)
+        {
+            EmojiPhases phases = EmojiPreview.PhasesOf(_editor.Document, previewed);
+            string where = EmojiActor is { } on ? on.Id : "이 리그의 오브젝트가 씬에 없다 — 캐릭터를 우클릭해 붙는 리그를 만든다";
+            string phase = _clock.Time <= phases.HoldStart ? "등장" : _clock.Time <= phases.ExitStart ? "머묾" : "퇴장";
+            DrawLabel(context, $"이모지 {previewed.Name} · {where} · 등장 {phases.Enter:0.##}s › 머묾 {phases.Hold:0.##}s{(phases.Staying ? "(끌 때까지 — 미리보기 길이)" : "")} › 퇴장 {phases.Exit:0.##}s · 지금 {phase}", new Point(stage.X + 8, stage.Y + 6));
+            return;
+        }
+
         if (CameraRig.IsCamera(motion) && CameraValue() is { } shot)
         {
             DrawLabel(context, $"카메라 모션 {motion!.Name} · zoom {shot.Zoom:0.##} · pan {shot.PanX:0.#}, {shot.PanY:0.#}", new Point(stage.X + 8, stage.Y + 6));
@@ -1731,9 +1794,12 @@ public sealed class ViewportView : Control
             return;
         }
 
+        // 이모지 정의를 보는 중이면 그 오브젝트는 수명 안에서만 보인다(뜨기 전·사라진 뒤에는 없다).
+        string? emojiActor = _editor is not null && ShownEmoji is { } shownEmoji && !EmojiPreview.IsAlive(_editor.Document, shownEmoji, _clock.Time) ? EmojiActor?.Id : null;
+
         foreach (SceneObject o in scene.DrawOrder())
         {
-            if (!o.Visible)
+            if (!o.Visible || o.Id == emojiActor)
             {
                 continue;
             }
@@ -1997,7 +2063,7 @@ public sealed class ViewportView : Control
         }
 
         // 클립 층에서는 고른 블록 안에서만 포즈를 잡는다(EditMotion). 카메라 모션에는 캐릭터의 포즈를 키하지 않는다.
-        bool canPose = ShownClip is null ? !CameraRig.IsCamera(Motion) : EditMotion is not null && ContextEntry is not null;
+        bool canPose = ShownEmoji is null && (ShownClip is null ? !CameraRig.IsCamera(Motion) : EditMotion is not null && ContextEntry is not null);
 
         if (canPose && TryStartManipulation(position))
         {

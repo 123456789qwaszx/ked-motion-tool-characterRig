@@ -190,6 +190,38 @@ Spine에 없는 이 툴의 방향: **창 없이 도는 명령줄 도구**(검증
 
 ---
 
+## 8. 이모지 정의 — 툴에서 만든다 (소유자, 2026-11-10)
+
+§6은 "정의는 런타임의 데이터 — 툴은 모션만"이라 했다. **바뀌었다**: 스킨(그림)이 툴 안에 섰고 불투명도·이벤트·반복까지 모션으로 들어왔으니,
+그것들을 이모지 하나로 묶는 정의도 여기서 만들고 수명 전체를 미리본다. 정의의 모양이 곧 런타임에 보내는 규약 초안이다.
+
+```
+EmojiAsset                       // 저작본 "emojis": [...] · 산출물 emojis.json (emojis/1-draft)
+  name         "sweat"           // 대본이 부르는 키 — 빈칸 없는 글(한글도 된다)
+  rig          "emoji"
+  skin         "땀"              // 산출물에는 풀어서: "parts": { "Emoji_Part1": "art/sweat.png" }
+  enter        "pop"             // 한 번
+  hold         "bob"             // 머무는 동안 처음부터 되풀이
+  exit         "fade"            // 한 번
+  holdSeconds  1.0               // 없으면 끌 때까지 머문다 → 산출물 "stay": true
+  anchorNode   "Emoji_Anchor"    // 오프셋이 들어가는 노드
+  offset       [120, 300]        // 붙는 자리에서의 px
+  locator      "faceAura"        // 런타임의 기준점 이름 — 툴은 풀지 않고 싣는다
+```
+
+**수명의 뜻(규약 초안).**
+1. 뜬다 — 리그가 캐릭터의 붙는 자리에 서고, `anchorNode`에 `offset`이 들어가고, `parts`의 그림이 붙는다.
+2. `enter`를 한 번 돈다(끝 규칙 그대로 — commit이면 그 자세가 남는다).
+3. `hold`를 **등장이 끝난 자세에서 처음부터** 되풀이한다(바퀴가 쌓이지 않는다 — Spine의 loop). `holdSeconds`가 다하면 그 순간의 자세에서 멈춘다.
+4. `exit`를 한 번 돌고 사라진다.
+5. `holdSeconds`가 없으면(`stay`) 4는 `emoji_off`가 올 때 시작한다 — 이것은 **상태**다(되감기에서 살아 있어야 한다). 있으면 **이벤트**다(끝 상태가 없다).
+
+**모션의 재생 기준.** 툴은 각 모션의 재생 기준(상대값/절대값)으로 미리본다. 이모지 리그는 매번 처음 자세에서 뜨므로 대개 둘이 같다 —
+런타임이 정의에 재생 기준을 따로 받을지는 열려 있다.
+
+**하지 않는 것(지금).** 붙는 자리(`locator`)를 풀어 캐릭터의 머리 옆에 세우는 것 — 미리보기는 붙는 노드에서의 오프셋만 쓴다 · 그림 넘기기(프레임 묶음) ·
+좌·우 판 · 감정 묶음(표정 + 이모지 + 컷인 테마) · 모션의 이벤트 키(`emoji` · 값 = 키)가 울릴 때 클립 미리보기에서 그 이모지를 띄우는 것(다음 후보).
+
 ## 상태
 
 - **P1 완료**(2026-11-10): `Model/SkinAsset.cs` · `MotionDocument.Skins`(저작본 `skins` — 비면 안 적는다) · `SceneObject.Skin` · `Rig/RigParts.cs`(조각 판정 —
@@ -232,4 +264,10 @@ Spine에 없는 이 툴의 방향: **창 없이 도는 명령줄 도구**(검증
   결과는 stdout의 JSON 하나, 종료 코드 0·1·2. 화면과 같은 함수(`MotionValidator`·`ClipValidator`·`MotionExport`·`ClipStage`·`ClipPreview`·`ClipBake`)를 지난다.
   손으로 쓴 문서는 읽을 때 탄젠트 값을 종류대로 세운다(`TangentMath.Recompute` — 앱이 저장한 문서에는 무변). 로직은 `MtCli.Run(args, stdout, stderr)`이라 테스트가 프로세스 없이 부른다.
   테스트 `MtCliTests` 7개. 아직 없는 것: 문서를 **고치는** 명령(키 놓기·블록 놓기 — 지금은 JSON을 직접 쓰고 `validate`로 확인한다) · 그림으로 내보내기(PNG·GIF).
-- 다음: 소유자가 정한다 — K6(`clips.json` 초안) · 이모지 정의를 툴에서(스킨 + 등장/머묾/퇴장 모션의 묶음) · `mt`의 고치는 명령.
+- **이모지 정의**(2026-11-10, §8): `Model/EmojiAsset.cs` · `MotionDocument.Emojis`(없으면 안 적는다) · `MotionEditor.Emojis.cs`(추가/삭제/키 바꾸기/값 — 한 칸씩,
+  모션·스킨의 이름이 바뀌면 따라온다) · `Preview/EmojiPreview.cs`(수명의 시각 t 포즈 — 새 수학 없이 등장·머묾·퇴장을 `MotionPreview`에 차례로) ·
+  `Validation/EmojiValidator.cs`(참조·리그) · `EmojisJson`(`emojis/1-draft` — 스킨은 풀어서, 모션은 이름으로, 결정적) · `mt emojis`·`mt validate`·`mt info`에 이모지.
+  화면: `ViewportView.BindEmoji`(시계 = 수명, 그 리그의 오브젝트가 정의의 스킨을 입고 연기, 수명 밖에서는 안 그린다) · 오른쪽 **이모지** 탭
+  (목록 = 미리보기의 주인 — 모션·클립과 서로 푼다 · 키 · 스킨 · 등장/머묾/퇴장 · 머무는 시간 · 오프셋 · 붙는 자리 · `emojis.json…`) · 문제 칸.
+  테스트 `EmojiTests` 4개 · `SkinShellTests` +1.
+- 다음: 소유자가 정한다 — 이벤트 키로 이모지 띄우기(클립에서 캐릭터의 표정 변화와 함께) · 붙는 자리 풀기(§5의 1) · K6(`clips.json` 초안) · `mt`의 고치는 명령.

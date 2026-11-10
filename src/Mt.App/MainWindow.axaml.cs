@@ -576,7 +576,7 @@ public partial class MainWindow : Window
             _showStageSkeleton.IsChecked = _settings.ShowStageSkeleton;
             _collapsedGroups.Clear();
             _collapsedGroups.UnionWith(_settings.CollapsedChannelBoxGroups);
-            _inspectorTabs.SelectedIndex = Math.Clamp(_settings.InspectorTab, 0, 3);
+            _inspectorTabs.SelectedIndex = Math.Clamp(_settings.InspectorTab, 0, 4);
             int autoSaveIndex = Array.IndexOf(AutoSaveMinutes, _settings.AutoSaveMinutes);
             _autoSaveCombo.SelectedIndex = autoSaveIndex < 0 ? 2 : autoSaveIndex;
             _timeDisplayCombo.SelectedIndex = (int)_settings.TimeDisplay;
@@ -1604,6 +1604,12 @@ public partial class MainWindow : Window
         {
             _viewport.BindClip(_session.Editor, clip);
         }
+        else if (name is null && SelectedEmoji is { } emoji)
+        {
+            // 이모지 정의를 골랐다 — 뷰포트(와 시계)는 그 수명의 것이다.
+            _viewport.BindEmoji(_session.Editor, emoji);
+            LoadEmojiImages();
+        }
         else
         {
             _viewport.Bind(_session.Editor, name);
@@ -1812,6 +1818,7 @@ public partial class MainWindow : Window
             new TabItem { Header = "씬", Content = BuildSceneTab(), FontSize = 12 },
             new TabItem { Header = "모션", Content = BuildMotionTab(), FontSize = 12 },
             new TabItem { Header = "클립", Content = BuildClipTab(), FontSize = 12 },
+            new TabItem { Header = "이모지", Content = BuildEmojiTab(), FontSize = 12 },
         };
         _inspectorTabs.SelectionChanged += (_, _) =>
         {
@@ -2219,6 +2226,7 @@ public partial class MainWindow : Window
     {
         RefreshMotionList();
         RefreshClips();
+        RefreshEmojis();
         RefreshMotionInspector();
         RefreshKeyInspector();
         RefreshProblems();
@@ -2987,6 +2995,7 @@ public partial class MainWindow : Window
     {
         RefreshMotionList();
         RefreshClips();
+        RefreshEmojis();
         RefreshChannels();
         RefreshMotionInspector();
         RefreshKeyInspector();
@@ -3043,7 +3052,8 @@ public partial class MainWindow : Window
 
         if (SelectedMotion is not null)
         {
-            DeselectClip(); // 시간의 주인은 모션이나 클립 중 하나다
+            DeselectClip(); // 시간의 주인은 모션 · 클립 · 이모지 중 하나다
+            DeselectEmoji();
         }
 
         BindMotion(SelectedMotion);
@@ -3558,7 +3568,8 @@ public partial class MainWindow : Window
         IReadOnlyList<MotionProblem> problems = _session.Problems;
         IReadOnlyList<ClipProblem> clipProblems = ClipValidator.Validate(_session.Editor.Document, _session.RigNodeIds);
         ProblemsPanel.Children.Clear();
-        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count > 0;
+        IReadOnlyList<EmojiProblem> emojiProblems = EmojiValidator.Validate(_session.Editor.Document, _session.RigNodeIds);
+        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count + emojiProblems.Count > 0;
 
         foreach (MotionProblem problem in problems)
         {
@@ -3592,6 +3603,11 @@ public partial class MainWindow : Window
         foreach (ClipProblem problem in clipProblems)
         {
             ProblemsPanel.Children.Add(ClipProblemRow(problem));
+        }
+
+        foreach (EmojiProblem problem in emojiProblems)
+        {
+            ProblemsPanel.Children.Add(EmojiProblemRow(problem));
         }
     }
 

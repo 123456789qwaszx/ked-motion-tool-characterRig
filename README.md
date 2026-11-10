@@ -189,6 +189,11 @@ tests: Ked.Presentation.Core.Tests(NUnit, 원본 그대로) · Mt.Authoring.Test
 부모 노드의 불투명도와 곱해져 그려지므로 묶음 전체(`Emoji_Body`)와 조각 하나를 따로 흐릴 수 있다. 알파 채널이 든 문서는 `motions/3`으로 나가고,
 없으면 전과 같은 `motions/2`다. 이 채널은 툴이 먼저 지은 규약이다 — 코어 사본에 선반영했고(`vendoring.md`), 런타임이 같은 모양으로 구현한다.
 
+**이모지 정의.** 오른쪽 **이모지** 탭 — 그림(스킨) + 등장·머묾·퇴장 모션 + 머무는 시간 + 자리를 키 하나로 묶는다. 이모지 리그의 오브젝트를 고르고 **이모지 추가**,
+칸에서 스킨과 모션 셋을 고른다. 목록에서 고르면 뷰포트가 **수명 한 번**을 재생한다: 등장(한 번) → 머묾(등장이 끝난 자세에서 처음부터 되풀이) → 퇴장(한 번) → 사라짐.
+머무는 시간을 비우면 끌 때까지 머무는 이모지다(미리보기는 머묾을 2초쯤 보인다). 오프셋은 붙는 자리에서의 위치(`Emoji_Anchor`), "붙는 자리"는 런타임의 기준점 이름으로 그대로 실린다.
+모션과 스킨은 참조라 여러 이모지가 같은 "튀어나옴"을 나눠 쓴다. **emojis.json…** 으로 내보낸다(`emojis/1-draft` — 스킨은 조각 → 그림으로 풀어서, 모션은 이름으로).
+
 **이벤트 키(`motions/3`).** 모션의 한 시각에 "여기서 이것을 울린다"는 표시를 놓는다 — 재생이 그 시각을 지나는 순간 런타임이 (이름, 값)으로 알린다
 (예: 이름 `emoji` · 값 `땀`, 이름 `sfx` · 값 `pop`). "모션" 탭 아래 **이벤트 추가 (지금 시각)**, 줄에서 시각·이름·값을 고친다. 타임 슬라이더에 초록 세모로 보이고,
 뷰포트는 방금 울린 것을 `⚑ 이름 값`으로 잠깐 보인다(클립에서는 맡은 캐릭터와 함께, 반복하는 블록은 바퀴마다). 상태가 아니라서 건너뛰기·되감기에서는 다시 울리지 않는다.
@@ -245,6 +250,7 @@ dotnet run --project src/Mt.Cli -- export   a.motion-authoring.json motions.json
 dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --motion nod --time 0.3 [--object s1] [--mode relative|absolute]
 dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --clip greet --time 0.8
 dotnet run --project src/Mt.Cli -- bake     a.motion-authoring.json --clip greet --object s1 --name greet_s1 [--out b.motion-authoring.json]
+dotnet run --project src/Mt.Cli -- emojis   a.motion-authoring.json emojis.json
 ```
 
 - `pose`는 모션·클립이 건드리는 노드의 값(위치·배율·회전·불투명도)과 카메라, 방금(0.4초 안에) 울린 이벤트 키를 낸다 — AI가 "이 시각에 정말 이렇게 되나"를 읽는 자리다.

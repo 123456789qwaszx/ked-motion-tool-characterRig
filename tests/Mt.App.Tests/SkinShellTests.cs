@@ -278,4 +278,108 @@ public class SkinShellTests
             }
         });
     }
+
+    [Fact]
+    public void 이모지_정의를_만들어_고르면_수명_한_번이_돌고_값을_고치면_바로_따라온다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                window.Session.LoadRig(EmojiRigFixture.WriteDump(TestDocuments.FixturePath("rig-schemas.json")));
+                MotionEditor editor = window.Session.Editor;
+                string id = window.CreateAttachedFromMenu(EmojiRigFixture.RigKind, "s1");
+                window.AddSkinFromForm();
+                editor.RenameSkin("skin", "땀");
+                editor.SetSkinPart("땀", "Emoji_Part1", "art/sweat.png");
+
+                // 모션 셋: pop(0.2초, Body y → 40, 유지·절대값) · bob(0.4초, Body y 0 → 10 → 0, 복원) · fade(0.3초, Part1 알파 → 0, 유지).
+                KeyAsset Linear(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
+                editor.AddMotion("pop", EmojiRigFixture.RigKind, 0.2f, MotionEnd.Commit, MotionChannelMode.Absolute);
+                editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
+                editor.SetKeys("pop", "Emoji_Body", MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.2f, 40f) });
+                editor.AddMotion("bob", EmojiRigFixture.RigKind, 0.4f);
+                editor.AddChannel("bob", "Emoji_Body", MotionChannelKind.Position);
+                editor.SetKeys("bob", "Emoji_Body", MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.2f, 10f), Linear(0.4f, 0f) });
+                editor.AddMotion("fade", EmojiRigFixture.RigKind, 0.3f, MotionEnd.Commit);
+                editor.AddChannel("fade", "Emoji_Part1", MotionChannelKind.Alpha);
+                editor.SetKeys("fade", "Emoji_Part1", MotionChannelKind.Alpha, Axis.X, new[] { Linear(0f, 1f), Linear(0.3f, 0f) });
+                window.SelectMotion("pop");
+                window.Viewport.SelectedObjectId = id;
+                window.InspectorTab = 4; // 이모지 탭
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+                // 이모지 추가 — 고른 오브젝트의 리그와 입은 스킨으로, 한 칸. 골라지고 모션 선택이 풀린다.
+                long revision = editor.Revision;
+                Assert.Equal("emoji", window.AddEmojiFromForm());
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.Equal("emoji", window.SelectedEmoji);
+                Assert.Null(window.SelectedMotion);
+                Assert.Equal("emoji", window.Viewport.EmojiName);
+                Assert.Equal(id, window.Viewport.EmojiActor?.Id);
+                Assert.Equal(("emoji", "땀", (string?)null, (string?)null, (string?)null, "", true), window.EmojiFormState);
+
+                // 값을 채운다 — 칸마다 한 칸. 시계가 수명(0.2 + 1 + 0.3)을 따라간다.
+                window.UpdateSelectedEmoji(e => { e.Enter = "pop"; e.Hold = "bob"; e.Exit = "fade"; e.HoldSeconds = 1f; e.OffsetX = 120f; e.OffsetY = 300f; });
+                Assert.Equal(1.5, window.Viewport.Clock.Duration, 4);
+                Assert.Equal(("pop", "bob", "fade", "1"), (window.EmojiFormState.Enter, window.EmojiFormState.Hold, window.EmojiFormState.Exit, window.EmojiFormState.HoldSeconds));
+                Assert.Equal(0, window.ProblemRowsShown);
+
+                // 수명: 등장(0 → 40) · 머묾(40 위에서 되풀이) · 퇴장(흐려짐). 자리는 정의의 오프셋.
+                float BodyY() => window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Body").AnchoredPosition.Y;
+                window.Viewport.ScrubTo(0.1);
+                Assert.Equal(20f, BodyY(), 2);
+                window.Viewport.ScrubTo(0.4);
+                Assert.Equal(50f, BodyY(), 2);
+                window.Viewport.ScrubTo(0.8);
+                Assert.Equal(50f, BodyY(), 2);
+                window.Viewport.ScrubTo(1.35);
+                Assert.Equal(0.5f, window.Viewport.NodeOpacity(id, "Emoji_Part1")!.Value, 2);
+                Assert.Equal(120f, window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Anchor").AnchoredPosition.X, 2);
+                Assert.Equal(new[] { "Emoji_Part1" }, window.Viewport.DrawnParts(editor.Document.ActiveSceneAsset!.Find(id)!));
+
+                // 머무는 시간을 비우면 머무는 이모지 — 미리보기는 머묾을 2초 보인다.
+                window.UpdateSelectedEmoji(e => e.HoldSeconds = null);
+                Assert.Equal(2.5, window.Viewport.Clock.Duration, 4);
+                Assert.Equal("", window.EmojiFormState.HoldSeconds);
+                editor.Undo();
+                Assert.Equal(1.5, window.Viewport.Clock.Duration, 4);
+
+                // 정의의 스킨이 그림이다 — 오브젝트가 스킨을 벗어도 미리보기에서는 보인다.
+                editor.SetObjectSkin(null, id, null);
+                Assert.Single(window.Viewport.DrawnParts(editor.Document.ActiveSceneAsset!.Find(id)!));
+
+                // 없는 모션을 가리키면 문제 칸이 알린다. 내보내기는 막힌다.
+                window.UpdateSelectedEmoji(e => e.Enter = "ghost");
+                Assert.Equal(1, window.ProblemRowsShown);
+                string target = Path.Combine(Path.GetTempPath(), $"ked-emojis-{Guid.NewGuid():N}.json");
+                Assert.False(window.Session.ExportEmojis(target));
+                editor.Undo();
+                Assert.True(window.Session.ExportEmojis(target), window.Session.Status);
+                Assert.Contains("\"schema\": \"emojis/1-draft\"", File.ReadAllText(target), StringComparison.Ordinal);
+                File.Delete(target);
+
+                // 모션을 고르면 이모지가 풀리고(오브젝트는 다시 제 스킨 — 벗었으니 안 그려진다), 다시 고르면 돌아온다.
+                window.SelectMotion("bob");
+                Assert.Null(window.SelectedEmoji);
+                Assert.Null(window.Viewport.EmojiName);
+                Assert.Empty(window.Viewport.DrawnParts(editor.Document.ActiveSceneAsset!.Find(id)!));
+                window.SelectEmoji("emoji");
+                Assert.Null(window.SelectedMotion);
+                Assert.Equal("emoji", window.Viewport.EmojiName);
+
+                // 지우면 뷰포트가 풀린다.
+                editor.RemoveEmoji("emoji");
+                Assert.Null(window.Viewport.EmojiName);
+                Assert.False(window.EmojiFormState.Enabled);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
 }
