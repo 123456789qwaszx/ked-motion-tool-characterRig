@@ -103,6 +103,11 @@ public sealed class SceneObject
 
     public bool Visible { get; set; } = true;
 
+    /// <summary>
+    /// 입은 스킨의 이름(<see cref="SkinAsset"/>) — 조각 노드가 있는 리그(이모지 등)에서 조각마다 어떤 그림을 그릴지. null이면 조각을 안 그린다.
+    /// </summary>
+    public string? Skin { get; set; }
+
     public SceneObject Clone() => (SceneObject)MemberwiseClone();
 
     /// <summary>노드 키 접두사 — 코어 <c>StageState.NodeKeyOf</c>와 같은 꼴.</summary>

@@ -68,6 +68,9 @@ public sealed class ViewportView : Control
     // 씬 전체의 시작 상태(오브젝트마다 슬롯 접두사). 모션은 선택 오브젝트에만 얹는다.
     private RectNodeTree? _template;
     private readonly Dictionary<string, Bitmap?> _portraits = new();
+
+    /// <summary>조각 그림 — (오브젝트 id, 조각 노드 id) → 비트맵. 스킨이 그림을 준 조각만 든다(파일을 못 읽었으면 null — 자리표시).</summary>
+    private readonly Dictionary<(string Object, string Node), Bitmap?> _partImages = new();
     private string? _selectedObjectId;
     public bool ShowGrid { get; set; } = true;
     private Vec2 _stageSize = BaseResolutionFile.Default;
@@ -399,6 +402,12 @@ public sealed class ViewportView : Control
     /// <summary>포즈 위의 오브젝트 사각형(루트 공간) — 초상이 있으면 보이는 그림, 없으면 루트 rect.</summary>
     private Quad? QuadOf(RectNodeTree pose, SceneObject o)
     {
+        // 조각으로 그려지는 오브젝트는 첫 조각의 사각형이 고르는 자리다.
+        if (DrawnParts(o) is { Count: > 0 } parts && PartQuadOf(pose, o, parts[0]) is { } first)
+        {
+            return first;
+        }
+
         string? image = ScenePreview.ImageKeyOf(pose, o);
         return image is not null
             ? PortraitLayout.VisualQuad(pose, image, AspectOf(o))
@@ -1110,8 +1119,73 @@ public sealed class ViewportView : Control
         InvalidateVisual();
     }
 
+    /// <summary>조각의 그림 비트맵(스킨이 준 것). 못 읽었으면 null을 넣는다 — 그 조각은 자리표시로 그려진다.</summary>
+    public void SetPartImage(string objectId, string node, Bitmap? image)
+    {
+        ArgumentNullException.ThrowIfNull(objectId);
+        ArgumentNullException.ThrowIfNull(node);
+        _partImages[(objectId, node)] = image;
+        InvalidateVisual();
+    }
+
+    /// <summary>
+    /// 그 오브젝트에서 그려지는 조각 노드들(그리는 순서) — 리그의 조각 가운데 입은 스킨이 그림을 준 것. 조각이 없는 리그나 스킨을 안 입었으면 빈 목록.
+    /// </summary>
+    public IReadOnlyList<string> DrawnParts(SceneObject o)
+    {
+        ArgumentNullException.ThrowIfNull(o);
+
+        if (_editor?.Document.FindSkin(o.Skin) is not { } skin || !string.Equals(skin.Rig, o.Rig, StringComparison.Ordinal))
+        {
+            return Array.Empty<string>();
+        }
+
+        return RigParts.Of(_rig, o.Rig).Where(skin.Parts.ContainsKey).ToList();
+    }
+
+    /// <summary>조각이 지금 그려지는 사각형(루트 공간) — 노드의 rect 안에 그림의 종횡비로 맞춘 것(비트맵이 없으면 rect 그대로). 없으면 null.</summary>
+    public Quad? PartQuad(string objectId, string node)
+        => CurrentPose() is { } pose && Scene?.Find(objectId) is { } o ? PartQuadOf(pose, o, node) : null;
+
+    private Quad? PartQuadOf(RectNodeTree pose, SceneObject o, string node)
+    {
+        string key = o.KeyOf(node);
+
+        if (!pose.Contains(key))
+        {
+            return null;
+        }
+
+        Quad rect = PortraitLayout.RectQuad(pose, key);
+
+        if (!_partImages.TryGetValue((o.Id, node), out Bitmap? image) || image is not { PixelSize: { Width: > 0, Height: > 0 } })
+        {
+            return rect;
+        }
+
+        // 노드 rect 안에 그림을 찌그러뜨리지 않고 넣는다(가운데, contain) — rect의 두 변을 따라 줄인다.
+        float w = Norm(rect.BottomRight - rect.BottomLeft);
+        float h = Norm(rect.TopLeft - rect.BottomLeft);
+
+        static float Norm(Vec2 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y);
+
+        if (w <= 1e-6f || h <= 1e-6f)
+        {
+            return rect;
+        }
+
+        float aspect = image.PixelSize.Width / (float)image.PixelSize.Height;
+        float fitW = Math.Min(w, h * aspect);
+        float fitH = fitW / aspect;
+        Vec2 ux = (rect.BottomRight - rect.BottomLeft) * (1f / w);
+        Vec2 uy = (rect.TopLeft - rect.BottomLeft) * (1f / h);
+        Vec2 origin = rect.BottomLeft + ux * ((w - fitW) / 2f) + uy * ((h - fitH) / 2f);
+        return new Quad(origin, origin + ux * fitW, origin + ux * fitW + uy * fitH, origin + uy * fitH);
+    }
+
     public void ClearPortraits()
     {
+        _partImages.Clear();
         _portraits.Clear();
         RebuildTemplate();
         InvalidateVisual();
@@ -1520,8 +1594,58 @@ public sealed class ViewportView : Control
         }
     }
 
+    /// <summary>사각형 하나에 그림을 그린다 — 비트맵이 없으면 자리표시(X 표 사각형).</summary>
+    private void DrawImageQuad(DrawingContext context, Quad quad, Bitmap? image)
+    {
+        Point topLeft = ToControl(quad.TopLeft);
+        Point topRight = ToControl(quad.TopRight);
+        Point bottomLeft = ToControl(quad.BottomLeft);
+        Point bottomRight = ToControl(quad.BottomRight);
+
+        if (image is null)
+        {
+            context.DrawGeometry(PlaceholderFill, PlaceholderPen, new PolylineGeometry(new[] { topLeft, topRight, bottomRight, bottomLeft, topLeft }, true));
+            context.DrawLine(PlaceholderPen, topLeft, bottomRight);
+            context.DrawLine(PlaceholderPen, topRight, bottomLeft);
+            return;
+        }
+
+        double w = image.PixelSize.Width;
+        double h = image.PixelSize.Height;
+        var matrix = new Matrix(
+            (topRight.X - topLeft.X) / w, (topRight.Y - topLeft.Y) / w,
+            (bottomLeft.X - topLeft.X) / h, (bottomLeft.Y - topLeft.Y) / h,
+            topLeft.X, topLeft.Y);
+
+        using (context.PushTransform(matrix))
+        {
+            context.DrawImage(image, new Rect(0, 0, w, h));
+        }
+    }
+
     private void DrawObject(DrawingContext context, RectNodeTree pose, SceneObject o, bool selected)
     {
+        // 조각이 있는 리그(이모지 등) — 스킨이 그림을 준 조각만, 덤프 순서로 그린다. 스킨을 안 입었으면 아래의 윤곽으로 떨어진다.
+        if (_rig is not null && RigParts.Of(_rig, o.Rig).Count > 0 && DrawnParts(o) is { Count: > 0 } parts)
+        {
+            foreach (string node in parts)
+            {
+                if (PartQuadOf(pose, o, node) is { } part)
+                {
+                    _partImages.TryGetValue((o.Id, node), out Bitmap? image);
+                    DrawImageQuad(context, part, image);
+                }
+            }
+
+            if (selected && PartQuadOf(pose, o, parts[0]) is { } outline)
+            {
+                context.DrawGeometry(null, SelectedObjectPen, new PolylineGeometry(
+                    new[] { ToControl(outline.TopLeft), ToControl(outline.TopRight), ToControl(outline.BottomRight), ToControl(outline.BottomLeft), ToControl(outline.TopLeft) }, true));
+            }
+
+            return;
+        }
+
         string? imageKey = ScenePreview.ImageKeyOf(pose, o);
 
         if (imageKey is null)

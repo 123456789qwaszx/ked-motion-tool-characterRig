@@ -83,7 +83,7 @@ public static class ScenePreview
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(o);
 
-        if (string.IsNullOrEmpty(o.Place))
+        if (string.IsNullOrEmpty(o.Place) || !IsCharacterShaped(state, o))
         {
             return false;
         }
@@ -96,6 +96,13 @@ public static class ScenePreview
         state.Apply(claim);
         return true;
     }
+
+    /// <summary>
+    /// 깊이·자리 폴드가 설 수 있는 리그인가 — 코어의 그 폴드들은 캐릭터 리그의 축(깊이 노드와 초상까지의 사슬)을 전제하고, 없으면 던진다.
+    /// 이모지 같은 다른 리그는 깊이·자리 없이 선다(층은 그리는 순서만).
+    /// </summary>
+    private static bool IsCharacterShaped(StageState state, SceneObject o)
+        => state.Nodes.Contains(o.KeyOf(DepthYNode)) && state.Nodes.Contains(o.KeyOf(DepthScaleNode)) && state.Nodes.Contains(o.KeyOf(PortraitLayout.ImageNodeId));
 
     /// <summary>화면 지점 이름들 — 코어 <see cref="ScreenPointRatios"/>가 아는 것.</summary>
     public static readonly IReadOnlyList<string> ScreenPoints = new[] { "center", "left", "right", "top", "bottom", "tl", "tr", "bl", "br" };
@@ -141,7 +148,7 @@ public static class ScenePreview
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(o);
 
-        if (depth is null || !SceneLayers.IsKnown(o.Layer))
+        if (depth is null || !SceneLayers.IsKnown(o.Layer) || !IsCharacterShaped(state, o))
         {
             return false;
         }

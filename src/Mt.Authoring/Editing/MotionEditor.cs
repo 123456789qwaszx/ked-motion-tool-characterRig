@@ -177,6 +177,7 @@ public sealed partial class MotionEditor
             Visible = source.Visible,
             Place = source.Place,
             PlaceFocus = source.PlaceFocus,
+            Skin = source.Skin,
         };
 
         int at = scene.Objects.IndexOf(source) + 1;

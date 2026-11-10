@@ -67,6 +67,12 @@ public static class MotionDocumentJson
 
         document.EnsureDefaultScene();
 
+        foreach (SkinAsset skin in document.Skins)
+        {
+            // 역직렬화는 기본 비교자로 사전을 만든다 — 노드 이름순(서수)으로 다시 세워 쓰는 글자를 한 가지로.
+            skin.Parts = new SortedDictionary<string, string>(skin.Parts ?? new SortedDictionary<string, string>(), StringComparer.Ordinal);
+        }
+
         foreach (ClipAsset clip in document.Clips)
         {
             clip.Roles ??= new List<ClipRole>();

@@ -38,7 +38,8 @@ public sealed class DocumentSession
 
     private static string AssetFingerprintOf(MotionDocument document)
         => "rig=" + (document.RigSchemas?.Path ?? "") + "\nbase=" + (document.BaseResolution?.Path ?? "") + "\n"
-           + string.Join("\n", document.Scenes.SelectMany(scene => scene.Objects).Select(o => $"portrait {o.Id}={o.Portrait ?? ""}"));
+           + string.Join("\n", document.Scenes.SelectMany(scene => scene.Objects).Select(o => $"portrait {o.Id}={o.Portrait ?? ""} skin={o.Skin ?? ""}"))
+           + "\n" + string.Join("\n", document.Skins.Select(s => $"skin {s.Name}:{s.Rig}:" + string.Join(",", s.Parts.Select(p => p.Key + "=" + p.Value))));
 
     private void OnEditorChanged(object? sender, MotionChangedEventArgs e)
     {
@@ -136,6 +137,30 @@ public sealed class DocumentSession
         string resolved = ResolveFromDocument(o.Portrait);
         return File.Exists(resolved) ? resolved : null;
     }
+
+    /// <summary>
+    /// 오브젝트가 입은 스킨의 조각 그림들 — 조각 노드 id → 파일 경로(파일이 없으면 null: 자리표시로 그린다).
+    /// 스킨이 없거나 리그가 다르면 빈 목록.
+    /// </summary>
+    public IReadOnlyList<(string Node, string? Path)> PartImagesOf(SceneObject o)
+    {
+        ArgumentNullException.ThrowIfNull(o);
+
+        if (Editor.Document.FindSkin(o.Skin) is not { } skin || !string.Equals(skin.Rig, o.Rig, StringComparison.Ordinal))
+        {
+            return Array.Empty<(string, string?)>();
+        }
+
+        return skin.Parts.Select(p =>
+        {
+            string resolved = ResolveFromDocument(p.Value);
+            return (p.Key, File.Exists(resolved) ? resolved : null);
+        }).ToList();
+    }
+
+    /// <summary>스킨의 조각 그림을 파일로 정한다 — 경로는 문서 기준 상대로 적힌다. null이면 그 조각을 비운다.</summary>
+    public void SetSkinPart(string skin, string node, string? path)
+        => Editor.SetSkinPart(skin, node, string.IsNullOrEmpty(path) ? null : RelativeToDocument(path));
 
     /// <summary>기준 해상도(무대 크기). base-resolution.json이 없으면 1920×1080.</summary>
     public Vec2 StageSize { get; private set; } = BaseResolutionFile.Default;

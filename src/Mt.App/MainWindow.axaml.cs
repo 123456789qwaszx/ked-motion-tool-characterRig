@@ -1641,6 +1641,23 @@ public partial class MainWindow : Window
 
         foreach (SceneObject o in _viewport.SceneObjects)
         {
+            // 스킨의 조각 그림 — 파일이 없거나 못 읽으면 null을 넣는다(자리표시로 그려진다).
+            foreach ((string node, string? partPath) in _session.PartImagesOf(o))
+            {
+                Bitmap? image = null;
+
+                try
+                {
+                    image = partPath is null ? null : new Bitmap(partPath);
+                }
+                catch (Exception exception)
+                {
+                    _session.SetStatus($"{o.Id}의 조각 {node} 그림을 읽지 못했다: {exception.Message}");
+                }
+
+                _viewport.SetPartImage(o.Id, node, image);
+            }
+
             if (_session.PortraitPathOf(o) is not { } portraitPath)
             {
                 continue;
@@ -1928,6 +1945,7 @@ public partial class MainWindow : Window
         }
 
         _viewport.ObjectSelected += (_, _) => RefreshObjects();
+        panel.Children.Add(BuildSkinPanel());
         return panel;
     }
 
@@ -2207,6 +2225,7 @@ public partial class MainWindow : Window
         try
         {
             RebuildHierarchy();
+            RefreshSkinPanel();
 
             SceneObject? selected = _viewport.SelectedObject;
             bool has = selected is not null;
