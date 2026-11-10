@@ -379,6 +379,19 @@ public static class MtCli
             blocking |= v.Blocking;
         }
 
+        // 문서를 지을 때와 스키마가 달라진 것 — 알림(무엇이 달라졌고 무엇이 그것을 쓰는가).
+        if (document.BuiltOn is { } builtOn)
+        {
+            // rig은 덤프에 문서가 정의한 리그를 더한 것이다 — 지문은 덤프의 리그만 적으니 그것은 빼고 견준다.
+            SchemaPrint now = SchemaDiff.PrintOf(rig);
+            now.Rigs.RemoveAll(r => document.FindRig(r.Kind) is not null);
+
+            foreach (SchemaViolation v in SchemaDiff.Compare(builtOn, now).Notices(document))
+            {
+                problems.Add(new JsonObject { ["kind"] = "schema", ["name"] = v.Subject, ["message"] = v.ToString(), ["blocking"] = v.Blocking });
+            }
+        }
+
         return (problems, blocking);
     }
 

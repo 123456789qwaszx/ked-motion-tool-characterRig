@@ -223,6 +223,91 @@ public class MainWindowTests
     }
 
     [Fact]
+    public void 덤프가_바뀌면_문제_줄에_달라진_것이_나오고_이름_바꾸기를_따라가고_지금의_스키마로_맞춘다()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        const string Node = "CharacterPortrait_Track_Move_Y";
+        const string Renamed = "CharacterPortrait_Track_Move_Up";
+
+        // 유니티 쪽에서 노드 이름이 바뀐 덤프 — 그 밖은 같다.
+        string changedDump = Path.Combine(directory, "rig-schemas.json");
+        File.WriteAllText(changedDump, File.ReadAllText(TestDocuments.FixturePath("rig-schemas.json")).Replace($"\"{Node}\"", $"\"{Renamed}\"", StringComparison.Ordinal));
+
+        HeadlessUi.Run(() =>
+        {
+            var window = new MainWindow(Path.Combine(directory, "settings.json"));
+            window.Show();
+
+            try
+            {
+                // 덤프를 싣는 순간 문서에 그 스키마가 적힌다.
+                window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
+                Assert.NotNull(window.Session.Editor.Document.BuiltOn);
+                window.AddMotionFromForm("nod", "character", "0.5", MotionEnd.Restore);
+                window.AddChannelFromForm(Node, MotionChannelKind.Position);
+                window.Session.Editor.SetKeys("nod", Node, MotionChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.25f, -18f), TestDocuments.Key(0.5f, 0f) });
+                Assert.True(window.Session.SchemaChange.IsEmpty);
+                Assert.Equal(0, window.ProblemRowsShown);
+
+                // 다른 덤프를 실어도 적힌 스키마는 그대로다 — 무엇이 달라졌는지가 문제 줄에 나온다.
+                window.Session.LoadRig(changedDump);
+                Assert.True(window.Session.SchemaChange.HasRenames);
+                Assert.True(window.ProblemRowsShown >= 3); // 손 줄 · 리그 줄 · 모션 줄(과 계약의 막는 문제)
+
+                long revision = window.Session.Editor.Revision;
+                Assert.Equal(1, window.FollowSchemaRenamesFromForm());
+                Assert.Equal(revision + 1, window.Session.Editor.Revision);
+                Assert.Equal(Renamed, window.Session.Editor.Document.Find("nod")!.Channels[0].Node);
+                Assert.DoesNotContain(window.Session.Problems, p => p.Blocking);
+
+                // 다 보았다 — 지금의 스키마를 적으면 알림이 사라진다. 한 칸이라 되돌리면 다시 나온다.
+                window.AdoptSchemaFromForm();
+                Assert.True(window.Session.SchemaChange.IsEmpty);
+                Assert.Equal(0, window.ProblemRowsShown);
+                window.Session.Editor.Undo();
+                Assert.False(window.Session.SchemaChange.IsEmpty);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void 저장하면_지문이_없는_문서에_지금의_스키마가_적힌다()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        string path = Path.Combine(directory, "doc.motion-authoring.json");
+
+        HeadlessUi.Run(() =>
+        {
+            var window = new MainWindow(Path.Combine(directory, "settings.json"));
+            window.Show();
+
+            try
+            {
+                Assert.Null(window.Session.Editor.Document.BuiltOn);
+                window.Session.Save(path);
+                Assert.NotNull(window.Session.Editor.Document.BuiltOn);
+                Assert.False(window.Session.IsDirty);
+                Assert.Contains("\"builtOn\"", File.ReadAllText(path), StringComparison.Ordinal);
+
+                // 이미 적힌 문서는 저장이 문서를 바꾸지 않는다.
+                long revision = window.Session.Editor.Revision;
+                window.Session.Save(path);
+                Assert.Equal(revision, window.Session.Editor.Revision);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
     public void 문제_행의_돕는_손이_문제를_없애고_설정은_파일로_남고_자동_저장은_문서_옆이다()
     {
         string directory = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", Guid.NewGuid().ToString("N"));

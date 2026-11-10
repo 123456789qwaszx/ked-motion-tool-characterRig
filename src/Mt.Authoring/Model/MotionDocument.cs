@@ -18,6 +18,12 @@ public sealed class MotionDocument
     /// <summary>리그 덤프의 출처. 열 때 해시가 다르면 "리그가 바뀌었다"를 알린다 — 조용히 맞는 척하지 않는다.</summary>
     public RigSchemasReference? RigSchemas { get; set; }
 
+    /// <summary>
+    /// 문서를 지을 때의 스키마(<c>docs/PLAN-characterRig.md</c> §3의 2). 지금 실린 덤프와 견주어 무엇이 달라졌는지 보인다(<c>Schema.SchemaDiff</c>).
+    /// 없으면 아직 적은 적이 없다 — 덤프를 싣거나 저장할 때 적힌다.
+    /// </summary>
+    public SchemaPrint? BuiltOn { get; set; }
+
     /// <summary>기준 해상도 덤프(<c>base-resolution.json</c>)의 경로. 뷰포트가 쓴다. v1에서는 없어도 된다.</summary>
     public FileReference? BaseResolution { get; set; }
 

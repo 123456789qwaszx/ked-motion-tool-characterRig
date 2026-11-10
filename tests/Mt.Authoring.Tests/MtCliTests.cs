@@ -107,6 +107,21 @@ public class MtCliTests
     }
 
     [Fact]
+    public void validate는_문서를_지을_때와_달라진_스키마를_알린다()
+    {
+        // 지을 때는 있던 노드가 지금의 덤프(내장본)에는 없다 — 알림이라 종료 코드는 그대로 0이다.
+        SchemaPrint builtOn = Mt.Authoring.Schema.SchemaDiff.PrintOf(Mt.Authoring.Rig.BuiltinTuning.RigSchemas);
+        builtOn.Rigs.Single(r => r.Kind == "character").Nodes.Add("Old_Node < __root");
+
+        (int code, JsonNode? json, _, _) = Run("validate", WriteDocument(e => e.SetBuiltOn(builtOn)));
+
+        Assert.Equal(0, code);
+        JsonNode schema = Assert.Single(json!["problems"]!.AsArray(), p => p!["kind"]!.GetValue<string>() == "schema")!;
+        Assert.False(schema["blocking"]!.GetValue<bool>());
+        Assert.Contains("사라진 노드 [Old_Node]", schema["message"]!.GetValue<string>(), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void export는_앱과_같은_바이트를_쓰고_검증을_못_지나면_안_쓴다()
     {
         string document = WriteDocument();

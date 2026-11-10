@@ -3689,7 +3689,8 @@ public partial class MainWindow : Window
         ProblemsPanel.Children.Clear();
         IReadOnlyList<EmojiProblem> emojiProblems = EmojiValidator.Validate(_session.Editor.Document, _session.RigNodeIds);
         IReadOnlyList<SchemaViolation> definedRigs = SchemaContract.DefinedRigs(_session.Editor.Document);
-        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count + emojiProblems.Count + definedRigs.Count > 0;
+        SchemaDiff schemaChange = _session.SchemaChange;
+        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count + emojiProblems.Count + definedRigs.Count > 0 || !schemaChange.IsEmpty;
 
         foreach (MotionProblem problem in problems)
         {
@@ -3742,7 +3743,61 @@ public partial class MainWindow : Window
                 MaxWidth = 700,
             });
         }
+
+        AddSchemaChangeRows(schemaChange);
     }
+
+    /// <summary>
+    /// 스키마가 달라진 것(문서를 지을 때 ↔ 지금 실린 덤프) — 알림 줄들과, 맨 위에 두 손:
+    /// 이름이 바뀐 것으로 보이는 노드를 따라가기 · 지금의 스키마를 문서에 적기(다 보았다).
+    /// </summary>
+    private void AddSchemaChangeRows(SchemaDiff change)
+    {
+        if (change.IsEmpty)
+        {
+            return;
+        }
+
+        var hands = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        hands.Children.Add(new TextBlock
+        {
+            Text = "△ 문서를 지을 때와 스키마가 다르다",
+            FontSize = 11,
+            Foreground = Brushes.Goldenrod,
+            VerticalAlignment = VerticalAlignment.Center,
+        });
+
+        if (change.HasRenames)
+        {
+            hands.Children.Add(SmallButton("이름 바꾸기를 따라간다", (_, _) => Guard("스키마", () => FollowSchemaRenames())));
+        }
+
+        hands.Children.Add(SmallButton("이 스키마로 맞춘다", (_, _) => Guard("스키마", AdoptSchema)));
+        ProblemsPanel.Children.Add(hands);
+
+        foreach (SchemaViolation notice in change.Notices(_session.Editor.Document))
+        {
+            ProblemsPanel.Children.Add(new TextBlock
+            {
+                Text = "△ " + notice,
+                FontSize = 11,
+                Foreground = Brushes.Goldenrod,
+                TextWrapping = TextWrapping.Wrap,
+                MaxWidth = 700,
+                HorizontalAlignment = HorizontalAlignment.Left,
+            });
+        }
+    }
+
+    private int FollowSchemaRenames() => _session.FollowSchemaRenames();
+
+    private void AdoptSchema() => _session.AdoptSchema();
+
+    /// <summary>테스트 손잡이 — 문제 줄의 "이름 바꾸기를 따라간다".</summary>
+    internal int FollowSchemaRenamesFromForm() => FollowSchemaRenames();
+
+    /// <summary>테스트 손잡이 — 문제 줄의 "이 스키마로 맞춘다".</summary>
+    internal void AdoptSchemaFromForm() => AdoptSchema();
 
     /// <summary>테스트가 문제 행의 돕는 손을 누른 것과 같다.</summary>
     internal bool ApplyFix(string motionName, MotionFix fix) => MotionFixes.Apply(_session.Editor, motionName, fix, _session.Controllers);

@@ -2,6 +2,7 @@ using Mt.Authoring;
 using Mt.Authoring.Editing;
 using Mt.Authoring.Model;
 using Mt.Authoring.Rig;
+using Mt.Authoring.Schema;
 using Mt.Authoring.Serialization;
 using Mt.Authoring.Validation;
 using Ked.Presentation.Core;
@@ -250,6 +251,41 @@ public sealed class DocumentSession
         StatusChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// 스키마가 달라진 것(<c>docs/PLAN-characterRig.md</c> §3의 2) — 문서를 지을 때의 스키마와 지금 실린 덤프를 견준다.
+    /// 문서에 지문이 없거나 덤프가 없으면 달라진 것이 없다.
+    /// </summary>
+    public SchemaDiff SchemaChange
+        => Editor.Document.BuiltOn is { } builtOn && _dumpRig is not null ? SchemaDiff.Compare(builtOn, SchemaDiff.PrintOf(_dumpRig)) : SchemaDiff.None;
+
+    /// <summary>이름이 바뀐 것으로 보이는 노드를 따라간다 — 문서가 옛 이름으로 가리키던 곳을 새 이름으로(한 칸). 바꾼 곳의 수.</summary>
+    public int FollowSchemaRenames()
+    {
+        int changed = Editor.FollowSchemaRenames(SchemaChange);
+        SetStatus(changed == 0 ? "이름 바꾸기를 따라간다: 바꿀 곳이 없다." : $"이름이 바뀐 노드를 따라갔다: {changed}곳.");
+        return changed;
+    }
+
+    /// <summary>지금 실린 스키마를 문서의 스키마로 적는다 — 달라진 것을 다 보았다는 뜻이다(한 칸).</summary>
+    public void AdoptSchema()
+    {
+        if (_dumpRig is null)
+        {
+            return;
+        }
+
+        Editor.SetBuiltOn(SchemaDiff.PrintOf(_dumpRig));
+        SetStatus("지금의 스키마를 문서에 적었다.");
+    }
+
+    private void RecordSchemaIfMissing()
+    {
+        if (Editor.Document.BuiltOn is null && _dumpRig is not null)
+        {
+            Editor.SetBuiltOn(SchemaDiff.PrintOf(_dumpRig));
+        }
+    }
+
     public void New()
     {
         Replace(new MotionDocument(), null);
@@ -264,7 +300,10 @@ public sealed class DocumentSession
         TryLoadAssetsFromDocument();
         _assetFingerprint = AssetFingerprintOf(Editor.Document);
         AssetsChanged?.Invoke(this, EventArgs.Empty);
-        SetStatus($"열었다: {path}");
+        SchemaDiff change = SchemaChange;
+        SetStatus(change.IsEmpty
+            ? $"열었다: {path}"
+            : $"열었다: {path} — 문서를 지을 때와 스키마가 다르다(문제 줄에 무엇이 달라졌는지 나온다).");
     }
 
     /// <summary>자동 저장 — 문서 옆 <c>*.autosave.motion-authoring.json</c>. 저장 여부(IsDirty)는 건드리지 않는다. 경로가 없으면 안 한다.</summary>
@@ -294,6 +333,7 @@ public sealed class DocumentSession
     public void Save(string? path = null)
     {
         path ??= DocumentPath ?? throw new InvalidOperationException("저장할 경로가 없다 — 다른 이름으로 저장을 쓴다.");
+        RecordSchemaIfMissing();
         File.WriteAllText(path, MotionDocumentJson.Write(Editor.Document));
         DocumentPath = path;
         _savedRevision = Editor.Revision;
@@ -327,6 +367,7 @@ public sealed class DocumentSession
         Editor.Batch(MotionChangeKind.Document, () =>
         {
             Editor.SetRigSchemas(RelativeToDocument(path), rig.Sha256);
+            RecordSchemaIfMissing(); // 이미 적힌 지문은 두고 — 다른 덤프를 실었으면 달라진 것이 보여야 한다
 
             if (baseResolution is not null)
             {

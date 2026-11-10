@@ -42,6 +42,9 @@
 
 실제 리그·초상으로 보고 싶으면 **리그 덤프…**로 `ked-stage-runtime/ExportedTuning/rig-schemas.json`을, **초상 PNG…**로 `ked-presentation-runtime/Assets/Samples/Portraits/harin/b/01.png` 같은 파일을 싣는다. 덤프 옆의 `base-resolution.json`·`presets/depth.json`·`presets/focus-tuning.json`·`presets/controllers.json`은 자동으로 같이 실린다.
 
+**유니티 쪽 리그가 바뀌었을 때.** 문서는 지을 때의 스키마를 적어 둔다(덤프를 싣거나 저장할 때). 바뀐 덤프로 열면 아래 문제 줄에 "문서를 지을 때와 스키마가 다르다"와 함께 무엇이 달라졌고 무엇이 그것을 쓰는지 나온다.
+이름만 바뀐 노드는 **이름 바꾸기를 따라간다**로 한 번에 고치고, 다 확인했으면 **이 스키마로 맞춘다**를 누른다. 사라진 노드를 쓰는 모션은 그 채널을 지우거나 다른 노드로 옮길 때까지 내보내지 못한다.
+
 ## 4. 모션을 처음부터 만들기
 
 1. **모션 추가** — 이름 `motion`, 선택 오브젝트의 리그, 길이 1초, 종료 처리 `복원(Restore)`로 생긴다. 오른쪽 **모션** 탭에서 이름(소문자·숫자·`_`)·길이·종료 처리·재생 기준을 바꾼다.
