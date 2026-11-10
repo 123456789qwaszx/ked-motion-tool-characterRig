@@ -1240,6 +1240,12 @@ public sealed class ViewportView : Control
             ? EmojiEvents.Resolve(_editor.Document, scene, fired, seconds)
             : Array.Empty<EmojiPlay>();
 
+    /// <summary>붙는 자리(로케이터)가 푼 점 — 가만히 선 무대(클립이면 그 시각의 무대)에서 잰다. 못 풀면 null(오프셋만).</summary>
+    private Vec2? EmojiOrigin(EmojiAsset emoji, SceneObject actor, double seconds)
+        => (ShownClip is not null ? _clipStage?.TreeAt(seconds) ?? _template : _template) is { } rest && SceneAtTime(seconds) is { } scene
+            ? EmojiPreview.LocatorPoint(rest, scene, emoji, actor, _focus)
+            : null;
+
     private EmojiPlay? EmojiPlayOn(string objectId)
     {
         foreach (EmojiPlay play in EmojiPlaysAt(_clock.Time))
@@ -1509,7 +1515,7 @@ public sealed class ViewportView : Control
         // 캐릭터들의 포즈 위에, 이벤트 키로 뜬 이모지를 얹는다.
         RectNodeTree? tree = BasePoseAt(seconds, alphas);
         return tree is not null && _editor is not null && EmojiPlaysAt(seconds) is { Count: > 0 } plays
-            ? EmojiEvents.Pose(tree, _editor.Document, plays, alphas)
+            ? EmojiEvents.Pose(tree, _editor.Document, plays, alphas, play => EmojiOrigin(play.Emoji, play.Target, seconds))
             : tree;
     }
 
@@ -1530,7 +1536,7 @@ public sealed class ViewportView : Control
         // 이모지 정의 — 수명 한 번(등장 → 머묾 → 퇴장)을 그 리그의 오브젝트에 얹는다.
         if (_editor is not null && ShownEmoji is { } emoji)
         {
-            return EmojiActor is { } actor ? EmojiPreview.Pose(_template, _editor.Document, emoji, actor, seconds, alphas) : _template.Clone();
+            return EmojiActor is { } actor ? EmojiPreview.Pose(_template, _editor.Document, emoji, actor, seconds, alphas, EmojiOrigin(emoji, actor, seconds)) : _template.Clone();
         }
 
         // 카메라 모션 — 씬의 카메라 값에 모션을 얹어 무대의 카메라 노드를 다시 세운다. 캐릭터는 시작 상태로 선다.

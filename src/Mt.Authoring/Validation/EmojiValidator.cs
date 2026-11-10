@@ -27,6 +27,12 @@ public static class EmojiValidator
             void Block(string message) => problems.Add(new EmojiProblem(emoji.Name, message));
             void Notice(string message) => problems.Add(new EmojiProblem(emoji.Name, message, Blocking: false));
 
+            // 붙는 자리 — 코어가 아는 기준점 이름이어야 미리보기가 푼다. 런타임이 이름을 더 알 수 있어 막지는 않는다.
+            if (emoji.Locator is not null && !Ked.Presentation.Core.FocusPresetName.TryNormalizeToken(emoji.Locator, out _))
+            {
+                Notice($"붙는 자리 '{emoji.Locator}'를 모른다 — 미리보기는 오프셋만 쓴다({string.Join("·", Preview.ScenePreview.FocusPresets)})");
+            }
+
             if (string.IsNullOrEmpty(emoji.Name) || emoji.Name.Any(char.IsWhiteSpace))
             {
                 Block("키는 빈칸 없는 글이어야 한다");

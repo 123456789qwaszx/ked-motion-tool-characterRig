@@ -26,7 +26,7 @@ public partial class MainWindow
     private readonly TextBox _emojiHoldSeconds = new() { FontSize = 11, PlaceholderText = "끌 때까지 머문다" };
     private readonly TextBox _emojiOffsetX = new() { FontSize = 11 };
     private readonly TextBox _emojiOffsetY = new() { FontSize = 11 };
-    private readonly TextBox _emojiLocator = new() { FontSize = 11, PlaceholderText = "(런타임 기본)" };
+    private readonly TextBox _emojiLocator = new() { FontSize = 11, PlaceholderText = "(붙는 노드)" };
     private readonly StackPanel _emojiFields = new() { Spacing = 4 };
 
     internal string? SelectedEmoji => _emojiList.SelectedItem as string;
@@ -93,7 +93,7 @@ public partial class MainWindow
         ToolTip.SetTip(_emojiExit, "사라질 때 한 번 도는 모션(흐려짐). 머묾이 멈춘 그 자세에서 시작한다");
         ToolTip.SetTip(_emojiHoldSeconds, "등장이 끝난 뒤 퇴장이 시작하기까지(초). 비우면 끌 때까지 머무는 이모지(상태) — 미리보기는 머묾을 얼마간만 보인다");
         ToolTip.SetTip(_emojiOffsetX, "붙는 자리에서의 오프셋(px) — Emoji_Anchor의 위치로 들어간다. 이모지마다 머리 옆·위·입 옆이 다르다");
-        ToolTip.SetTip(_emojiLocator, "런타임의 기준점 이름(faceAura·face…) — 캐릭터마다 다른 머리 자리는 런타임이 푼다. 툴의 미리보기는 오프셋만 쓴다");
+        ToolTip.SetTip(_emojiLocator, "기준점 이름(faceAura·face·bust·body·feet·handLeft·handRight) — 붙은 캐릭터의 그 점에서부터 오프셋을 잰다. 비우면 붙는 노드에서부터");
 
         OnCommit(_emojiName, text =>
         {

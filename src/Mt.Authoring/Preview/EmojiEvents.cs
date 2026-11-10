@@ -84,14 +84,15 @@ public static class EmojiEvents
     }
 
     /// <summary>도는 이모지들을 포즈에 얹는다 — 캐릭터의 모션이 다 얹힌 나무 위에(붙은 리그라 캐릭터를 따라간다).</summary>
-    public static RectNodeTree Pose(RectNodeTree tree, MotionDocument document, IEnumerable<EmojiPlay> plays, IDictionary<string, float>? alphas = null)
+    /// <param name="originOf">붙는 자리가 푼 점(<see cref="EmojiPreview.LocatorPoint"/>) — 가만히 선 무대에서 잰다. null이면 오프셋만.</param>
+    public static RectNodeTree Pose(RectNodeTree tree, MotionDocument document, IEnumerable<EmojiPlay> plays, IDictionary<string, float>? alphas = null, Func<EmojiPlay, Vec2?>? originOf = null)
     {
         ArgumentNullException.ThrowIfNull(tree);
         ArgumentNullException.ThrowIfNull(plays);
 
         foreach (EmojiPlay play in plays)
         {
-            tree = EmojiPreview.Pose(tree, document, play.Emoji, play.Target, play.Local, alphas, play.Phases);
+            tree = EmojiPreview.Pose(tree, document, play.Emoji, play.Target, play.Local, alphas, play.Phases, originOf?.Invoke(play));
         }
 
         return tree;

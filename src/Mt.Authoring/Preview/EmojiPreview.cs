@@ -1,5 +1,6 @@
 using Ked.Presentation.Core;
 using Mt.Authoring.Model;
+using Mt.Authoring.Rig;
 
 namespace Mt.Authoring.Preview;
 
@@ -68,11 +69,12 @@ public static class EmojiPreview
     /// 수명의 시각 t 포즈 — <paramref name="actor"/>(이모지 리그의 오브젝트)에 얹는다. 자리(<see cref="EmojiAsset.AnchorNode"/>의 오프셋)도 여기서 넣는다.
     /// 수명 밖이면 template 그대로(호출부가 <see cref="IsAlive"/>로 안 그린다).
     /// </summary>
-    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, EmojiAsset emoji, SceneObject actor, double seconds, IDictionary<string, float>? alphas = null)
-        => Pose(template, document, emoji, actor, seconds, alphas, PhasesOf(document, emoji));
+    /// <param name="origin">붙는 자리(<see cref="LocatorPoint"/>)가 푼 점 — 오프셋이 여기서부터다. null이면 붙는 노드에서부터.</param>
+    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, EmojiAsset emoji, SceneObject actor, double seconds, IDictionary<string, float>? alphas = null, Vec2? origin = null)
+        => Pose(template, document, emoji, actor, seconds, alphas, PhasesOf(document, emoji), origin);
 
     /// <summary>구간을 정해 준 포즈 — 이벤트로 뜬 이모지(<see cref="PlayPhases"/>)가 쓴다.</summary>
-    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, EmojiAsset emoji, SceneObject actor, double seconds, IDictionary<string, float>? alphas, EmojiPhases phases)
+    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, EmojiAsset emoji, SceneObject actor, double seconds, IDictionary<string, float>? alphas, EmojiPhases phases, Vec2? origin = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(document);
@@ -80,7 +82,7 @@ public static class EmojiPreview
         ArgumentNullException.ThrowIfNull(actor);
 
         RectNodeTree tree = template.Clone();
-        ApplyAnchor(tree, emoji, actor);
+        ApplyAnchor(tree, emoji, actor, origin);
 
         if (!IsAlive(phases, seconds))
         {
@@ -130,14 +132,53 @@ public static class EmojiPreview
     }
 
     /// <summary>자리 — 정의의 오프셋을 그 노드의 위치로. 노드가 리그에 없으면 루트에.</summary>
-    public static void ApplyAnchor(RectNodeTree tree, EmojiAsset emoji, SceneObject actor)
+    public static void ApplyAnchor(RectNodeTree tree, EmojiAsset emoji, SceneObject actor, Vec2? origin = null)
     {
-        string key = tree.Contains(actor.KeyOf(emoji.AnchorNode)) ? actor.KeyOf(emoji.AnchorNode) : ScenePreview.RootKeyOf(actor);
+        string key = AnchorKeyOf(tree, emoji, actor);
 
         if (tree.Contains(key))
         {
-            tree.SetState(key, tree.GetState(key).WithAnchoredPosition(new Vec2(emoji.OffsetX, emoji.OffsetY)));
+            tree.SetState(key, tree.GetState(key).WithAnchoredPosition((origin ?? Vec2.Zero) + new Vec2(emoji.OffsetX, emoji.OffsetY)));
         }
+    }
+
+    private static string AnchorKeyOf(RectNodeTree tree, EmojiAsset emoji, SceneObject actor)
+        => tree.Contains(actor.KeyOf(emoji.AnchorNode)) ? actor.KeyOf(emoji.AnchorNode) : ScenePreview.RootKeyOf(actor);
+
+    /// <summary>
+    /// 붙는 자리(<see cref="EmojiAsset.Locator"/>)를 푼다 — 붙은 캐릭터의 그 기준점(<c>faceAura</c>·<c>face</c>…)이 자리 노드의 좌표로 어디인가.
+    /// 점은 코어의 focus 오프셋 합(<see cref="FocusOffsetMath"/> — place가 쓰는 그 표)을 초상 계층의 측정 노드에서 잰 것이고,
+    /// 자리 노드를 그리로 보내는 값은 place와 같은 풀이(<see cref="SettledFocusMath.SolveFocusPlacement"/>)다.
+    ///
+    /// <paramref name="rest"/>는 **가만히 선 무대**(모션을 얹기 전) — 뜨는 순간 한 번 푸는 값이라 캐릭터의 초상 계층 모션(끄덕임)을 따라가지 않는다.
+    /// 붙는 자리가 없거나 모르는 이름이거나, 붙은 데가 없거나 캐릭터 리그가 아니면 null(오프셋은 붙는 노드에서부터).
+    /// </summary>
+    public static Vec2? LocatorPoint(RectNodeTree rest, SceneAsset scene, EmojiAsset emoji, SceneObject actor, FocusTuningFile? focus)
+    {
+        ArgumentNullException.ThrowIfNull(rest);
+        ArgumentNullException.ThrowIfNull(scene);
+        ArgumentNullException.ThrowIfNull(emoji);
+        ArgumentNullException.ThrowIfNull(actor);
+
+        if (!FocusPresetName.TryNormalizeToken(emoji.Locator, out string preset) || scene.ParentOf(actor) is not { } parent)
+        {
+            return null;
+        }
+
+        string measureKey = parent.KeyOf(PlaceFocusStageReduction.MeasureNodeId);
+        string anchorKey = AnchorKeyOf(rest, emoji, actor);
+
+        if (!rest.Contains(measureKey) || !rest.Contains(anchorKey))
+        {
+            return null;
+        }
+
+        // 툴은 배역 키를 두지 않는다 — place와 같이 표의 기본값(base)만 쓴다.
+        Vec2 offset = FocusOffsetMath.Resolve(focus?.Body, "", preset, Vec2.Zero);
+        Vec2 point = SettledFocusMath.FocusPointInRigSpace(rest.BuildChainTo(measureKey), rest.RootSpace, offset);
+
+        RectNodeState[] chain = rest.BuildChainTo(anchorKey);
+        return SettledFocusMath.SolveFocusPlacement(chain, rest.RootSpace, chain.Length - 1, Vec2.Zero, point, chain[^1].AnchoredPosition);
     }
 
     private static MotionAsset? Find(MotionDocument document, string? name) => string.IsNullOrEmpty(name) ? null : document.Find(name);

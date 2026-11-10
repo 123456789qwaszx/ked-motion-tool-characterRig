@@ -520,6 +520,15 @@ public class SkinShellTests
                 window.Viewport.ScrubTo(0.4);
                 Assert.Equal(40f, BodyY(), 2);
 
+                // 붙는 자리(faceAura)를 주면 자리 노드가 캐릭터의 그 점으로 간다 — 오프셋은 거기서부터(머리 쪽이라 위로 올라간다).
+                float before = window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Anchor").AnchoredPosition.Y;
+                EmojiAsset located = editor.Document.FindEmoji("sweat")!.Clone();
+                located.Locator = "faceAura";
+                editor.UpdateEmoji("sweat", located);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.True(window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Anchor").AnchoredPosition.Y > before + 100f);
+                Assert.Equal(40f, BodyY(), 2);
+
                 // 수명(0.4초)이 다하면 다시 사라진다.
                 window.Viewport.ScrubTo(0.55);
                 Assert.True(window.Viewport.IsDormantEmoji(id));

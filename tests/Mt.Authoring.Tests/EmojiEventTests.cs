@@ -154,4 +154,78 @@ public class EmojiEventTests
         editor.SetClipBlockMuted("clip", 0, 0, true);
         Assert.Empty(At(1.3));
     }
+
+    // ── 붙는 자리(로케이터) — PLAN-parts.md §11 ─────────────────────────
+
+    private static readonly FocusTuningFile Focus = FocusTuningFile.Load(FocusTuningFile.TryFindBeside(Fixtures.PathOf("rig-schemas.json"))!);
+
+    /// <summary>노드의 원점이 루트 공간 어디인가.</summary>
+    private static Vec2 WorldOf(RectNodeTree tree, string key) => SettledFocusMath.FocusPointInRigSpace(tree.BuildChainTo(key), tree.RootSpace, Vec2.Zero);
+
+    /// <summary>캐릭터의 기준점이 루트 공간 어디인가(표의 기본값).</summary>
+    private static Vec2 FocusOf(RectNodeTree tree, string objectId, string preset)
+        => SettledFocusMath.FocusPointInRigSpace(tree.BuildChainTo($"{objectId}/{PlaceFocusStageReduction.MeasureNodeId}"), tree.RootSpace, FocusOffsetMath.Resolve(Focus.Body, "", preset, Vec2.Zero));
+
+    private static void Near(Vec2 expected, Vec2 actual)
+    {
+        Assert.InRange(actual.X, expected.X - 0.05f, expected.X + 0.05f);
+        Assert.InRange(actual.Y, expected.Y - 0.05f, expected.Y + 0.05f);
+    }
+
+    [Fact]
+    public void 붙는_자리는_붙은_캐릭터의_기준점에서_풀리고_캐릭터가_어디에_서든_따라간다()
+    {
+        MotionEditor editor = NewEditor();
+        EmojiAsset Sweat() => editor.Document.FindEmoji("sweat")!;
+        SceneObject Actor() => Scene(editor).Find("e1")!;
+        RectNodeTree Rest() => ScenePreview.Build(RigFile, Scene(editor), null, null, null, Focus);
+        RectNodeTree Posed(RectNodeTree rest) => EmojiPreview.Pose(rest, editor.Document, Sweat(), Actor(), 0.5, null, EmojiPreview.LocatorPoint(rest, Scene(editor), Sweat(), Actor(), Focus));
+
+        // 붙는 자리가 없으면 풀지 않는다 — 오프셋은 붙는 노드에서부터(전과 같다).
+        Assert.Null(EmojiPreview.LocatorPoint(Rest(), Scene(editor), Sweat(), Actor(), Focus));
+
+        // faceAura — 자리 노드의 원점이 캐릭터의 그 점에 선다.
+        editor.UpdateEmoji("sweat", new EmojiAsset { Enter = "pop", Exit = "out", HoldSeconds = 1f, Locator = "faceAura" });
+        RectNodeTree rest = Rest();
+        Near(FocusOf(rest, "s1", "faceAura"), WorldOf(Posed(rest), "e1/Emoji_Anchor"));
+
+        // 캐릭터를 옮기고 키워도(오프셋·배율·자리) 그 점을 따라간다. 다른 기준점은 다른 자리다.
+        editor.SetObjectPlacement(null, "s1", 300f, -50f, 0f, 1.5f, 1.5f);
+        editor.SetObjectPlace(null, "s1", "left", "face");
+        rest = Rest();
+        Near(FocusOf(rest, "s1", "faceAura"), WorldOf(Posed(rest), "e1/Emoji_Anchor"));
+        editor.UpdateEmoji("sweat", new EmojiAsset { Enter = "pop", Exit = "out", HoldSeconds = 1f, Locator = "hand_left" }); // 대본의 표기도 받는다
+        Near(FocusOf(rest, "s1", "handLeft"), WorldOf(Posed(rest), "e1/Emoji_Anchor"));
+        Assert.NotEqual(FocusOf(rest, "s1", "faceAura"), FocusOf(rest, "s1", "handLeft"));
+
+        // 오프셋은 그 점에서부터 — 자리 노드의 좌표로 더해진다.
+        Vec2 origin = EmojiPreview.LocatorPoint(rest, Scene(editor), Sweat(), Actor(), Focus)!.Value;
+        editor.UpdateEmoji("sweat", new EmojiAsset { Enter = "pop", Exit = "out", HoldSeconds = 1f, Locator = "handLeft", OffsetX = 30f, OffsetY = -10f });
+        Near(origin + new Vec2(30f, -10f), Posed(rest).GetState("e1/Emoji_Anchor").AnchoredPosition);
+
+        // 모르는 이름·붙은 데가 없음 → 풀지 않고, 모르는 이름은 검증이 알린다(막지 않는다).
+        editor.UpdateEmoji("sweat", new EmojiAsset { Enter = "pop", Exit = "out", HoldSeconds = 1f, Locator = "nose" });
+        Assert.Null(EmojiPreview.LocatorPoint(rest, Scene(editor), Sweat(), Actor(), Focus));
+        EmojiProblem notice = Assert.Single(EmojiValidator.Validate(editor.Document, RigFile.NodeIds), p => p.Message.Contains("nose", StringComparison.Ordinal));
+        Assert.False(notice.Blocking);
+        editor.UpdateEmoji("sweat", new EmojiAsset { Enter = "pop", Exit = "out", HoldSeconds = 1f, Locator = "face" });
+        editor.AttachObject(null, "e1", null);
+        Assert.Null(EmojiPreview.LocatorPoint(Rest(), Scene(editor), Sweat(), Actor(), Focus));
+    }
+
+    [Fact]
+    public void 붙는_자리는_가만히_선_자세에서_한_번_풀려_초상_계층의_모션을_따라가지_않는다()
+    {
+        MotionEditor editor = NewEditor();
+        editor.UpdateEmoji("sweat", new EmojiAsset { Enter = "pop", Exit = "out", HoldSeconds = 1f, Locator = "faceAura" });
+        editor.AddMotionEvent("nod", 0f, "emoji", "sweat");
+        RectNodeTree rest = ScenePreview.Build(RigFile, Scene(editor), null, null, null, Focus);
+        SceneObject s1 = Scene(editor).Find("s1")!;
+
+        // nod의 가운데(0.3초) — 캐릭터의 초상이 움직이는 중이어도 이모지의 자리는 가만히 선 자세의 그 점이다.
+        RectNodeTree nodding = ScenePreview.Pose(rest, s1, editor.Document.Find("nod")!, 0.3);
+        RectNodeTree posed = EmojiEvents.Pose(nodding, editor.Document, Plays(editor, 0.3), null, play => EmojiPreview.LocatorPoint(rest, Scene(editor), play.Emoji, play.Target, Focus));
+        Vec2 anchor = WorldOf(posed, "e1/Emoji_Anchor");
+        Near(FocusOf(rest, "s1", "faceAura"), anchor);
+    }
 }
