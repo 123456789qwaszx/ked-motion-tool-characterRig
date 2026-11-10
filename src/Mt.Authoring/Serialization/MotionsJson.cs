@@ -26,7 +26,9 @@ public static class MotionsJson
         ArgumentNullException.ThrowIfNull(clips);
 
         var sb = new StringBuilder();
-        sb.Append("{\n  \"schema\": \"").Append(AuthoringFormat.ExportSchema).Append("\",\n  \"motions\": [");
+        // 알파 채널이 있을 때만 motions/3 — 없으면 전과 같은 글자다.
+        bool hasAlpha = clips.Any(c => c.Channels is not null && c.Channels.Any(ch => ch.Kind == MotionChannelKind.Alpha));
+        sb.Append("{\n  \"schema\": \"").Append(hasAlpha ? AuthoringFormat.ExportSchemaV3 : AuthoringFormat.ExportSchema).Append("\",\n  \"motions\": [");
 
         for (int m = 0; m < clips.Count; m++)
         {
@@ -92,7 +94,8 @@ public static class MotionsJson
         {
             problems.Add($"schema '{file.Schema}' — 채널의 mode는 무시한다(motions/2: relative/absolute는 motion 커맨드가 정한다). 키 값은 그대로 읽는다.");
         }
-        else if (!string.Equals(file.Schema, AuthoringFormat.ExportSchema, StringComparison.Ordinal))
+        else if (!string.Equals(file.Schema, AuthoringFormat.ExportSchema, StringComparison.Ordinal)
+                 && !string.Equals(file.Schema, AuthoringFormat.ExportSchemaV3, StringComparison.Ordinal))
         {
             problems.Add($"schema '{file.Schema}' (기대 '{AuthoringFormat.ExportSchema}'). 읽기는 시도한다.");
         }
@@ -197,6 +200,7 @@ public static class MotionsJson
             case "position": kind = MotionChannelKind.Position; return true;
             case "scale": kind = MotionChannelKind.Scale; return true;
             case "euler": kind = MotionChannelKind.Euler; return true;
+            case "alpha": kind = MotionChannelKind.Alpha; return true;
             default: kind = default; return false;
         }
     }
@@ -231,7 +235,7 @@ public static class MotionsJson
     }
 
     private static string KindToken(MotionChannelKind kind)
-        => kind switch { MotionChannelKind.Position => "position", MotionChannelKind.Scale => "scale", _ => "euler" };
+        => kind switch { MotionChannelKind.Position => "position", MotionChannelKind.Scale => "scale", MotionChannelKind.Alpha => "alpha", _ => "euler" };
 
     /// <summary>invariant "R" — 정수는 소수점 없이, 음수 0은 0 (규약 §7).</summary>
     public static string F(float v)

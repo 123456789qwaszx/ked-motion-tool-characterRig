@@ -185,4 +185,97 @@ public class SkinShellTests
             }
         });
     }
+
+    [Fact]
+    public void 불투명도_칸에_값을_넣으면_알파_채널의_키가_되고_조각이_그만큼_흐려진다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                window.Session.LoadRig(EmojiRigFixture.WriteDump(TestDocuments.FixturePath("rig-schemas.json")));
+                MotionEditor editor = window.Session.Editor;
+                string id = window.CreateAttachedFromMenu(EmojiRigFixture.RigKind, "s1");
+                window.AddSkinFromForm();
+                editor.SetSkinPart("skin", "Emoji_Part1", "art/sweat.png");
+                editor.AddMotion("vanish", EmojiRigFixture.RigKind, 1f, MotionEnd.Commit);
+                window.SelectMotion("vanish");
+                window.Viewport.SelectedObjectId = id;
+                window.Viewport.SnapEnabled = false;
+                window.InspectorTab = 2; // 모션 탭
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+                // 불투명도를 받을 수 없는 노드(Anchor)를 고르면 칸이 없다. 조각을 고르면 선다.
+                window.Viewport.SelectedNode = "Emoji_Anchor";
+                window.Viewport.ScrubTo(0.0);
+                Assert.False(window.AlphaBox.Visible);
+                window.Viewport.SelectedNode = "Emoji_Part1";
+                window.Viewport.ScrubTo(0.0001);
+                window.Viewport.ScrubTo(0.0);
+                Assert.True(window.AlphaBox.Visible);
+                Assert.Equal("1", window.AlphaBox.Box.Text);
+
+                // 처음에 1, 끝에 0 — 값을 넣고 Enter가 그 시각의 키(한 칸). 없던 알파 채널이 생긴다.
+                window.Viewport.SetAlphaValue("Emoji_Part1", 1f);
+                window.Viewport.ScrubTo(1.0);
+                long revision = editor.Revision;
+                TextBox box = window.AlphaBox.Box;
+                box.Focus();
+                box.Text = "0";
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal(revision + 1, editor.Revision);
+                ChannelAsset channel = Assert.Single(editor.Document.Find("vanish")!.Channels);
+                Assert.Equal(("Emoji_Part1", MotionChannelKind.Alpha), (channel.Node, channel.Kind));
+                Assert.Equal(new[] { (0f, 1f), (1f, 0f) }, channel.X!.Keys.Select(k => (k.T, k.V)));
+                Assert.Equal(0, window.ProblemRowsShown);
+
+                // 뷰포트: 가운데에서 절반, 끝에서 0(안 그려진다). 다른 조각은 그대로 1.
+                window.Viewport.ScrubTo(0.5);
+                Assert.Equal(0.5f, window.Viewport.NodeOpacity(id, "Emoji_Part1")!.Value, 2);
+                Assert.Equal(1f, window.Viewport.NodeOpacity(id, "Emoji_Part2")!.Value, 3);
+                Assert.Equal("0.5", window.AlphaBox.Box.Text);
+                window.Viewport.ScrubTo(1.0);
+                Assert.Equal(0f, window.Viewport.NodeOpacity(id, "Emoji_Part1")!.Value, 3);
+
+                // 묶음(Body)의 불투명도는 조각의 것과 곱해진다.
+                window.Viewport.SelectedNode = "Emoji_Body";
+                window.Viewport.ScrubTo(0.0);
+                window.Viewport.SetAlphaValue("Emoji_Body", 0.5f);
+                window.Viewport.ScrubTo(1.0);
+                window.Viewport.SetAlphaValue("Emoji_Body", 0.5f);
+                window.Viewport.ScrubTo(0.5);
+                Assert.Equal(0.25f, window.Viewport.NodeOpacity(id, "Emoji_Part1")!.Value, 2);
+                Assert.Equal(0.5f, window.Viewport.NodeOpacity(id, "Emoji_Part2")!.Value, 2);
+
+                // 범위 밖 값은 0~1로 죈다. 캐릭터의 노드(받을 수 없는 것)에는 안 놓인다.
+                window.Viewport.SetAlphaValue("Emoji_Body", 7f);
+                Assert.All(editor.Document.Find("vanish")!.FindChannel("Emoji_Body", MotionChannelKind.Alpha)!.X!.Keys, k => Assert.InRange(k.V, 0f, 1f));
+                revision = editor.Revision;
+                window.Viewport.SetAlphaValue("Emoji_Anchor", 0.3f);
+                Assert.Equal(revision, editor.Revision);
+
+                // 알파가 든 모션은 motions/3으로 나간다.
+                string export = Path.Combine(Path.GetTempPath(), $"ked-motion-tool-{Guid.NewGuid():N}.json");
+
+                try
+                {
+                    Assert.True(window.Session.Export(export), window.Session.Status);
+                    string json = File.ReadAllText(export);
+                    Assert.Contains("\"schema\": \"motions/3\"", json, StringComparison.Ordinal);
+                    Assert.Contains("\"kind\": \"alpha\"", json, StringComparison.Ordinal);
+                }
+                finally
+                {
+                    File.Delete(export);
+                }
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
 }

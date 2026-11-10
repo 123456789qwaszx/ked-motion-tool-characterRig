@@ -18,6 +18,12 @@ public static class AuthoringFormat
     /// <summary>내보내기 산출물의 스키마 — 무대 런타임 <c>MotionLibrary</c>가 읽는 그것. 채널에 mode가 없다.</summary>
     public const string ExportSchema = "motions/2";
 
+    /// <summary>
+    /// 불투명도 채널(<c>alpha</c>)이 든 산출물의 스키마(<c>PLAN-parts.md</c> §2.1). 알파 채널이 하나라도 있으면 이 이름으로 나가고,
+    /// 없으면 <see cref="ExportSchema"/> 그대로 나간다 — 기존 파일과 골든이 한 글자도 안 바뀐다.
+    /// </summary>
+    public const string ExportSchemaV3 = "motions/3";
+
     /// <summary>옛 산출물 — 읽을 수 있다. 채널 <c>mode</c>는 무시한다(뜻은 커맨드가 정한다).</summary>
     public const string ExportSchemaV1 = "motions/1";
 

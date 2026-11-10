@@ -94,7 +94,7 @@ public static class ClipPreview
     /// <param name="isMuted">끈 트랙(배역 끄기) — 그 블록은 없는 것처럼 건너뛴다. 보기 상태라 문서에는 없다. null이면 없음.</param>
     /// <param name="startCamera">그 시각의 카메라 값(<see cref="ClipStage.CameraAt"/>). null이면 씬의 카메라 — 카메라 모션이 여기서 시작한다.</param>
     /// <param name="except">이 블록은 얹지 않는다 — 클립 안에서 그 블록의 모션을 고칠 때 "이 블록이 얹히기 전의 상태"(키 값의 시작값)를 낸다.</param>
-    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, ClipAsset clip, double seconds, Func<ClipTrack, bool>? isMuted = null, CameraSettings? startCamera = null, ClipBlock? except = null)
+    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, ClipAsset clip, double seconds, Func<ClipTrack, bool>? isMuted = null, CameraSettings? startCamera = null, ClipBlock? except = null, IDictionary<string, float>? alphas = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(document);
@@ -124,7 +124,7 @@ public static class ClipPreview
                 continue;
             }
 
-            tree = MotionPreview.Pose(tree, motion, seconds - block.At, block.Mode, null, target.Prefix);
+            tree = MotionPreview.Pose(tree, motion, seconds - block.At, block.Mode, null, target.Prefix, alphas);
         }
 
         // 카메라 모션 — 카메라 트랙의 모션 블록. 그때의 카메라(상태 블록까지 반영한 값)에서 시작해 순서대로 얹고, 무대의 카메라 노드를 그 값으로 다시 세운다.

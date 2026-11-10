@@ -30,10 +30,12 @@ public static class MotionValidator
 
     /// <param name="rigNodeIds">rigKind → 노드 id 목록. null이면 노드 존재 검사를 생략한다(덤프가 아직 없는 자리).</param>
     /// <param name="controllers">컨트롤러 표. 주면 자리·깊이(absolute) 컨트롤러가 든 relative 미리보기 모션에 경고한다.</param>
+    /// <param name="alphaNodeIds">rigKind → 불투명도를 받을 수 있는 노드(덤프의 hasCanvasGroup). 주면 알파 채널이 그 노드에 놓였는지 본다.</param>
     public static IReadOnlyList<MotionProblem> Validate(
         MotionDocument document,
         IReadOnlyDictionary<string, ICollection<string>>? rigNodeIds = null,
-        ControllersFile? controllers = null)
+        ControllersFile? controllers = null,
+        IReadOnlyDictionary<string, ICollection<string>>? alphaNodeIds = null)
     {
         ArgumentNullException.ThrowIfNull(document);
 
@@ -47,7 +49,7 @@ public static class MotionValidator
                 problems.Add(new MotionProblem(motion.Name, "같은 이름이 둘이다"));
             }
 
-            problems.AddRange(ValidateMotion(motion, rigNodeIds, controllers));
+            problems.AddRange(ValidateMotion(motion, rigNodeIds, controllers, alphaNodeIds));
         }
 
         return problems;
@@ -56,7 +58,8 @@ public static class MotionValidator
     public static IReadOnlyList<MotionProblem> ValidateMotion(
         MotionAsset motion,
         IReadOnlyDictionary<string, ICollection<string>>? rigNodeIds = null,
-        ControllersFile? controllers = null)
+        ControllersFile? controllers = null,
+        IReadOnlyDictionary<string, ICollection<string>>? alphaNodeIds = null)
     {
         ArgumentNullException.ThrowIfNull(motion);
 
@@ -79,6 +82,20 @@ public static class MotionValidator
         if (!MotionRules.TryValidate(clip, nodeIds, out string reason))
         {
             problems.Add(new MotionProblem(motion.Name, reason));
+        }
+
+        // 알파 채널은 불투명도를 받을 수 있는 노드에만 — 호스트가 쓸 CanvasGroup이 없으면 재생에서 아무 일도 안 일어난다.
+        if (alphaNodeIds is not null && alphaNodeIds.TryGetValue(motion.Rig ?? "", out ICollection<string>? alphaNodes))
+        {
+            for (int i = 0; i < motion.Channels.Count; i++)
+            {
+                if (motion.Channels[i].Kind == MotionChannelKind.Alpha && !alphaNodes.Contains(motion.Channels[i].Node))
+                {
+                    problems.Add(new MotionProblem(
+                        motion.Name,
+                        $"채널 {i}: '{motion.Channels[i].Node}'는 불투명도를 받을 수 없는 노드다(덤프에 CanvasGroup이 없다). 받을 수 있는 노드: [{string.Join(", ", alphaNodes)}]"));
+                }
+            }
         }
 
         // 경고는 모양 규칙과 무관하게 본다 — 고치는 순서를 작가가 고른다.

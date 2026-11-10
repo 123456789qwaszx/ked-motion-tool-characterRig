@@ -26,7 +26,11 @@ public static class MotionPreview
     /// mode를 쓰는 쪽이 정하는 포즈 — 연출 클립의 블록이 그 "쓰는 쪽"이다(재생에서는 motion 커맨드의 인자).
     /// 모션의 <see cref="MotionAsset.PreviewMode"/>는 읽지 않는다.
     /// </summary>
-    public static RectNodeTree Pose(RectNodeTree template, MotionAsset motion, double seconds, MotionChannelMode mode, Func<Graph.CurveRef, bool>? isMuted = null, string keyPrefix = "")
+    /// <param name="alphas">
+    /// 노드 키 → 불투명도(없는 키는 1). 알파 채널은 트리가 아니라 이 표에 얹힌다 — 불투명도는 <c>RectNodeState</c>에 없다(코어도 따로 든다).
+    /// 받은 표를 **그 자리에서 고친다**(앞 블록이 남긴 값이 뒤 블록의 시작값이 되게). null이면 알파 채널은 건너뛴다.
+    /// </param>
+    public static RectNodeTree Pose(RectNodeTree template, MotionAsset motion, double seconds, MotionChannelMode mode, Func<Graph.CurveRef, bool>? isMuted = null, string keyPrefix = "", IDictionary<string, float>? alphas = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(motion);
@@ -88,6 +92,20 @@ public static class MotionPreview
             }
 
             RectNodeState state = tree.GetState(key);
+
+            if (channel.Kind == MotionChannelKind.Alpha)
+            {
+                if (alphas is not null)
+                {
+                    float from = alphas.TryGetValue(key, out float current) ? current : 1f;
+                    Vec3 a0 = MotionMath.StartOf(channel, state, from);
+                    Vec3 a = ended ? MotionMath.EndValue(channel, mode, a0) : MotionMath.Compose(channel, mode, a0, t);
+                    alphas[key] = Math.Clamp(a.X, 0f, 1f);
+                }
+
+                continue;
+            }
+
             Vec3 start = MotionMath.StartOf(channel, state);
             Vec3 value = ended ? MotionMath.EndValue(channel, mode, start) : MotionMath.Compose(channel, mode, start, t);
             tree.SetState(key, Apply(channel.Kind, state, value));
@@ -102,6 +120,7 @@ public static class MotionPreview
         MotionChannelKind.Position => state.WithAnchoredPosition(value.XY),
         MotionChannelKind.Scale => state.WithLocalScale(new Vec3(value.X, value.Y, state.LocalScale.Z)),
         MotionChannelKind.Euler => state.WithLocalEuler(value),
+        MotionChannelKind.Alpha => state, // 불투명도는 노드 상태에 없다 — Pose의 alphas 표로 간다
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "모르는 채널 종류"),
     };
 }

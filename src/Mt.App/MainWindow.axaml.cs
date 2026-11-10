@@ -1089,6 +1089,7 @@ public partial class MainWindow : Window
     /// </summary>
     private void RefreshChannelBox()
     {
+        RefreshAlphaPanel(); // 고른 노드가 바뀌면 불투명도 칸도
         _refreshDepth++;
 
         try
@@ -1960,6 +1961,7 @@ public partial class MainWindow : Window
         ToolTip.SetTip(_motionDefaultMode, "키 값을 어떻게 읽나 — 상대값(relative) = 시작값 + 키(배율은 ×) · 절대값(absolute) = 키 그대로. 뷰포트 미리보기와 매니퓰레이터·채널 박스가 포즈를 키 값으로 바꿀 때 쓴다. 파일에는 안 나간다: 재생은 대본의 <<motion slot 이름 relative|absolute>>가 정한다(생략 = relative)");
 
         panel.Children.Add(BuildCameraPanel());
+        panel.Children.Add(BuildAlphaPanel());
 
         OnCommit(_motionName, text => WithMotion(m =>
         {

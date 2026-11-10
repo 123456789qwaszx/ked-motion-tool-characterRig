@@ -13,6 +13,13 @@ namespace Ked.Presentation.Core
 
         /// <summary>localEulerAngles (X·Y·Z). 도.</summary>
         Euler,
+
+        /// <summary>
+        /// CanvasGroup alpha (X 하나, 0~1) — motions/3. StageNodeClaimKind.CanvasAlpha와 같은 축이다(fade가 쓰는 그것).
+        /// RectNodeState에 살지 않으므로 시작값은 상태의 alpha 저장소에서 온다(MotionMath.StartOf의 alpha 인자).
+        /// relative는 배율처럼 **곱**이다(중립값 1) — "지금 불투명도에서 흐려진다".
+        /// </summary>
+        Alpha,
     }
 
     /// <summary>

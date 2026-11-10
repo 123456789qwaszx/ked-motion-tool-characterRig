@@ -422,14 +422,17 @@ public sealed class ViewportView : Control
     private double SnapTime(double seconds) => SnapEnabled ? TimeSnap.Snap(seconds, SnapStep) : seconds;
 
     /// <summary>지금 보이는 포즈 — 시각의 포즈에 키 없는 포즈를 얹은 것.</summary>
-    public RectNodeTree? CurrentPose()
+    public RectNodeTree? CurrentPose() => CurrentPose(null);
+
+    /// <param name="alphas">노드 키 → 불투명도(알파 채널이 얹힌 것만 든다, 없는 키는 1). 받은 표에 채워 준다.</param>
+    private RectNodeTree? CurrentPose(IDictionary<string, float>? alphas)
     {
         if (_held is not null)
         {
             return _held;
         }
 
-        RectNodeTree? pose = PoseAt(_clock.Time);
+        RectNodeTree? pose = PoseAt(_clock.Time, alphas);
 
         if (pose is null)
         {
@@ -1358,7 +1361,9 @@ public sealed class ViewportView : Control
 
     // ── 포즈 조회 (테스트·인스펙터) ───────────────────────────────────
 
-    public RectNodeTree? PoseAt(double seconds)
+    public RectNodeTree? PoseAt(double seconds) => PoseAt(seconds, null);
+
+    private RectNodeTree? PoseAt(double seconds, IDictionary<string, float>? alphas)
     {
         MotionAsset? motion = Motion;
         if (_template is null)
@@ -1369,7 +1374,7 @@ public sealed class ViewportView : Control
         if (_editor is not null && ShownClip is { } clip)
         {
             // 무대(상태 블록)가 먼저 서고 모션이 그 위에 얹힌다.
-            return ClipPreview.Pose(_clipStage?.TreeAt(seconds) ?? _template, _editor.Document, clip, seconds, IsClipTrackMuted, _clipStage?.CameraAt(seconds));
+            return ClipPreview.Pose(_clipStage?.TreeAt(seconds) ?? _template, _editor.Document, clip, seconds, IsClipTrackMuted, _clipStage?.CameraAt(seconds), null, alphas);
         }
 
         // 카메라 모션 — 씬의 카메라 값에 모션을 얹어 무대의 카메라 노드를 다시 세운다. 캐릭터는 시작 상태로 선다.
@@ -1381,8 +1386,85 @@ public sealed class ViewportView : Control
         }
 
         return motion is not null && SelectedObject is { } o && CanWear(o)
-            ? ScenePreview.Pose(_template, o, motion, seconds, _flags.IsMuted)
+            ? ScenePreview.Pose(_template, o, motion, seconds, _flags.IsMuted, alphas)
             : _template.Clone();
+    }
+
+    // ── 불투명도(알파 채널, PLAN-parts.md P4) ───────────────────────────
+
+    /// <summary>그리는 중인 프레임의 불투명도 표 — Render가 포즈와 함께 채운다.</summary>
+    private readonly Dictionary<string, float> _drawAlphas = new(StringComparer.Ordinal);
+
+    /// <summary>노드에서 그 오브젝트의 루트까지 불투명도를 곱한 값 — CanvasGroup이 겹치는 방식 그대로.</summary>
+    private static float EffectiveAlpha(RectNodeTree pose, string key, string prefix, IDictionary<string, float> alphas)
+    {
+        float alpha = 1f;
+
+        for (string? at = key; at is not null && at.StartsWith(prefix, StringComparison.Ordinal) && pose.Contains(at); at = pose.GetParentKey(at))
+        {
+            if (alphas.TryGetValue(at, out float own))
+            {
+                alpha *= own;
+            }
+        }
+
+        return Math.Clamp(alpha, 0f, 1f);
+    }
+
+    /// <summary>지금 시각에 그 노드가 그려지는 불투명도(부모들의 것까지 곱한 값). 오브젝트·노드가 없으면 null.</summary>
+    public float? NodeOpacity(string objectId, string node)
+    {
+        var alphas = new Dictionary<string, float>(StringComparer.Ordinal);
+
+        if (CurrentPose(alphas) is not { } pose || Scene?.Find(objectId) is not { } o || !pose.Contains(o.KeyOf(node)))
+        {
+            return null;
+        }
+
+        return EffectiveAlpha(pose, o.KeyOf(node), o.Prefix, alphas);
+    }
+
+    /// <summary>그 노드가 불투명도를 받을 수 있나 — 덤프에 CanvasGroup이 있는 노드만.</summary>
+    public bool CanTakeAlpha(string? node)
+        => node is not null && _rig is not null && (ContextActor ?? SelectedObject) is { } o
+           && _rig.AlphaNodeIds.TryGetValue(o.Rig, out ICollection<string>? nodes) && nodes.Contains(node);
+
+    /// <summary>
+    /// 고른 노드의 **제** 불투명도(부모 것은 안 곱한다) — 지금 시각. 불투명도를 받을 수 없는 노드거나 키를 놓을 모션이 없으면 null.
+    /// </summary>
+    public float? AlphaValue(string? node)
+    {
+        if (!CanTakeAlpha(node) || EditMotion is not { } motion || CameraRig.IsCamera(motion))
+        {
+            return null;
+        }
+
+        var alphas = new Dictionary<string, float>(StringComparer.Ordinal);
+        return CurrentPose(alphas) is null ? null : alphas.TryGetValue(Prefix + node, out float alpha) ? alpha : 1f;
+    }
+
+    /// <summary>
+    /// 불투명도를 지금 시각에 키한다(값 칸) — 알파 채널의 키 하나, 되돌리기 한 칸. 없던 채널이면 생긴다.
+    /// 클립 안에서는 블록의 규칙을 따른다: 시각 = 시계 − 블록의 시작, 재생 기준 = 블록의 것, 시작값 = 이 블록만 뺀 그 시각의 불투명도.
+    /// </summary>
+    public void SetAlphaValue(string node, float value)
+    {
+        if (_editor is null || !CanTakeAlpha(node) || EditMotion is not { } motion || CameraRig.IsCamera(motion) || _template is null)
+        {
+            return;
+        }
+
+        float start = 1f;
+
+        if (ShownClip is { } clip && ContextEntry is { } entry)
+        {
+            var before = new Dictionary<string, float>(StringComparer.Ordinal);
+            ClipPreview.Pose(_clipStage?.TreeAt(_clock.Time) ?? _template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, null, entry.Block, before);
+            start = before.TryGetValue(Prefix + node, out float alpha) ? alpha : 1f;
+        }
+
+        float key = PoseEdit.KeyValueFor(MotionChannelKind.Alpha, EditModeOf(motion), start, Math.Clamp(value, 0f, 1f));
+        _editor.KeyComponents(motion.Name, node, MotionChannelKind.Alpha, (float)Math.Max(0, SnapTime(EditTime)), new[] { (Axis.X, Math.Clamp(key, 0f, 1f)) }, DefaultTangent);
     }
 
     /// <summary>지금 시각의 초상 사각형(루트 공간). 리그가 없으면 null.</summary>
@@ -1456,7 +1538,8 @@ public sealed class ViewportView : Control
         }
 
         // 오브젝트는 무대 밖도 그대로 그리고, 카메라에 안 잡히는 바깥을 회색으로 덮어 가른다. 축·손잡이는 그 위에.
-        RectNodeTree pose = CurrentPose() ?? _template;
+        _drawAlphas.Clear();
+        RectNodeTree pose = CurrentPose(_drawAlphas) ?? _template;
         DrawObjects(context, pose);
         DrawOutside(context, stage);
         context.DrawRectangle(StagePen, stage);
@@ -1633,7 +1716,17 @@ public sealed class ViewportView : Control
                 if (PartQuadOf(pose, o, node) is { } part)
                 {
                     _partImages.TryGetValue((o.Id, node), out Bitmap? image);
-                    DrawImageQuad(context, part, image);
+                    float alpha = EffectiveAlpha(pose, o.KeyOf(node), o.Prefix, _drawAlphas);
+
+                    if (alpha <= 0.001f)
+                    {
+                        continue;
+                    }
+
+                    using (context.PushOpacity(alpha))
+                    {
+                        DrawImageQuad(context, part, image);
+                    }
                 }
             }
 
@@ -1669,6 +1762,7 @@ public sealed class ViewportView : Control
         }
 
         Quad quad = PortraitLayout.VisualQuad(pose, imageKey, AspectOf(o));
+        using IDisposable faded = context.PushOpacity(EffectiveAlpha(pose, imageKey, o.Prefix, _drawAlphas)); // 초상에 알파 모션이 얹혔으면
         Point topLeft = ToControl(quad.TopLeft);
         Point topRight = ToControl(quad.TopRight);
         Point bottomLeft = ToControl(quad.BottomLeft);

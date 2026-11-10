@@ -15,14 +15,15 @@ public static class MotionExport
         IReadOnlyDictionary<string, ICollection<string>>? rigNodeIds,
         out string json,
         out IReadOnlyList<MotionProblem> problems,
-        Func<MotionAsset, bool>? filter = null)
+        Func<MotionAsset, bool>? filter = null,
+        IReadOnlyDictionary<string, ICollection<string>>? alphaNodeIds = null)
     {
         ArgumentNullException.ThrowIfNull(document);
 
         // 카메라 모션은 싣지 않는다 — motions/2는 리그 노드만 알고, 런타임 로더는 모르는 rigKind의 클립을 버린다(CameraRig).
         List<MotionAsset> selected = document.Motions.Where(m => !Preview.CameraRig.IsCamera(m) && (filter is null || filter(m))).ToList();
         var names = new HashSet<string>(selected.Select(m => m.Name), StringComparer.Ordinal);
-        problems = MotionValidator.Validate(document, Preview.CameraRig.WithCamera(rigNodeIds))
+        problems = MotionValidator.Validate(document, Preview.CameraRig.WithCamera(rigNodeIds), null, alphaNodeIds)
             .Where(p => p.Blocking && (string.IsNullOrEmpty(p.MotionName) || names.Contains(p.MotionName)))
             .ToList();
 

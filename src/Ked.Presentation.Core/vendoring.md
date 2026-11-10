@@ -13,6 +13,18 @@
 | 테스트 | 순수 테스트(유니티·런타임·DOTween 참조 없는 것)만 `tests/Ked.Presentation.Core.Tests/EditMode/`로 |
 | 이쪽 살림 | `Ked.Presentation.Core.csproj`·`vendoring.md` (동기화 때 유지) |
 
+## 선반영 — 런타임 반영 대기 (2026-11-10, 소유자 지시: "런타임은 완성이 되었다고 가정하고 진행")
+
+툴이 규약을 먼저 만들어 가는 중이라, 아래는 **정본보다 이 사본이 앞서 있다**. "사본을 고치지 않는다"의 예외이고, 다음 동기화의 감사(ⓒ 이쪽에만 있는 멤버)에
+걸리는 것이 정상이다 — 저쪽이 같은 모양으로 들어오면 사라지고, 다르게 들어오면 소비자(`Mt.Authoring`)를 저쪽에 맞춘다. 명세는 `docs/PLAN-parts.md` §2.1.
+
+| 파일 | 선반영한 것 |
+|---|---|
+| `Motion/MotionClip.cs` | `MotionChannelKind.Alpha` |
+| `Motion/MotionMath.cs` | `Neutral`(Alpha = 1) · relative는 곱 · `ClaimFor` → `StageNodeClaim.CanvasAlpha` · `StartOf(channel, state, alpha)` 오버로드 |
+| `Motion/MotionRules.cs` | Alpha는 X만 · 키 값 0~1 |
+| `Reduce/StageReducer.Staging.cs` | `ApplyMotion`이 시작값에 `state.GetAlpha`를 넘긴다 |
+
 ## 동기화 절차
 
 1. **감사** — `diff -r`로 세 갈래를 가른다: ⓐ 저쪽에만 있는 파일(가져온다) ⓑ 내용이 다른

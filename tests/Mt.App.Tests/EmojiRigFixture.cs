@@ -19,12 +19,12 @@ internal static class EmojiRigFixture
         {
             Node("__root", "", stretch: true, size: 0f),
             Node("Emoji_Anchor", "__root", stretch: false, size: 0f),
-            Node("Emoji_Body", "Emoji_Anchor", stretch: false, size: 0f),
+            Node("Emoji_Body", "Emoji_Anchor", stretch: false, size: 0f, canvas: true), // 묶음 전체의 불투명도
         };
 
         for (int i = 1; i <= 4; i++)
         {
-            nodes.Add(Node($"Emoji_Part{i}", "Emoji_Body", stretch: false, size: PartSize));
+            nodes.Add(Node($"Emoji_Part{i}", "Emoji_Body", stretch: false, size: PartSize, canvas: true)); // 조각마다 따로 흐려진다
         }
 
         root["rigs"]!.AsArray().Add(new JsonObject { ["rigKind"] = RigKind, ["sourcePrefab"] = "", ["nodes"] = nodes });
@@ -36,7 +36,7 @@ internal static class EmojiRigFixture
         return path;
     }
 
-    private static JsonObject Node(string id, string parent, bool stretch, float size) => new()
+    private static JsonObject Node(string id, string parent, bool stretch, float size, bool canvas = false) => new()
     {
         ["id"] = id,
         ["parent"] = parent,
@@ -48,7 +48,7 @@ internal static class EmojiRigFixture
         ["localScale"] = new JsonObject { ["x"] = 1f, ["y"] = 1f, ["z"] = 1f },
         ["localEulerAngles"] = new JsonObject { ["x"] = 0f, ["y"] = 0f, ["z"] = 0f },
         ["measuredRectSize"] = stretch ? V2(1920f, 1080f) : V2(size, size),
-        ["hasCanvasGroup"] = false,
+        ["hasCanvasGroup"] = canvas,
         ["canvasGroupAlpha"] = 1f,
     };
 

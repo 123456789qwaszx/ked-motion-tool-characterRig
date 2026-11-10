@@ -17,7 +17,7 @@ namespace Ked.Presentation.Core
     {
         /// <summary>relative에서 "아무 변화 없음"인 값. 위치·회전 0, 배율 1. 없는 성분은 이 값으로 샘플된다.</summary>
         public static float Neutral(MotionChannelKind kind)
-            => kind == MotionChannelKind.Scale ? 1f : 0f;
+            => kind == MotionChannelKind.Scale || kind == MotionChannelKind.Alpha ? 1f : 0f;
 
         /// <summary>
         /// 채널의 원시 값. 없는 성분은 중립값이다 — 합성(Compose)이 "건드리지 않는다"로 읽는다.
@@ -61,7 +61,7 @@ namespace Ked.Presentation.Core
         private static Vec3 Apply(in MotionChannel channel, MotionChannelMode mode, Vec3 start, Vec3 v)
         {
             if (mode == MotionChannelMode.Relative)
-                return channel.Kind == MotionChannelKind.Scale ? Vec3.Scale(start, v) : start + v;
+                return channel.Kind == MotionChannelKind.Scale || channel.Kind == MotionChannelKind.Alpha ? Vec3.Scale(start, v) : start + v;
 
             return new Vec3(
                 channel.HasX ? v.X : start.X,
@@ -83,11 +83,19 @@ namespace Ked.Presentation.Core
                 MotionChannelKind.Position => StageNodeClaim.AnchoredPosition(nodeKey, end.XY),
                 MotionChannelKind.Scale => StageNodeClaim.LocalScaleXY(nodeKey, end.XY),
                 MotionChannelKind.Euler => StageNodeClaim.LocalEuler(nodeKey, end),
+                MotionChannelKind.Alpha => StageNodeClaim.CanvasAlpha(nodeKey, System.Math.Clamp(end.X, 0f, 1f)),
                 _ => throw new System.ArgumentOutOfRangeException(nameof(channel), channel.Kind, "모르는 채널 종류"),
             };
         }
 
-        /// <summary>채널 종류에 맞는 시작값을 노드 상태에서 읽는다 — Position은 z=0, Scale은 z를 그대로 든다.</summary>
+        /// <summary>
+        /// 시작값 — alpha까지. Alpha 채널의 시작값은 노드 상태가 아니라 무대 상태의 alpha 저장소에 있다(StageState.GetAlpha).
+        /// 그 밖의 종류는 alpha 인자를 보지 않는다. Alpha의 Y·Z는 1로 둔다(곱의 중립값 — 없는 성분).
+        /// </summary>
+        public static Vec3 StartOf(in MotionChannel channel, in RectNodeState state, float alpha)
+            => channel.Kind == MotionChannelKind.Alpha ? new Vec3(alpha, 1f, 1f) : StartOf(channel, state);
+
+        /// <summary>채널 종류에 맞는 시작값을 노드 상태에서 읽는다 — Position은 z=0, Scale은 z를 그대로 든다. Alpha는 alpha 인자를 받는 쪽을 쓴다.</summary>
         public static Vec3 StartOf(in MotionChannel channel, in RectNodeState state)
             => channel.Kind switch
             {

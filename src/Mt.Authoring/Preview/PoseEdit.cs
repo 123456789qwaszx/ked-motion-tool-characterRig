@@ -89,7 +89,7 @@ public static class PoseEdit
             return posed;
         }
 
-        if (kind == MotionChannelKind.Scale)
+        if (kind == MotionChannelKind.Scale || kind == MotionChannelKind.Alpha)
         {
             return Math.Abs(start) < 1e-6f ? posed : posed / start;
         }
