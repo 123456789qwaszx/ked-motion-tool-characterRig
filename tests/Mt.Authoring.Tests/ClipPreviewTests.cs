@@ -515,4 +515,72 @@ public class ClipPreviewTests
         Near(13f, SwayZ(Pose(editor, 1.5), "s1"));
         Near(8f, SwayZ(ClipPreview.Pose(Template(editor), editor.Document, Greet(editor), 1.5, null, null, lean), "s1")); // lean의 시작값
     }
+
+    [Fact]
+    public void 반복은_같은_블록을_끝에_이어_놓은_것과_같다_리듀서로도()
+    {
+        MotionEditor editor = NewEditor();
+        editor.AddClipBlock("greet", 0, "lean", 0f, MotionChannelMode.Relative); // Sway +5 (0.5초, commit)
+        editor.SetClipBlockRepeat("greet", 0, 0, 3);
+        editor.AddClipBlock("greet", 1, "nod", 0f);                              // s2: 복원 모션
+        editor.SetClipBlockRepeat("greet", 1, 0, 2);
+        ClipAsset clip = Greet(editor);
+
+        Assert.Equal(1.5f, ClipTiming.EndOf(editor.Document, clip.Tracks[0].Blocks[0]), 4);
+        Assert.Equal(1.5f, ClipTiming.DurationOf(editor.Document, clip), 4);
+        Assert.Equal("lean ×3", clip.Tracks[0].Blocks[0].Describe());
+
+        // 유지 모션은 돌 때마다 쌓인다: 5 · 10 · 15, 가운데는 그 사이.
+        Near(5f, SwayZ(Pose(editor, 0.5), "s1"));
+        Assert.InRange(SwayZ(Pose(editor, 0.75), "s1"), 6f, 9f);
+        Near(10f, SwayZ(Pose(editor, 1.0), "s1"));
+        Near(15f, SwayZ(Pose(editor, 9.0), "s1"));
+
+        // 복원 모션은 매번 처음 자세에서 다시 돈다.
+        Near(-18f, MoveYOf(Pose(editor, 0.3), "s2"));
+        Near(-18f, MoveYOf(Pose(editor, 0.9), "s2"));
+        Near(0f, MoveYOf(Pose(editor, 9.0), "s2"));
+
+        // 똑같은 블록을 이어 놓은 클립과 프레임마다 같다.
+        MotionEditor chained = NewEditor();
+        for (int i = 0; i < 3; i++)
+        {
+            chained.AddClipBlock("greet", 0, "lean", 0.5f * i, MotionChannelMode.Relative);
+        }
+
+        for (int k = 0; k <= 40; k++)
+        {
+            double t = k / 24.0;
+            Near(SwayZ(ClipPreview.Pose(Template(chained), chained.Document, Greet(chained), t), "s1"), SwayZ(Pose(editor, t), "s1"));
+        }
+
+        // 정지 프레임 = motion 커맨드를 그 횟수만큼.
+        var tuning = new StageReducerTuning
+        {
+            RigSchemas = RigFile.Dto,
+            ReferenceStageWidth = 1920f,
+            BaseResolution = new Vec2(1920f, 1080f),
+            RoleAnchors = new RoleAnchorTuningBodyDto(),
+            Motions = MotionExport.ToClips(editor.Document).ToDictionary(c => c.Name, c => c),
+        };
+        var commands = new List<StageCommand> { Cmd("slot", "s1") };
+        commands.AddRange(Enumerable.Repeat(Cmd("motion", "s1", "lean", "relative"), 3));
+        Near(15f, SwayZ(StageReducer.ApplyAll(StageReducer.CreateInitialState(tuning), commands, tuning).Nodes, "s1"));
+
+        // except: 둘째 바퀴(번호 1)부터 빼면 첫 바퀴가 남긴 5가 시작값이다.
+        Near(5f, SwayZ(ClipPreview.Pose(Template(editor), editor.Document, clip, 0.75, null, null, clip.Tracks[0].Blocks[0], null, 1), "s1"));
+
+        // 겹침·길이 검사는 늘어난 길이로 본다. 굽기는 바퀴를 다 담는다.
+        editor.AddClipBlock("greet", 0, "bow", 1.2f); // lean ×3(0 ~ 1.5)과 같은 노드
+        Assert.Contains(ClipValidator.ValidateClip(editor.Document, Greet(editor), RigFile.NodeIds), p => p.Blocking && p.Message.Contains("겹칠 수 없다", StringComparison.Ordinal));
+        editor.Undo();
+        MotionAsset baked = ClipBake.Bake(editor, Template(editor), "greet", "s1", "baked");
+        Near(15f, SwayZ(MotionPreview.Pose(Template(editor), baked, 9.0, null, "s1/"), "s1"));
+        Near(10f, SwayZ(MotionPreview.Pose(Template(editor), baked, 1.0, null, "s1/"), "s1"));
+
+        // 저작본: 한 번이면 안 적힌다. 터무니없는 값은 검증이 막는다.
+        Assert.Equal(2, Mt.Authoring.Serialization.MotionDocumentJson.Write(editor.Document).Split("\"repeat\"").Length - 1);
+        Greet(editor).Tracks[0].Blocks[0].Repeat = 100000;
+        Assert.Contains(ClipValidator.ValidateClip(editor.Document, Greet(editor), RigFile.NodeIds), p => p.Blocking && p.Message.Contains("반복은", StringComparison.Ordinal));
+    }
 }

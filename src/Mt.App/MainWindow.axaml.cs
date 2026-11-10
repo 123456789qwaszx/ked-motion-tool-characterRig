@@ -245,6 +245,12 @@ public partial class MainWindow : Window
         };
         _viewport.TimeChanged += (_, _) =>
         {
+            // 반복하는 블록은 바퀴가 넘어갈 때 시각 차가 바뀐다 — 그래프의 시각이 모션 길이 안에서 다시 돈다.
+            if (SelectedClip is not null && _graph.MotionName is not null)
+            {
+                _blockOffset = _viewport.ClipBlockTimeOffset;
+            }
+
             SyncTime(() =>
             {
                 _graph.CurrentTime = _viewport.Time - _blockOffset;

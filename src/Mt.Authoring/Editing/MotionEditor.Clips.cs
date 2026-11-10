@@ -222,7 +222,7 @@ public sealed partial class MotionEditor
         if (block.IsMotion)
         {
             RequireFits(target, Require(value.Motion));
-            next = new ClipBlock { At = ClampAt(value.At), Motion = value.Motion, Mode = value.Mode, Muted = value.IsMuted ? true : null };
+            next = new ClipBlock { At = ClampAt(value.At), Motion = value.Motion, Mode = value.Mode, Muted = value.IsMuted ? true : null, Repeat = NormalizeRepeat(value.Repeat) };
         }
         else
         {
@@ -276,6 +276,7 @@ public sealed partial class MotionEditor
         block.Mode = MotionChannelMode.Relative;
         block.Duration = state.Duration is > 0f ? state.Duration : null; // 0과 빈 칸은 같은 뜻 — 한 가지로 적는다
         block.Muted = state.IsMuted ? true : null;
+        block.Repeat = null; // 상태 블록은 한 번이다
         return block;
     }
 
@@ -324,6 +325,30 @@ public sealed partial class MotionEditor
         }
 
         Mutate(MotionChangeKind.Clip, () => block.Mode = mode);
+    }
+
+    /// <summary>모션 블록의 반복 횟수(1 이상). 1이면 안 적는다. 블록의 길이가 모션 길이 × 횟수가 된다.</summary>
+    public void SetClipBlockRepeat(string clipName, int track, int index, int repeat)
+    {
+        ClipBlock block = RequireBlock(RequireTrack(RequireClip(clipName), track), index);
+
+        if (!block.IsMotion)
+        {
+            throw new InvalidOperationException("상태 블록은 반복하지 않는다.");
+        }
+
+        int? next = NormalizeRepeat(repeat);
+        Mutate(MotionChangeKind.Clip, () => block.Repeat = next);
+    }
+
+    private static int? NormalizeRepeat(int? repeat)
+    {
+        if (repeat is < 1 or > Validation.ClipValidator.MaxRepeat)
+        {
+            throw new InvalidOperationException($"반복은 1~{Validation.ClipValidator.MaxRepeat}번이다 ('{repeat}')");
+        }
+
+        return repeat is null or 1 ? null : repeat;
     }
 
     /// <summary>블록을 끄거나 켠다 — 자리는 그대로, 적용만 빠진다(미리보기·굽기·겹침 검사). 되돌리기 한 칸.</summary>

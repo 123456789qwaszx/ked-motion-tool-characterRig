@@ -301,16 +301,42 @@ public sealed class ViewportView : Control
                 return null;
             }
 
-            double local = _clock.Time - entry.Block.At;
-            return local >= -1e-6 && local <= motion.Duration + 1e-6 ? (entry.Block, motion) : null;
+            return CycleOf(entry.Block, motion).InRange ? (entry.Block, motion) : null;
         }
     }
+
+    /// <summary>
+    /// 지금 시각이 그 블록의 몇 번째 바퀴인가(반복하는 블록) — 바퀴 번호, 그 바퀴 안의 시각(모션 기준), 블록 안인가.
+    /// 바퀴의 끝과 다음 바퀴의 처음이 만나는 자리는 앞 바퀴의 끝으로 본다(마지막 키를 고치는 자리다).
+    /// </summary>
+    private (int Cycle, double Local, bool InRange) CycleOf(ClipBlock block, MotionAsset motion)
+    {
+        double total = _clock.Time - block.At;
+        double duration = motion.Duration;
+
+        if (duration <= 1e-9)
+        {
+            return (0, total, Math.Abs(total) <= 1e-6);
+        }
+
+        int cycle = Math.Clamp((int)Math.Ceiling(total / duration - 1e-9) - 1, 0, block.Cycles - 1);
+        return (cycle, total - cycle * duration, total >= -1e-6 && total <= duration * block.Cycles + 1e-6);
+    }
+
+    /// <summary>
+    /// 클립 시각과 그 블록의 모션 시각의 차 — 블록의 시작 + 지나온 바퀴들. 문맥이 없으면 0.
+    /// 셸이 그래프·도프 시트의 현재 시각을 이만큼 어긋나게 맞춘다.
+    /// </summary>
+    public double ClipBlockTimeOffset
+        => _editor is not null && AnyContextEntry is { } entry && _editor.Document.Find(entry.Block.Motion) is { } motion
+            ? entry.Block.At + CycleOf(entry.Block, motion).Cycle * (double)motion.Duration
+            : 0;
 
     /// <summary>그 시각의 클립 카메라 — 카메라 블록(상태)까지 반영한 값에 카메라 모션을 얹은 것. <paramref name="except"/>는 빼고.</summary>
     private CameraSettings ClipCameraAt(ClipAsset clip, double seconds, ClipBlock? except)
     {
         CameraSettings stage = _clipStage?.CameraAt(seconds) ?? Scene?.Camera ?? new CameraSettings();
-        return ClipPreview.CameraAt(_editor!.Document, clip, stage, seconds, IsClipTrackMuted, except) ?? stage;
+        return ClipPreview.CameraAt(_editor!.Document, clip, stage, seconds, IsClipTrackMuted, except, ContextCycle) ?? stage;
     }
 
     private (ClipTrack Track, ClipBlock Block)? AnyContextEntry
@@ -350,13 +376,16 @@ public sealed class ViewportView : Control
                 return null;
             }
 
-            double local = _clock.Time - entry.Block.At;
-            return local >= -1e-6 && local <= motion.Duration + 1e-6 ? motion : null;
+            return CycleOf(entry.Block, motion).InRange ? motion : null;
         }
     }
 
     /// <summary>키를 놓는 시각(모션 기준) — 클립 안에서는 시계에서 블록의 시작을 뺀다.</summary>
-    private double EditTime => _clock.Time - (ContextEntry?.Block.At ?? 0f);
+    private double EditTime => ContextEntry is null ? _clock.Time : _clock.Time - ClipBlockTimeOffset;
+
+    /// <summary>문맥 블록의 지금 바퀴 — 시작값은 이 바퀴부터 뺀 상태다(앞 바퀴가 남긴 것은 시작값의 일부).</summary>
+    private int ContextCycle
+        => _editor is not null && AnyContextEntry is { } entry && _editor.Document.Find(entry.Block.Motion) is { } motion ? CycleOf(entry.Block, motion).Cycle : 0;
 
     /// <summary>키 값을 읽는 기준 — 클립 안에서는 블록의 재생 기준(모션의 렌즈가 아니다).</summary>
     private MotionChannelMode EditModeOf(MotionAsset motion) => ContextEntry?.Block.Mode ?? motion.PreviewMode;
@@ -369,7 +398,7 @@ public sealed class ViewportView : Control
     {
         if (_editor is not null && _template is not null && ShownClip is { } clip && ContextEntry is { } entry)
         {
-            RectNodeTree start = ClipPreview.Pose(_clipStage?.TreeAt(_clock.Time) ?? _template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, _clipStage?.CameraAt(_clock.Time), entry.Block);
+            RectNodeTree start = ClipPreview.Pose(_clipStage?.TreeAt(_clock.Time) ?? _template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, _clipStage?.CameraAt(_clock.Time), entry.Block, null, ContextCycle);
             return start.GetState(key);
         }
 
@@ -980,7 +1009,7 @@ public sealed class ViewportView : Control
         {
             CameraSettings before = ClipCameraAt(clip, _clock.Time, context.Block);
             float from = node == CameraRig.ZoomNode ? before.Zoom : axis == Axis.X ? before.PanX : before.PanY;
-            float at = (float)Math.Max(0, SnapTime(_clock.Time - context.Block.At));
+            float at = (float)Math.Max(0, SnapTime(_clock.Time - ClipBlockTimeOffset));
             _editor.KeyComponents(context.Motion.Name, node, MotionChannelKind.Position, at, new[] { (axis, CameraRig.KeyValueFor(context.Block.Mode, from, value)) }, DefaultTangent);
             return;
         }
@@ -1459,7 +1488,7 @@ public sealed class ViewportView : Control
         if (ShownClip is { } clip && ContextEntry is { } entry)
         {
             var before = new Dictionary<string, float>(StringComparer.Ordinal);
-            ClipPreview.Pose(_clipStage?.TreeAt(_clock.Time) ?? _template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, null, entry.Block, before);
+            ClipPreview.Pose(_clipStage?.TreeAt(_clock.Time) ?? _template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, null, entry.Block, before, ContextCycle);
             start = before.TryGetValue(Prefix + node, out float alpha) ? alpha : 1f;
         }
 

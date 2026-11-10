@@ -42,6 +42,7 @@ public sealed class ClipTimelineView : Control
     private static readonly IBrush StateBrush = new SolidColorBrush(Color.FromRgb(0x5C, 0x5C, 0x6E));
     private static readonly IBrush CameraBrush = new SolidColorBrush(Color.FromRgb(0x8C, 0x7A, 0x3A));
     private static readonly IBrush MissingBrush = new SolidColorBrush(Color.FromRgb(0x6A, 0x3A, 0x3A));
+    private static readonly Pen CycleMarkPen = new(new SolidColorBrush(Color.FromArgb(0xB0, 0x20, 0x20, 0x20)), 1);
     private static readonly Pen TickPen = new(new SolidColorBrush(Color.FromRgb(0x55, 0x55, 0x55)), 1);
     private static readonly Pen SelectedPen = new(Brushes.White, 1.5);
     private static readonly Pen OverlapPen = new(Brushes.OrangeRed, 1.5);
@@ -777,11 +778,18 @@ public sealed class ClipTimelineView : Control
                 using IDisposable? off = block.IsMuted && !muted ? context.PushOpacity(0.35) : null;
                 context.DrawRectangle(fill, pen, rect, 3, 3);
 
+                // 반복하는 블록은 바퀴마다 금을 긋는다.
+                for (int cycle = 1; motion is not null && cycle < block.Cycles; cycle++)
+                {
+                    double x = XAtTime(block.At + cycle * motion.Duration);
+                    context.DrawLine(CycleMarkPen, new Point(x, rect.Y + 2), new Point(x, rect.Bottom - 2));
+                }
+
                 string text = (block.IsMuted ? "🔇 " : "") + (!block.IsMotion
                     ? block.Describe()
                     : motion is null
                     ? $"{block.Motion} (없음)"
-                    : $"{block.Motion} · {(block.Mode == MotionChannelMode.Relative ? "rel" : "abs")} · {(motion.End == MotionEnd.Restore ? "restore" : "commit")}");
+                    : $"{block.Describe()} · {(block.Mode == MotionChannelMode.Relative ? "rel" : "abs")} · {(motion.End == MotionEnd.Restore ? "restore" : "commit")}");
 
                 // 길이 없는 상태 블록은 막대가 좁다 — 이름은 막대 옆에 쓴다.
                 if (!block.IsMotion && rect.Width < 40)

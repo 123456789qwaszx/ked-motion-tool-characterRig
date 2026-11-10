@@ -98,6 +98,18 @@ public sealed class ClipBlock
 
     public MotionChannelMode Mode { get; set; } = MotionChannelMode.Relative;
 
+    /// <summary>
+    /// 반복 횟수(모션 블록) — 그 모션을 이어서 몇 번 도는가. null·1이면 한 번. 블록의 길이는 모션 길이 × 횟수다.
+    /// 뜻은 **같은 블록을 끝에 이어 그만큼 놓은 것**과 같다: 유지(commit) 모션은 돌 때마다 남긴 값 위에 다시 얹히고(상대값이면 쌓인다),
+    /// 복원(restore) 모션은 매번 시작 자세로 돌아와 다시 돈다. 그래서 정지 프레임은 motion 커맨드를 그 횟수만큼 부른 것과 같다.
+    /// 끝없이 도는 반복(머무는 이모지의 punch)은 클립의 것이 아니라 재생하는 쪽의 인자다 — 클립은 길이가 있다.
+    /// </summary>
+    public int? Repeat { get; set; }
+
+    /// <summary>도는 횟수 — 1 이상.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public int Cycles => IsMotion ? Math.Max(1, Repeat ?? 1) : 1;
+
     /// <summary>상태 블록의 길이(초). 0·null이면 그 순간에 바뀐다. 모션 블록은 쓰지 않는다(길이 = 모션의 길이).</summary>
     public float? Duration { get; set; }
 
@@ -140,7 +152,7 @@ public sealed class ClipBlock
     /// <summary>타임라인 막대와 문제 문구에 쓰는 짧은 이름.</summary>
     public string Describe() => Kind switch
     {
-        ClipBlockKind.Motion => Motion,
+        ClipBlockKind.Motion => Cycles > 1 ? $"{Motion} ×{Cycles}" : Motion,
         ClipBlockKind.Visible => Visible == false ? "숨기기" : "보이기",
         ClipBlockKind.Place => string.IsNullOrEmpty(Place) ? "자리 풀기" : $"자리 {Place}",
         ClipBlockKind.Layer => $"층 {Layer}",
@@ -158,7 +170,7 @@ public static class ClipTiming
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(block);
-        return block.IsMotion ? document.Find(block.Motion)?.Duration ?? 0f : Math.Max(0f, block.Duration ?? 0f);
+        return block.IsMotion ? (document.Find(block.Motion)?.Duration ?? 0f) * block.Cycles : Math.Max(0f, block.Duration ?? 0f);
     }
 
     /// <summary>블록이 끝나는 시각.</summary>

@@ -589,7 +589,7 @@ public class ClipShellTests
 
                 // 모션 블록을 고르면 인스펙터는 시작·재생 기준뿐이다.
                 timeline.Select((0, 0));
-                Assert.Equal(4, window.ClipBlockRows); // 제목 · 끄기 · 시작 · 재생 기준
+                Assert.Equal(5, window.ClipBlockRows); // 제목 · 반복 · 끄기 · 시작 · 재생 기준
                 window.UpdateSelectedClipBlock(b => b.Mode = MotionChannelMode.Absolute);
                 Assert.Equal(MotionChannelMode.Absolute, editor.Document.FindClip("clip")!.Tracks[0].Blocks[0].Mode);
             }
@@ -1214,6 +1214,64 @@ public class ClipShellTests
                 Assert.Null(window.Viewport.EditMotion);
                 timeline.PlaceMotion(0, "nod", 1.2);
                 Assert.False(window.CameraBoxes.Visible);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void 반복하는_블록은_바퀴마다_다시_돌고_그래프의_시각도_모션_길이_안에서_돈다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                ClipTimelineView timeline = PrepareTimeline(window);
+                MotionEditor editor = window.Session.Editor;
+                window.Viewport.SnapEnabled = false;
+                window.Viewport.AutoKey = false;
+                timeline.PlaceMotion(1, "nod", 0.5); // s2: 0.5 ~ 1.1
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+                // 인스펙터의 "반복" — 세 번. 블록이 세 배로 길어지고 클립 길이가 따라간다. 한 칸.
+                long revision = editor.Revision;
+                window.UpdateSelectedClipBlock(b => b.Repeat = 3);
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.Equal(3, editor.Document.FindClip("clip")!.Tracks[1].Blocks[0].Cycles);
+                Assert.Equal(2.3, window.Viewport.Clock.Duration, 4); // 0.5 + 0.6 × 3
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.Equal(timeline.XAtTime(2.3) - timeline.XAtTime(0.5), timeline.BlockRect(1, 0).Width, 1); // 막대가 세 바퀴만큼
+
+                // 바퀴마다 같은 움직임이 다시 온다(복원 모션): 0.8 · 1.4 · 2.0초가 모두 가장 깊은 자리.
+                foreach (double t in new[] { 0.8, 1.4, 2.0 })
+                {
+                    window.Viewport.ScrubTo(t);
+                    Assert.Equal(-18f, MoveYOf(window, "s2"), 2);
+                    Assert.Equal(0.3, window.Graph.CurrentTime, 4); // 그래프는 모션의 0.3초 — 바퀴가 넘어가도 모션 길이 안에서 돈다
+                }
+
+                // 그래프에서 시각을 옮기면 지금 바퀴 안에서 간다.
+                window.Viewport.ScrubTo(1.4);
+                window.Graph.CurrentTime = 0.1;
+                Assert.Equal(1.2, window.Viewport.Time, 4); // 둘째 바퀴(1.1 ~ 1.7)의 0.1초
+
+                // 둘째 바퀴에서 잡은 포즈도 그 모션의 키가 된다 — 모든 바퀴가 같이 바뀐다(모션은 하나다).
+                window.Viewport.ScrubTo(1.4);
+                window.Viewport.SetComponent(MoveY, MotionChannelKind.Position, Axis.Y, -30f);
+                Assert.Contains(editor.Document.Find("nod")!.Channels[0].Y!.Keys, k => Math.Abs(k.T - 0.3f) < 1e-4f && Math.Abs(k.V + 30f) < 1e-3f);
+                window.Viewport.ScrubTo(0.8);
+                Assert.Equal(-30f, MoveYOf(window, "s2"), 2);
+
+                // 한 번으로 되돌리면 안 적힌다.
+                editor.SetClipBlockRepeat("clip", 1, 0, 1);
+                Assert.Null(editor.Document.FindClip("clip")!.Tracks[1].Blocks[0].Repeat);
+                Assert.Throws<InvalidOperationException>(() => editor.SetClipBlockRepeat("clip", 1, 0, 0));
             }
             finally
             {

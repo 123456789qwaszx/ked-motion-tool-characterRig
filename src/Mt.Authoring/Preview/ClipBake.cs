@@ -63,7 +63,7 @@ public static class ClipBake
                 }
 
                 keyTimes.Add(block.At);
-                keyTimes.Add(block.At + motion.Duration);
+                keyTimes.Add(block.At + motion.Duration * block.Cycles);
 
                 foreach (ChannelAsset channel in motion.Channels)
                 {
@@ -79,7 +79,11 @@ public static class ClipBake
 
                     foreach (Axis axis in AxesOf(channel.Kind))
                     {
-                        keyTimes.AddRange(channel.Get(axis)?.Keys.Select(k => block.At + k.T) ?? Enumerable.Empty<float>());
+                        for (int cycle = 0; cycle < block.Cycles; cycle++)
+                        {
+                            float from = block.At + cycle * motion.Duration; // 바퀴마다 키 시각이 다시 온다
+                            keyTimes.AddRange(channel.Get(axis)?.Keys.Select(k => from + k.T) ?? Enumerable.Empty<float>());
+                        }
                     }
                 }
             }

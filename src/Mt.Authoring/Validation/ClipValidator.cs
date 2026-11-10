@@ -25,6 +25,9 @@ public static class ClipValidator
     /// <summary>시각 비교의 여유 — 프레임(1/24초)보다 훨씬 작다.</summary>
     public const float Tolerance = 1e-4f;
 
+    /// <summary>블록 하나의 반복 횟수 상한 — 손으로 쓴 파일의 터무니없는 값이 미리보기를 멈추지 않게.</summary>
+    public const int MaxRepeat = 100;
+
     /// <param name="rigNodeIds">rigKind → 노드 id 목록. null이면 리그 맞춤은 rigKind 이름만 견준다.</param>
     public static IReadOnlyList<ClipProblem> Validate(
         MotionDocument document,
@@ -191,7 +194,12 @@ public static class ClipValidator
                 continue;
             }
 
-            float end = block.At + motion.Duration;
+            float end = block.At + motion.Duration * block.Cycles;
+
+            if (block.Repeat is < 1 or > MaxRepeat)
+            {
+                Block($"{where}: 반복은 1~{MaxRepeat}번이다 ({block.Repeat})");
+            }
 
             if (duration is { } d && end > d + Tolerance)
             {
@@ -342,7 +350,7 @@ public static class ClipValidator
 
             string role = clip.Tracks[placed.Track].Role;
             float start = placed.Block.At;
-            float end = start + motion.Duration;
+            float end = start + motion.Duration * placed.Block.Cycles;
 
             foreach (ChannelAsset channel in motion.Channels)
             {

@@ -131,10 +131,9 @@ public partial class MainWindow
                 ? clip.Tracks[at.Track].Blocks[at.Index]
                 : null;
         string? motion = block is { IsMotion: true } && _session.Editor.Document.Find(block.Motion) is not null ? block.Motion : null;
-        _blockOffset = motion is null ? 0 : block!.At;
-
         // 뷰포트도 같은 블록을 본다 — 끌기·채널 박스·S가 그 블록의 모션에 키를 놓는다(2단계).
         _viewport.ClipBlockContext = motion is null ? null : _timeline.SelectedBlock;
+        _blockOffset = motion is null ? 0 : _viewport.ClipBlockTimeOffset; // 블록의 시작 + 지나온 바퀴(반복하는 블록)
 
         if (_graph.MotionName != motion)
         {
@@ -453,6 +452,12 @@ public partial class MainWindow
                 FontWeight = FontWeight.SemiBold,
                 TextWrapping = TextWrapping.Wrap,
             });
+            if (block.IsMotion)
+            {
+                _clipBlock.Children.Add(BlockNumber("반복(번)", block.Cycles, v => b => b.Repeat = v is null ? null : (int)Math.Round(v.Value),
+                    "그 모션을 이어서 몇 번 도는가 — 같은 블록을 끝에 이어 놓은 것과 같다(유지 모션은 돌 때마다 쌓이고, 복원 모션은 매번 처음 자세에서 다시 돈다). 비우면 한 번"));
+            }
+
             var off = new CheckBox { Content = "이 블록 끄기 (M)", IsChecked = block.IsMuted, FontSize = 11 };
             ToolTip.SetTip(off, "자리는 그대로 두고 적용만 뺀다 — 미리보기·굽기·겹침 검사에서 없는 것처럼. 파일에 남는다(되돌리기 한 번)");
             off.IsCheckedChanged += (_, _) => FromBlockControl(() => _timeline.SetSelectedMuted(off.IsChecked == true));
