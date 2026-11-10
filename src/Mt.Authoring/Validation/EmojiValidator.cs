@@ -66,6 +66,18 @@ public static class EmojiValidator
                 Notice($"스킨 '{skin.Name}'에 그림을 준 조각이 없다");
             }
 
+            if (emoji.SkinFlipped is not null)
+            {
+                if (document.FindSkin(emoji.SkinFlipped) is not { } flipped)
+                {
+                    Block($"반전 판 스킨 '{emoji.SkinFlipped}'이 없다");
+                }
+                else if (!string.Equals(flipped.Rig, emoji.Rig, StringComparison.Ordinal))
+                {
+                    Block($"반전 판 스킨 '{flipped.Name}'은 리그 '{flipped.Rig}'의 것이다(이모지는 '{emoji.Rig}')");
+                }
+            }
+
             foreach ((string label, string? name) in new[] { ("등장", emoji.Enter), ("머묾", emoji.Hold), ("퇴장", emoji.Exit) })
             {
                 if (name is null)
@@ -132,6 +144,52 @@ public static class EmojisJson
         return true;
     }
 
+    /// <summary>
+    /// 스킨을 풀어서 — 조각 → 그림. 한 장이고 제자리면 글 하나(<c>"art/a.png"</c>), 넘길 장이나 놓임이 있으면 객체:
+    /// <c>{ "image", "frames": [...], "frameSeconds", "loop", "x", "y", "scale", "rotation" }</c>(기본값인 것은 안 적는다).
+    /// </summary>
+    private static JsonObject PartsOf(SkinAsset? skin)
+    {
+        var parts = new JsonObject();
+
+        if (skin is null)
+        {
+            return parts;
+        }
+
+        foreach ((string node, string image) in skin.Parts)
+        {
+            SkinPartSetup setup = skin.SetupOf(node);
+
+            if (setup.IsDefault)
+            {
+                parts[node] = image;
+                continue;
+            }
+
+            var part = new JsonObject { ["image"] = image };
+
+            if (setup.Frames.Count > 0)
+            {
+                part["frames"] = new JsonArray(setup.Frames.Select(f => (JsonNode)f).ToArray());
+                part["frameSeconds"] = setup.FrameSeconds;
+                part["loop"] = setup.Loop;
+            }
+
+            if (setup.IsPlaced)
+            {
+                part["x"] = setup.X;
+                part["y"] = setup.Y;
+                part["scale"] = setup.Scale;
+                part["rotation"] = setup.Rotation;
+            }
+
+            parts[node] = part;
+        }
+
+        return parts;
+    }
+
     public static string Write(MotionDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
@@ -139,14 +197,13 @@ public static class EmojisJson
 
         foreach (EmojiAsset e in document.Emojis.OrderBy(e => e.Name, StringComparer.Ordinal))
         {
-            var parts = new JsonObject();
+            var entry = new JsonObject { ["name"] = e.Name, ["rig"] = e.Rig, ["parts"] = PartsOf(document.FindSkin(e.Skin)) };
 
-            foreach ((string node, string image) in document.FindSkin(e.Skin)?.Parts ?? new SortedDictionary<string, string>())
+            // 반전 판 — 캐릭터가 좌우 반전일 때 이 그림을, 뒤집지 않고.
+            if (document.FindSkin(e.SkinFlipped) is { } flipped)
             {
-                parts[node] = image;
+                entry["partsFlipped"] = PartsOf(flipped);
             }
-
-            var entry = new JsonObject { ["name"] = e.Name, ["rig"] = e.Rig, ["parts"] = parts };
 
             if (e.Enter is not null)
             {

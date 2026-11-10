@@ -20,6 +20,7 @@ public partial class MainWindow
     private readonly ListBox _emojiList = new() { MinHeight = 60 };
     private readonly TextBox _emojiName = new() { FontSize = 11 };
     private readonly ComboBox _emojiSkin = new() { FontSize = 11 };
+    private readonly ComboBox _emojiSkinFlipped = new() { FontSize = 11 };
     private readonly ComboBox _emojiEnter = new() { FontSize = 11 };
     private readonly ComboBox _emojiHold = new() { FontSize = 11 };
     private readonly ComboBox _emojiExit = new() { FontSize = 11 };
@@ -66,6 +67,8 @@ public partial class MainWindow
 
         _emojiFields.Children.Add(Labeled("키", _emojiName));
         _emojiFields.Children.Add(Labeled("그림(스킨)", _emojiSkin));
+        _emojiFields.Children.Add(Labeled("반전 판", _emojiSkinFlipped));
+        ToolTip.SetTip(_emojiSkinFlipped, "붙은 캐릭터가 좌우 반전일 때 입는 스킨(말풍선의 꼬리가 반대쪽인 판) — 자리와 움직임은 뒤집히고 이 그림은 뒤집지 않고 그린다. 없으면 같은 그림이 뒤집혀 보인다");
         _emojiFields.Children.Add(Labeled("등장", _emojiEnter));
         _emojiFields.Children.Add(Labeled("머묾(되풀이)", _emojiHold));
         _emojiFields.Children.Add(Labeled("퇴장", _emojiExit));
@@ -90,7 +93,7 @@ public partial class MainWindow
 
         ToolTip.SetTip(_emojiName, "대본이 부르는 이름 — 빈칸 없는 글(한글도 된다)");
         ToolTip.SetTip(_emojiEnter, "뜰 때 한 번 도는 모션(튀어나옴). 유지(commit)면 그 자세에서 머묾이 시작한다");
-        ToolTip.SetTip(_emojiHold, "머무는 동안 처음부터 되풀이하는 모션(까딱임·punch). 등장이 끝난 자세에서 시작하고 바퀴가 쌓이지 않는다");
+        ToolTip.SetTip(_emojiHold, "머무는 동안 처음부터 되풀이하는 모션(까딱임·punch). 등장이 끝난 자세에서 시작하고 바퀴가 쌓이지 않는다. 끝에서 처음으로 튀는 머묾(흘러내렸다가 다시 위에서)은 끝 규칙을 '유지'로 둔다 — '복원' 모션은 중립값에서 끝나야 한다");
         ToolTip.SetTip(_emojiExit, "사라질 때 한 번 도는 모션(흐려짐). 머묾이 멈춘 그 자세에서 시작한다");
         ToolTip.SetTip(_emojiHoldSeconds, "등장이 끝난 뒤 퇴장이 시작하기까지(초). 비우면 끌 때까지 머무는 이모지(상태) — 미리보기는 머묾을 얼마간만 보인다");
         ToolTip.SetTip(_emojiOffsetX, "붙는 자리에서의 오프셋(px) — Emoji_Anchor의 위치로 들어간다. 이모지마다 머리 옆·위·입 옆이 다르다");
@@ -118,6 +121,7 @@ public partial class MainWindow
             };
 
         Combo(_emojiSkin, (e, v) => e.Skin = v);
+        Combo(_emojiSkinFlipped, (e, v) => e.SkinFlipped = v);
         Combo(_emojiEnter, (e, v) => e.Enter = v);
         Combo(_emojiHold, (e, v) => e.Hold = v);
         Combo(_emojiExit, (e, v) => e.Exit = v);
@@ -259,33 +263,7 @@ public partial class MainWindow
             _refreshDepth--;
         }
 
-        RefreshAssets(); // 정의의 스킨으로 갈아 끼운 조각 그림을 오브젝트의 것으로 되돌린다
         RefreshEmojiInspector();
-    }
-
-    /// <summary>뷰포트가 이모지를 묶은 뒤 — 정의의 스킨 그림을 연기할 오브젝트에 싣는다(오브젝트가 입은 스킨 대신).</summary>
-    private void LoadEmojiImages()
-    {
-        if (_viewport.ShownEmoji is not { } emoji || _viewport.EmojiActor is not { } actor)
-        {
-            return;
-        }
-
-        foreach ((string node, string? path) in _session.PartImagesOfSkin(emoji.Skin))
-        {
-            Bitmap? image = null;
-
-            try
-            {
-                image = path is null ? null : new Bitmap(path);
-            }
-            catch (Exception exception)
-            {
-                _session.SetStatus($"이모지 {emoji.Name}의 조각 {node} 그림을 읽지 못했다: {exception.Message}");
-            }
-
-            _viewport.SetPartImage(actor.Id, node, image);
-        }
     }
 
     private void RefreshEmojis()
@@ -310,7 +288,6 @@ public partial class MainWindow
             BindMotion(SelectedMotion);
         }
 
-        LoadEmojiImages();
         RefreshEmojiInspector();
     }
 
@@ -342,6 +319,7 @@ public partial class MainWindow
             string rig = emoji?.Rig ?? "";
             List<string> motions = document.Motions.Where(m => m.Rig == rig).Select(m => m.Name).OrderBy(n => n, StringComparer.Ordinal).ToList();
             Fill(_emojiSkin, document.Skins.Where(s => s.Rig == rig).Select(s => s.Name), emoji?.Skin);
+            Fill(_emojiSkinFlipped, document.Skins.Where(s => s.Rig == rig).Select(s => s.Name), emoji?.SkinFlipped);
             Fill(_emojiEnter, motions, emoji?.Enter);
             Fill(_emojiHold, motions, emoji?.Hold);
             Fill(_emojiExit, motions, emoji?.Exit);

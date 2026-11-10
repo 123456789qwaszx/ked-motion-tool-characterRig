@@ -60,6 +60,7 @@ public sealed partial class MotionEditor
         Mutate(MotionChangeKind.Scene, () =>
         {
             emoji.Skin = Blank(value.Skin);
+            emoji.SkinFlipped = Blank(value.SkinFlipped);
             emoji.Enter = Blank(value.Enter);
             emoji.Hold = Blank(value.Hold);
             emoji.Exit = Blank(value.Exit);
@@ -86,9 +87,17 @@ public sealed partial class MotionEditor
 
     private void RetargetEmojiSkins(string name, string newName)
     {
-        foreach (EmojiAsset emoji in Document.Emojis.Where(e => e.Skin == name))
+        foreach (EmojiAsset emoji in Document.Emojis)
         {
-            emoji.Skin = newName;
+            if (emoji.Skin == name)
+            {
+                emoji.Skin = newName;
+            }
+
+            if (emoji.SkinFlipped == name)
+            {
+                emoji.SkinFlipped = newName;
+            }
         }
     }
 

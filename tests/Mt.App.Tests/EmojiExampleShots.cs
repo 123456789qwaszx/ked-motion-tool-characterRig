@@ -56,6 +56,36 @@ public class EmojiExampleShots
                     Shot($"emoji-{index++:00}");
                 }
 
+                // 그림 넘기기 — 점이 하나씩 찍힌다.
+                window.SelectEmoji("말줄임점풍선");
+
+                foreach (double t in new[] { 0.2, 0.5, 0.9, 1.4 })
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                    window.Viewport.ScrubTo(t);
+                    Shot($"frames-{t:0.0}");
+                }
+
+                // 반전 판 — 캐릭터를 좌우로 뒤집으면 자리가 뒤집히고 반전 판 그림이 뜬다(화면에만: 저장하지 않는다).
+                window.Session.Editor.SetObjectPlacement(null, "s1", 0f, 0f, 0f, -1f, 1f);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.Viewport.ScrubTo(1.4);
+                Shot("flipped-dots");
+                window.SelectEmoji("느낌물음표");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.Viewport.ScrubTo(0.7);
+                Shot("flipped-plain");
+                window.Session.Editor.Undo();
+
+                // 스킨 칸 — 이모지 오브젝트에 꽃 스킨을 입혀 "씬" 탭에서 본다.
+                window.Session.Editor.SetObjectSkin(null, "e1", "행복한벚꽃");
+                window.SelectEmoji(null);
+                window.Viewport.SelectedObjectId = "e1";
+                window.InspectorTab = 1;
+                Shot("skin-panel");
+                window.Session.Editor.Undo();
+                window.InspectorTab = 4;
+
                 window.SelectClip("emoji_demo");
 
                 foreach (double t in new[] { 0.6, 3.0, 7.5 })

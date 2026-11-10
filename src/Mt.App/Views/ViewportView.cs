@@ -70,10 +70,8 @@ public sealed class ViewportView : Control
     private readonly Dictionary<string, Bitmap?> _portraits = new();
 
     /// <summary>조각 그림 — (오브젝트 id, 조각 노드 id) → 비트맵. 스킨이 그림을 준 조각만 든다(파일을 못 읽었으면 null — 자리표시).</summary>
-    private readonly Dictionary<(string Object, string Node), Bitmap?> _partImages = new();
-
-    // 스킨의 조각 그림(스킨 이름, 조각) — 이벤트로 뜬 이모지가 정의의 스킨을 입을 때 쓴다(오브젝트가 입은 것 대신).
-    private readonly Dictionary<(string Skin, string Node), Bitmap?> _skinImages = new();
+    // 스킨의 그림 — 문서 기준 경로 → 비트맵. 어느 스킨의 어느 장을 그릴지는 그릴 때 고른다(입은 스킨 · 이모지 정의의 스킨 · 반전 판 · 그림 넘기기).
+    private readonly Dictionary<string, Bitmap?> _images = new(StringComparer.Ordinal);
     private string? _selectedObjectId;
     public bool ShowGrid { get; set; } = true;
     private Vec2 _stageSize = BaseResolutionFile.Default;
@@ -1194,21 +1192,11 @@ public sealed class ViewportView : Control
         InvalidateVisual();
     }
 
-    /// <summary>조각의 그림 비트맵(스킨이 준 것). 못 읽었으면 null을 넣는다 — 그 조각은 자리표시로 그려진다.</summary>
-    public void SetPartImage(string objectId, string node, Bitmap? image)
+    /// <summary>스킨의 그림 비트맵 — 문서 기준 경로로. 못 읽었으면 null을 넣는다(자리표시로 그려진다).</summary>
+    public void SetImage(string image, Bitmap? bitmap)
     {
-        ArgumentNullException.ThrowIfNull(objectId);
-        ArgumentNullException.ThrowIfNull(node);
-        _partImages[(objectId, node)] = image;
-        InvalidateVisual();
-    }
-
-    /// <summary>스킨의 조각 그림 — 이벤트 키로 뜨는 이모지의 스킨(이모지 정의가 가리키는 것)을 싣는다.</summary>
-    public void SetSkinImage(string skin, string node, Bitmap? image)
-    {
-        ArgumentNullException.ThrowIfNull(skin);
-        ArgumentNullException.ThrowIfNull(node);
-        _skinImages[(skin, node)] = image;
+        ArgumentNullException.ThrowIfNull(image);
+        _images[image] = bitmap;
         InvalidateVisual();
     }
 
@@ -1264,8 +1252,69 @@ public sealed class ViewportView : Control
         => _editor is not null && SceneAtTime(_clock.Time) is { } scene && FiredUntil(double.PositiveInfinity) is { Count: > 0 } all
             && EmojiEvents.Targets(_editor.Document, scene, all).Contains(objectId) && EmojiPlayOn(objectId) is null;
 
-    private bool TryPartImage(SceneObject o, string node, out Bitmap? image)
-        => EmojiPlayOn(o.Id) is { Emoji.Skin: { } skin } ? _skinImages.TryGetValue((skin, node), out image) : _partImages.TryGetValue((o.Id, node), out image);
+    /// <summary>그 오브젝트가 지금 입은 것 — 스킨, 그림 넘기기의 시각(뜬 뒤 몇 초), 반전 판인가(그림을 뒤집지 않고 그린다).</summary>
+    private readonly record struct Worn(SkinAsset Skin, double Seconds, bool Upright);
+
+    /// <summary>
+    /// 지금 입은 스킨 — 이모지 정의를 보는 중이거나 이벤트로 떠 있으면 정의의 스킨(오브젝트가 입은 것 대신), 그 캐릭터가 좌우 반전이고 반전 판이 있으면 그 판.
+    /// 그림 넘기기의 시각은 이모지면 뜬 뒤의 시간, 아니면 시계의 시각.
+    /// </summary>
+    private Worn? WornBy(RectNodeTree? pose, SceneObject o)
+    {
+        if (_editor is null)
+        {
+            return null;
+        }
+
+        EmojiAsset? emoji = ShownEmoji is { } shown && EmojiActor is { } actor && actor.Id == o.Id ? shown : null;
+        double seconds = _clock.Time;
+
+        if (emoji is null && EmojiPlayOn(o.Id) is { } play)
+        {
+            emoji = play.Emoji;
+            seconds = play.Local;
+        }
+
+        bool upright = false;
+        string? name = emoji is null ? o.Skin : emoji.Skin;
+
+        if (emoji?.SkinFlipped is { } flipped && pose is not null && IsMirrored(pose, o))
+        {
+            name = flipped;
+            upright = true;
+        }
+
+        return _editor.Document.FindSkin(name) is { } skin && string.Equals(skin.Rig, o.Rig, StringComparison.Ordinal) ? new Worn(skin, seconds, upright) : null;
+    }
+
+    /// <summary>그 오브젝트가 좌우로 뒤집혀 서 있는가(부모 캐릭터의 배율 x가 음수 등) — 조각 사각형의 손잡이 방향으로 본다.</summary>
+    private bool IsMirrored(RectNodeTree pose, SceneObject o)
+    {
+        foreach (string node in RigParts.Of(_rig, o.Rig))
+        {
+            if (pose.Contains(o.KeyOf(node)))
+            {
+                Quad q = PortraitLayout.RectQuad(pose, o.KeyOf(node));
+                Vec2 a = q.BottomRight - q.BottomLeft;
+                Vec2 b = q.TopLeft - q.BottomLeft;
+                float cross = a.X * b.Y - a.Y * b.X;
+
+                if (MathF.Abs(cross) > 1e-6f)
+                {
+                    return cross < 0f;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private Bitmap? ImageOf(Worn worn, string node)
+        => worn.Skin.ImageAt(node, worn.Seconds) is { } image && _images.TryGetValue(image, out Bitmap? bitmap) ? bitmap : null;
+
+    /// <summary>테스트 손잡이 — 그 조각에 지금 그려지는 그림(문서 기준 경로). 안 그려지면 null.</summary>
+    public string? PartImage(string objectId, string node)
+        => Scene?.Find(objectId) is { } o && WornBy(CurrentPose(), o) is { } worn ? worn.Skin.ImageAt(node, worn.Seconds) : null;
 
     /// <summary>
     /// 그 오브젝트에서 그려지는 조각 노드들(그리는 순서) — 리그의 조각 가운데 입은 스킨이 그림을 준 것. 조각이 없는 리그나 스킨을 안 입었으면 빈 목록.
@@ -1273,21 +1322,13 @@ public sealed class ViewportView : Control
     public IReadOnlyList<string> DrawnParts(SceneObject o)
     {
         ArgumentNullException.ThrowIfNull(o);
-
-        // 이모지 정의를 보는 중이면 그 오브젝트는 정의의 스킨을 입는다(오브젝트가 입은 것 대신).
-        // 이벤트로 떠 있는 동안에도 그렇다.
-        string? skinName = ShownEmoji is { } emoji && EmojiActor is { } actor && actor.Id == o.Id ? emoji.Skin
-            : EmojiPlayOn(o.Id) is { } play ? play.Emoji.Skin : o.Skin;
-
-        if (_editor?.Document.FindSkin(skinName) is not { } skin || !string.Equals(skin.Rig, o.Rig, StringComparison.Ordinal))
-        {
-            return Array.Empty<string>();
-        }
-
-        return RigParts.Of(_rig, o.Rig).Where(skin.Parts.ContainsKey).ToList();
+        return DrawnParts(CurrentPose(), o);
     }
 
-    /// <summary>조각이 지금 그려지는 사각형(루트 공간) — 노드의 rect 안에 그림의 종횡비로 맞춘 것(비트맵이 없으면 rect 그대로). 없으면 null.</summary>
+    private IReadOnlyList<string> DrawnParts(RectNodeTree? pose, SceneObject o)
+        => WornBy(pose, o) is { } worn ? RigParts.Of(_rig, o.Rig).Where(worn.Skin.Parts.ContainsKey).ToList() : Array.Empty<string>();
+
+    /// <summary>조각이 지금 그려지는 사각형(루트 공간) — 노드의 rect 안에 그림의 종횡비로 맞추고 스킨의 놓임(자리·크기·회전)을 입힌 것. 없으면 null.</summary>
     public Quad? PartQuad(string objectId, string node)
         => CurrentPose() is { } pose && Scene?.Find(objectId) is { } o ? PartQuadOf(pose, o, node) : null;
 
@@ -1301,13 +1342,9 @@ public sealed class ViewportView : Control
         }
 
         Quad rect = PortraitLayout.RectQuad(pose, key);
+        Worn? worn = WornBy(pose, o);
+        Bitmap? image = worn is { } w0 ? ImageOf(w0, node) : null;
 
-        if (!TryPartImage(o, node, out Bitmap? image) || image is not { PixelSize: { Width: > 0, Height: > 0 } })
-        {
-            return rect;
-        }
-
-        // 노드 rect 안에 그림을 찌그러뜨리지 않고 넣는다(가운데, contain) — rect의 두 변을 따라 줄인다.
         float w = Norm(rect.BottomRight - rect.BottomLeft);
         float h = Norm(rect.TopLeft - rect.BottomLeft);
 
@@ -1318,19 +1355,56 @@ public sealed class ViewportView : Control
             return rect;
         }
 
-        float aspect = image.PixelSize.Width / (float)image.PixelSize.Height;
-        float fitW = Math.Min(w, h * aspect);
-        float fitH = fitW / aspect;
         Vec2 ux = (rect.BottomRight - rect.BottomLeft) * (1f / w);
         Vec2 uy = (rect.TopLeft - rect.BottomLeft) * (1f / h);
-        Vec2 origin = rect.BottomLeft + ux * ((w - fitW) / 2f) + uy * ((h - fitH) / 2f);
+        float fitW = w;
+        float fitH = h;
+
+        // 노드 rect 안에 그림을 찌그러뜨리지 않고 넣는다(가운데, contain) — rect의 두 변을 따라 줄인다.
+        if (image is { PixelSize: { Width: > 0, Height: > 0 } })
+        {
+            float aspect = image.PixelSize.Width / (float)image.PixelSize.Height;
+            fitW = Math.Min(w, h * aspect);
+            fitH = fitW / aspect;
+        }
+
+        Vec2 center = rect.BottomLeft + ux * (w / 2f) + uy * (h / 2f);
+        float turn = 0f;
+
+        // 스킨의 놓임 — 조각 노드 안에서의 자리(노드의 px), 크기, 회전. 노드의 값(모션) 위에 따로 얹힌다.
+        if (worn is { } w1 && w1.Skin.SetupOf(node) is { IsPlaced: true } setup && pose.GetState(key) is var state)
+        {
+            Vec2 size = state.SizeDelta;
+            float sx = size.X > 1e-6f ? w / size.X : 1f; // 노드의 px → 루트 공간(부모들의 배율까지)
+            float sy = size.Y > 1e-6f ? h / size.Y : 1f;
+            center = center + ux * (setup.X * sx) + uy * (setup.Y * sy);
+            fitW *= setup.Scale;
+            fitH *= setup.Scale;
+            turn = setup.Rotation * MathF.PI / 180f;
+        }
+
+        // 반전 판은 뒤집지 않고 그린다 — 뒤집힌 축(ux)을 되돌린다.
+        if (worn is { Upright: true })
+        {
+            ux = ux * -1f;
+        }
+
+        if (turn != 0f)
+        {
+            // 화면에서 반시계가 +가 되게 — 축의 손잡이 방향을 따른다.
+            float handed = ux.X * uy.Y - ux.Y * uy.X < 0f ? -1f : 1f;
+            float c = MathF.Cos(turn);
+            float s = MathF.Sin(turn) * handed;
+            (ux, uy) = (ux * c + uy * s, uy * c - ux * s);
+        }
+
+        Vec2 origin = center - ux * (fitW / 2f) - uy * (fitH / 2f);
         return new Quad(origin, origin + ux * fitW, origin + ux * fitW + uy * fitH, origin + uy * fitH);
     }
 
     public void ClearPortraits()
     {
-        _partImages.Clear();
-        _skinImages.Clear();
+        _images.Clear();
         _portraits.Clear();
         RebuildTemplate();
         InvalidateVisual();
@@ -1919,13 +1993,13 @@ public sealed class ViewportView : Control
     private void DrawObject(DrawingContext context, RectNodeTree pose, SceneObject o, bool selected)
     {
         // 조각이 있는 리그(이모지 등) — 스킨이 그림을 준 조각만, 덤프 순서로 그린다. 스킨을 안 입었으면 아래의 윤곽으로 떨어진다.
-        if (_rig is not null && RigParts.Of(_rig, o.Rig).Count > 0 && DrawnParts(o) is { Count: > 0 } parts)
+        if (_rig is not null && RigParts.Of(_rig, o.Rig).Count > 0 && DrawnParts(pose, o) is { Count: > 0 } parts && WornBy(pose, o) is { } worn)
         {
             foreach (string node in parts)
             {
                 if (PartQuadOf(pose, o, node) is { } part)
                 {
-                    TryPartImage(o, node, out Bitmap? image);
+                    Bitmap? image = ImageOf(worn, node);
                     float alpha = EffectiveAlpha(pose, o.KeyOf(node), o.Prefix, _drawAlphas);
 
                     if (alpha <= 0.001f)

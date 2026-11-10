@@ -1612,7 +1612,6 @@ public partial class MainWindow : Window
         {
             // 이모지 정의를 골랐다 — 뷰포트(와 시계)는 그 수명의 것이다.
             _viewport.BindEmoji(_session.Editor, emoji);
-            LoadEmojiImages();
         }
         else
         {
@@ -1656,45 +1655,25 @@ public partial class MainWindow : Window
         _viewport.StageSize = _session.StageSize;
         _viewport.ClearPortraits();
 
-        // 이모지 정의의 스킨 — 이벤트 키로 뜰 때 붙은 이모지 리그가 입는다.
-        foreach (string skin in _session.Editor.Document.Emojis.Select(e => e.Skin).OfType<string>().Distinct(StringComparer.Ordinal))
+        // 스킨의 그림 — 파일이 없거나 못 읽으면 null을 넣는다(자리표시로 그려진다). 어느 스킨의 어느 장을 그릴지는 뷰포트가 그때그때 고른다.
+        foreach ((string image, string? imagePath) in _session.SkinImages())
         {
-            foreach ((string node, string? skinPath) in _session.PartImagesOfSkin(skin))
+            Bitmap? bitmap = null;
+
+            try
             {
-                Bitmap? image = null;
-
-                try
-                {
-                    image = skinPath is null ? null : new Bitmap(skinPath);
-                }
-                catch (Exception exception)
-                {
-                    _session.SetStatus($"스킨 {skin}의 조각 {node} 그림을 읽지 못했다: {exception.Message}");
-                }
-
-                _viewport.SetSkinImage(skin, node, image);
+                bitmap = imagePath is null ? null : new Bitmap(imagePath);
             }
+            catch (Exception exception)
+            {
+                _session.SetStatus($"그림 {image}를 읽지 못했다: {exception.Message}");
+            }
+
+            _viewport.SetImage(image, bitmap);
         }
 
         foreach (SceneObject o in _viewport.SceneObjects)
         {
-            // 스킨의 조각 그림 — 파일이 없거나 못 읽으면 null을 넣는다(자리표시로 그려진다).
-            foreach ((string node, string? partPath) in _session.PartImagesOf(o))
-            {
-                Bitmap? image = null;
-
-                try
-                {
-                    image = partPath is null ? null : new Bitmap(partPath);
-                }
-                catch (Exception exception)
-                {
-                    _session.SetStatus($"{o.Id}의 조각 {node} 그림을 읽지 못했다: {exception.Message}");
-                }
-
-                _viewport.SetPartImage(o.Id, node, image);
-            }
-
             if (_session.PortraitPathOf(o) is not { } portraitPath)
             {
                 continue;

@@ -28,6 +28,11 @@ public sealed partial class MotionEditor
         {
             Document.Skins.Remove(skin);
 
+            foreach (EmojiAsset emoji in Document.Emojis.Where(e => e.SkinFlipped == name))
+            {
+                emoji.SkinFlipped = null; // 반전 판만 없어진다 — 그림(Skin)이 없어진 것은 검증이 알린다
+            }
+
             foreach (SceneObject o in Wearers(name))
             {
                 o.Skin = null;
@@ -74,10 +79,102 @@ public sealed partial class MotionEditor
             if (string.IsNullOrEmpty(image))
             {
                 skin.Parts.Remove(node);
+                skin.Setups.Remove(node); // 그림이 없는 조각에는 넘길 장도 놓임도 없다
             }
             else
             {
                 skin.Parts[node] = image;
+            }
+        });
+    }
+
+    /// <summary>
+    /// 조각의 장들을 한 번에 — 첫 장이 그 조각의 그림, 나머지가 넘길 장이다(한 칸). 비면 그 조각을 비운다. 장당 시간·놓임은 그대로 둔다.
+    /// </summary>
+    public void SetSkinPartImages(string name, string node, IReadOnlyList<string> images)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        ArgumentNullException.ThrowIfNull(images);
+        SkinAsset skin = RequireSkin(name);
+        List<string> list = images.Select(i => (i ?? "").Trim()).Where(i => i.Length > 0).ToList();
+
+        if (node.Length == 0)
+        {
+            throw new InvalidOperationException("조각 노드 id가 비었다.");
+        }
+
+        if (skin.ImagesOf(node).SequenceEqual(list))
+        {
+            return;
+        }
+
+        Mutate(MotionChangeKind.Scene, () =>
+        {
+            if (list.Count == 0)
+            {
+                skin.Parts.Remove(node);
+                skin.Setups.Remove(node);
+                return;
+            }
+
+            skin.Parts[node] = list[0];
+            SkinPartSetup setup = skin.SetupOf(node).Clone();
+            setup.Frames = list.Skip(1).ToList();
+
+            if (setup.IsDefault)
+            {
+                skin.Setups.Remove(node);
+            }
+            else
+            {
+                skin.Setups[node] = setup;
+            }
+        });
+    }
+
+    /// <summary>
+    /// 조각의 덧붙임(그림 넘기기 · 놓임)을 고친다 — 그림이 있는 조각에만. 기본값뿐이면 지운다. 같은 값은 무기록.
+    /// </summary>
+    public void SetSkinPartSetup(string name, string node, SkinPartSetup value)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        ArgumentNullException.ThrowIfNull(value);
+        SkinAsset skin = RequireSkin(name);
+
+        if (!skin.Parts.ContainsKey(node))
+        {
+            throw new InvalidOperationException($"스킨 '{name}'의 조각 '{node}'에 그림이 없다 — 먼저 그림을 준다.");
+        }
+
+        if (!float.IsFinite(value.X) || !float.IsFinite(value.Y) || !float.IsFinite(value.Rotation) || !float.IsFinite(value.Scale) || value.Scale <= 0f)
+        {
+            throw new InvalidOperationException("놓임의 자리·회전은 수, 크기는 0보다 큰 수다.");
+        }
+
+        if (!float.IsFinite(value.FrameSeconds) || value.FrameSeconds <= 0f)
+        {
+            throw new InvalidOperationException($"장당 시간은 0보다 큰 수다 ('{value.FrameSeconds}')");
+        }
+
+        SkinPartSetup next = value.Clone();
+        next.Frames = next.Frames.Select(f => (f ?? "").Trim()).Where(f => f.Length > 0).ToList();
+        SkinPartSetup now = skin.SetupOf(node);
+
+        if (now.Frames.SequenceEqual(next.Frames) && now.FrameSeconds == next.FrameSeconds && now.Loop == next.Loop
+            && now.X == next.X && now.Y == next.Y && now.Scale == next.Scale && now.Rotation == next.Rotation)
+        {
+            return;
+        }
+
+        Mutate(MotionChangeKind.Scene, () =>
+        {
+            if (next.IsDefault)
+            {
+                skin.Setups.Remove(node);
+            }
+            else
+            {
+                skin.Setups[node] = next;
             }
         });
     }

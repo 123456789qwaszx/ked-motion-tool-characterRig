@@ -37,7 +37,7 @@ public class EmojiExampleTests
         Assert.True(!MotionValidator.Validate(document, rig.NodeIds, null, rig.AlphaNodeIds).Any(), string.Join("\n", MotionValidator.Validate(document, rig.NodeIds, null, rig.AlphaNodeIds).Select(p => $"{p.MotionName}: {p.Message}")));
         Assert.Empty(EmojiValidator.Validate(document, rig.NodeIds).Select(p => $"{p.EmojiName}: {p.Message}"));
         Assert.Empty(ClipValidator.Validate(document, rig.NodeIds).Select(p => p.Message));
-        Assert.Equal(24, document.Emojis.Count);
+        Assert.Equal(22, document.Emojis.Count);
 
         string directory = ExampleDirectory();
         string path = Path.Combine(directory, "emoji-examples.motion-authoring.json");
@@ -51,7 +51,7 @@ public class EmojiExampleTests
         Assert.Equal(json, File.ReadAllText(path));
 
         // 스킨이 가리키는 그림이 다 있다.
-        Assert.All(document.Skins.SelectMany(s => s.Parts.Values).Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
+        Assert.All(document.Skins.SelectMany(s => s.AllImages()).Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class EmojiExampleTests
         Assert.Equal("행복한벚꽃", Playing(3.5)); // 머문다
         Assert.Equal("행복한벚꽃", Playing(4.6)); // 끄라는 말이 왔다 — 퇴장 중
         Assert.Null(Playing(5.0));
-        Assert.Equal("말줄임점풍선_우", Playing(8.0));
+        Assert.Equal("말줄임점풍선", Playing(8.0));
         Assert.Null(Playing(9.5));
     }
 }

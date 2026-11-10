@@ -681,4 +681,101 @@ public class SkinShellTests
             }
         });
     }
+
+    [Fact]
+    public void 스킨의_그림_넘기기와_놓임과_반전_판이_뷰포트에_그대로_보인다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                window.Session.LoadRig(EmojiRigFixture.WriteDump(TestDocuments.FixturePath("rig-schemas.json")));
+                MotionEditor editor = window.Session.Editor;
+                string id = window.CreateAttachedFromMenu(EmojiRigFixture.RigKind, "s1");
+                window.AddSkinFromForm();
+                window.InspectorTab = 1; // 씬 탭
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+                // 그림 칸에 ' | '로 이어 적으면 장이 여럿 — 한 칸.
+                long revision = editor.Revision;
+                TextBox images = window.SkinPartBox("Emoji_Part1")!;
+                images.Focus();
+                images.Text = "art/a.png | art/b.png | art/c.png";
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.Equal(new[] { "art/a.png", "art/b.png", "art/c.png" }, editor.Document.FindSkin("skin")!.ImagesOf("Emoji_Part1"));
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.Equal("art/a.png | art/b.png | art/c.png", window.SkinPartBox("Emoji_Part1")!.Text);
+                Assert.Null(window.SkinSetupBoxes("Emoji_Part2")); // 그림이 없는 조각에는 덧붙임 칸이 없다
+
+                // 시계를 따라 넘어간다(장당 0.2초).
+                editor.AddMotion("still", EmojiRigFixture.RigKind, 1f);
+                window.SelectMotion("still");
+                window.Viewport.SelectedObjectId = id;
+                window.Viewport.ScrubTo(0.0);
+                Assert.Equal("art/a.png", window.Viewport.PartImage(id, "Emoji_Part1"));
+                window.Viewport.ScrubTo(0.25);
+                Assert.Equal("art/b.png", window.Viewport.PartImage(id, "Emoji_Part1"));
+                window.Viewport.ScrubTo(0.5);
+                Assert.Equal("art/c.png", window.Viewport.PartImage(id, "Emoji_Part1"));
+
+                // 놓임 칸(X) — 한 칸, 조각이 그만큼 옮겨 그려진다. 노드의 값은 그대로다(모션과 따로).
+                Quad before = window.Viewport.PartQuad(id, "Emoji_Part1")!.Value;
+                var boxes = window.SkinSetupBoxes("Emoji_Part1")!.Value;
+                revision = editor.Revision;
+                boxes.X.Focus();
+                boxes.X.Text = "50";
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.Equal(50f, editor.Document.FindSkin("skin")!.SetupOf("Emoji_Part1").X);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Quad placed = window.Viewport.PartQuad(id, "Emoji_Part1")!.Value;
+                // 놓임은 조각 노드의 px이다 — 화면에서는 부모들의 배율(캐릭터의 깊이 배율 등)이 곱해진다: 조각의 폭이 곱해진 그만큼.
+                float perPixel = (before.BottomRight.X - before.BottomLeft.X) / EmojiRigFixture.PartSize;
+                Assert.Equal(before.Center.X + 50f * perPixel, placed.Center.X, 2);
+                Assert.Equal(0f, window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Part1").AnchoredPosition.X, 3);
+
+                // 크기 0.5 — 사각형이 반으로.
+                SkinPartSetup half = editor.Document.FindSkin("skin")!.SetupOf("Emoji_Part1").Clone();
+                half.Scale = 0.5f;
+                editor.SetSkinPartSetup("skin", "Emoji_Part1", half);
+                Quad small = window.Viewport.PartQuad(id, "Emoji_Part1")!.Value;
+                Assert.Equal((before.BottomRight.X - before.BottomLeft.X) / 2f, small.BottomRight.X - small.BottomLeft.X, 2);
+
+                // 반전 판 — 캐릭터가 좌우 반전이면 이모지는 반전 판 스킨을 입고, 그림은 뒤집지 않는다(사각형의 왼쪽 아래가 여전히 왼쪽).
+                editor.AddSkin("skin_flip", EmojiRigFixture.RigKind);
+                editor.SetSkinPartImages("skin_flip", "Emoji_Part1", new[] { "art/left.png" });
+                editor.AddEmoji("e", EmojiRigFixture.RigKind);
+                editor.UpdateEmoji("e", new EmojiAsset { Skin = "skin", SkinFlipped = "skin_flip", HoldSeconds = 1f, OffsetX = 100f });
+                window.SelectEmoji("e");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.Viewport.ScrubTo(0.1);
+                Assert.Equal("art/a.png", window.Viewport.PartImage(id, "Emoji_Part1"));
+                float right = window.Viewport.PartQuad(id, "Emoji_Part1")!.Value.Center.X;
+
+                editor.SetObjectPlacement(null, "s1", 0f, 0f, 0f, -1f, 1f);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.Viewport.ScrubTo(0.1);
+                Assert.Equal("art/left.png", window.Viewport.PartImage(id, "Emoji_Part1"));
+                Quad flipped = window.Viewport.PartQuad(id, "Emoji_Part1")!.Value;
+                Assert.True(flipped.Center.X < 0f && right > 0f, $"{right} → {flipped.Center.X}"); // 자리는 뒤집혔다
+                Assert.True(flipped.BottomRight.X > flipped.BottomLeft.X);                          // 그림은 안 뒤집혔다
+
+                // 반전 판이 없으면 같은 그림이 뒤집혀 보인다.
+                editor.UpdateEmoji("e", new EmojiAsset { Skin = "skin", HoldSeconds = 1f, OffsetX = 100f });
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.Viewport.ScrubTo(0.1);
+                Quad mirrored = window.Viewport.PartQuad(id, "Emoji_Part1")!.Value;
+                Assert.Equal("art/a.png", window.Viewport.PartImage(id, "Emoji_Part1"));
+                Assert.True(mirrored.BottomRight.X < mirrored.BottomLeft.X);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
 }

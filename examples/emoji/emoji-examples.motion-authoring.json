@@ -103,179 +103,6 @@
       ]
     },
     {
-      "name": "emoji_pop_frames",
-      "rig": "emoji",
-      "duration": 0.25,
-      "end": "commit",
-      "previewMode": "absolute",
-      "channels": [
-        {
-          "node": "Emoji_Body",
-          "kind": "scale",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.15,
-                "v": 1.2,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.25,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.15,
-                "v": 1.2,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.25,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Emoji_Body",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 12.5,
-                "outTangent": 12.5,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.08,
-                "v": 1,
-                "inTangent": 12.5,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.25,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Emoji_Part2",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.25,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Emoji_Part3",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.25,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Emoji_Part4",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.25,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
       "name": "emoji_drop",
       "rig": "emoji",
       "duration": 0.3,
@@ -341,7 +168,7 @@
       ]
     },
     {
-      "name": "blossom_in",
+      "name": "emoji_bloom",
       "rig": "emoji",
       "duration": 0.5,
       "end": "commit",
@@ -349,50 +176,6 @@
       "channels": [
         {
           "node": "Emoji_Part1",
-          "kind": "position",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": -150,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.5,
-                "v": -150,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 40,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.5,
-                "v": 40,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Emoji_Part1",
           "kind": "scale",
           "x": {
             "keys": [
@@ -493,50 +276,6 @@
         },
         {
           "node": "Emoji_Part2",
-          "kind": "position",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 150,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.5,
-                "v": 150,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": -30,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.5,
-                "v": -30,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Emoji_Part2",
           "kind": "scale",
           "x": {
             "keys": [
@@ -558,7 +297,7 @@
               },
               {
                 "t": 0.26,
-                "v": 1,
+                "v": 1.25,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "auto",
@@ -566,7 +305,7 @@
               },
               {
                 "t": 0.34,
-                "v": 0.8,
+                "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "auto",
@@ -574,7 +313,7 @@
               },
               {
                 "t": 0.5,
-                "v": 0.8,
+                "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "flat",
@@ -602,7 +341,7 @@
               },
               {
                 "t": 0.26,
-                "v": 1,
+                "v": 1.25,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "auto",
@@ -610,7 +349,7 @@
               },
               {
                 "t": 0.34,
-                "v": 0.8,
+                "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "auto",
@@ -618,7 +357,7 @@
               },
               {
                 "t": 0.5,
-                "v": 0.8,
+                "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "flat",
@@ -653,50 +392,6 @@
         },
         {
           "node": "Emoji_Part3",
-          "kind": "position",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 120,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.5,
-                "v": 120,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 130,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.5,
-                "v": 130,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Emoji_Part3",
           "kind": "scale",
           "x": {
             "keys": [
@@ -718,7 +413,7 @@
               },
               {
                 "t": 0.38,
-                "v": 0.6875,
+                "v": 1.25,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "auto",
@@ -726,7 +421,7 @@
               },
               {
                 "t": 0.45999998,
-                "v": 0.55,
+                "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "auto",
@@ -734,7 +429,7 @@
               },
               {
                 "t": 0.5,
-                "v": 0.55,
+                "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "flat",
@@ -762,7 +457,7 @@
               },
               {
                 "t": 0.38,
-                "v": 0.6875,
+                "v": 1.25,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "auto",
@@ -770,7 +465,7 @@
               },
               {
                 "t": 0.45999998,
-                "v": 0.55,
+                "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "auto",
@@ -778,7 +473,7 @@
               },
               {
                 "t": 0.5,
-                "v": 0.55,
+                "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "flat",
@@ -1204,442 +899,7 @@
       ]
     },
     {
-      "name": "emoji_frames2",
-      "rig": "emoji",
-      "duration": 0.6,
-      "end": "commit",
-      "previewMode": "absolute",
-      "channels": [
-        {
-          "node": "Emoji_Part1",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.28,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": -49.999973,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.3,
-                "v": 0,
-                "inTangent": -49.999973,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.6,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Emoji_Part2",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.28,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 49.999973,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.3,
-                "v": 1,
-                "inTangent": 49.999973,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.6,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "emoji_frames3",
-      "rig": "emoji",
-      "duration": 0.6,
-      "end": "commit",
-      "previewMode": "absolute",
-      "channels": [
-        {
-          "node": "Emoji_Part1",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.18,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": -50.00001,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.2,
-                "v": 0,
-                "inTangent": -50.00001,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.6,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Emoji_Part2",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.18,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 50.00001,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.2,
-                "v": 1,
-                "inTangent": 50.00001,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.38,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": -49.999973,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.4,
-                "v": 0,
-                "inTangent": -49.999973,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.6,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Emoji_Part3",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.38,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 49.999973,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.4,
-                "v": 1,
-                "inTangent": 49.999973,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.6,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "dots_frames",
-      "rig": "emoji",
-      "duration": 2,
-      "end": "commit",
-      "previewMode": "absolute",
-      "channels": [
-        {
-          "node": "Emoji_Part1",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.32999998,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": -49.999973,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.35,
-                "v": 0,
-                "inTangent": -49.999973,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 2,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Emoji_Part2",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.32999998,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 49.999973,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.35,
-                "v": 1,
-                "inTangent": 49.999973,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.68,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": -50.00005,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.7,
-                "v": 0,
-                "inTangent": -50.00005,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 2,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Emoji_Part3",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.68,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 50.00005,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 0.7,
-                "v": 1,
-                "inTangent": 50.00005,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 1.03,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": -50.00005,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 1.05,
-                "v": 0,
-                "inTangent": -50.00005,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 2,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Emoji_Part4",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 1.03,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 50.00005,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 1.05,
-                "v": 1,
-                "inTangent": 50.00005,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 2,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "blossom_sway",
+      "name": "emoji_sway",
       "rig": "emoji",
       "duration": 1,
       "end": "restore",
@@ -2017,7 +1277,7 @@
         {
           "t": 0.2,
           "name": "emoji",
-          "value": "말줄임점풍선_우"
+          "value": "말줄임점풍선"
         }
       ]
     },
@@ -2245,42 +1505,64 @@
       }
     },
     {
-      "name": "쑥스럼풍선_우",
-      "rig": "emoji",
-      "parts": {
-        "Emoji_Part1": "art/shy_r.png"
-      }
-    },
-    {
-      "name": "쑥스럼풍선_좌",
-      "rig": "emoji",
-      "parts": {
-        "Emoji_Part1": "art/shy_l.png"
-      }
-    },
-    {
       "name": "난감실타래",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/tangle_1.png",
-        "Emoji_Part2": "art/tangle_2.png"
+        "Emoji_Part1": "art/tangle_1.png"
+      },
+      "setups": {
+        "Emoji_Part1": {
+          "frames": [
+            "art/tangle_2.png"
+          ],
+          "frameSeconds": 0.3,
+          "loop": true,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0
+        }
       }
     },
     {
       "name": "왁자지껄",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/chatter_1.png",
-        "Emoji_Part2": "art/chatter_2.png"
+        "Emoji_Part1": "art/chatter_1.png"
+      },
+      "setups": {
+        "Emoji_Part1": {
+          "frames": [
+            "art/chatter_2.png"
+          ],
+          "frameSeconds": 0.3,
+          "loop": true,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0
+        }
       }
     },
     {
       "name": "삐질삐질땀방울",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/sweat_1.png",
-        "Emoji_Part2": "art/sweat_2.png",
-        "Emoji_Part3": "art/sweat_3.png"
+        "Emoji_Part1": "art/sweat_1.png"
+      },
+      "setups": {
+        "Emoji_Part1": {
+          "frames": [
+            "art/sweat_2.png",
+            "art/sweat_3.png"
+          ],
+          "frameSeconds": 0.2,
+          "loop": true,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0
+        }
       }
     },
     {
@@ -2312,23 +1594,61 @@
       }
     },
     {
-      "name": "말줄임점풍선_우",
+      "name": "말줄임점풍선",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/dots_r_1.png",
-        "Emoji_Part2": "art/dots_r_2.png",
-        "Emoji_Part3": "art/dots_r_3.png",
-        "Emoji_Part4": "art/dots_r_4.png"
+        "Emoji_Part1": "art/dots_r_1.png"
+      },
+      "setups": {
+        "Emoji_Part1": {
+          "frames": [
+            "art/dots_r_2.png",
+            "art/dots_r_3.png",
+            "art/dots_r_4.png"
+          ],
+          "frameSeconds": 0.35,
+          "loop": false,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0
+        }
       }
     },
     {
-      "name": "말줄임점풍선_좌",
+      "name": "말줄임점풍선_반전",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/dots_l_1.png",
-        "Emoji_Part2": "art/dots_l_2.png",
-        "Emoji_Part3": "art/dots_l_3.png",
-        "Emoji_Part4": "art/dots_l_4.png"
+        "Emoji_Part1": "art/dots_l_1.png"
+      },
+      "setups": {
+        "Emoji_Part1": {
+          "frames": [
+            "art/dots_l_2.png",
+            "art/dots_l_3.png",
+            "art/dots_l_4.png"
+          ],
+          "frameSeconds": 0.35,
+          "loop": false,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0
+        }
+      }
+    },
+    {
+      "name": "쑥스럼풍선",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/shy_r.png"
+      }
+    },
+    {
+      "name": "쑥스럼풍선_반전",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/shy_l.png"
       }
     },
     {
@@ -2338,6 +1658,35 @@
         "Emoji_Part1": "art/blossom.png",
         "Emoji_Part2": "art/blossom.png",
         "Emoji_Part3": "art/blossom.png"
+      },
+      "setups": {
+        "Emoji_Part1": {
+          "frames": [],
+          "frameSeconds": 0.2,
+          "loop": true,
+          "x": -150,
+          "y": 40,
+          "scale": 1,
+          "rotation": 0
+        },
+        "Emoji_Part2": {
+          "frames": [],
+          "frameSeconds": 0.2,
+          "loop": true,
+          "x": 150,
+          "y": -30,
+          "scale": 0.8,
+          "rotation": 0
+        },
+        "Emoji_Part3": {
+          "frames": [],
+          "frameSeconds": 0.2,
+          "loop": true,
+          "x": 120,
+          "y": 130,
+          "scale": 0.55,
+          "rotation": 0
+        }
       }
     }
   ],
@@ -2497,37 +1846,11 @@
       "locator": "face"
     },
     {
-      "name": "쑥스럼풍선_우",
-      "rig": "emoji",
-      "skin": "쑥스럼풍선_우",
-      "enter": "emoji_pop",
-      "hold": "emoji_bob",
-      "exit": "emoji_fade",
-      "holdSeconds": 1.6,
-      "anchorNode": "Emoji_Anchor",
-      "offsetX": 190,
-      "offsetY": 20,
-      "locator": "faceAura"
-    },
-    {
-      "name": "쑥스럼풍선_좌",
-      "rig": "emoji",
-      "skin": "쑥스럼풍선_좌",
-      "enter": "emoji_pop",
-      "hold": "emoji_bob",
-      "exit": "emoji_fade",
-      "holdSeconds": 1.6,
-      "anchorNode": "Emoji_Anchor",
-      "offsetX": -190,
-      "offsetY": 20,
-      "locator": "faceAura"
-    },
-    {
       "name": "난감실타래",
       "rig": "emoji",
       "skin": "난감실타래",
-      "enter": "emoji_pop_frames",
-      "hold": "emoji_frames2",
+      "enter": "emoji_pop",
+      "hold": "emoji_bob",
       "exit": "emoji_fade",
       "holdSeconds": 1.8,
       "anchorNode": "Emoji_Anchor",
@@ -2539,8 +1862,8 @@
       "name": "왁자지껄",
       "rig": "emoji",
       "skin": "왁자지껄",
-      "enter": "emoji_pop_frames",
-      "hold": "emoji_frames2",
+      "enter": "emoji_pop",
+      "hold": "emoji_shake",
       "exit": "emoji_fade",
       "holdSeconds": 1.8,
       "anchorNode": "Emoji_Anchor",
@@ -2552,8 +1875,7 @@
       "name": "삐질삐질땀방울",
       "rig": "emoji",
       "skin": "삐질삐질땀방울",
-      "enter": "emoji_pop_frames",
-      "hold": "emoji_frames3",
+      "enter": "emoji_pop",
       "exit": "emoji_fade",
       "holdSeconds": 1.8,
       "anchorNode": "Emoji_Anchor",
@@ -2610,11 +1932,12 @@
       "locator": "faceAura"
     },
     {
-      "name": "말줄임점풍선_우",
+      "name": "말줄임점풍선",
       "rig": "emoji",
-      "skin": "말줄임점풍선_우",
-      "enter": "emoji_pop_frames",
-      "hold": "dots_frames",
+      "skin": "말줄임점풍선",
+      "skinFlipped": "말줄임점풍선_반전",
+      "enter": "emoji_pop",
+      "hold": "emoji_bob",
       "exit": "emoji_fade",
       "anchorNode": "Emoji_Anchor",
       "offsetX": 190,
@@ -2622,14 +1945,16 @@
       "locator": "faceAura"
     },
     {
-      "name": "말줄임점풍선_좌",
+      "name": "쑥스럼풍선",
       "rig": "emoji",
-      "skin": "말줄임점풍선_좌",
-      "enter": "emoji_pop_frames",
-      "hold": "dots_frames",
+      "skin": "쑥스럼풍선",
+      "skinFlipped": "쑥스럼풍선_반전",
+      "enter": "emoji_pop",
+      "hold": "emoji_bob",
       "exit": "emoji_fade",
+      "holdSeconds": 1.6,
       "anchorNode": "Emoji_Anchor",
-      "offsetX": -190,
+      "offsetX": 190,
       "offsetY": 20,
       "locator": "faceAura"
     },
@@ -2637,8 +1962,8 @@
       "name": "행복한벚꽃",
       "rig": "emoji",
       "skin": "행복한벚꽃",
-      "enter": "blossom_in",
-      "hold": "blossom_sway",
+      "enter": "emoji_bloom",
+      "hold": "emoji_sway",
       "exit": "emoji_fade",
       "anchorNode": "Emoji_Anchor",
       "offsetX": 0,

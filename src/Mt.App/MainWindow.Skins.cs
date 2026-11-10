@@ -76,6 +76,7 @@ public partial class MainWindow
             IReadOnlyList<string> parts = o is null ? Array.Empty<string>() : RigParts.Of(_session.Rig, o.Rig);
             _skinPanel.IsVisible = parts.Count > 0;
             _skinParts.Children.Clear();
+            _skinSetupBoxes.Clear();
 
             if (o is null || parts.Count == 0)
             {
@@ -102,7 +103,7 @@ public partial class MainWindow
 
             foreach (string node in parts)
             {
-                _skinParts.Children.Add(SkinPartRow(skin.Name, node, skin.Parts.TryGetValue(node, out string? image) ? image : ""));
+                _skinParts.Children.Add(SkinPartRow(skin, node));
             }
         }
         finally
@@ -112,15 +113,16 @@ public partial class MainWindow
     }
 
     /// <summary>조각 한 줄 — 노드 이름 · 그림 경로(문서 기준, 비우면 그 조각을 안 그린다) · 파일 고르기.</summary>
-    private Control SkinPartRow(string skin, string node, string image)
+    private Control SkinPartRow(SkinAsset asset, string node)
     {
-        var box = new TextBox { FontSize = 11, Text = image, Tag = node, PlaceholderText = "(그림 없음)" };
-        ToolTip.SetTip(box, $"{node}에 그릴 그림 — 문서 기준 상대 경로. 비우면 이 조각은 안 그린다");
+        string skin = asset.Name;
+        var box = new TextBox { FontSize = 11, Text = string.Join(FrameSeparator, asset.ImagesOf(node)), Tag = node, PlaceholderText = "(그림 없음)" };
+        ToolTip.SetTip(box, $"{node}에 그릴 그림 — 문서 기준 상대 경로. 비우면 이 조각은 안 그린다. 여러 장을 ' | '로 이어 적으면 그림 넘기기(아래 칸의 장당 시간마다 넘어간다)");
         OnCommit(box, text =>
         {
             if (!_refreshing)
             {
-                Guard("조각 그림", () => _session.Editor.SetSkinPart(skin, node, text.Trim()));
+                Guard("조각 그림", () => _session.Editor.SetSkinPartImages(skin, node, text.Split('|')));
             }
         });
 
@@ -142,6 +144,15 @@ public partial class MainWindow
         });
 
         var row = new DockPanel();
+
+        // 그림이 있는 조각에만: 그림 넘기기(장당 시간 · 되풀이)와 놓임(자리 · 크기 · 회전).
+        if (asset.Parts.ContainsKey(node))
+        {
+            Control setup = SkinSetupRow(asset, node);
+            DockPanel.SetDock(setup, Dock.Bottom);
+            row.Children.Add(setup);
+        }
+
         DockPanel.SetDock(pick, Dock.Right);
         row.Children.Add(pick);
         var label = new TextBlock { Text = node, FontSize = 11, Width = 96, VerticalAlignment = VerticalAlignment.Center, TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis };
@@ -149,6 +160,72 @@ public partial class MainWindow
         row.Children.Add(label);
         row.Children.Add(box);
         return row;
+    }
+
+    private const string FrameSeparator = " | ";
+
+    /// <summary>테스트 손잡이 — 조각의 덧붙임 칸들(장당 초 · 되풀이 · X · Y · 크기 · 회전). 그림이 없는 조각이면 null.</summary>
+    internal (TextBox Seconds, CheckBox Loop, TextBox X, TextBox Y, TextBox Scale, TextBox Rotation)? SkinSetupBoxes(string node)
+        => _skinSetupBoxes.TryGetValue(node, out var boxes) ? boxes : null;
+
+    private readonly Dictionary<string, (TextBox Seconds, CheckBox Loop, TextBox X, TextBox Y, TextBox Scale, TextBox Rotation)> _skinSetupBoxes = new(StringComparer.Ordinal);
+
+    private Control SkinSetupRow(SkinAsset asset, string node)
+    {
+        string skin = asset.Name;
+        SkinPartSetup now = asset.SetupOf(node);
+        TextBox Box(string text, string hint, string tip)
+        {
+            var box = new TextBox { FontSize = 10, Text = text, PlaceholderText = hint, Width = 46, MinWidth = 0, Padding = new Avalonia.Thickness(3, 1) };
+            ToolTip.SetTip(box, tip);
+            return box;
+        }
+
+        TextBox seconds = Box(F(now.FrameSeconds), "초", "그림 넘기기 — 한 장이 보이는 시간(초). 장이 여럿일 때만 쓰인다");
+        var loop = new CheckBox { Content = "되풀이", FontSize = 10, IsChecked = now.Loop, IsEnabled = now.Frames.Count > 0 };
+        ToolTip.SetTip(loop, "마지막 장 다음에 첫 장으로 돌아간다. 끄면 마지막 장에서 멈춘다(점이 하나씩 찍히고 서는 말풍선)");
+        seconds.IsEnabled = now.Frames.Count > 0;
+        TextBox x = Box(F(now.X), "X", "놓임 — 조각 노드 안에서의 자리 X(px). 모션과는 따로다: 꽃 셋을 흩어 놓는 것은 여기서, 움직임은 모션에서");
+        TextBox y = Box(F(now.Y), "Y", "놓임 — 자리 Y(px)");
+        TextBox scale = Box(F(now.Scale), "크기", "놓임 — 크기(배). 1이 조각 사각형에 꼭 맞는 크기");
+        TextBox rotation = Box(F(now.Rotation), "회전", "놓임 — 회전(도, 반시계가 +)");
+        _skinSetupBoxes[node] = (seconds, loop, x, y, scale, rotation);
+
+        void Commit()
+        {
+            if (_refreshing || _session.Editor.Document.FindSkin(skin) is not { } current || !current.Parts.ContainsKey(node))
+            {
+                return;
+            }
+
+            SkinPartSetup value = current.SetupOf(node).Clone();
+            value.FrameSeconds = TryFloat(seconds.Text ?? "", out float s) ? s : value.FrameSeconds;
+            value.Loop = loop.IsChecked == true;
+            value.X = TryFloat(x.Text ?? "", out float vx) ? vx : value.X;
+            value.Y = TryFloat(y.Text ?? "", out float vy) ? vy : value.Y;
+            value.Scale = TryFloat(scale.Text ?? "", out float vs) ? vs : value.Scale;
+            value.Rotation = TryFloat(rotation.Text ?? "", out float vr) ? vr : value.Rotation;
+            Guard("조각 놓임", () => _session.Editor.SetSkinPartSetup(skin, node, value));
+        }
+
+        foreach (TextBox box in new[] { seconds, x, y, scale, rotation })
+        {
+            OnCommit(box, _ => Commit());
+        }
+
+        loop.IsCheckedChanged += (_, _) => Commit();
+
+        // 인스펙터가 좁아 두 줄로: 그림 넘기기 / 놓임.
+        return new StackPanel
+        {
+            Spacing = 2,
+            Margin = new Avalonia.Thickness(12, 1, 0, 4),
+            Children =
+            {
+                new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { Small("장당"), seconds, Small("초"), loop } },
+                new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { Small("놓임"), x, y, scale, rotation } },
+            },
+        };
     }
 
     /// <summary>고른 오브젝트의 리그로 새 스킨을 만들어 입힌다 — 되돌리기 한 번.</summary>

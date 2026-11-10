@@ -153,6 +153,11 @@ public sealed partial class MotionEditor
                 {
                     skin.Parts[name] = image;
                 }
+
+                if (skin.Setups.Remove(id, out SkinPartSetup? setup))
+                {
+                    skin.Setups[name] = setup;
+                }
             }
 
             foreach (EmojiAsset emoji in Document.Emojis.Where(e => e.Rig == kind && e.AnchorNode == id))

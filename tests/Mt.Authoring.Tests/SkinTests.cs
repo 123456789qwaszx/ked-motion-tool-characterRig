@@ -116,4 +116,97 @@ public class SkinTests
         editor.RenameSkin("a", " a "); // 같은 이름 — 아무 일도 없다
         Assert.Equal(revision, editor.Revision);
     }
+
+    // ── 조각의 덧붙임(PLAN-parts.md §13) — 그림 넘기기 · 놓임 · 반전 판 ────
+
+    [Fact]
+    public void 조각에_장을_여럿_주면_장당_시간마다_넘어가고_되풀이하거나_마지막에서_멈춘다()
+    {
+        MotionEditor editor = NewEditor();
+        editor.AddSkin("땀", EmojiRigFixture.RigKind);
+        long revision = editor.Revision;
+
+        // 장들을 한 번에 — 한 칸. 첫 장이 그 조각의 그림이다. 빈 것은 버린다.
+        editor.SetSkinPartImages("땀", "Emoji_Part1", new[] { " a.png ", "b.png", "", "c.png" });
+        editor.SetSkinPartImages("땀", "Emoji_Part1", new[] { "a.png", "b.png", "c.png" }); // 같은 값은 무기록
+        Assert.Equal(revision + 1, editor.Revision);
+        SkinAsset skin = editor.Document.FindSkin("땀")!;
+        Assert.Equal("a.png", skin.Parts["Emoji_Part1"]);
+        Assert.Equal(new[] { "a.png", "b.png", "c.png" }, skin.ImagesOf("Emoji_Part1"));
+        Assert.Equal(new[] { "a.png", "b.png", "c.png" }, skin.AllImages());
+
+        // 기본: 장당 0.2초, 되풀이.
+        Assert.Equal("a.png", skin.ImageAt("Emoji_Part1", 0));
+        Assert.Equal("a.png", skin.ImageAt("Emoji_Part1", 0.19));
+        Assert.Equal("b.png", skin.ImageAt("Emoji_Part1", 0.2));
+        Assert.Equal("c.png", skin.ImageAt("Emoji_Part1", 0.45));
+        Assert.Equal("a.png", skin.ImageAt("Emoji_Part1", 0.6));
+        Assert.Equal("a.png", skin.ImageAt("Emoji_Part1", -1)); // 뜨기 전
+        Assert.Null(skin.ImageAt("Emoji_Part2", 0));
+
+        // 장당 시간과 되풀이 — 끄면 마지막 장에서 멈춘다.
+        SkinPartSetup setup = skin.SetupOf("Emoji_Part1").Clone();
+        setup.FrameSeconds = 0.5f;
+        setup.Loop = false;
+        editor.SetSkinPartSetup("땀", "Emoji_Part1", setup);
+        Assert.Equal("b.png", skin.ImageAt("Emoji_Part1", 0.7));
+        Assert.Equal("c.png", skin.ImageAt("Emoji_Part1", 99));
+
+        // 막는 것.
+        revision = editor.Revision;
+        Assert.Throws<InvalidOperationException>(() => editor.SetSkinPartSetup("땀", "Emoji_Part2", new SkinPartSetup { X = 1f })); // 그림이 없는 조각
+        Assert.Throws<InvalidOperationException>(() => editor.SetSkinPartSetup("땀", "Emoji_Part1", new SkinPartSetup { Scale = 0f }));
+        Assert.Throws<InvalidOperationException>(() => editor.SetSkinPartSetup("땀", "Emoji_Part1", new SkinPartSetup { FrameSeconds = 0f }));
+        Assert.Equal(revision, editor.Revision);
+
+        // 저작본 왕복. 덧붙임이 없는 스킨에는 안 적힌다.
+        string json = MotionDocumentJson.Write(editor.Document);
+        Assert.Contains("\"setups\"", json, StringComparison.Ordinal);
+        Assert.Equal(json, MotionDocumentJson.Write(MotionDocumentJson.Read(json)));
+        Assert.Equal("c.png", MotionDocumentJson.Read(json).FindSkin("땀")!.ImageAt("Emoji_Part1", 99));
+
+        // 한 장으로 줄이고 기본값으로 돌리면 덧붙임이 사라진다. 그림을 비우면 덧붙임도 함께.
+        editor.SetSkinPartImages("땀", "Emoji_Part1", new[] { "a.png" });
+        editor.SetSkinPartSetup("땀", "Emoji_Part1", new SkinPartSetup());
+        Assert.Empty(skin.Setups);
+        Assert.DoesNotContain("\"setups\"", MotionDocumentJson.Write(editor.Document), StringComparison.Ordinal);
+        editor.SetSkinPartSetup("땀", "Emoji_Part1", new SkinPartSetup { X = 30f });
+        editor.SetSkinPart("땀", "Emoji_Part1", null);
+        Assert.Empty(skin.Setups);
+    }
+
+    [Fact]
+    public void 놓임과_반전_판은_이모지_산출물에_풀려_나간다()
+    {
+        MotionEditor editor = NewEditor();
+        editor.AddSkin("꽃", EmojiRigFixture.RigKind);
+        editor.SetSkinPartImages("꽃", "Emoji_Part1", new[] { "art/f.png" });
+        editor.SetSkinPartImages("꽃", "Emoji_Part2", new[] { "art/f.png", "art/g.png" });
+        editor.SetSkinPartImages("꽃", "Emoji_Part3", new[] { "art/f.png" });
+        editor.SetSkinPartSetup("꽃", "Emoji_Part1", new SkinPartSetup { X = -150f, Y = 40f, Scale = 0.8f, Rotation = 15f });
+        editor.AddSkin("꽃_반전", EmojiRigFixture.RigKind);
+        editor.SetSkinPartImages("꽃_반전", "Emoji_Part1", new[] { "art/f_l.png" });
+        editor.AddEmoji("flower", EmojiRigFixture.RigKind);
+        editor.UpdateEmoji("flower", new EmojiAsset { Skin = "꽃", SkinFlipped = "꽃_반전", HoldSeconds = 1f });
+        Assert.DoesNotContain(Mt.Authoring.Validation.EmojiValidator.Validate(editor.Document, RigFile.NodeIds), p => p.Blocking);
+
+        var emoji = System.Text.Json.Nodes.JsonNode.Parse(Mt.Authoring.Validation.EmojisJson.Write(editor.Document))!["emojis"]![0]!;
+        var parts = emoji["parts"]!;
+        Assert.Equal(("art/f.png", -150f, 40f, 0.8f, 15f),
+            (parts["Emoji_Part1"]!["image"]!.GetValue<string>(), parts["Emoji_Part1"]!["x"]!.GetValue<float>(), parts["Emoji_Part1"]!["y"]!.GetValue<float>(),
+             parts["Emoji_Part1"]!["scale"]!.GetValue<float>(), parts["Emoji_Part1"]!["rotation"]!.GetValue<float>()));
+        Assert.Null(parts["Emoji_Part1"]!["frames"]);
+        Assert.Equal(new[] { "art/g.png" }, parts["Emoji_Part2"]!["frames"]!.AsArray().Select(f => f!.GetValue<string>()));
+        Assert.Equal((0.2f, true), (parts["Emoji_Part2"]!["frameSeconds"]!.GetValue<float>(), parts["Emoji_Part2"]!["loop"]!.GetValue<bool>()));
+        Assert.Equal("art/f.png", parts["Emoji_Part3"]!.GetValue<string>()); // 한 장이고 제자리면 글 하나 — 전과 같은 모양
+        Assert.Equal("art/f_l.png", emoji["partsFlipped"]!["Emoji_Part1"]!.GetValue<string>());
+
+        // 반전 판 스킨이 이름을 바꾸면 따라오고, 지워지면 반전 판만 없어진다. 없는 스킨을 가리키면 막는다.
+        editor.RenameSkin("꽃_반전", "꽃_좌");
+        Assert.Equal("꽃_좌", editor.Document.FindEmoji("flower")!.SkinFlipped);
+        editor.RemoveSkin("꽃_좌");
+        Assert.Null(editor.Document.FindEmoji("flower")!.SkinFlipped);
+        editor.UpdateEmoji("flower", new EmojiAsset { Skin = "꽃", SkinFlipped = "ghost", HoldSeconds = 1f });
+        Assert.Contains(Mt.Authoring.Validation.EmojiValidator.Validate(editor.Document, RigFile.NodeIds), p => p.Blocking && p.Message.Contains("ghost", StringComparison.Ordinal));
+    }
 }

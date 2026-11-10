@@ -18,6 +18,12 @@ public sealed class EmojiAsset
     /// <summary>그림 — 스킨의 이름. null이면 그림이 없다(검증이 알린다).</summary>
     public string? Skin { get; set; }
 
+    /// <summary>
+    /// 반전 판 그림 — 붙은 캐릭터가 좌우 반전일 때 입는 스킨(말풍선의 꼬리가 반대쪽인 판). 자리와 움직임은 계층이 뒤집어 주고, 이 판의 그림은 **뒤집지 않고** 그린다
+    /// (글자·점의 순서가 읽히게 따로 그린 그림이다). null이면 같은 그림이 계층을 따라 뒤집혀 보인다.
+    /// </summary>
+    public string? SkinFlipped { get; set; }
+
     /// <summary>등장 모션(한 번). null이면 바로 선다.</summary>
     public string? Enter { get; set; }
 

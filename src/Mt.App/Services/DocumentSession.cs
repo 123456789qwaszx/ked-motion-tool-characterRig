@@ -40,7 +40,7 @@ public sealed class DocumentSession
         => "rig=" + (document.RigSchemas?.Path ?? "") + "\nbase=" + (document.BaseResolution?.Path ?? "") + "\n"
            + string.Join("\n", document.Scenes.SelectMany(scene => scene.Objects).Select(o => $"portrait {o.Id}={o.Portrait ?? ""} skin={o.Skin ?? ""}"))
            + "\nrigs " + RigsKeyOf(document)
-           + "\n" + string.Join("\n", document.Skins.Select(s => $"skin {s.Name}:{s.Rig}:" + string.Join(",", s.Parts.Select(p => p.Key + "=" + p.Value))));
+           + "\n" + string.Join("\n", document.Skins.Select(s => $"skin {s.Name}:{s.Rig}:" + string.Join(",", s.Parts.Keys.Select(node => node + "=" + string.Join("|", s.ImagesOf(node))))));
 
     private void OnEditorChanged(object? sender, MotionChangedEventArgs e)
     {
@@ -200,35 +200,13 @@ public sealed class DocumentSession
         return File.Exists(resolved) ? resolved : null;
     }
 
-    /// <summary>
-    /// 오브젝트가 입은 스킨의 조각 그림들 — 조각 노드 id → 파일 경로(파일이 없으면 null: 자리표시로 그린다).
-    /// 스킨이 없거나 리그가 다르면 빈 목록.
-    /// </summary>
-    public IReadOnlyList<(string Node, string? Path)> PartImagesOf(SceneObject o)
-    {
-        ArgumentNullException.ThrowIfNull(o);
-
-        if (Editor.Document.FindSkin(o.Skin) is not { } skin || !string.Equals(skin.Rig, o.Rig, StringComparison.Ordinal))
+    /// <summary>문서의 스킨들이 쓰는 그림 전부 — 문서 기준 경로 → 파일 경로(파일이 없으면 null: 자리표시로 그린다).</summary>
+    public IReadOnlyList<(string Image, string? Path)> SkinImages()
+        => Editor.Document.Skins.SelectMany(s => s.AllImages()).Distinct(StringComparer.Ordinal).Select(image =>
         {
-            return Array.Empty<(string, string?)>();
-        }
-
-        return skin.Parts.Select(p =>
-        {
-            string resolved = ResolveFromDocument(p.Value);
-            return (p.Key, File.Exists(resolved) ? resolved : null);
+            string resolved = ResolveFromDocument(image);
+            return (image, File.Exists(resolved) ? resolved : (string?)null);
         }).ToList();
-    }
-
-    /// <summary>스킨의 조각 그림들 — 조각 노드 id → 파일 경로(없으면 null). 이모지 정의를 미리볼 때 정의의 스킨을 싣는다.</summary>
-    public IReadOnlyList<(string Node, string? Path)> PartImagesOfSkin(string? skinName)
-        => Editor.Document.FindSkin(skinName) is { } skin
-            ? skin.Parts.Select(p =>
-            {
-                string resolved = ResolveFromDocument(p.Value);
-                return (p.Key, File.Exists(resolved) ? resolved : (string?)null);
-            }).ToList()
-            : Array.Empty<(string, string?)>();
 
     /// <summary>이모지 정의를 <c>emojis.json</c>(초안)으로 내보낸다 — 막는 문제가 있으면 안 나간다.</summary>
     public bool ExportEmojis(string path)
