@@ -125,7 +125,57 @@ public sealed partial class MotionEditor
     {
         SceneAsset scene = RequireScene(sceneName);
         SceneObject o = RequireObject(scene, id);
-        Mutate(MotionChangeKind.Scene, () => scene.Objects.Remove(o));
+
+        // 붙은 것도 같은 칸에서 사라진다 — 없는 부모를 가리키며 남지 않게.
+        Mutate(MotionChangeKind.Scene, () =>
+        {
+            scene.Objects.RemoveAll(c => string.Equals(c.AttachTo, id, StringComparison.Ordinal));
+            scene.Objects.Remove(o);
+        });
+    }
+
+    /// <summary>
+    /// 오브젝트를 다른 오브젝트의 노드에 붙인다(<c>PLAN-parts.md</c> P2) — 부모가 움직이면 따라간다. parent가 null이면 뗀다.
+    /// 한 단계만: 붙은 것에는 못 붙이고, 무언가가 붙어 있는 오브젝트는 다른 데 못 붙는다. 노드가 그 리그에 있는지는 편집기가 모른다(없으면 부모의 루트에 선다).
+    /// </summary>
+    public void AttachObject(string? sceneName, string id, string? parent, string? node = SceneObject.DefaultAttachNode)
+    {
+        SceneAsset scene = RequireScene(sceneName);
+        SceneObject o = RequireObject(scene, id);
+
+        if (parent is null)
+        {
+            Mutate(MotionChangeKind.Scene, () =>
+            {
+                o.AttachTo = null;
+                o.AttachNode = null;
+            });
+            return;
+        }
+
+        SceneObject target = RequireObject(scene, parent);
+
+        if (string.Equals(id, parent, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("오브젝트를 제 자신에 붙일 수 없다.");
+        }
+
+        if (target.AttachTo is not null)
+        {
+            throw new InvalidOperationException($"'{parent}'는 이미 '{target.AttachTo}'에 붙어 있다 — 붙은 것에는 또 붙이지 않는다.");
+        }
+
+        if (scene.Objects.Any(c => string.Equals(c.AttachTo, id, StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException($"'{id}'에 붙은 것이 있다 — 먼저 떼어야 다른 데 붙일 수 있다.");
+        }
+
+        string? at = string.IsNullOrEmpty(node) ? null : node;
+        Mutate(MotionChangeKind.Scene, () =>
+        {
+            o.AttachTo = parent;
+            o.AttachNode = at;
+        });
     }
 
     /// <summary>이름(id) 바꾸기.</summary>
@@ -152,6 +202,11 @@ public sealed partial class MotionEditor
         {
             o.Id = newId;
             RetargetClipObjects(scene, id, newId);
+
+            foreach (SceneObject attached in scene.Objects.Where(c => string.Equals(c.AttachTo, id, StringComparison.Ordinal)))
+            {
+                attached.AttachTo = newId; // 붙은 것이 따라온다
+            }
         });
     }
 
@@ -178,6 +233,8 @@ public sealed partial class MotionEditor
             Place = source.Place,
             PlaceFocus = source.PlaceFocus,
             Skin = source.Skin,
+            AttachTo = source.AttachTo, // 붙은 것을 복제하면 같은 데 붙는다(부모를 복제해도 붙은 것은 따라 복제되지 않는다)
+            AttachNode = source.AttachNode,
         };
 
         int at = scene.Objects.IndexOf(source) + 1;

@@ -24,7 +24,31 @@ public sealed class SceneAsset
     /// 무대 안에서는 먼 레이어부터(far → close), 같은 층은 목록 순. 클릭 선택은 그 역순.
     /// </summary>
     public IEnumerable<SceneObject> DrawOrder()
-        => Objects.OrderBy(o => StageNodes.IndexOf(o.Stage)).ThenBy(o => SceneLayers.IndexOf(o.Layer)).ThenBy(o => Objects.IndexOf(o));
+    {
+        // 붙은 오브젝트는 제 무대·층이 아니라 부모의 것을 따른다 — 부모 바로 뒤(위)에 그린다(런타임 결정: 그 인물의 층에, 앞 인물에 가려져도 된다).
+        foreach (SceneObject o in Objects.Where(o => ParentOf(o) is null)
+                     .OrderBy(o => StageNodes.IndexOf(o.Stage)).ThenBy(o => SceneLayers.IndexOf(o.Layer)).ThenBy(o => Objects.IndexOf(o)))
+        {
+            yield return o;
+
+            foreach (SceneObject attached in Objects.Where(c => ReferenceEquals(ParentOf(c), o)))
+            {
+                yield return attached;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 붙은 곳의 오브젝트. 안 붙었거나, 적힌 부모가 없거나, 부모가 또 어딘가에 붙어 있으면(한 단계만 붙인다) null — 그때는 보통 오브젝트로 선다.
+    /// </summary>
+    public SceneObject? ParentOf(SceneObject o)
+    {
+        ArgumentNullException.ThrowIfNull(o);
+        return o.AttachTo is { } id && !string.Equals(id, o.Id, StringComparison.Ordinal) && Find(id) is { AttachTo: null } parent ? parent : null;
+    }
+
+    /// <summary>그 오브젝트에 붙은 것들(목록 순).</summary>
+    public IEnumerable<SceneObject> AttachedTo(string id) => Objects.Where(o => ParentOf(o) is { } p && string.Equals(p.Id, id, StringComparison.Ordinal));
 
     /// <summary>값이 같은 사본 — 연출 클립의 상태 블록이 원본을 건드리지 않고 "그때의 씬"을 만든다.</summary>
     public SceneAsset Clone() => new()
@@ -102,6 +126,19 @@ public sealed class SceneObject
     public string? Portrait { get; set; }
 
     public bool Visible { get; set; } = true;
+
+    /// <summary>
+    /// 붙은 곳 — 다른 오브젝트의 id(<c>PLAN-parts.md</c> P2). 그 오브젝트의 <see cref="AttachNode"/> 밑에 이 리그가 서서 부모가 움직이면 따라간다
+    /// (이모지가 캐릭터를 따라가듯). 한 단계만 — 붙은 것에 또 붙이지 않는다. 붙으면 무대·층·자리(place)는 부모의 것이고,
+    /// 오프셋·회전·배율은 붙는 자리에 대한 값이다(배율 x = −1이 좌우 반전의 미리보기다).
+    /// </summary>
+    public string? AttachTo { get; set; }
+
+    /// <summary>부모 리그의 어느 노드 밑에 서는가. null이거나 그 노드가 없으면 부모의 루트.</summary>
+    public string? AttachNode { get; set; }
+
+    /// <summary>캐릭터에 붙는 기본 자리 — 슬롯 계층의 끝(런타임 결정: 슬롯 계층은 따라가고 초상 계층은 무시한다).</summary>
+    public const string DefaultAttachNode = "CharSlot_Scale";
 
     /// <summary>
     /// 입은 스킨의 이름(<see cref="SkinAsset"/>) — 조각 노드가 있는 리그(이모지 등)에서 조각마다 어떤 그림을 그릴지. null이면 조각을 안 그린다.

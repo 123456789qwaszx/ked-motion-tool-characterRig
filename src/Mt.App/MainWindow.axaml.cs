@@ -2235,10 +2235,19 @@ public partial class MainWindow : Window
                 c.IsEnabled = has;
             }
 
-            _objPlaceFocus.IsEnabled = has && selected!.Place is not null;
+            // 붙은 오브젝트의 무대·층·자리는 부모의 것이다 — 제 칸은 뜻이 없어 잠근다. 오프셋·회전·배율은 붙는 자리에 대한 값으로 남는다.
+            SceneObject? attachedTo = selected is null ? null : _viewport.Scene?.ParentOf(selected);
+
+            foreach (Control c in new Control[] { _objLayer, _objStage, _objPlace })
+            {
+                c.IsEnabled = has && attachedTo is null;
+            }
+
+            _objPlaceFocus.IsEnabled = has && attachedTo is null && selected!.Place is not null;
 
             _objSummary.Text = selected is null
                 ? "오브젝트 없음 — 왼쪽 하이어아키에서 층(Content)을 우클릭해 만든다"
+                : attachedTo is not null ? $"{selected.Id} · {selected.Rig} · ↳ {attachedTo.Id}의 {selected.AttachNode ?? "루트"}에 붙었다"
                 : $"{selected.Id} · {selected.Rig} · {StageNodes.ContentOf(selected.Stage, selected.Layer)}"
                   + (_viewport.Motion is null || _viewport.CanWear(selected) ? "" : " · 지금 모션은 이 리그에 안 맞는다");
             _objId.Text = selected?.Id ?? "";
@@ -2384,9 +2393,21 @@ public partial class MainWindow : Window
             }
         }
 
-        foreach (SceneObject o in scene.Objects)
+        // 붙은 오브젝트는 제 층이 아니라 부모 오브젝트 밑에 보인다 — 부모를 먼저 세운다.
+        foreach (SceneObject o in scene.Objects.Where(o => scene.ParentOf(o) is null))
         {
             TreeViewItem under = contentItems.GetValueOrDefault((o.Stage, o.Layer)) ?? root;
+            BuildObjectItem(scene, o, under, nodeWasSelected, ref selectedItem);
+        }
+
+        foreach (SceneObject o in scene.Objects)
+        {
+            if (scene.ParentOf(o) is not { } parent)
+            {
+                continue;
+            }
+
+            TreeViewItem under = _hierarchyParents.Keys.FirstOrDefault(i => i.Tag is HierarchyNode { NodeId: null } node && node.ObjectId == parent.Id) ?? root;
             BuildObjectItem(scene, o, under, nodeWasSelected, ref selectedItem);
         }
 
@@ -2622,6 +2643,7 @@ public partial class MainWindow : Window
 
             _hierarchyMenu.Items.Add(layer);
             _hierarchyMenu.Items.Add(new Separator());
+            AddAttachMenu(scene!, o);
         }
 
         string where = target switch
