@@ -34,6 +34,8 @@ public static class MtCli
           mt bake     <문서> --clip <이름> --object <id> --name <새 모션> [--out <문서>] [--rig <덤프>]
                                                                클립에서 그 캐릭터에 얹힌 블록을 모션 하나로 구워 문서에 더한다
 
+          mt emojis   <문서> <emojis.json> [--rig <덤프>]      이모지 정의 내보내기(emojis/1-draft — 스킨은 풀어서, 모션은 이름으로)
+
           <문서>  *.motion-authoring.json        <덤프>  rig-schemas.json (없으면 문서가 적어 둔 것, 그것도 없으면 내장본)
         """;
 
@@ -66,6 +68,7 @@ public static class MtCli
                 "export" => Export(options, stdout),
                 "pose" => Pose(options, stdout),
                 "bake" => Bake(options, stdout),
+                "emojis" => Emojis(options, stdout),
                 _ => throw new UsageException($"모르는 명령 '{args[0]}'"),
             };
         }
@@ -123,6 +126,10 @@ public static class MtCli
             ["schema"] = document.Schema,
             ["motions"] = motions,
             ["clips"] = clips,
+            ["emojis"] = new JsonArray(document.Emojis.Select(e => (JsonNode)new JsonObject
+            {
+                ["name"] = e.Name, ["rig"] = e.Rig, ["skin"] = e.Skin, ["enter"] = e.Enter, ["hold"] = e.Hold, ["exit"] = e.Exit, ["holdSeconds"] = e.HoldSeconds,
+            }).ToArray()),
             ["skins"] = new JsonArray(document.Skins.Select(s => (JsonNode)new JsonObject { ["name"] = s.Name, ["rig"] = s.Rig, ["parts"] = s.Parts.Count }).ToArray()),
             ["scenes"] = new JsonArray(document.Scenes.Select(s => (JsonNode)new JsonObject
             {
@@ -163,6 +170,28 @@ public static class MtCli
             ["path"] = Path.GetFullPath(target),
             ["schema"] = json.Contains(AuthoringFormat.ExportSchemaV3, StringComparison.Ordinal) ? AuthoringFormat.ExportSchemaV3 : AuthoringFormat.ExportSchema,
             ["motions"] = new JsonArray(MotionExport.ToClips(document).Select(c => (JsonNode)c.Name).ToArray()),
+        });
+        return 0;
+    }
+
+    private static int Emojis(Options options, TextWriter stdout)
+    {
+        string target = options.Positional(1, "내보낼 emojis.json 경로");
+        MotionDocument document = Load(options, out RigSchemaFile rig);
+
+        if (!EmojisJson.TryExport(document, CameraRig.WithCamera(rig.NodeIds), out string json, out IReadOnlyList<string> problems, rig.AlphaNodeIds))
+        {
+            Write(stdout, new JsonObject { ["ok"] = false, ["problems"] = new JsonArray(problems.Select(p => (JsonNode)p).ToArray()) });
+            return 1;
+        }
+
+        File.WriteAllBytes(target, System.Text.Encoding.UTF8.GetBytes(json));
+        Write(stdout, new JsonObject
+        {
+            ["ok"] = true,
+            ["path"] = Path.GetFullPath(target),
+            ["schema"] = EmojisJson.Schema,
+            ["emojis"] = new JsonArray(document.Emojis.Select(e => (JsonNode)e.Name).OrderBy(n => n.GetValue<string>(), StringComparer.Ordinal).ToArray()),
         });
         return 0;
     }
@@ -299,6 +328,12 @@ public static class MtCli
         foreach (MotionProblem p in MotionValidator.Validate(document, nodeIds, null, rig.AlphaNodeIds))
         {
             problems.Add(new JsonObject { ["kind"] = "motion", ["name"] = p.MotionName, ["message"] = p.Message, ["blocking"] = p.Blocking });
+            blocking |= p.Blocking;
+        }
+
+        foreach (EmojiProblem p in EmojiValidator.Validate(document, nodeIds))
+        {
+            problems.Add(new JsonObject { ["kind"] = "emoji", ["name"] = p.EmojiName, ["message"] = p.Message, ["blocking"] = p.Blocking });
             blocking |= p.Blocking;
         }
 

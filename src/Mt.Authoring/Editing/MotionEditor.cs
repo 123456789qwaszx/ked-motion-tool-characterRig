@@ -575,6 +575,7 @@ public sealed partial class MotionEditor
         {
             motion.Name = newName;
             RetargetClipMotions(name, newName);
+            RetargetEmojiMotions(name, newName);
         });
     }
 

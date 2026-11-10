@@ -54,6 +54,7 @@ public sealed partial class MotionEditor
             }
 
             skin.Name = trimmed;
+            RetargetEmojiSkins(name, trimmed);
         });
     }
 
