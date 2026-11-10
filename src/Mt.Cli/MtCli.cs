@@ -36,6 +36,8 @@ public static class MtCli
 
           mt emojis   <문서> <emojis.json> [--rig <덤프>]      이모지 정의 내보내기(emojis/1-draft — 스킨은 풀어서, 모션은 이름으로)
 
+          mt rigs     <문서> <rigs.json>                       문서가 정의한 리그 내보내기(rig-schemas.json과 같은 모양)
+
           <문서>  *.motion-authoring.json        <덤프>  rig-schemas.json (없으면 문서가 적어 둔 것, 그것도 없으면 내장본)
         """;
 
@@ -69,6 +71,7 @@ public static class MtCli
                 "pose" => Pose(options, stdout),
                 "bake" => Bake(options, stdout),
                 "emojis" => Emojis(options, stdout),
+                "rigs" => Rigs(options, stdout),
                 _ => throw new UsageException($"모르는 명령 '{args[0]}'"),
             };
         }
@@ -192,6 +195,31 @@ public static class MtCli
             ["path"] = Path.GetFullPath(target),
             ["schema"] = EmojisJson.Schema,
             ["emojis"] = new JsonArray(document.Emojis.Select(e => (JsonNode)e.Name).OrderBy(n => n.GetValue<string>(), StringComparer.Ordinal).ToArray()),
+        });
+        return 0;
+    }
+
+    private static int Rigs(Options options, TextWriter stdout)
+    {
+        string target = options.Positional(1, "내보낼 rigs.json 경로");
+        MotionDocument document = Load(options, out RigSchemaFile rig);
+
+        if (document.Rigs.Count == 0)
+        {
+            throw new InvalidOperationException("문서가 정의한 리그가 없다.");
+        }
+
+        File.WriteAllBytes(target, System.Text.Encoding.UTF8.GetBytes(RigAssets.WriteSchemas(document, rig.Dto.capturedUnderParentSize.ToVec2())));
+        Write(stdout, new JsonObject
+        {
+            ["ok"] = true,
+            ["path"] = Path.GetFullPath(target),
+            ["rigs"] = new JsonArray(document.Rigs.Select(r => (JsonNode)new JsonObject
+            {
+                ["kind"] = r.Kind,
+                ["nodes"] = r.Nodes.Count,
+                ["parts"] = r.Nodes.Count(n => n.Image),
+            }).ToArray()),
         });
         return 0;
     }
@@ -398,6 +426,7 @@ public static class MtCli
         }
 
         rig = dump is null ? BuiltinTuning.RigSchemas : RigSchemaFile.Load(dump);
+        rig = RigAssets.Compose(rig, document); // 문서가 정의한 리그(이모지 등)도 한 벌로
 
         // 손으로(또는 AI가) 쓴 문서는 탄젠트 값을 모른다 — 키의 탄젠트 종류(auto·flat·linear…)대로 값을 세운다. 앱이 편집할 때마다 하는 그 계산이고,
         // 앱이 저장한 문서에는 아무것도 안 바꾼다(이미 그 값이다). free는 적힌 값 그대로 둔다.

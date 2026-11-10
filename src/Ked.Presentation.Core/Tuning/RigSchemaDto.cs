@@ -67,6 +67,12 @@ namespace Ked.Presentation.Core
 
         /// <summary>hasCanvasGroup일 때만 의미 있는 스폰 직후 alpha.</summary>
         public float canvasGroupAlpha;
+
+        /// <summary>
+        /// 그림을 그리는 노드인가(Image가 붙는 자리). 조각 여럿으로 된 리그(이모지)에서 "어느 노드가 그림인가"를 덤프가 말한다.
+        /// 없는 필드는 false로 읽힌다 — 예전 덤프는 그대로다.
+        /// </summary>
+        public bool hasImage;
     }
 
     [Serializable]

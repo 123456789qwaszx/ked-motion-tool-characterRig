@@ -21,7 +21,8 @@ public static partial class RigParts
     public static IReadOnlyList<string> Of(RigSchemaRigDto rig)
     {
         ArgumentNullException.ThrowIfNull(rig);
-        return rig.nodes.Select(n => n.id).Where(IsPartNode).ToList();
+        // 덤프(또는 툴이 정의한 리그)가 그림 노드를 표시했으면 그것, 표시가 없는 옛 덤프는 이름 규칙으로.
+        return rig.nodes.Where(n => n.hasImage || IsPartNode(n.id)).Select(n => n.id).ToList();
     }
 
     /// <summary>그 rigKind의 조각 노드 id. 덤프에 없는 리그면 빈 목록.</summary>

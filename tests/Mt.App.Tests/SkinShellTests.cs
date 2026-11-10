@@ -382,4 +382,92 @@ public class SkinShellTests
             }
         });
     }
+
+    [Fact]
+    public void 덤프에_이모지_리그가_없어도_툴이_리그를_정의해_바로_이모지를_만든다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow(); // 내장 덤프 — character · screenEffect뿐
+            window.Show();
+
+            try
+            {
+                MotionEditor editor = window.Session.Editor;
+                Assert.DoesNotContain(RigTemplates.EmojiKind, window.Session.Rig!.RigKinds);
+                Assert.Contains(RigTemplates.EmojiKind, window.AttachableRigs); // 그래도 메뉴에는 있다 — 만들 때 정의한다
+
+                // 붙는 리그 만들기 ▸ emoji — 리그 정의 + 오브젝트 + 붙이기가 되돌리기 한 칸.
+                long revision = editor.Revision;
+                string id = window.CreateAttachedFromMenu(RigTemplates.EmojiKind, "s1");
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.NotNull(editor.Document.FindRig(RigTemplates.EmojiKind));
+                Assert.Contains(RigTemplates.EmojiKind, window.Session.Rig!.RigKinds);          // 세션의 리그에 합쳐졌다
+                Assert.True(window.Viewport.CurrentPose()!.Contains($"{id}/Emoji_Part1"));       // 뷰포트에 섰다
+                Assert.Equal("s1/CharSlot_Scale", window.Viewport.CurrentPose()!.GetParentKey($"{id}/__root"));
+                Assert.Equal(0, window.ProblemRowsShown);
+
+                // 스킨 칸이 서고(조각 넷), 스킨을 입혀 조각을 그린다.
+                window.InspectorTab = 1;
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.True(window.SkinFormState.Visible);
+                window.AddSkinFromForm();
+                Assert.Equal(4, window.SkinFormState.PartRows);
+                editor.SetSkinPart("skin", "Emoji_Part1", "art/sweat.png");
+                Assert.Equal(new[] { "Emoji_Part1" }, window.Viewport.DrawnParts(editor.Document.ActiveSceneAsset!.Find(id)!));
+
+                // 모션 — 이 리그의 노드에, 불투명도도.
+                editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f, MotionEnd.Commit, MotionChannelMode.Absolute);
+                editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
+                editor.SetKeys("pop", "Emoji_Body", MotionChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.2f, 40f) });
+                window.SelectMotion("pop");
+                window.Viewport.SelectedObjectId = id;
+                window.Viewport.SelectedNode = "Emoji_Part1";
+                Assert.True(window.Viewport.CanTakeAlpha("Emoji_Part1"));
+                Assert.Equal(0, window.ProblemRowsShown);
+
+                // 이모지 정의 — 리그가 이미 있으니 그대로 쓴다.
+                window.InspectorTab = 4;
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.AddEmojiFromForm();
+                window.UpdateSelectedEmoji(e => { e.Enter = "pop"; e.HoldSeconds = 0.5f; });
+                Assert.Equal(RigTemplates.EmojiKind, editor.Document.FindEmoji("emoji")!.Rig);
+                Assert.Equal(0.7, window.Viewport.Clock.Duration, 4);
+                Assert.Equal(0, window.ProblemRowsShown);
+
+                // 리그 칸: 조각 수를 둘로 — 한 칸. 스킨 칸의 조각 줄도 따라 준다.
+                Assert.Equal(("4", "160", true), (window.RigPartBoxes.Count.Text, window.RigPartBoxes.Size.Text, window.RigPartBoxes.Editable));
+                TextBox count = window.RigPartBoxes.Count;
+                count.Focus();
+                count.Text = "2";
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal(2, editor.Document.FindRig(RigTemplates.EmojiKind)!.Nodes.Count(n => n.Image));
+                Assert.False(window.Viewport.CurrentPose()!.Contains($"{id}/Emoji_Part3"));
+                editor.Undo();
+                Assert.True(window.Viewport.CurrentPose()!.Contains($"{id}/Emoji_Part3"));
+
+                // 내보내기 셋: 리그(덤프와 같은 모양) · 모션 · 이모지.
+                string directory = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", $"emoji-out-{Guid.NewGuid():N}");
+                Directory.CreateDirectory(directory);
+                Assert.True(window.Session.ExportRigs(Path.Combine(directory, "rigs.json")), window.Session.Status);
+                Assert.True(window.Session.Export(Path.Combine(directory, "motions.json")), window.Session.Status);
+                Assert.True(window.Session.ExportEmojis(Path.Combine(directory, "emojis.json")), window.Session.Status);
+                Assert.Contains("\"hasImage\": true", File.ReadAllText(Path.Combine(directory, "rigs.json")), StringComparison.Ordinal);
+                Assert.Contains("\"rig\": \"emoji\"", File.ReadAllText(Path.Combine(directory, "motions.json")), StringComparison.Ordinal);
+
+                // 저장하고 다시 열어도 리그가 선다.
+                string saved = Path.Combine(directory, "a.motion-authoring.json");
+                window.Session.Save(saved);
+                window.Session.New();
+                Assert.DoesNotContain(RigTemplates.EmojiKind, window.Session.Rig!.RigKinds);
+                window.Session.Open(saved);
+                Assert.Contains(RigTemplates.EmojiKind, window.Session.Rig!.RigKinds);
+                Assert.True(window.Viewport.CurrentPose()!.Contains($"{id}/Emoji_Part1"));
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
 }

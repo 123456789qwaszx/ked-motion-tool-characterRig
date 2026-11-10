@@ -182,7 +182,10 @@ tests: Ked.Presentation.Core.Tests(NUnit, 원본 그대로) · Mt.Authoring.Test
 스킨 = 조각마다 붙일 그림의 묶음에 붙인 이름("땀"·"꽃"), 오브젝트는 스킨을 고른다. 그런 리그의 오브젝트를 고르면 "씬" 탭 아래에 스킨 칸이 선다:
 입은 스킨 고르기 · 스킨 추가/삭제 · 이름 · 조각마다 그림(경로를 적거나 `…`로 고른다). 그림을 안 준 조각은 안 그려진다.
 조각 노드는 리그의 보통 노드라 모션이 조각마다 따로 움직인다. 캐릭터의 초상 한 장은 전과 같다(스킨이 아니다).
-지금 덤프에는 조각 있는 리그가 없다 — 런타임이 이모지 리그를 덤프에 넣으면 쓰인다(그때까지 조각은 이름 규칙 `_Part<숫자>`로 가린다).
+**이모지 리그는 툴이 정의한다**(Spine처럼 툴이 원본 — `docs/PLAN-parts.md` §9). 캐릭터 리그는 여전히 유니티의 덤프가 원본이지만, 새로 만드는 붙는 리그는
+문서 안에 정의되고(`rigs`) 덤프의 리그와 한 벌로 쓰인다. 따로 만들 것은 없다: 하이어아키에서 캐릭터를 우클릭 → **붙는 리그 만들기 ▸ emoji**, 또는 "이모지" 탭의 **이모지 추가**가
+리그가 없으면 그 자리에서 정의한다(자리 › 묶음 › 조각 넷). 조각의 수와 크기는 "이모지" 탭 아래 **리그** 칸에서 바꾸고, **rigs.json…** 으로 내보내면
+런타임이 캐릭터 덤프를 읽는 그 로더로 읽어 세운다(같은 모양이다). 런타임에 넘기는 것은 세 파일 — `rigs.json` · `motions.json` · `emojis.json`.
 
 **불투명도(P4, `motions/3`).** 불투명도도 모션의 채널이다(종류 `alpha`, 0~1, 성분 하나). 불투명도를 받을 수 있는 노드(덤프에 CanvasGroup이 있는 노드)를
 하이어아키에서 고르면 "모션" 탭에 **불투명도** 칸이 선다 — 값을 넣고 Enter = 그 시각에 키, 커브는 그래프에서. 상대값은 곱(지금 불투명도 × 키), 절대값은 키 그대로.
@@ -251,6 +254,7 @@ dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --motion nod
 dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --clip greet --time 0.8
 dotnet run --project src/Mt.Cli -- bake     a.motion-authoring.json --clip greet --object s1 --name greet_s1 [--out b.motion-authoring.json]
 dotnet run --project src/Mt.Cli -- emojis   a.motion-authoring.json emojis.json
+dotnet run --project src/Mt.Cli -- rigs     a.motion-authoring.json rigs.json
 ```
 
 - `pose`는 모션·클립이 건드리는 노드의 값(위치·배율·회전·불투명도)과 카메라, 방금(0.4초 안에) 울린 이벤트 키를 낸다 — AI가 "이 시각에 정말 이렇게 되나"를 읽는 자리다.

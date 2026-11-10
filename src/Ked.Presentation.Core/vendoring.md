@@ -26,6 +26,7 @@
 | `Reduce/StageReducer.Staging.cs` | `ApplyMotion`이 시작값에 `state.GetAlpha`를 넘긴다 |
 | `Motion/MotionClip.cs` | `MotionEvent`(Time·Name·Value) · `MotionClip.Events` — 이벤트 키(명세 `docs/PLAN-parts.md` §2.5) |
 | `Motion/MotionRules.cs` | 이벤트: 이름 규칙 · 시각 0~길이 · 오름차순 |
+| `Tuning/RigSchemaDto.cs` | `RigSchemaNodeDto.hasImage` — 그림 노드 표시(명세 `docs/PLAN-parts.md` §2.2). 툴이 정의한 리그(§9)가 이 필드로 조각을 가린다 |
 
 ## 동기화 절차
 

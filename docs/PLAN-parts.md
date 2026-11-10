@@ -222,6 +222,26 @@ EmojiAsset                       // 저작본 "emojis": [...] · 산출물 emoji
 **하지 않는 것(지금).** 붙는 자리(`locator`)를 풀어 캐릭터의 머리 옆에 세우는 것 — 미리보기는 붙는 노드에서의 오프셋만 쓴다 · 그림 넘기기(프레임 묶음) ·
 좌·우 판 · 감정 묶음(표정 + 이모지 + 컷인 테마) · 모션의 이벤트 키(`emoji` · 값 = 키)가 울릴 때 클립 미리보기에서 그 이모지를 띄우는 것(다음 후보).
 
+## 9. 리그도 툴에서 — 붙는 리그는 툴이 원본 (소유자, 2026-11-10)
+
+"Spine도 툴에서 먼저 정의하고 유니티가 쓴다." 모션·스킨·이모지 정의는 이미 그 방향이었고, 리그만 반대(유니티 덤프 → 툴)였다.
+**캐릭터 리그는 그대로 덤프가 원본**(프리팹·깊이·자리·카메라가 그 구조에 맞물려 있다)이고, **새로 만드는 붙는 리그(이모지 등)는 툴이 정의해 내보낸다.**
+`HANDOFF.md` §2의 "리그는 만들지 않는다"에 예외가 생긴다 — 갈리는 선은 "유니티에 이미 있는 것인가, 새로 만드는 것인가"다.
+
+```
+RigAsset                          // 저작본 "rigs": [...]
+  kind   "emoji"
+  nodes[]                         // 부모가 자식보다 먼저. 루트(__root)는 적지 않는다 — 내보낼 때 붙는다
+    id · parent · x · y · width · height · image(그림을 그리는가) · alpha(불투명도를 받는가)
+```
+
+- 노드는 단순하다: 부모 가운데에 앵커·피벗을 둔 사각형. 코어의 리그 스키마(`RigSchemaRigDto`)로 바꿔 **덤프의 리그와 한 벌로** 쓴다(`RigAssets.Compose`) —
+  그 뒤는 전부 같은 길이다(트리 세우기·검증·조각·불투명도 노드).
+- 같은 rigKind가 덤프에도 있으면 **문서의 것이 이긴다**. 런타임이 나중에 같은 리그를 덤프해도 툴의 정의가 원본으로 남는다.
+- 산출물은 **덤프와 같은 모양**(`rig-schemas.json`의 그 형식) — 런타임은 캐릭터 덤프를 읽는 그 로더로 읽어 세운다. 그림 노드는 `hasImage`(§2.2, 코어 선반영), 불투명도는 `hasCanvasGroup`.
+- 본: `RigTemplates.Emoji` — `Emoji_Anchor › Emoji_Body › Emoji_Part1…4`(160px). 조각의 수·크기는 `SetRigParts`로. 노드를 하나씩 짓고 옮기는 리그 편집기는 아직 없다.
+- 화면: "붙는 리그 만들기 ▸ emoji"와 "이모지 추가"가 **리그가 없으면 같은 되돌리기 칸에서 정의한다** — 덤프를 기다릴 것이 없다.
+
 ## 상태
 
 - **P1 완료**(2026-11-10): `Model/SkinAsset.cs` · `MotionDocument.Skins`(저작본 `skins` — 비면 안 적는다) · `SceneObject.Skin` · `Rig/RigParts.cs`(조각 판정 —
@@ -270,4 +290,11 @@ EmojiAsset                       // 저작본 "emojis": [...] · 산출물 emoji
   화면: `ViewportView.BindEmoji`(시계 = 수명, 그 리그의 오브젝트가 정의의 스킨을 입고 연기, 수명 밖에서는 안 그린다) · 오른쪽 **이모지** 탭
   (목록 = 미리보기의 주인 — 모션·클립과 서로 푼다 · 키 · 스킨 · 등장/머묾/퇴장 · 머무는 시간 · 오프셋 · 붙는 자리 · `emojis.json…`) · 문제 칸.
   테스트 `EmojiTests` 4개 · `SkinShellTests` +1.
-- 다음: 소유자가 정한다 — 이벤트 키로 이모지 띄우기(클립에서 캐릭터의 표정 변화와 함께) · 붙는 자리 풀기(§5의 1) · K6(`clips.json` 초안) · `mt`의 고치는 명령.
+- **툴에서 정의하는 리그**(2026-11-10, §9): `Model/RigAsset.cs`(`RigAsset`·`RigNodeAsset`·`RigAssetCodec.ToDto`·`RigTemplates.Emoji`) · `MotionDocument.Rigs`(없으면 안 적는다) ·
+  `MotionEditor.Rigs.cs`(`AddRig` — 세울 수 있는 모양만, 캐릭터·카메라·무대는 못 정의한다 · `RemoveRig` · `SetRigParts`) · `RigSchemaFile.With`·`RigAssets.Compose`(덤프 + 문서, 문서가 이긴다) ·
+  `RigAssets.WriteSchemas`(덤프와 같은 모양) · 코어 선반영 `RigSchemaNodeDto.hasImage` → `RigParts`가 표시로 가린다(표시 없는 옛 덤프는 이름 규칙) ·
+  세션의 `Rig`가 합친 것(문서의 리그가 바뀌면 다시 합친다, 세울 수 없으면 덤프만으로 물러난다) · `ExportRigs` · `mt rigs`·`mt` 전체가 문서의 리그로 ·
+  화면: 메뉴와 "이모지 추가"가 이모지 리그를 필요할 때 정의 · "이모지" 탭의 리그 칸(조각 수·크기 · `rigs.json…`).
+  테스트 `RigAssetTests` 5개 · `SkinShellTests` +1(내장 덤프만으로 이모지를 만들어 리그·모션·이모지 셋을 내보내고, 저장·다시 열기).
+- 이제 **실제 덤프 없이 앱에서 이모지를 만든다.** 런타임에 넘기는 것은 세 파일: `rigs.json`(리그) · `motions.json`(`motions/3`) · `emojis.json`(`emojis/1-draft`).
+- 다음: 소유자가 정한다 — 이벤트 키로 이모지 띄우기(클립에서 캐릭터의 표정 변화와 함께) · 붙는 자리 풀기(§5의 1) · 리그 편집기(노드를 짓고 옮기기) · K6(`clips.json` 초안) · `mt`의 고치는 명령.

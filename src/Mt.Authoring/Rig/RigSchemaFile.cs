@@ -79,6 +79,36 @@ public sealed class RigSchemaFile
     public RectNodeTree BuildTree(string rigKind, string keyPrefix = "")
         => RigSchemaLoader.BuildTree(Dto, rigKind, keyPrefix);
 
+    /// <summary>
+    /// 이 덤프에 리그들을 더한 것 — 문서가 정의한 리그(<c>PLAN-parts.md</c> §9)를 덤프의 리그와 한 벌로 쓴다.
+    /// 같은 rigKind가 덤프에도 있으면 **더하는 쪽이 이긴다**(툴에서 정의한 리그가 원본이다). 손상된 리그면 예외(트리를 한 번 세워 본다).
+    /// 해시는 덤프 파일의 것 그대로다 — 문서가 기억하는 것은 덤프의 해시다.
+    /// </summary>
+    public RigSchemaFile With(IEnumerable<RigSchemaRigDto> extra)
+    {
+        ArgumentNullException.ThrowIfNull(extra);
+        List<RigSchemaRigDto> added = extra.ToList();
+
+        if (added.Count == 0)
+        {
+            return this;
+        }
+
+        var kinds = new HashSet<string>(added.Select(r => r.rigKind), StringComparer.Ordinal);
+        var dto = new RigSchemasFileDto
+        {
+            capturedUnderParentSize = Dto.capturedUnderParentSize,
+            rigs = Dto.rigs.Where(r => !kinds.Contains(r.rigKind)).Concat(added).ToList(),
+        };
+
+        foreach (RigSchemaRigDto rig in added)
+        {
+            RigSchemaLoader.BuildTree(dto, rig.rigKind);
+        }
+
+        return new RigSchemaFile(dto, Sha256);
+    }
+
     public static RigSchemaFile Load(string path)
     {
         ArgumentNullException.ThrowIfNull(path);

@@ -17,10 +17,28 @@ public partial class MainWindow
 
     /// <summary>덤프의 리그 중 붙여 만들 것 — 캐릭터(제 층에 서는 것)와 카메라의 가짜 리그를 뺀 나머지.</summary>
     private List<string> AttachableRigKinds()
-        => (_session.Rig?.RigKinds ?? Enumerable.Empty<string>())
+    {
+        List<string> kinds = (_session.Rig?.RigKinds ?? Enumerable.Empty<string>())
             .Where(k => k != SceneObject.DefaultRig && k != CameraRig.RigKind)
-            .OrderBy(k => k, StringComparer.Ordinal)
             .ToList();
+
+        // 이모지 리그는 언제나 고를 수 있다 — 아직 없으면 만들 때 툴이 정의한다(PLAN-parts.md §9, Spine처럼 툴이 원본).
+        if (!kinds.Contains(RigTemplates.EmojiKind))
+        {
+            kinds.Add(RigTemplates.EmojiKind);
+        }
+
+        return kinds.OrderBy(k => k, StringComparer.Ordinal).ToList();
+    }
+
+    /// <summary>이모지 리그가 덤프에도 문서에도 없으면 문서에 정의한다(본 그대로: 자리 › 묶음 › 조각 넷). 묶음 안에서 부르면 같은 되돌리기 칸이다.</summary>
+    private void EnsureRigDefined(string rig)
+    {
+        if (rig == RigTemplates.EmojiKind && _session.Rig?.RigKinds.Contains(rig) != true)
+        {
+            _session.Editor.AddRig(RigTemplates.Emoji());
+        }
+    }
 
     private void AddAttachMenu(SceneAsset scene, SceneObject o)
     {
@@ -65,8 +83,9 @@ public partial class MainWindow
             ? SceneObject.DefaultAttachNode
             : null;
 
-        editor.Batch(MotionChangeKind.Scene, () =>
+        editor.Batch(MotionChangeKind.Document, () =>
         {
+            EnsureRigDefined(rig);
             editor.AddSceneObject(null, id, rig, parent.Layer, parent.Stage);
             editor.AttachObject(null, id, parentId, node);
         });

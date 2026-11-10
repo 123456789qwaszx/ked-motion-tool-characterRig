@@ -101,6 +101,23 @@ public sealed class MotionDocument
     public EmojiAsset? FindEmoji(string? name)
         => name is null ? null : Emojis.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
 
+    /// <summary>
+    /// 툴에서 정의한 리그들(<c>PLAN-parts.md</c> §9) — 캐릭터에 붙는 리그(이모지 등). 덤프의 리그와 한 벌로 쓰이고, 같은 이름이면 이쪽이 이긴다.
+    /// 저작본에는 <see cref="RigsOrNull"/>로 실린다(없으면 안 적는다). 런타임에는 리그 스키마 모양으로 따로 나간다.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public List<RigAsset> Rigs { get; set; } = new();
+
+    [System.Text.Json.Serialization.JsonPropertyName("rigs")]
+    public List<RigAsset>? RigsOrNull
+    {
+        get => Rigs.Count == 0 ? null : Rigs;
+        set => Rigs = value ?? new List<RigAsset>();
+    }
+
+    public RigAsset? FindRig(string? kind)
+        => kind is null ? null : Rigs.FirstOrDefault(r => string.Equals(r.Kind, kind, StringComparison.Ordinal));
+
     public ClipAsset? FindClip(string? name)
         => name is null ? null : Clips.FirstOrDefault(c => string.Equals(c.Name, name, StringComparison.Ordinal));
 
