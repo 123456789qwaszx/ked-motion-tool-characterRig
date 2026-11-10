@@ -228,4 +228,8 @@ Spine에 없는 이 툴의 방향: **창 없이 도는 명령줄 도구**(검증
   `MotionEditor.Events.cs`(추가/고치기/삭제, 각각 한 칸, 시각 순) · 산출물 `"events"`(있으면 `motions/3`, 값은 JSON 문자열 — 한글 그대로) ·
   `ClipPreview.EventsBetween`(클립: 블록의 시각 + 바퀴마다, 끈 것은 안 울린다) · 굽기가 그 출연자의 이벤트를 옮겨 온다 · "모션" 탭의 이벤트 줄(시각·이름·값·×)과
   "이벤트 추가 (지금 시각)" · 타임 슬라이더의 초록 세모 · 뷰포트가 방금 울린 것을 0.4초 동안 `⚑ 이름 값`으로 보인다. 테스트 `MotionEventTests` 4개 · `ClipShellTests` +1.
-- 다음: 명령줄 도구.
+- **명령줄 도구 `mt`**(2026-11-10): `src/Mt.Cli` — `info` · `validate` · `export` · `pose`(모션/클립의 그 시각: 노드 값·불투명도·카메라·방금 울린 이벤트) · `bake`.
+  결과는 stdout의 JSON 하나, 종료 코드 0·1·2. 화면과 같은 함수(`MotionValidator`·`ClipValidator`·`MotionExport`·`ClipStage`·`ClipPreview`·`ClipBake`)를 지난다.
+  손으로 쓴 문서는 읽을 때 탄젠트 값을 종류대로 세운다(`TangentMath.Recompute` — 앱이 저장한 문서에는 무변). 로직은 `MtCli.Run(args, stdout, stderr)`이라 테스트가 프로세스 없이 부른다.
+  테스트 `MtCliTests` 7개. 아직 없는 것: 문서를 **고치는** 명령(키 놓기·블록 놓기 — 지금은 JSON을 직접 쓰고 `validate`로 확인한다) · 그림으로 내보내기(PNG·GIF).
+- 다음: 소유자가 정한다 — K6(`clips.json` 초안) · 이모지 정의를 툴에서(스킨 + 등장/머묾/퇴장 모션의 묶음) · `mt`의 고치는 명령.

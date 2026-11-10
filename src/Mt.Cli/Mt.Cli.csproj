@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 창 없이 도는 명령줄 도구 — 검증·내보내기·그 시각의 포즈·굽기를 JSON으로 낸다.
+       AI(와 스크립트·CI)가 모션을 쓰고, 검증하고, 결과를 읽는 고리다. Avalonia를 모른다 — Mt.Authoring만 쓴다. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Mt.Cli</RootNamespace>
+    <AssemblyName>mt</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Mt.Authoring.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mt.Authoring\Mt.Authoring.csproj" />
+  </ItemGroup>
+</Project>

@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Mt.Authoring\Mt.Authoring.csproj" />
+    <ProjectReference Include="..\..\src\Mt.Cli\Mt.Cli.csproj" />
   </ItemGroup>
 
   <ItemGroup>

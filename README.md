@@ -233,6 +233,25 @@ tests: Ked.Presentation.Core.Tests(NUnit, 원본 그대로) · Mt.Authoring.Test
 - 선택한 키의 노드에 피벗·x(빨강)·y(초록) 축.
 - `base-resolution.json`은 리그 덤프 옆에서 자동으로 싣는다(없으면 1920×1080).
 
+## 명령줄 `mt` — 창 없이, AI·스크립트·CI용
+
+`src/Mt.Cli`(실행 파일 `mt`). 저작 원본을 읽어 **검증·내보내기·그 시각의 포즈·굽기**를 한다. 결과는 표준 출력의 JSON 하나, 사람에게 하는 말은 표준 오류,
+종료 코드는 0 = 됨 · 1 = 막는 문제가 있다 · 2 = 쓰는 법이 틀렸다. 화면과 같은 함수를 지나므로 여기서 통과한 것은 앱에서도 통과하고, 여기서 읽은 포즈는 뷰포트가 보이는 포즈다.
+
+```
+dotnet run --project src/Mt.Cli -- info     a.motion-authoring.json
+dotnet run --project src/Mt.Cli -- validate a.motion-authoring.json [--rig rig-schemas.json]
+dotnet run --project src/Mt.Cli -- export   a.motion-authoring.json motions.json
+dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --motion nod --time 0.3 [--object s1] [--mode relative|absolute]
+dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --clip greet --time 0.8
+dotnet run --project src/Mt.Cli -- bake     a.motion-authoring.json --clip greet --object s1 --name greet_s1 [--out b.motion-authoring.json]
+```
+
+- `pose`는 모션·클립이 건드리는 노드의 값(위치·배율·회전·불투명도)과 카메라, 방금(0.4초 안에) 울린 이벤트 키를 낸다 — AI가 "이 시각에 정말 이렇게 되나"를 읽는 자리다.
+- 리그 덤프는 `--rig`, 없으면 문서가 적어 둔 경로, 그것도 없으면 내장본.
+- **손으로(또는 AI가) 쓴 문서**는 키에 값과 탄젠트 **종류**(`auto`·`flat`·`linear`·`spline`·`plateau`)만 적으면 된다 — `mt`가 읽을 때 탄젠트 값을 세운다
+  (앱이 편집할 때마다 하는 그 계산. `free`는 적힌 값 그대로). 앱이 저장한 문서에는 아무것도 안 바뀐다.
+
 ## 설정 · 저장
 
 - **설정 창**(툴바 "설정…", 마야 Preferences): 리그 노드 보기 · 무대 뼈대 보기 · 시간 스냅 간격(1/24초 = 1프레임 기본 · 1/60 · 1/120) · 새 키 탄젠트 · 시간 표시 · 자동 저장. 바꾸는 즉시 적용, 닫을 때 저장. 시간 스냅 켬/끔과 값 스냅은 그래프 툴바에, Auto Key는 하단 줄에.
