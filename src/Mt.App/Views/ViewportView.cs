@@ -1372,7 +1372,7 @@ public sealed class ViewportView : Control
         float turn = 0f;
 
         // 스킨의 놓임 — 조각 노드 안에서의 자리(노드의 px), 크기, 회전. 노드의 값(모션) 위에 따로 얹힌다.
-        if (worn is { } w1 && w1.Skin.SetupOf(node) is { IsPlaced: true } setup && pose.GetState(key) is var state)
+        if (worn is { } w1 && PlacementOf(w1.Skin, node) is { IsPlaced: true } setup && pose.GetState(key) is var state)
         {
             Vec2 size = state.SizeDelta;
             float sx = size.X > 1e-6f ? w / size.X : 1f; // 노드의 px → 루트 공간(부모들의 배율까지)
@@ -2014,7 +2014,12 @@ public sealed class ViewportView : Control
                 }
             }
 
-            if (selected && PartQuadOf(pose, o, parts[0]) is { } outline)
+            if (PlacedPart is { } picked && picked.Skin == worn.Skin.Name && PartQuadOf(pose, o, picked.Node) is { } held)
+            {
+                context.DrawGeometry(null, SelectedObjectPen, new PolylineGeometry(
+                    new[] { ToControl(held.TopLeft), ToControl(held.TopRight), ToControl(held.BottomRight), ToControl(held.BottomLeft), ToControl(held.TopLeft) }, true));
+            }
+            else if (selected && PartQuadOf(pose, o, parts[0]) is { } outline)
             {
                 context.DrawGeometry(null, SelectedObjectPen, new PolylineGeometry(
                     new[] { ToControl(outline.TopLeft), ToControl(outline.TopRight), ToControl(outline.BottomRight), ToControl(outline.BottomLeft), ToControl(outline.TopLeft) }, true));
@@ -2212,6 +2217,19 @@ public sealed class ViewportView : Control
 
         if (!pressed.IsLeftButtonPressed)
         {
+            return;
+        }
+
+        // 이모지 정의를 보는 중이면 조각을 끌어 스킨의 놓임을 잡는다(모션의 키가 아니다).
+        if (ShownEmoji is not null)
+        {
+            if (TryStartPartPlacement(position, e.KeyModifiers))
+            {
+                Pause();
+                e.Pointer.Capture(this);
+                e.Handled = true;
+            }
+
             return;
         }
 
@@ -2545,6 +2563,13 @@ public sealed class ViewportView : Control
             return;
         }
 
+        if (_place is not null)
+        {
+            DragPartPlacement(e.GetPosition(this));
+            e.Handled = true;
+            return;
+        }
+
         switch (_drag)
         {
             case Drag.MoveFree:
@@ -2560,6 +2585,148 @@ public sealed class ViewportView : Control
         }
     }
 
+    // ── 조각 놓기 (PLAN-parts.md §14) — 이모지 정의를 보며 조각을 끌어 스킨의 놓임을 잡는다 ──
+
+    private enum PlaceMode { Move, Scale, Rotate }
+
+    private sealed record PartPlacement(string Skin, string Node, PlaceMode Mode, Vec2 StartRoot, Vec2 CenterRoot, SkinPartSetup Start, Vec2 AxisX, Vec2 AxisY)
+    {
+        public SkinPartSetup Now { get; set; } = Start;
+    }
+
+    private PartPlacement? _place;
+
+    /// <summary>마지막으로 집은 조각(스킨, 노드) — 윤곽으로 보인다.</summary>
+    public (string Skin, string Node)? PlacedPart { get; private set; }
+
+    /// <summary>끄는 중이면 끌고 있는 값, 아니면 스킨의 값.</summary>
+    private SkinPartSetup PlacementOf(SkinAsset skin, string node)
+        => _place is { } place && place.Skin == skin.Name && place.Node == node ? place.Now : skin.SetupOf(node);
+
+    /// <summary>
+    /// 그 자리의 조각을 집는다 — 끌면 자리, Shift+끌기는 크기(가운데에서의 거리 비), Ctrl+끌기는 회전(가운데 둘레). 위에 그려진 조각이 먼저 집힌다.
+    /// </summary>
+    private bool TryStartPartPlacement(Point position, KeyModifiers modifiers)
+    {
+        if (_editor is null || EmojiActor is not { } actor || CurrentPose() is not { } pose || WornBy(pose, actor) is not { } worn)
+        {
+            return false;
+        }
+
+        var at = new Pixel(position.X, position.Y);
+
+        foreach (string node in DrawnParts(pose, actor).Reverse())
+        {
+            if (PartQuadOf(pose, actor, node) is not { } quad)
+            {
+                continue;
+            }
+
+            var polygon = new[] { quad.BottomLeft, quad.BottomRight, quad.TopRight, quad.TopLeft }.Select(c => ToControl(c)).Select(p => new Pixel(p.X, p.Y)).ToList();
+
+            if (!GraphHitTest.Contains(polygon, at))
+            {
+                continue;
+            }
+
+            // 노드의 px 한 칸이 루트 공간에서 얼마인가 — 놓임은 노드의 px이다(PartQuadOf와 같은 축).
+            Quad rect = PortraitLayout.RectQuad(pose, actor.KeyOf(node));
+            Vec2 size = pose.GetState(actor.KeyOf(node)).SizeDelta;
+            Vec2 axisX = size.X > 1e-6f ? (rect.BottomRight - rect.BottomLeft) * (1f / size.X) : new Vec2(1f, 0f);
+            Vec2 axisY = size.Y > 1e-6f ? (rect.TopLeft - rect.BottomLeft) * (1f / size.Y) : new Vec2(0f, 1f);
+            PlaceMode mode = modifiers.HasFlag(KeyModifiers.Shift) ? PlaceMode.Scale : modifiers.HasFlag(KeyModifiers.Control) ? PlaceMode.Rotate : PlaceMode.Move;
+            _place = new PartPlacement(worn.Skin.Name, node, mode, ToRoot(position), quad.Center, worn.Skin.SetupOf(node).Clone(), axisX, axisY);
+            PlacedPart = (worn.Skin.Name, node);
+            InvalidateVisual();
+            return true;
+        }
+
+        PlacedPart = null;
+        InvalidateVisual();
+        return false;
+    }
+
+    private void DragPartPlacement(Point position)
+    {
+        if (_place is not { } place)
+        {
+            return;
+        }
+
+        Vec2 now = ToRoot(position);
+        SkinPartSetup next = place.Start.Clone();
+
+        static float Dot(Vec2 a, Vec2 b) => a.X * b.X + a.Y * b.Y;
+        static float Length(Vec2 v) => MathF.Sqrt(Dot(v, v));
+
+        switch (place.Mode)
+        {
+            case PlaceMode.Move:
+            {
+                // 루트 공간의 이동을 노드의 px로 — 축이 직교한다고 본다(리그의 노드는 기울지 않는다).
+                Vec2 delta = now - place.StartRoot;
+                float lx = Dot(place.AxisX, place.AxisX);
+                float ly = Dot(place.AxisY, place.AxisY);
+                next.X = MathF.Round(place.Start.X + (lx > 1e-9f ? Dot(delta, place.AxisX) / lx : 0f));
+                next.Y = MathF.Round(place.Start.Y + (ly > 1e-9f ? Dot(delta, place.AxisY) / ly : 0f));
+                break;
+            }
+
+            case PlaceMode.Scale:
+            {
+                float from = Length(place.StartRoot - place.CenterRoot);
+                float to = Length(now - place.CenterRoot);
+
+                if (from > 1e-3f)
+                {
+                    next.Scale = MathF.Max(0.05f, MathF.Round(place.Start.Scale * to / from, 2));
+                }
+
+                break;
+            }
+
+            case PlaceMode.Rotate:
+            {
+                Vec2 a = place.StartRoot - place.CenterRoot;
+                Vec2 b = now - place.CenterRoot;
+
+                if (Length(a) > 1e-3f && Length(b) > 1e-3f)
+                {
+                    // 뒤집힌 계층에서는 화면의 돌림이 거꾸로다 — 축의 손잡이 방향을 따른다.
+                    float handed = place.AxisX.X * place.AxisY.Y - place.AxisX.Y * place.AxisY.X < 0f ? -1f : 1f;
+                    float turn = (MathF.Atan2(b.Y, b.X) - MathF.Atan2(a.Y, a.X)) * 180f / MathF.PI;
+                    turn = (turn - 360f * MathF.Round(turn / 360f)) * handed; // 가까운 쪽으로(−180~180) — 반 바퀴 경계에서 튀지 않게
+                    next.Rotation = MathF.Round(place.Start.Rotation + turn);
+                }
+
+                break;
+            }
+        }
+
+        place.Now = next;
+        InvalidateVisual();
+    }
+
+    /// <summary>놓는다 — 끈 하나가 되돌리기 한 칸. 안 움직였으면 기록이 없다.</summary>
+    private void EndPartPlacement()
+    {
+        if (_place is not { } place)
+        {
+            return;
+        }
+
+        _place = null;
+
+        try
+        {
+            _editor?.SetSkinPartSetup(place.Skin, place.Node, place.Now);
+        }
+        finally
+        {
+            InvalidateVisual();
+        }
+    }
+
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
@@ -2567,6 +2734,14 @@ public sealed class ViewportView : Control
         if (_panning)
         {
             _panning = false;
+            e.Pointer.Capture(null);
+            e.Handled = true;
+            return;
+        }
+
+        if (_place is not null)
+        {
+            EndPartPlacement();
             e.Pointer.Capture(null);
             e.Handled = true;
             return;

@@ -1,3 +1,5 @@
+using Avalonia;
+using Mt.App.Views;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
@@ -837,6 +839,94 @@ public class SkinShellTests
                 editor.Undo(); // 새 반전 판
                 Assert.Null(editor.Document.FindEmoji("emoji")!.SkinFlipped);
                 Assert.Null(editor.Document.FindSkin("emoji_반전"));
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void 이모지_정의를_보며_조각을_끌면_스킨의_놓임이_한_칸으로_바뀐다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                MotionEditor editor = window.Session.Editor;
+                string id = window.CreateAttachedFromMenu(RigTemplates.EmojiKind, "s1");
+                window.InspectorTab = 4;
+                window.AddEmojiFromForm();
+                window.NewEmojiSkinFromForm(flipped: false);
+                editor.SetSkinPartImages("emoji", "Emoji_Part1", new[] { "art/a.png" });
+                editor.SetSkinPartImages("emoji", "Emoji_Part2", new[] { "art/b.png" });
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.Viewport.ScrubTo(0.05);
+                ViewportView view = window.Viewport;
+                SkinAsset skin = editor.Document.FindSkin("emoji")!;
+
+                Point At(Vec2 root) => view.TranslatePoint(view.ToScreen(root), window) ?? throw new InvalidOperationException("뷰가 창에 붙어 있지 않다");
+                Quad Part(string node) => view.PartQuad(id, node)!.Value;
+
+                // 두 조각이 겹쳐 있다 — 위에 그려진 것(Part2)이 집힌다. 끌면 그만큼 놓임이 바뀐다: 한 칸, 모션의 키는 안 생긴다.
+                long revision = editor.Revision;
+                Quad before = Part("Emoji_Part2");
+                float perPixel = (before.BottomRight.X - before.BottomLeft.X) / RigTemplates.DefaultPartSize; // 노드의 px → 루트 공간
+                Vec2 grab = before.Center;
+                var drop = new Vec2(grab.X + 60f * perPixel, grab.Y + 30f * perPixel);
+                window.MouseDown(At(grab), MouseButton.Left);
+                window.MouseMove(At(new Vec2(grab.X + 20f, grab.Y)), RawInputModifiers.LeftMouseButton);
+                Assert.Equal(revision, editor.Revision); // 끄는 동안에는 기록이 없다(그림만 따라온다)
+                Assert.True(Part("Emoji_Part2").Center.X > before.Center.X);
+                window.MouseMove(At(drop), RawInputModifiers.LeftMouseButton);
+                window.MouseUp(At(drop), MouseButton.Left);
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.Equal((60f, 30f), (skin.SetupOf("Emoji_Part2").X, skin.SetupOf("Emoji_Part2").Y));
+                Assert.Equal(0f, skin.SetupOf("Emoji_Part1").X);
+                Assert.Equal(("emoji", "Emoji_Part2"), view.PlacedPart);
+                Assert.Empty(editor.Document.Motions);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.Equal("60", window.EmojiSkinSetupBoxes("Emoji_Part2")!.X.Text); // 칸이 따라온다
+
+                // 옮겨 간 Part2가 안 덮는 쪽(왼쪽)에서 집으면 Part1이다. Shift+끌기 = 크기(가운데에서의 거리 비).
+                Quad one = Part("Emoji_Part1");
+                var edge = new Vec2(one.Center.X - 60f * perPixel, one.Center.Y);
+                var half = new Vec2(one.Center.X - 30f * perPixel, one.Center.Y);
+                window.MouseDown(At(edge), MouseButton.Left, RawInputModifiers.Shift);
+                window.MouseMove(At(half), RawInputModifiers.LeftMouseButton | RawInputModifiers.Shift);
+                window.MouseUp(At(half), MouseButton.Left, RawInputModifiers.Shift);
+                Assert.Equal(0.5f, skin.SetupOf("Emoji_Part1").Scale, 2);
+                Assert.Equal(revision + 2, editor.Revision);
+
+                // Ctrl+끌기 = 회전(가운데 둘레) — 왼쪽에서 아래로 4분의 1바퀴 = 반시계 +90도.
+                one = Part("Emoji_Part1");
+                var right = new Vec2(one.Center.X - 30f * perPixel, one.Center.Y);
+                var up = new Vec2(one.Center.X, one.Center.Y - 30f * perPixel);
+                window.MouseDown(At(right), MouseButton.Left, RawInputModifiers.Control);
+                window.MouseMove(At(up), RawInputModifiers.LeftMouseButton | RawInputModifiers.Control);
+                window.MouseUp(At(up), MouseButton.Left, RawInputModifiers.Control);
+                Assert.Equal(90f, skin.SetupOf("Emoji_Part1").Rotation, 0);
+
+                // 제자리에서 눌렀다 떼면 기록이 없다. 빈 자리를 누르면 집은 것이 풀린다.
+                revision = editor.Revision;
+                Vec2 two = Part("Emoji_Part2").Center;
+                window.MouseDown(At(two), MouseButton.Left);
+                window.MouseUp(At(two), MouseButton.Left);
+                Assert.Equal(revision, editor.Revision);
+                var empty = new Vec2(two.X - 900f, two.Y - 400f);
+                window.MouseDown(At(empty), MouseButton.Left);
+                window.MouseUp(At(empty), MouseButton.Left);
+                Assert.Null(view.PlacedPart);
+
+                // 되돌리면 놓임이 돌아간다.
+                editor.Undo();
+                editor.Undo();
+                editor.Undo();
+                Assert.Empty(editor.Document.FindSkin("emoji")!.Setups); // 되돌리기는 문서를 갈아 끼운다 — 다시 찾는다
             }
             finally
             {
