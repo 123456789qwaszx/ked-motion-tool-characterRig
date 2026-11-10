@@ -724,7 +724,7 @@ public class SkinShellTests
 
                 // 놓임 칸(X) — 한 칸, 조각이 그만큼 옮겨 그려진다. 노드의 값은 그대로다(모션과 따로).
                 Quad before = window.Viewport.PartQuad(id, "Emoji_Part1")!.Value;
-                var boxes = window.SkinSetupBoxes("Emoji_Part1")!.Value;
+                var boxes = window.SkinSetupBoxes("Emoji_Part1")!;
                 revision = editor.Revision;
                 boxes.X.Focus();
                 boxes.X.Text = "50";
@@ -771,6 +771,72 @@ public class SkinShellTests
                 Quad mirrored = window.Viewport.PartQuad(id, "Emoji_Part1")!.Value;
                 Assert.Equal("art/a.png", window.Viewport.PartImage(id, "Emoji_Part1"));
                 Assert.True(mirrored.BottomRight.X < mirrored.BottomLeft.X);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void 이모지_탭에서_그_이모지의_스킨을_바로_만들고_고친다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                MotionEditor editor = window.Session.Editor;
+                string id = window.CreateAttachedFromMenu(RigTemplates.EmojiKind, "s1"); // 리그도 그 자리에서 정의된다
+                window.InspectorTab = 4;
+                Assert.Equal("emoji", window.AddEmojiFromForm());
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.Null(window.EmojiSkinPartBox("Emoji_Part1")); // 스킨이 아직 없다
+
+                // 새 스킨 — 이모지의 이름으로 만들어 그림으로 삼는다, 한 칸. 조각 줄이 선다(오브젝트에 입히지 않아도).
+                long revision = editor.Revision;
+                Assert.Equal("emoji", window.NewEmojiSkinFromForm(flipped: false));
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.Equal("emoji", editor.Document.FindEmoji("emoji")!.Skin);
+                Assert.Null(editor.Document.ActiveSceneAsset!.Find(id)!.Skin);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                TextBox part = window.EmojiSkinPartBox("Emoji_Part1")!;
+
+                // 그 자리에서 그림을 준다 — 뷰포트의 이모지가 바로 그 그림을 그린다.
+                part.Focus();
+                part.Text = "art/a.png | art/b.png";
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal(new[] { "art/a.png", "art/b.png" }, editor.Document.FindSkin("emoji")!.ImagesOf("Emoji_Part1"));
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.Viewport.ScrubTo(0.05);
+                Assert.Equal("art/a.png", window.Viewport.PartImage(id, "Emoji_Part1"));
+
+                // 놓임도 여기서.
+                var boxes = window.EmojiSkinSetupBoxes("Emoji_Part1")!;
+                boxes.Y.Focus();
+                boxes.Y.Text = "30";
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal(30f, editor.Document.FindSkin("emoji")!.SetupOf("Emoji_Part1").Y);
+
+                // 반전 판 — 따로 한 묶음의 줄이 선다.
+                Assert.Equal("emoji_반전", window.NewEmojiSkinFromForm(flipped: true));
+                Assert.Equal("emoji_반전", editor.Document.FindEmoji("emoji")!.SkinFlipped);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                TextBox flipped = window.EmojiSkinPartBox("Emoji_Part1", flipped: true)!;
+                flipped.Focus();
+                flipped.Text = "art/left.png";
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal("art/left.png", editor.Document.FindSkin("emoji_반전")!.Parts["Emoji_Part1"]);
+                Assert.Equal("art/a.png", editor.Document.FindSkin("emoji")!.Parts["Emoji_Part1"]); // 본판은 그대로
+
+                // 되돌리면 스킨과 이모지의 참조가 함께 돌아간다.
+                editor.Undo(); // 그림
+                editor.Undo(); // 새 반전 판
+                Assert.Null(editor.Document.FindEmoji("emoji")!.SkinFlipped);
+                Assert.Null(editor.Document.FindSkin("emoji_반전"));
             }
             finally
             {

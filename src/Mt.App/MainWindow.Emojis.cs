@@ -17,7 +17,7 @@ public partial class MainWindow
 {
     private const string NoneChoice = "(없음)";
 
-    private readonly ListBox _emojiList = new() { MinHeight = 60 };
+    private readonly ListBox _emojiList = new() { MinHeight = 60, MaxHeight = 150, FontSize = 11 }; // 정의가 많아도 칸들이 화면 밖으로 밀리지 않게
     private readonly TextBox _emojiName = new() { FontSize = 11 };
     private readonly ComboBox _emojiSkin = new() { FontSize = 11 };
     private readonly ComboBox _emojiSkinFlipped = new() { FontSize = 11 };
@@ -68,6 +68,12 @@ public partial class MainWindow
         _emojiFields.Children.Add(Labeled("키", _emojiName));
         _emojiFields.Children.Add(Labeled("그림(스킨)", _emojiSkin));
         _emojiFields.Children.Add(Labeled("반전 판", _emojiSkinFlipped));
+        Button newSkin = SmallButton("새 스킨", (_, _) => Guard("새 스킨", () => NewEmojiSkin(flipped: false)));
+        Button newFlipped = SmallButton("새 반전 판", (_, _) => Guard("새 반전 판", () => NewEmojiSkin(flipped: true)));
+        ToolTip.SetTip(newSkin, "이 이모지의 이름으로 빈 스킨을 만들어 그림으로 삼는다 — 되돌리기 한 번. 아래 조각 칸에서 그림을 준다");
+        ToolTip.SetTip(newFlipped, "이 이모지의 반전 판 스킨(이름_반전)을 만든다 — 되돌리기 한 번");
+        _emojiFields.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { newSkin, newFlipped } });
+        _emojiFields.Children.Add(_emojiSkinParts);
         ToolTip.SetTip(_emojiSkinFlipped, "붙은 캐릭터가 좌우 반전일 때 입는 스킨(말풍선의 꼬리가 반대쪽인 판) — 자리와 움직임은 뒤집히고 이 그림은 뒤집지 않고 그린다. 없으면 같은 그림이 뒤집혀 보인다");
         _emojiFields.Children.Add(Labeled("등장", _emojiEnter));
         _emojiFields.Children.Add(Labeled("머묾(되풀이)", _emojiHold));
@@ -130,6 +136,98 @@ public partial class MainWindow
         OnCommit(_emojiOffsetY, text => WithEmoji(e => e.OffsetY = TryFloat(text, out float v) ? v : e.OffsetY));
         OnCommit(_emojiLocator, text => WithEmoji(e => e.Locator = text));
         return panel;
+    }
+
+    // 이 이모지의 스킨을 그 자리에서 고친다 — "씬" 탭의 스킨 칸(오브젝트가 입은 스킨)과 같은 줄을 쓴다.
+    private readonly StackPanel _emojiSkinParts = new() { Spacing = 3 };
+    private readonly Dictionary<string, SkinSetupBoxSet> _emojiSetupBoxes = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, SkinSetupBoxSet> _emojiFlippedSetupBoxes = new(StringComparer.Ordinal);
+
+    /// <summary>테스트 손잡이 — "이모지" 탭의 조각 그림 칸(반전 판이면 flipped).</summary>
+    internal TextBox? EmojiSkinPartBox(string node, bool flipped = false)
+        => _emojiSkinParts.Children.OfType<Panel>().SelectMany(p => p.Children.OfType<TextBox>()).FirstOrDefault(b => Equals(b.Tag, node) && Equals(b.Name == "flipped", flipped));
+
+    internal SkinSetupBoxSet? EmojiSkinSetupBoxes(string node, bool flipped = false)
+        => (flipped ? _emojiFlippedSetupBoxes : _emojiSetupBoxes).TryGetValue(node, out SkinSetupBoxSet? boxes) ? boxes : null;
+
+    internal string? NewEmojiSkinFromForm(bool flipped) => NewEmojiSkin(flipped);
+
+    /// <summary>이 이모지의 이름으로 새 스킨을 만들어 그림(또는 반전 판)으로 삼는다 — 한 칸.</summary>
+    private string? NewEmojiSkin(bool flipped)
+    {
+        if (CurrentEmoji is not { } emoji)
+        {
+            return null;
+        }
+
+        MotionDocument document = _session.Editor.Document;
+        string stem = flipped ? emoji.Name + "_반전" : emoji.Name;
+        string name = stem;
+
+        for (int i = 2; document.FindSkin(name) is not null; i++)
+        {
+            name = $"{stem}_{i.ToString(CultureInfo.InvariantCulture)}";
+        }
+
+        _session.Editor.Batch(MotionChangeKind.Scene, () =>
+        {
+            _session.Editor.AddSkin(name, emoji.Rig);
+            EmojiAsset value = emoji.Clone();
+
+            if (flipped)
+            {
+                value.SkinFlipped = name;
+            }
+            else
+            {
+                value.Skin = name;
+            }
+
+            _session.Editor.UpdateEmoji(emoji.Name, value);
+        });
+        return name;
+    }
+
+    private void RefreshEmojiSkinParts(EmojiAsset? emoji)
+    {
+        _emojiSkinParts.Children.Clear();
+        _emojiSetupBoxes.Clear();
+        _emojiFlippedSetupBoxes.Clear();
+
+        if (emoji is null)
+        {
+            return;
+        }
+
+        IReadOnlyList<string> parts = RigParts.Of(_session.Rig, emoji.Rig);
+
+        void Rows(string? skinName, string title, Dictionary<string, SkinSetupBoxSet> boxes, bool flipped)
+        {
+            if (_session.Editor.Document.FindSkin(skinName) is not { } skin || skin.Rig != emoji.Rig)
+            {
+                return;
+            }
+
+            _emojiSkinParts.Children.Add(new TextBlock { Text = $"{title} — {skin.Name}", FontSize = 10, Opacity = 0.75, Margin = new Avalonia.Thickness(0, 4, 0, 0) });
+
+            foreach (string node in parts)
+            {
+                Control row = SkinPartRow(skin, node, boxes);
+
+                if (flipped && row is Panel panel)
+                {
+                    foreach (TextBox box in panel.Children.OfType<TextBox>())
+                    {
+                        box.Name = "flipped";
+                    }
+                }
+
+                _emojiSkinParts.Children.Add(row);
+            }
+        }
+
+        Rows(emoji.Skin, "조각 그림", _emojiSetupBoxes, flipped: false);
+        Rows(emoji.SkinFlipped, "반전 판의 조각 그림", _emojiFlippedSetupBoxes, flipped: true);
     }
 
     private readonly StackPanel _rigFields = new() { Spacing = 4 };
@@ -320,6 +418,7 @@ public partial class MainWindow
             List<string> motions = document.Motions.Where(m => m.Rig == rig).Select(m => m.Name).OrderBy(n => n, StringComparer.Ordinal).ToList();
             Fill(_emojiSkin, document.Skins.Where(s => s.Rig == rig).Select(s => s.Name), emoji?.Skin);
             Fill(_emojiSkinFlipped, document.Skins.Where(s => s.Rig == rig).Select(s => s.Name), emoji?.SkinFlipped);
+            RefreshEmojiSkinParts(emoji);
             Fill(_emojiEnter, motions, emoji?.Enter);
             Fill(_emojiHold, motions, emoji?.Hold);
             Fill(_emojiExit, motions, emoji?.Exit);

@@ -86,6 +86,12 @@ public class EmojiExampleShots
                 window.Session.Editor.Undo();
                 window.InspectorTab = 4;
 
+                // "이모지" 탭 — 그 이모지의 스킨을 그 자리에서 고친다.
+                window.SelectEmoji("말줄임점풍선");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.Viewport.ScrubTo(1.4);
+                Shot("emoji-tab");
+
                 window.SelectClip("emoji_demo");
 
                 foreach (double t in new[] { 0.6, 3.0, 7.5 })
