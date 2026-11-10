@@ -40,6 +40,9 @@ public sealed class TimeSliderView : Control
     private static readonly Pen MajorTickPen = new(new SolidColorBrush(Color.FromRgb(0x6E, 0x6E, 0x6E)), 1);
     private static readonly IBrush LabelBrush = new SolidColorBrush(Color.FromRgb(0xB4, 0xB4, 0xB4));
     private static readonly IBrush KeyTickBrush = new SolidColorBrush(Color.FromRgb(0xD3, 0x3C, 0x3C));
+    private static readonly IBrush EnterTickBrush = new SolidColorBrush(Color.FromRgb(0x4C, 0xC2, 0x6B));
+    private static readonly IBrush HoldTickBrush = new SolidColorBrush(Color.FromRgb(0xE0, 0xB0, 0x30));
+    private static readonly IBrush ExitTickBrush = new SolidColorBrush(Color.FromRgb(0x4A, 0x9E, 0xE8));
     private static readonly IBrush SelectedKeyTickBrush = new SolidColorBrush(Color.FromRgb(0xF9, 0xD7, 0x1C));
     private static readonly IBrush GhostTickBrush = new SolidColorBrush(Color.FromArgb(140, 0xF9, 0xD7, 0x1C));
     private static readonly IBrush EventMarkBrush = new SolidColorBrush(Color.FromRgb(0x4C, 0xC9, 0x6A));
@@ -423,6 +426,16 @@ public sealed class TimeSliderView : Control
             foreach (double t in contextTimes)
             {
                 context.FillRectangle(KeyTickBrush, new Rect(XAtTime(t) - 1, 2, 2, track.Height - 6));
+            }
+        }
+
+        // 이모지 정의를 보되 고치는 구간이 없으면 — 세 모션의 키를 구간마다 다른 색으로(등장 초록 · 머묾 노랑 · 퇴장 파랑).
+        if (Motion is null && KeyTicks != KeyTickMode.None && Viewport?.EmojiKeyTimes() is { Count: > 0 } phaseTimes)
+        {
+            foreach ((Mt.Authoring.Preview.EmojiPhase phase, double t) in phaseTimes)
+            {
+                IBrush brush = phase switch { Mt.Authoring.Preview.EmojiPhase.Enter => EnterTickBrush, Mt.Authoring.Preview.EmojiPhase.Hold => HoldTickBrush, _ => ExitTickBrush };
+                context.FillRectangle(brush, new Rect(XAtTime(t) - 1, 2, 2, track.Height - 6));
             }
         }
 

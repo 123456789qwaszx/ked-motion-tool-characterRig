@@ -3279,10 +3279,108 @@ public partial class MainWindow : Window
             }
         }
 
+        AddUnkeyedRows(motion, query, labels);
+
         if (motion.Channels.Count == 0)
         {
             _channelRows.Children.Add(new TextBlock { Text = "(채널 없음 — 하이어아키에서 노드를 고르고 채널 박스에 값을 넣거나 매니퓰레이터로 끌면 생긴다)", FontSize = 11, Opacity = 0.6, TextWrapping = TextWrapping.Wrap, Margin = new Avalonia.Thickness(6, 4) });
         }
+    }
+
+    /// <summary>작은 리그(이모지 등)에서만 키 없는 채널을 늘어놓는다 — 캐릭터 리그는 노드가 많아 목록이 묻힌다(그쪽은 컨트롤러 표가 그 일을 한다).</summary>
+    private const int UnkeyedRowsMaxNodes = 16;
+
+    /// <summary>테스트 손잡이 — 그래프 목록의 "키 없음" 줄들(노드 · 종류).</summary>
+    internal IReadOnlyList<(string Node, MotionChannelKind Kind)> UnkeyedRows => _unkeyedRows;
+
+    internal void KeyUnkeyedRow(string node, MotionChannelKind kind) => KeyUnkeyed(node, kind);
+
+    private readonly List<(string Node, MotionChannelKind Kind)> _unkeyedRows = new();
+
+    /// <summary>
+    /// 아직 키가 없는 채널들을 흐리게 — 이 모션이 안 건드리는 노드·종류(위치·배율·회전·불투명도)도 보이고, 눌러서 그 노드를 고르거나 ＋로 지금 값에 키를 놓는다.
+    /// "배율만 있는 모션에 살짝 위치도" 같은 손을 목록에서 바로 간다.
+    /// </summary>
+    private void AddUnkeyedRows(MotionAsset motion, string query, ControllerRig? labels)
+    {
+        _unkeyedRows.Clear();
+
+        if (_session.Rig is not { } rig || !rig.NodeIds.TryGetValue(motion.Rig, out ICollection<string>? nodes) || nodes.Count > UnkeyedRowsMaxNodes)
+        {
+            return;
+        }
+
+        rig.AlphaNodeIds.TryGetValue(motion.Rig, out ICollection<string>? alphaNodes);
+        bool headed = false;
+
+        foreach (string node in nodes)
+        {
+            if (MotionRules.ForbiddenNodes.Contains(node) || node == RigAssetCodec.RootId)
+            {
+                continue;
+            }
+
+            string nodeLabel = DopeSheetRows.NodeLabel(node, labels);
+
+            foreach (MotionChannelKind kind in new[] { MotionChannelKind.Position, MotionChannelKind.Scale, MotionChannelKind.Euler, MotionChannelKind.Alpha })
+            {
+                if (motion.FindChannel(node, kind) is not null || (kind == MotionChannelKind.Alpha && alphaNodes?.Contains(node) != true))
+                {
+                    continue;
+                }
+
+                if (query.Length > 0 && !node.Contains(query, StringComparison.OrdinalIgnoreCase) && !nodeLabel.Contains(query, StringComparison.OrdinalIgnoreCase) && !ChannelKindLabel.Of(kind).Contains(query, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (!headed)
+                {
+                    headed = true;
+                    _channelRows.Children.Add(new TextBlock { Text = "키 없음", FontSize = 10, Opacity = 0.55, Margin = new Avalonia.Thickness(4, 8, 2, 0) });
+                }
+
+                _unkeyedRows.Add((node, kind));
+                string capturedNode = node;
+                MotionChannelKind capturedKind = kind;
+                var row = new DockPanel { Margin = new Avalonia.Thickness(2, 1, 2, 0), Opacity = 0.5 };
+                Button add = SmallButton("＋", (_, _) => Guard("키 놓기", () => KeyUnkeyed(capturedNode, capturedKind)));
+                ToolTip.SetTip(add, "지금 값을 현재 시각에 키 — 채널이 생긴다. 그 뒤 그래프·뷰포트에서 고친다");
+                DockPanel.SetDock(add, Dock.Right);
+                row.Children.Add(add);
+                var title = new TextBlock
+                {
+                    Text = $"{nodeLabel} · {ChannelKindLabel.Of(kind)}",
+                    FontSize = 11,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                    Cursor = new Cursor(StandardCursorType.Hand),
+                };
+                ToolTip.SetTip(title, $"{node}\n{kind} — 이 모션에 아직 키가 없다\n클릭: 이 노드를 고른다(뷰포트의 손잡이·채널 박스가 이 노드를 본다) · ＋: 지금 값에 키");
+                title.PointerPressed += (_, e) =>
+                {
+                    _viewport.SelectedNode = capturedNode;
+                    RefreshChannelBox();
+                    e.Handled = true;
+                };
+                row.Children.Add(title);
+                _channelRows.Children.Add(row);
+            }
+        }
+    }
+
+    /// <summary>키 없는 채널에 지금 값을 지금 시각의 키로 — 채널이 생긴다. 뷰포트의 길(클립·이모지 안이면 그 문맥의 시각과 시작값)로 놓는다.</summary>
+    private void KeyUnkeyed(string node, MotionChannelKind kind)
+    {
+        _viewport.SelectedNode = node;
+
+        if (kind == MotionChannelKind.Alpha)
+        {
+            _viewport.SetAlphaValue(node, _viewport.AlphaValue(node) ?? 1f);
+            return;
+        }
+
+        _viewport.KeyComponents(node, kind, kind == MotionChannelKind.Euler ? new[] { Axis.Z } : new[] { Axis.X, Axis.Y });
     }
 
     /// <summary>성분 행: 색 네모 + 이름 + (있으면) ×. 보이는 행은 파랗게(마야 선택). 없는 성분은 흐리고, 클릭해도 만들지 않는다 — <paramref name="onMissingClick"/>만.</summary>

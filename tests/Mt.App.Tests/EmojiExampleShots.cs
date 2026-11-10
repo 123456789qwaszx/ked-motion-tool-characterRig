@@ -95,6 +95,8 @@ public class EmojiExampleShots
                 // 이모지 안에서 머묾의 모션을 고친다 — 그래프에 그 모션이 뜨고 손잡이가 선다.
                 window.SelectEmoji("느낌물음표");
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.Viewport.ScrubTo(0.4);
+                Shot("phase-none"); // 구간을 안 골랐다 — 타임 슬라이더에 세 모션의 키가 색으로
                 window.EditEmojiPhase(Mt.Authoring.Preview.EmojiPhase.Hold);
                 window.Viewport.ScrubTo(0.4);
                 Shot("phase-edit");

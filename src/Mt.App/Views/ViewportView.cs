@@ -347,29 +347,9 @@ public sealed class ViewportView : Control
             return times;
         }
 
-        if (_emojiPhase is { } phase && ShownEmoji is { } emoji && _editor.Document.Find(EmojiPreview.MotionNameOf(emoji, phase) ?? "") is { } phaseMotion)
+        if (_emojiPhase is { } phase && ShownEmoji is { } emoji)
         {
-            EmojiPhases phases = EmojiPreview.PhasesOf(_editor.Document, emoji);
-            List<float> keys = KeyTimes.All(phaseMotion);
-
-            switch (phase)
-            {
-                case EmojiPhase.Enter:
-                    times.AddRange(keys.Select(k => (double)k));
-                    break;
-
-                case EmojiPhase.Exit:
-                    times.AddRange(keys.Select(k => phases.ExitStart + (double)k));
-                    break;
-
-                default:
-                    for (double from = phases.HoldStart; phaseMotion.Duration > 0f && from < phases.ExitStart - 1e-6; from += phaseMotion.Duration)
-                    {
-                        times.AddRange(keys.Select(k => from + k).Where(t => t <= phases.ExitStart + 1e-6));
-                    }
-
-                    break;
-            }
+            times.AddRange(PhaseKeyTimes(emoji, phase));
         }
         else if (ShownClip is not null && AnyContextEntry is { } entry && _editor.Document.Find(entry.Block.Motion) is { } blockMotion)
         {
@@ -384,6 +364,50 @@ public sealed class ViewportView : Control
 
         return times;
     }
+
+    /// <summary>그 구간의 모션의 키가 수명의 어디에 놓였는가 — 머묾은 바퀴마다.</summary>
+    private List<double> PhaseKeyTimes(EmojiAsset emoji, EmojiPhase phase)
+    {
+        var times = new List<double>();
+
+        if (_editor?.Document.Find(EmojiPreview.MotionNameOf(emoji, phase) ?? "") is not { } motion)
+        {
+            return times;
+        }
+
+        EmojiPhases phases = EmojiPreview.PhasesOf(_editor.Document, emoji);
+        List<float> keys = KeyTimes.All(motion);
+
+        switch (phase)
+        {
+            case EmojiPhase.Enter:
+                times.AddRange(keys.Select(k => (double)k));
+                break;
+
+            case EmojiPhase.Exit:
+                times.AddRange(keys.Select(k => phases.ExitStart + (double)k));
+                break;
+
+            default:
+                for (double from = phases.HoldStart; motion.Duration > 0f && from < phases.ExitStart - 1e-6; from += motion.Duration)
+                {
+                    times.AddRange(keys.Select(k => from + k).Where(t => t <= phases.ExitStart + 1e-6));
+                }
+
+                break;
+        }
+
+        return times;
+    }
+
+    /// <summary>
+    /// 이모지 정의를 보되 고치는 구간이 없을 때 — 세 구간의 모션의 키 전부(구간과 함께). 타임 슬라이더가 구간마다 다른 색으로 보인다.
+    /// 구간을 고르면 비고 <see cref="ContextKeyTimes"/>가 그 구간만 낸다.
+    /// </summary>
+    public IReadOnlyList<(EmojiPhase Phase, double Time)> EmojiKeyTimes()
+        => ShownEmoji is { } emoji && _emojiPhase is null
+            ? new[] { EmojiPhase.Enter, EmojiPhase.Hold, EmojiPhase.Exit }.SelectMany(p => PhaseKeyTimes(emoji, p).Select(t => (p, t))).ToList()
+            : Array.Empty<(EmojiPhase, double)>();
 
     /// <summary>문맥의 블록 — 클립을 보는 중이고, 그 자리에 캐릭터 모션 블록이 있고, 꺼지지 않았을 때만.</summary>
     private (ClipTrack Track, ClipBlock Block)? ContextEntry => AnyContextEntry is { } entry && !entry.Track.IsCamera ? entry : null;

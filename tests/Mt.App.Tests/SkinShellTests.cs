@@ -964,6 +964,12 @@ public class SkinShellTests
                 window.Viewport.SnapEnabled = false;
                 Vec2 Body() => window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Body").AnchoredPosition;
 
+                // 구간을 안 골랐으면 타임 슬라이더에 세 구간의 키가 다 보인다(구간마다 색이 다르다): 등장 pop의 0 · 0.2, 머묾 bob이 바퀴마다. 퇴장은 없다.
+                Assert.Equal(new[] { (EmojiPhase.Enter, 0.0), (EmojiPhase.Enter, 0.2) }, window.Viewport.EmojiKeyTimes().Where(k => k.Phase == EmojiPhase.Enter).Select(k => (k.Phase, Math.Round(k.Time, 3))));
+                Assert.Equal(8, window.Viewport.EmojiKeyTimes().Count(k => k.Phase == EmojiPhase.Hold));
+                Assert.DoesNotContain(window.Viewport.EmojiKeyTimes(), k => k.Phase == EmojiPhase.Exit);
+                Assert.Empty(window.Viewport.ContextKeyTimes());
+
                 // 구간을 안 골랐으면 그래프는 비고 포즈를 안 잡는다(조각을 끌어 놓는 쪽).
                 Assert.Null(window.Graph.MotionName);
                 Assert.Null(window.Viewport.EditMotion);
@@ -981,6 +987,27 @@ public class SkinShellTests
                 // 타임 슬라이더의 키 틱 — bob의 키(0 · 0.2 · 0.4)가 머묾의 바퀴마다 시계의 자리에: 0.2부터 0.4씩, 머무는 시간(1초)이 다하는 1.2까지.
                 Assert.Equal(new[] { 0.2, 0.4, 0.6, 0.6, 0.8, 1.0, 1.0, 1.2 }, window.Viewport.ContextKeyTimes().Select(t => Math.Round(t, 3)));
                 Assert.True(window.EmojiPhaseState.CanMakeUnique);
+
+                Assert.Empty(window.Viewport.EmojiKeyTimes()); // 구간을 고르면 그 구간만(빨간 틱)
+
+                // 그래프 목록 — bob이 건드리는 것은 Body의 위치뿐이다. 나머지(다른 노드 · 배율 · 회전 · 불투명도)가 "키 없음"으로 흐리게 선다.
+                Assert.DoesNotContain(("Emoji_Body", MotionChannelKind.Position), window.UnkeyedRows);
+                Assert.Contains(("Emoji_Body", MotionChannelKind.Scale), window.UnkeyedRows);
+                Assert.Contains(("Emoji_Body", MotionChannelKind.Alpha), window.UnkeyedRows);
+                Assert.Contains(("Emoji_Part1", MotionChannelKind.Euler), window.UnkeyedRows);
+                Assert.DoesNotContain(("Emoji_Anchor", MotionChannelKind.Alpha), window.UnkeyedRows); // 불투명도를 못 받는 노드
+
+                // ＋ — 지금 값이 지금 시각(bob의 0초)의 키가 되고 채널이 생긴다: 한 칸. 줄은 "키 없음"에서 빠진다.
+                long before = editor.Revision;
+                window.KeyUnkeyedRow("Emoji_Body", MotionChannelKind.Scale);
+                Assert.Equal(before + 1, editor.Revision);
+                ChannelAsset scale = editor.Document.Find("bob")!.FindChannel("Emoji_Body", MotionChannelKind.Scale)!;
+                Assert.Equal((1f, 1f), (scale.X!.Keys.Single().V, scale.Y!.Keys.Single().V));
+                Assert.DoesNotContain(("Emoji_Body", MotionChannelKind.Scale), window.UnkeyedRows);
+                Assert.Equal("Emoji_Body", window.Viewport.SelectedNode);
+                editor.Undo();
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.Contains(("Emoji_Body", MotionChannelKind.Scale), window.UnkeyedRows);
 
                 // 둘째 바퀴의 0.1초(수명 0.7초) — 그래프의 시각은 모션 기준이다.
                 window.Viewport.ScrubTo(0.7);
