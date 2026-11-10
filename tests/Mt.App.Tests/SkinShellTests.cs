@@ -934,4 +934,105 @@ public class SkinShellTests
             }
         });
     }
+
+    [Fact]
+    public void 이모지를_보면서_구간의_모션을_고치면_그래프가_그_모션을_보이고_키가_그_모션에_놓인다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                MotionEditor editor = window.Session.Editor;
+                string id = window.CreateAttachedFromMenu(RigTemplates.EmojiKind, "s1");
+                KeyAsset Linear(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
+                editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f, MotionEnd.Commit, MotionChannelMode.Absolute);
+                editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
+                editor.SetKeys("pop", "Emoji_Body", MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.2f, 40f) });
+                editor.AddMotion("bob", RigTemplates.EmojiKind, 0.4f);
+                editor.AddChannel("bob", "Emoji_Body", MotionChannelKind.Position);
+                editor.SetKeys("bob", "Emoji_Body", MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.2f, 10f), Linear(0.4f, 0f) });
+                editor.AddEmoji("sweat", RigTemplates.EmojiKind);
+                editor.UpdateEmoji("sweat", new EmojiAsset { Enter = "pop", Hold = "bob", HoldSeconds = 1f });
+                editor.AddEmoji("other", RigTemplates.EmojiKind);
+                editor.UpdateEmoji("other", new EmojiAsset { Hold = "bob", HoldSeconds = 1f });
+                window.InspectorTab = 4;
+                window.SelectEmoji("sweat");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.Viewport.SnapEnabled = false;
+                Vec2 Body() => window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Body").AnchoredPosition;
+
+                // 구간을 안 골랐으면 그래프는 비고 포즈를 안 잡는다(조각을 끌어 놓는 쪽).
+                Assert.Null(window.Graph.MotionName);
+                Assert.Null(window.Viewport.EditMotion);
+                Assert.Equal((EmojiPhase?)null, window.EmojiPhaseState.Phase);
+
+                // 머묾을 고친다 — 이모지는 고른 채, 그래프에 bob이 뜨고 시계가 그 구간의 처음으로 간다.
+                window.EditEmojiPhase(EmojiPhase.Hold);
+                Assert.Equal("sweat", window.SelectedEmoji);
+                Assert.Null(window.SelectedMotion);
+                Assert.Equal("bob", window.Graph.MotionName);
+                Assert.Equal("bob", window.Viewport.EditMotion?.Name);
+                Assert.InRange(window.Viewport.Time, 0.2, 0.21);
+                Assert.Contains("함께 쓴다: other", window.EmojiPhaseState.Note, StringComparison.Ordinal);
+                Assert.True(window.EmojiPhaseState.CanMakeUnique);
+
+                // 둘째 바퀴의 0.1초(수명 0.7초) — 그래프의 시각은 모션 기준이다.
+                window.Viewport.ScrubTo(0.7);
+                Assert.Equal(0.1, window.Graph.CurrentTime, 4);
+                Assert.Equal(45f, Body().Y, 2); // 등장이 남긴 40 + bob의 5
+
+                // 값을 넣고 S — 키가 bob의 0.1초에 놓인다. 시작값은 등장이 끝난 자세라 상대값 20이 들어간다(60 − 40).
+                window.Viewport.SelectedNode = "Emoji_Body";
+                long revision = editor.Revision;
+                window.Viewport.SetComponent("Emoji_Body", MotionChannelKind.Position, Axis.Y, 60f);
+                window.Viewport.SetKey();
+                KeyAsset key = editor.Document.Find("bob")!.FindChannel("Emoji_Body", MotionChannelKind.Position)!.Y!.Keys.Single(k => Math.Abs(k.T - 0.1f) < 1e-4f);
+                Assert.Equal(20f, key.V, 2);
+                Assert.True(editor.Revision > revision);
+                Assert.Equal(60f, Body().Y, 2);
+                window.Viewport.ScrubTo(0.3); // 첫 바퀴의 같은 자리에도 보인다(같은 모션이 되풀이된다)
+                Assert.Equal(60f, Body().Y, 2);
+                Assert.Equal("sweat", window.SelectedEmoji); // 고쳐도 이모지가 풀리지 않는다
+                Assert.Equal("bob", window.Graph.MotionName);
+
+                // 그래프에서 시각을 옮기면 뷰포트가 그 바퀴 안에서 따라온다.
+                window.Graph.CurrentTime = 0.2;
+                Assert.Equal(0.4, window.Viewport.Time, 4);
+
+                // 구간 밖(등장 중)에서는 손이 안 간다.
+                window.Viewport.ScrubTo(0.1);
+                Assert.Null(window.Viewport.EditMotion);
+                window.Viewport.ScrubTo(0.7);
+
+                // 이 이모지만의 모션으로 — 복제해 꽂고 그래프가 그것을 따라간다. 다른 이모지는 원래 것을 쓴다.
+                Assert.Equal("bob_2", window.MakeEmojiPhaseUniqueFromForm());
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.Equal(("bob_2", "bob"), (editor.Document.FindEmoji("sweat")!.Hold, editor.Document.FindEmoji("other")!.Hold));
+                Assert.Equal("bob_2", window.Graph.MotionName);
+                Assert.Contains("이 이모지만 쓴다", window.EmojiPhaseState.Note, StringComparison.Ordinal);
+                Assert.False(window.EmojiPhaseState.CanMakeUnique);
+
+                // 등장으로 바꾸면 그래프도 바뀌고, 풀면 그래프가 빈다.
+                window.EditEmojiPhase(EmojiPhase.Enter);
+                Assert.Equal("pop", window.Graph.MotionName);
+                Assert.InRange(window.Viewport.Time, 0.0, 0.2);
+                window.EditEmojiPhase(null);
+                Assert.Null(window.Graph.MotionName);
+                Assert.Null(window.Viewport.EditMotion);
+
+                // 모션 목록에서 모션을 고르면 이모지를 떠난다(보통의 모션 편집).
+                window.SelectMotion("pop");
+                Assert.Null(window.SelectedEmoji);
+                Assert.Equal("pop", window.Graph.MotionName);
+                Assert.Equal("pop", window.Viewport.EditMotion?.Name);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
 }

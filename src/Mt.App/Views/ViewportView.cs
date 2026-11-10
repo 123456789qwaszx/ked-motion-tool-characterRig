@@ -285,6 +285,55 @@ public sealed class ViewportView : Control
         }
     }
 
+    private EmojiPhase? _emojiPhase;
+
+    /// <summary>
+    /// 이모지 정의를 보는 중에 고칠 구간(등장·머묾·퇴장) — 끌기·채널 박스·S가 **그 구간의 모션**에 키를 놓는다(<c>PLAN-parts.md</c> §15).
+    /// 시각은 수명의 시각 − 구간의 시작(머묾은 지금 바퀴의 처음), 시작값은 그 구간이 얹히기 전의 자세다. null이면 포즈를 잡지 않고 조각을 끌어 놓는다(§14).
+    /// </summary>
+    public EmojiPhase? EmojiPhaseContext
+    {
+        get => _emojiPhase;
+        set
+        {
+            if (_emojiPhase == value)
+            {
+                return;
+            }
+
+            DiscardPending();
+            _emojiPhase = value;
+
+            if (value is not null && EmojiActor is { } actor)
+            {
+                SelectedObjectId = actor.Id;
+            }
+
+            PendingChanged?.Invoke(this, EventArgs.Empty);
+            InvalidateVisual();
+        }
+    }
+
+    /// <summary>고치는 구간의 모션과 그 0초가 수명의 몇 초인가 — 지금 시각이 그 구간 안일 때만(밖에서는 그 모션이 안 보인다).</summary>
+    private (MotionAsset Motion, double Offset)? EmojiEdit
+    {
+        get
+        {
+            if (_editor is null || _emojiPhase is not { } phase || ShownEmoji is not { } emoji || EmojiActor is null
+                || _editor.Document.Find(EmojiPreview.MotionNameOf(emoji, phase) ?? "") is not { } motion)
+            {
+                return null;
+            }
+
+            (bool inRange, double offset) = EmojiPreview.PhaseWindow(_editor.Document, emoji, phase, _clock.Time);
+            return inRange ? (motion, offset) : null;
+        }
+    }
+
+    /// <summary>고치는 구간의 모션의 0초가 수명의 몇 초인가 — 그래프·도프 시트의 시각이 이만큼 어긋난다. 구간 밖이어도 낸다.</summary>
+    public double EmojiPhaseTimeOffset
+        => _editor is not null && _emojiPhase is { } phase && ShownEmoji is { } emoji ? EmojiPreview.PhaseWindow(_editor.Document, emoji, phase, _clock.Time).Offset : 0;
+
     /// <summary>문맥의 블록 — 클립을 보는 중이고, 그 자리에 캐릭터 모션 블록이 있고, 꺼지지 않았을 때만.</summary>
     private (ClipTrack Track, ClipBlock Block)? ContextEntry => AnyContextEntry is { } entry && !entry.Track.IsCamera ? entry : null;
 
@@ -372,6 +421,11 @@ public sealed class ViewportView : Control
                 return bound;
             }
 
+            if (ShownEmoji is not null)
+            {
+                return EmojiEdit?.Motion;
+            }
+
             if (_editor is null || ContextEntry is not { } entry || ContextActor is null || _editor.Document.Find(entry.Block.Motion) is not { } motion)
             {
                 return null;
@@ -382,7 +436,7 @@ public sealed class ViewportView : Control
     }
 
     /// <summary>키를 놓는 시각(모션 기준) — 클립 안에서는 시계에서 블록의 시작을 뺀다.</summary>
-    private double EditTime => ContextEntry is null ? _clock.Time : _clock.Time - ClipBlockTimeOffset;
+    private double EditTime => EmojiEdit is { } emojiEdit ? _clock.Time - emojiEdit.Offset : ContextEntry is null ? _clock.Time : _clock.Time - ClipBlockTimeOffset;
 
     /// <summary>문맥 블록의 지금 바퀴 — 시작값은 이 바퀴부터 뺀 상태다(앞 바퀴가 남긴 것은 시작값의 일부).</summary>
     private int ContextCycle
@@ -401,6 +455,12 @@ public sealed class ViewportView : Control
         {
             RectNodeTree start = ClipPreview.Pose(_clipStage?.TreeAt(_clock.Time) ?? _template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, _clipStage?.CameraAt(_clock.Time), entry.Block, null, ContextCycle);
             return start.GetState(key);
+        }
+
+        // 이모지 안에서는 그 구간이 얹히기 전의 자세(자리 · 앞 구간이 남긴 것).
+        if (_editor is not null && _template is not null && _emojiPhase is { } phase && ShownEmoji is { } emoji && EmojiActor is { } actor)
+        {
+            return EmojiPreview.PoseBefore(_template, _editor.Document, emoji, actor, phase, null, EmojiOrigin(emoji, actor, _clock.Time)).GetState(key);
         }
 
         return _template!.GetState(key);
@@ -1732,6 +1792,12 @@ public sealed class ViewportView : Control
             ClipPreview.Pose(_clipStage?.TreeAt(_clock.Time) ?? _template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, null, entry.Block, before, ContextCycle);
             start = before.TryGetValue(Prefix + node, out float alpha) ? alpha : 1f;
         }
+        else if (_emojiPhase is { } phase && ShownEmoji is { } emoji && EmojiActor is { } actor)
+        {
+            var before = new Dictionary<string, float>(StringComparer.Ordinal);
+            EmojiPreview.PoseBefore(_template, _editor.Document, emoji, actor, phase, before);
+            start = before.TryGetValue(Prefix + node, out float alpha) ? alpha : 1f;
+        }
 
         float key = PoseEdit.KeyValueFor(MotionChannelKind.Alpha, EditModeOf(motion), start, Math.Clamp(value, 0f, 1f));
         _editor.KeyComponents(motion.Name, node, MotionChannelKind.Alpha, (float)Math.Max(0, SnapTime(EditTime)), new[] { (Axis.X, Math.Clamp(key, 0f, 1f)) }, DefaultTangent);
@@ -1820,7 +1886,26 @@ public sealed class ViewportView : Control
             EmojiPhases phases = EmojiPreview.PhasesOf(_editor.Document, previewed);
             string where = EmojiActor is { } on ? on.Id : "이 리그의 오브젝트가 씬에 없다 — 캐릭터를 우클릭해 붙는 리그를 만든다";
             string phase = _clock.Time <= phases.HoldStart ? "등장" : _clock.Time <= phases.ExitStart ? "머묾" : "퇴장";
-            DrawLabel(context, $"이모지 {previewed.Name} · {where} · 등장 {phases.Enter:0.##}s › 머묾 {phases.Hold:0.##}s{(phases.Staying ? "(끌 때까지 — 미리보기 길이)" : "")} › 퇴장 {phases.Exit:0.##}s · 지금 {phase}", new Point(stage.X + 8, stage.Y + 6));
+            string editing = "";
+
+            if (_emojiPhase is { } editPhase)
+            {
+                string name = editPhase switch { EmojiPhase.Enter => "등장", EmojiPhase.Hold => "머묾", _ => "퇴장" };
+
+                // 그 구간 안이면 손잡이가 선다 — 이모지를 보면서 그 구간의 모션에 키를 놓는다.
+                if (EmojiEdit is { } edit)
+                {
+                    DrawAxes(context, pose);
+                    DrawGizmo(context, pose);
+                    editing = $" — {name}의 모션 {edit.Motion.Name}에 키가 놓인다";
+                }
+                else
+                {
+                    editing = $" — {name} 구간 밖이다(그 구간으로 가면 고칠 수 있다)";
+                }
+            }
+
+            DrawLabel(context, $"이모지 {previewed.Name} · {where} · 등장 {phases.Enter:0.##}s › 머묾 {phases.Hold:0.##}s{(phases.Staying ? "(끌 때까지 — 미리보기 길이)" : "")} › 퇴장 {phases.Exit:0.##}s · 지금 {phase}{editing}", new Point(stage.X + 8, stage.Y + 6));
             return;
         }
 
@@ -2220,8 +2305,8 @@ public sealed class ViewportView : Control
             return;
         }
 
-        // 이모지 정의를 보는 중이면 조각을 끌어 스킨의 놓임을 잡는다(모션의 키가 아니다).
-        if (ShownEmoji is not null)
+        // 이모지 정의를 보는 중: 구간을 고치는 중이 아니면 조각을 끌어 스킨의 놓임을 잡는다(모션의 키가 아니다).
+        if (ShownEmoji is not null && _emojiPhase is null)
         {
             if (TryStartPartPlacement(position, e.KeyModifiers))
             {
@@ -2234,7 +2319,8 @@ public sealed class ViewportView : Control
         }
 
         // 클립 층에서는 고른 블록 안에서만 포즈를 잡는다(EditMotion). 카메라 모션에는 캐릭터의 포즈를 키하지 않는다.
-        bool canPose = ShownEmoji is null && (ShownClip is null ? !CameraRig.IsCamera(Motion) : EditMotion is not null && ContextEntry is not null);
+        bool canPose = ShownEmoji is not null ? EmojiEdit is not null
+            : ShownClip is null ? !CameraRig.IsCamera(Motion) : EditMotion is not null && ContextEntry is not null;
 
         if (canPose && TryStartManipulation(position))
         {

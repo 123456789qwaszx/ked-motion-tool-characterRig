@@ -12,6 +12,14 @@ public readonly record struct EmojiPhases(float Enter, float Hold, float Exit, b
     public float Total => Enter + Hold + Exit;
 }
 
+/// <summary>수명의 구간 — 그 구간의 모션을 이모지 안에서 고친다(<c>PLAN-parts.md</c> §15).</summary>
+public enum EmojiPhase
+{
+    Enter,
+    Hold,
+    Exit,
+}
+
 /// <summary>
 /// 이모지 정의의 미리보기 — 수명 한 번의 시각 t 포즈. 새 수학은 없다: 등장·머묾·퇴장 모션을 차례로 <see cref="MotionPreview"/>에 얹는다.
 ///
@@ -129,6 +137,64 @@ public static class EmojiPreview
         }
 
         return tree;
+    }
+
+    // ── 이모지 안에서 구간의 모션을 고친다 (PLAN-parts.md §15) ─────────
+
+    /// <summary>그 구간의 모션 이름. 없으면 null.</summary>
+    public static string? MotionNameOf(EmojiAsset emoji, EmojiPhase phase)
+        => phase switch { EmojiPhase.Enter => emoji.Enter, EmojiPhase.Hold => emoji.Hold, _ => emoji.Exit };
+
+    /// <summary>
+    /// 수명의 시각이 그 구간 안인가와, 그 구간의 모션의 0초가 수명의 몇 초인가(머묾은 지금 바퀴의 처음).
+    /// 구간의 경계는 앞 구간의 것이다(등장의 끝 = 등장의 마지막 키) — <see cref="Pose"/>와 같은 눈.
+    /// </summary>
+    public static (bool InRange, double Offset) PhaseWindow(MotionDocument document, EmojiAsset emoji, EmojiPhase phase, double seconds)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(emoji);
+        EmojiPhases phases = PhasesOf(document, emoji);
+
+        switch (phase)
+        {
+            case EmojiPhase.Enter:
+                return (seconds >= 0 && seconds <= phases.HoldStart, 0);
+
+            case EmojiPhase.Exit:
+                return (seconds > phases.ExitStart && seconds <= (double)phases.Total + 1e-6, phases.ExitStart);
+
+            default:
+                double loop = Find(document, emoji.Hold)?.Duration ?? 0f;
+                bool inRange = seconds > phases.HoldStart && seconds <= phases.ExitStart;
+
+                if (loop <= 0)
+                {
+                    return (false, phases.HoldStart);
+                }
+
+                // 바퀴의 끝은 그 바퀴의 것(다음 바퀴의 처음이 아니다).
+                double local = Math.Clamp(seconds, phases.HoldStart, phases.ExitStart) - phases.HoldStart;
+                double cycle = Math.Max(0, Math.Ceiling(local / loop - 1e-9) - 1);
+                return (inRange, phases.HoldStart + cycle * loop);
+        }
+    }
+
+    /// <summary>
+    /// 그 구간의 모션이 얹히기 **전**의 포즈 — 그 모션에 키를 놓을 때의 시작값. 등장은 자리만 잡힌 처음 자세, 머묾은 등장이 끝난 자세(바퀴마다 같다),
+    /// 퇴장은 머묾이 멈춘 자세. <see cref="Pose"/>와 같은 함수라 놓은 키가 보이는 자리에 그대로 선다.
+    /// </summary>
+    public static RectNodeTree PoseBefore(RectNodeTree template, MotionDocument document, EmojiAsset emoji, SceneObject actor, EmojiPhase phase, IDictionary<string, float>? alphas = null, Vec2? origin = null)
+    {
+        EmojiPhases phases = PhasesOf(document, emoji);
+        double at = phase switch { EmojiPhase.Enter => -1, EmojiPhase.Hold => phases.HoldStart, _ => phases.ExitStart };
+        return Pose(template, document, emoji, actor, at, alphas, phases, origin);
+    }
+
+    /// <summary>그 모션을 구간으로 쓰는 이모지의 수 — 함께 쓰는 모션을 고치면 다 바뀐다.</summary>
+    public static int UsesOf(MotionDocument document, string motion)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        return document.Emojis.Count(e => e.Enter == motion || e.Hold == motion || e.Exit == motion);
     }
 
     /// <summary>자리 — 정의의 오프셋을 그 노드의 위치로. 노드가 리그에 없으면 루트에.</summary>

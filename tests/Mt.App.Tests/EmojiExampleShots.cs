@@ -92,6 +92,14 @@ public class EmojiExampleShots
                 window.Viewport.ScrubTo(1.4);
                 Shot("emoji-tab");
 
+                // 이모지 안에서 머묾의 모션을 고친다 — 그래프에 그 모션이 뜨고 손잡이가 선다.
+                window.SelectEmoji("느낌물음표");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.EditEmojiPhase(Mt.Authoring.Preview.EmojiPhase.Hold);
+                window.Viewport.ScrubTo(0.4);
+                Shot("phase-edit");
+                window.EditEmojiPhase(null);
+
                 window.SelectClip("emoji_demo");
 
                 foreach (double t in new[] { 0.6, 3.0, 7.5 })

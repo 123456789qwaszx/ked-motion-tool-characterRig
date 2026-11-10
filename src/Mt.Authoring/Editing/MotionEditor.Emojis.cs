@@ -72,6 +72,44 @@ public sealed partial class MotionEditor
         });
     }
 
+    /// <summary>
+    /// 이 이모지만의 모션으로 — 그 구간의 모션을 새 이름으로 복제해 이 이모지가 그것을 쓰게 한다(한 칸). 다른 이모지·클립은 원래 것을 그대로 쓴다.
+    /// </summary>
+    public string MakeEmojiPhaseUnique(string emojiName, Preview.EmojiPhase phase, string newName)
+    {
+        ArgumentNullException.ThrowIfNull(newName);
+        EmojiAsset emoji = RequireEmoji(emojiName);
+        string current = Preview.EmojiPreview.MotionNameOf(emoji, phase) ?? throw new InvalidOperationException("그 구간에 모션이 없다.");
+        MotionAsset source = Require(current);
+
+        if (!MotionNames.IsValid(newName))
+        {
+            throw new InvalidOperationException(MotionNames.RuleMessage(newName));
+        }
+
+        if (Document.Find(newName) is not null)
+        {
+            throw new InvalidOperationException($"모션 '{newName}'이 이미 있다.");
+        }
+
+        // 문서의 사본에서 떼어 온다 — 원본과 객체를 나눠 갖지 않는다.
+        MotionAsset copy = Serialization.MotionDocumentJson.Read(Serialization.MotionDocumentJson.Write(Document)).Find(source.Name)!;
+        copy.Name = newName;
+
+        Mutate(MotionChangeKind.Structure, () =>
+        {
+            Document.Motions.Insert(Document.Motions.IndexOf(source) + 1, copy);
+
+            switch (phase)
+            {
+                case Preview.EmojiPhase.Enter: emoji.Enter = newName; break;
+                case Preview.EmojiPhase.Hold: emoji.Hold = newName; break;
+                default: emoji.Exit = newName; break;
+            }
+        });
+        return newName;
+    }
+
     private static string? Blank(string? text) => string.IsNullOrWhiteSpace(text) ? null : text.Trim();
 
     /// <summary>모션 이름이 바뀌면 이모지의 등장·머묾·퇴장 참조가 같은 칸에서 따라온다.</summary>

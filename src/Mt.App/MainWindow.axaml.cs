@@ -254,6 +254,10 @@ public partial class MainWindow : Window
             {
                 _blockOffset = _viewport.ClipBlockTimeOffset;
             }
+            else if (_viewport.EmojiName is not null && _graph.MotionName is not null)
+            {
+                _blockOffset = _viewport.EmojiPhaseTimeOffset; // 머묾은 바퀴가 넘어갈 때 시각 차가 바뀐다
+            }
 
             SyncTime(() =>
             {
@@ -1622,6 +1626,7 @@ public partial class MainWindow : Window
         _timeline.Bind(_session.Editor);
         _blockOffset = 0;
         SyncBlockContext(); // 클립을 보는 중이면 고른 블록의 모션을 그래프에 다시 묶는다
+        SyncEmojiContext(); // 이모지를 보는 중이면 고치는 구간의 모션을
         RefreshSelectedNode();
     }
 
@@ -1996,7 +2001,7 @@ public partial class MainWindow : Window
                 _session.Editor.RenameMotion(m.Name, text);
 
                 // 클립 안에서 블록의 모션 이름을 바꾼 것이면 목록에서 고르지 않는다 — 고르면 클립이 풀린다(블록의 참조는 편집기가 따라 바꿨다).
-                if (SelectedClip is null)
+                if (!EditingInPlace)
                 {
                     _motionList.SelectedItem = text;
                 }
@@ -3025,7 +3030,7 @@ public partial class MainWindow : Window
         try
         {
             // 클립 안에서 블록의 모션을 고치는 중이면 그래프의 모션은 "고른 모션"이 아니다 — 목록에서 골라 주지 않는다(고르면 클립이 풀린다).
-            string? selected = SelectedMotion ?? (SelectedClip is null ? _graph.MotionName : null);
+            string? selected = SelectedMotion ?? (EditingInPlace ? null : _graph.MotionName);
             // rigKind로 묶어 보인다(모션의 주인은 rigKind) — 같은 리그끼리 이름순.
             List<string> names = _session.Editor.Document.Motions
                 .OrderBy(m => m.Rig, StringComparer.Ordinal).ThenBy(m => m.Name, StringComparer.Ordinal)
@@ -3043,7 +3048,7 @@ public partial class MainWindow : Window
             int index = selected is null ? -1 : names.IndexOf(selected);
             _motionList.SelectedIndex = index;
 
-            if (index < 0 && _graph.MotionName is not null && SelectedClip is null)
+            if (index < 0 && _graph.MotionName is not null && !EditingInPlace)
             {
                 BindMotion(null);
             }

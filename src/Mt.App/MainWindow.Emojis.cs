@@ -1,11 +1,13 @@
 using System.Globalization;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Mt.Authoring.Editing;
 using Mt.Authoring.Model;
+using Mt.Authoring.Preview;
 using Mt.Authoring.Rig;
 using Mt.Authoring.Validation;
 
@@ -78,6 +80,7 @@ public partial class MainWindow
         _emojiFields.Children.Add(Labeled("등장", _emojiEnter));
         _emojiFields.Children.Add(Labeled("머묾(되풀이)", _emojiHold));
         _emojiFields.Children.Add(Labeled("퇴장", _emojiExit));
+        _emojiFields.Children.Add(BuildEmojiPhaseRow());
         _emojiFields.Children.Add(Labeled("머무는 시간", _emojiHoldSeconds));
         _emojiFields.Children.Add(Labeled("오프셋 X", _emojiOffsetX));
         _emojiFields.Children.Add(Labeled("오프셋 Y", _emojiOffsetY));
@@ -228,6 +231,150 @@ public partial class MainWindow
 
         Rows(emoji.Skin, "조각 그림", _emojiSetupBoxes, flipped: false);
         Rows(emoji.SkinFlipped, "반전 판의 조각 그림", _emojiFlippedSetupBoxes, flipped: true);
+    }
+
+    // ── 이모지 안에서 구간의 모션을 고친다 (PLAN-parts.md §15) ─────────
+
+    /// <summary>클립이나 이모지를 보면서 그 안의 모션을 고치는 중인가 — 그래프의 모션은 "고른 모션"이 아니다(목록에서 골라 주면 문맥이 풀린다).</summary>
+    private bool EditingInPlace => SelectedClip is not null || SelectedEmoji is not null;
+
+    private EmojiPhase? _emojiPhase;
+    private readonly Dictionary<EmojiPhase, ToggleButton> _emojiPhaseButtons = new();
+    private readonly TextBlock _emojiPhaseNote = new() { FontSize = 10, Opacity = 0.8, TextWrapping = Avalonia.Media.TextWrapping.Wrap };
+    private readonly Button _emojiPhaseUnique = new() { Content = "이 이모지만의 모션으로", FontSize = 10, Padding = new Avalonia.Thickness(6, 2) };
+
+    /// <summary>테스트 손잡이 — 고치는 구간과 그 안내 글, "이 이모지만의 모션으로"가 눌리는가.</summary>
+    internal (EmojiPhase? Phase, string Note, bool CanMakeUnique) EmojiPhaseState => (_emojiPhase, _emojiPhaseNote.Text ?? "", _emojiPhaseUnique.IsEnabled);
+
+    internal void EditEmojiPhase(EmojiPhase? phase) => SetEmojiPhase(phase);
+
+    internal string? MakeEmojiPhaseUniqueFromForm() => MakeEmojiPhaseUnique();
+
+    private Control BuildEmojiPhaseRow()
+    {
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+        buttons.Children.Add(Small("고치기"));
+
+        foreach ((EmojiPhase phase, string label) in new[] { (EmojiPhase.Enter, "등장"), (EmojiPhase.Hold, "머묾"), (EmojiPhase.Exit, "퇴장") })
+        {
+            var button = new ToggleButton { Content = label, FontSize = 10, Padding = new Avalonia.Thickness(6, 2) };
+            ToolTip.SetTip(button, $"{label}의 모션을 이모지를 보면서 고친다 — 그래프·도프 시트에 그 모션이 뜨고, 뷰포트의 끌기·채널 박스·S·Auto Key가 그 모션에 키를 놓는다. 다시 누르면 푼다(조각을 끌어 놓는 쪽으로 돌아간다)");
+            EmojiPhase captured = phase;
+            button.Click += (_, _) => SetEmojiPhase(_emojiPhase == captured ? null : captured);
+            _emojiPhaseButtons[phase] = button;
+            buttons.Children.Add(button);
+        }
+
+        ToolTip.SetTip(_emojiPhaseUnique, "이 구간의 모션을 복제해 이 이모지만 쓰게 한다 — 다른 이모지·클립은 원래 모션을 그대로 쓴다(되돌리기 한 번)");
+        _emojiPhaseUnique.Click += (_, _) => Guard("이 이모지만의 모션으로", () => MakeEmojiPhaseUnique());
+        return new StackPanel { Spacing = 3, Children = { buttons, _emojiPhaseNote, _emojiPhaseUnique } };
+    }
+
+    /// <summary>고칠 구간을 바꾼다 — 그 구간 밖에 있으면 시계를 그 구간의 처음으로 옮긴다(손잡이가 바로 서게).</summary>
+    private void SetEmojiPhase(EmojiPhase? phase)
+    {
+        _emojiPhase = phase;
+        SyncEmojiContext();
+
+        if (phase is { } p && CurrentEmoji is { } emoji && _viewport.EmojiName is not null)
+        {
+            MotionDocument document = _session.Editor.Document;
+
+            if (!EmojiPreview.PhaseWindow(document, emoji, p, _viewport.Time).InRange)
+            {
+                EmojiPhases phases = EmojiPreview.PhasesOf(document, emoji);
+                _viewport.Pause();
+                _viewport.ScrubTo(p switch { EmojiPhase.Enter => 0, EmojiPhase.Hold => phases.HoldStart + 0.001, _ => phases.ExitStart + 0.001 });
+            }
+        }
+    }
+
+    /// <summary>
+    /// 이모지 안에서 고치기 — 고른 구간의 모션을 그래프·도프 시트에 묶고 뷰포트에 그 구간을 알린다. 이모지는 고른 채로 남고 뷰포트는 수명 전체를 보인다.
+    /// 클립 안에서 고치기(<see cref="SyncBlockContext"/>)와 같은 꼴: 그래프의 시각은 모션 기준이고 시계와는 구간의 시작만큼 어긋난다.
+    /// </summary>
+    private void SyncEmojiContext()
+    {
+        if (_viewport.EmojiName is null || CurrentEmoji is not { } emoji)
+        {
+            _viewport.EmojiPhaseContext = null;
+            RefreshEmojiPhaseRow();
+            return; // 모션·클립 층 — 그래프는 그쪽의 것이다
+        }
+
+        MotionDocument document = _session.Editor.Document;
+        string? motion = _emojiPhase is { } phase && EmojiPreview.MotionNameOf(emoji, phase) is { } name && document.Find(name) is not null ? name : null;
+        _viewport.EmojiPhaseContext = motion is null ? null : _emojiPhase;
+        _blockOffset = motion is null ? 0 : _viewport.EmojiPhaseTimeOffset;
+
+        if (_graph.MotionName != motion)
+        {
+            _graph.Bind(_session.Editor, motion);
+            _dope.Controllers = _session.ControllersOf(motion is null ? null : document.Find(motion)?.Rig);
+            _dope.Bind(_session.Editor, motion);
+            RefreshChannels();
+            RefreshMotionInspector();
+            RefreshKeyInspector();
+            RefreshSelectedNode();
+        }
+
+        SyncTime(() =>
+        {
+            _graph.CurrentTime = _viewport.Time - _blockOffset;
+            _dope.CurrentTime = _viewport.Time - _blockOffset;
+        });
+        RefreshEmojiPhaseRow();
+    }
+
+    private void RefreshEmojiPhaseRow()
+    {
+        EmojiAsset? emoji = CurrentEmoji;
+        MotionDocument document = _session.Editor.Document;
+
+        foreach ((EmojiPhase phase, ToggleButton button) in _emojiPhaseButtons)
+        {
+            button.IsChecked = emoji is not null && _emojiPhase == phase;
+            button.IsEnabled = emoji is not null && document.Find(EmojiPreview.MotionNameOf(emoji, phase) ?? "") is not null;
+        }
+
+        string? motion = emoji is not null && _emojiPhase is { } editing ? EmojiPreview.MotionNameOf(emoji, editing) : null;
+
+        if (motion is null || document.Find(motion) is null)
+        {
+            _emojiPhaseNote.Text = emoji is null ? "" : "구간을 고르면 그 모션을 이모지를 보면서 고친다. 안 고르면 뷰포트의 끌기는 조각의 놓임이다.";
+            _emojiPhaseUnique.IsVisible = false;
+            return;
+        }
+
+        // 함께 쓰는 모션 — 고치면 다 바뀐다. 누가 쓰는지 보이고, 떼어 낼 수 있다.
+        List<string> others = document.Emojis.Where(e => e.Name != emoji!.Name && (e.Enter == motion || e.Hold == motion || e.Exit == motion)).Select(e => e.Name).ToList();
+        int clips = ClipTiming.UsesOf(document, motion);
+        bool shared = others.Count > 0 || clips > 0;
+        string who = string.Join(" · ", others.Take(4)) + (others.Count > 4 ? $" 외 {others.Count - 4}" : "") + (clips > 0 ? $"{(others.Count > 0 ? " · " : "")}클립 {clips}곳" : "");
+        _emojiPhaseNote.Text = shared
+            ? $"모션 {motion} — 함께 쓴다: {who}. 여기서 고치면 다 바뀐다."
+            : $"모션 {motion} — 이 이모지만 쓴다.";
+        _emojiPhaseUnique.IsVisible = true;
+        _emojiPhaseUnique.IsEnabled = shared;
+    }
+
+    /// <summary>고치는 구간의 모션을 복제해 이 이모지만 쓰게 한다 — 이름은 원래 이름_2, _3…. 한 칸.</summary>
+    private string? MakeEmojiPhaseUnique()
+    {
+        if (CurrentEmoji is not { } emoji || _emojiPhase is not { } phase || EmojiPreview.MotionNameOf(emoji, phase) is not { } motion)
+        {
+            return null;
+        }
+
+        string name = motion + "_2";
+
+        for (int i = 3; _session.Editor.Document.Find(name) is not null; i++)
+        {
+            name = $"{motion}_{i.ToString(CultureInfo.InvariantCulture)}";
+        }
+
+        _session.Editor.MakeEmojiPhaseUnique(emoji.Name, phase, name);
+        return name;
     }
 
     private readonly StackPanel _rigFields = new() { Spacing = 4 };
@@ -419,6 +566,7 @@ public partial class MainWindow
             Fill(_emojiSkin, document.Skins.Where(s => s.Rig == rig).Select(s => s.Name), emoji?.Skin);
             Fill(_emojiSkinFlipped, document.Skins.Where(s => s.Rig == rig).Select(s => s.Name), emoji?.SkinFlipped);
             RefreshEmojiSkinParts(emoji);
+            SyncEmojiContext(); // 구간의 모션을 바꿨거나 떼어 냈으면 그래프가 따라간다
             Fill(_emojiEnter, motions, emoji?.Enter);
             Fill(_emojiHold, motions, emoji?.Hold);
             Fill(_emojiExit, motions, emoji?.Exit);

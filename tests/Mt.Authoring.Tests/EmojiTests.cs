@@ -205,4 +205,60 @@ public class EmojiTests
         Assert.False(EmojisJson.TryExport(editor.Document, RigFile.NodeIds, out _, out problems));
         Assert.Contains(problems, p => p.Contains("pop", StringComparison.Ordinal));
     }
+
+    // ── 이모지 안에서 구간의 모션을 고친다(PLAN-parts.md §15) ───────────
+
+    [Fact]
+    public void 구간의_창은_그_모션의_0초가_수명의_몇_초인지_내고_머묾은_지금_바퀴의_처음이다()
+    {
+        MotionEditor editor = NewEditor(); // pop 0.2 › bob 0.4를 1초 › fade 0.3
+        (bool, double) Window(EmojiPhase phase, double t) => EmojiPreview.PhaseWindow(editor.Document, Sweat(editor), phase, t);
+        void Same((bool InRange, double Offset) expected, (bool InRange, double Offset) actual)
+        {
+            Assert.Equal(expected.InRange, actual.InRange);
+            Assert.Equal(expected.Offset, actual.Offset, 4);
+        }
+
+        Same((true, 0), Window(EmojiPhase.Enter, 0));
+        Same((true, 0), Window(EmojiPhase.Enter, 0.2));   // 경계는 앞 구간의 것
+        Same((false, 0), Window(EmojiPhase.Enter, 0.3));
+
+        Same((false, 0.2), Window(EmojiPhase.Hold, 0.2));
+        Same((true, 0.2), Window(EmojiPhase.Hold, 0.3));  // 첫 바퀴
+        Same((true, 0.2), Window(EmojiPhase.Hold, 0.6));  // 첫 바퀴의 끝(다음 바퀴의 처음이 아니다)
+        Same((true, 0.6), Window(EmojiPhase.Hold, 0.7));  // 둘째 바퀴
+        Same((true, 1.0), Window(EmojiPhase.Hold, 1.2));  // 셋째 바퀴 — 머무는 시간이 여기서 다한다
+        Same((false, 1.0), Window(EmojiPhase.Hold, 1.3));
+
+        Same((false, 1.2), Window(EmojiPhase.Exit, 1.2));
+        Same((true, 1.2), Window(EmojiPhase.Exit, 1.35));
+        Same((false, 1.2), Window(EmojiPhase.Exit, 1.6));
+
+        // 구간이 얹히기 전의 자세: 등장 전 0, 머묾 전 40(등장이 남긴 것 — 바퀴마다 같다), 퇴장 전 50(머묾이 멈춘 자리).
+        float Before(EmojiPhase phase) => EmojiPreview.PoseBefore(Template(editor), editor.Document, Sweat(editor), Actor(editor), phase).GetState("e1/" + Body).AnchoredPosition.Y;
+        Near(0f, Before(EmojiPhase.Enter));
+        Near(40f, Before(EmojiPhase.Hold));
+        Near(50f, Before(EmojiPhase.Exit));
+
+        // 이 이모지만의 모션으로 — 복제해 꽂는다, 한 칸. 다른 이모지는 원래 것을 쓴다.
+        editor.AddEmoji("other", EmojiRigFixture.RigKind);
+        editor.UpdateEmoji("other", new EmojiAsset { Hold = "bob", HoldSeconds = 1f });
+        Assert.Equal(2, EmojiPreview.UsesOf(editor.Document, "bob"));
+        long revision = editor.Revision;
+        Assert.Throws<InvalidOperationException>(() => editor.MakeEmojiPhaseUnique("sweat", EmojiPhase.Hold, "pop"));      // 이미 있는 이름
+        Assert.Throws<InvalidOperationException>(() => editor.MakeEmojiPhaseUnique("sweat", EmojiPhase.Hold, "땀 까딱"));  // 이름 규칙
+        Assert.Throws<InvalidOperationException>(() => editor.MakeEmojiPhaseUnique("other", EmojiPhase.Enter, "x"));       // 그 구간에 모션이 없다
+        Assert.Equal(revision, editor.Revision);
+        Assert.Equal("bob_sweat", editor.MakeEmojiPhaseUnique("sweat", EmojiPhase.Hold, "bob_sweat"));
+        Assert.Equal(revision + 1, editor.Revision);
+        Assert.Equal(("bob_sweat", "bob"), (Sweat(editor).Hold, editor.Document.FindEmoji("other")!.Hold));
+        Assert.Equal(1, EmojiPreview.UsesOf(editor.Document, "bob"));
+        editor.SetKeys("bob_sweat", Body, MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.2f, 30f), Linear(0.4f, 0f) });
+        Assert.Equal(10f, editor.Document.Find("bob")!.Channels[0].Y!.Keys[1].V); // 원본은 그대로
+        Near(70f, BodyY(editor, 0.4));
+        editor.Undo();
+        editor.Undo();
+        Assert.Equal("bob", Sweat(editor).Hold);
+        Assert.Null(editor.Document.Find("bob_sweat"));
+    }
 }
