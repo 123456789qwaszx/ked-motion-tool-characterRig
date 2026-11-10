@@ -208,6 +208,15 @@ public static class ClipBake
 
                 editor.SetKeys(newName, node, kind, axis, Reduce(times, values).Select(i => new KeyAsset { T = times[i], V = values[i], Tangent = TangentMode.Linear }));
             }
+
+            // 이 출연자의 블록에 든 이벤트 키도 옮겨 온다 — 구운 모션 하나가 같은 때에 같은 것을 울린다.
+            foreach ((double time, string? objectId, string name, string? value) in ClipPreview.EventsBetween(document, clip, -1.0, duration, isMuted))
+            {
+                if (string.Equals(objectId, actor.Id, StringComparison.Ordinal))
+                {
+                    editor.AddMotionEvent(newName, (float)time, name, value);
+                }
+            }
         });
 
         return editor.Document.Find(newName)!;

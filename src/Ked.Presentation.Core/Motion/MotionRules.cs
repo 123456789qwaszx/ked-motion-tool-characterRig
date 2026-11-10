@@ -77,6 +77,29 @@ namespace Ked.Presentation.Core
                 }
             }
 
+            MotionEvent[] events = clip.Events ?? System.Array.Empty<MotionEvent>();
+
+            for (int i = 0; i < events.Length; i++)
+            {
+                if (string.IsNullOrEmpty(events[i].Name) || !NameRule.IsMatch(events[i].Name))
+                {
+                    reason = $"이벤트 {i}: 이름은 [a-z0-9_]+ 여야 한다 ('{events[i].Name}')";
+                    return false;
+                }
+
+                if (events[i].Time < -Tolerance || events[i].Time > clip.Duration + Tolerance)
+                {
+                    reason = $"이벤트 {i}: 시각이 0~길이 밖이다 ({events[i].Time})";
+                    return false;
+                }
+
+                if (i > 0 && events[i].Time < events[i - 1].Time)
+                {
+                    reason = $"이벤트 {i}: 시각이 오름차순이 아니다";
+                    return false;
+                }
+            }
+
             reason = null;
             return true;
         }

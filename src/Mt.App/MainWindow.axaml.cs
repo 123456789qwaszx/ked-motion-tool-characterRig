@@ -1968,6 +1968,7 @@ public partial class MainWindow : Window
 
         panel.Children.Add(BuildCameraPanel());
         panel.Children.Add(BuildAlphaPanel());
+        panel.Children.Add(BuildEventPanel());
 
         OnCommit(_motionName, text => WithMotion(m =>
         {
@@ -3528,6 +3529,7 @@ public partial class MainWindow : Window
         {
             _refreshDepth--;
             RefreshCameraPanel();
+            RefreshEventPanel();
         }
     }
 

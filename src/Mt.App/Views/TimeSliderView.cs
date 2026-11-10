@@ -42,6 +42,7 @@ public sealed class TimeSliderView : Control
     private static readonly IBrush KeyTickBrush = new SolidColorBrush(Color.FromRgb(0xD3, 0x3C, 0x3C));
     private static readonly IBrush SelectedKeyTickBrush = new SolidColorBrush(Color.FromRgb(0xF9, 0xD7, 0x1C));
     private static readonly IBrush GhostTickBrush = new SolidColorBrush(Color.FromArgb(140, 0xF9, 0xD7, 0x1C));
+    private static readonly IBrush EventMarkBrush = new SolidColorBrush(Color.FromRgb(0x4C, 0xC9, 0x6A));
     private static readonly IBrush RangeFill = new SolidColorBrush(Color.FromArgb(96, 0xFF, 0x30, 0x30));
     private static readonly Pen RangePen = new(new SolidColorBrush(Color.FromArgb(220, 0xE0, 0x40, 0x40)), 1);
     private static readonly IBrush HandleBrush = new SolidColorBrush(Color.FromArgb(230, 0xF0, 0x60, 0x60));
@@ -378,6 +379,17 @@ public sealed class TimeSliderView : Control
             }
 
             DrawLabel(context, TimeText.Format(clock.Time, TimeDisplay), new Point(x + 3, 2), CurrentFrameLabel, 10);
+        }
+
+        // 이벤트 키 — 아래쪽의 초록 세모(키 틱과 겹치지 않게).
+        if (Motion is { Events.Count: > 0 } eventful)
+        {
+            foreach (MotionEventAsset e in eventful.Events)
+            {
+                double ex = XAtTime(e.T);
+                context.DrawGeometry(EventMarkBrush, null, new PolylineGeometry(
+                    new[] { new Point(ex - 3.5, track.Bottom), new Point(ex + 3.5, track.Bottom), new Point(ex, track.Bottom - 6) }, true));
+            }
         }
 
         // 키 틱 — 현재 프레임 상자 위에.

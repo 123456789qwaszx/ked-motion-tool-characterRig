@@ -24,6 +24,8 @@
 | `Motion/MotionMath.cs` | `Neutral`(Alpha = 1) · relative는 곱 · `ClaimFor` → `StageNodeClaim.CanvasAlpha` · `StartOf(channel, state, alpha)` 오버로드 |
 | `Motion/MotionRules.cs` | Alpha는 X만 · 키 값 0~1 |
 | `Reduce/StageReducer.Staging.cs` | `ApplyMotion`이 시작값에 `state.GetAlpha`를 넘긴다 |
+| `Motion/MotionClip.cs` | `MotionEvent`(Time·Name·Value) · `MotionClip.Events` — 이벤트 키(명세 `docs/PLAN-parts.md` §2.5) |
+| `Motion/MotionRules.cs` | 이벤트: 이름 규칙 · 시각 0~길이 · 오름차순 |
 
 ## 동기화 절차
 

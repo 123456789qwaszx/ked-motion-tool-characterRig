@@ -26,8 +26,8 @@ public static class MotionsJson
         ArgumentNullException.ThrowIfNull(clips);
 
         var sb = new StringBuilder();
-        // 알파 채널이 있을 때만 motions/3 — 없으면 전과 같은 글자다.
-        bool hasAlpha = clips.Any(c => c.Channels is not null && c.Channels.Any(ch => ch.Kind == MotionChannelKind.Alpha));
+        // 알파 채널이나 이벤트 키가 있을 때만 motions/3 — 없으면 전과 같은 글자다.
+        bool hasAlpha = clips.Any(c => c.Events is { Length: > 0 } || (c.Channels is not null && c.Channels.Any(ch => ch.Kind == MotionChannelKind.Alpha)));
         sb.Append("{\n  \"schema\": \"").Append(hasAlpha ? AuthoringFormat.ExportSchemaV3 : AuthoringFormat.ExportSchema).Append("\",\n  \"motions\": [");
 
         for (int m = 0; m < clips.Count; m++)
@@ -51,7 +51,30 @@ public static class MotionsJson
                 sb.Append(" }");
             }
 
-            sb.Append("\n      ] }");
+            sb.Append("\n      ]");
+
+            // 이벤트 키 — 있을 때만(motions/3). 값은 JSON 문자열로(한글은 그대로).
+            if (clip.Events is { Length: > 0 } events)
+            {
+                sb.Append(",\n      \"events\": [");
+
+                for (int e = 0; e < events.Length; e++)
+                {
+                    sb.Append(e > 0 ? ",\n" : "\n");
+                    sb.Append("        { \"t\": ").Append(F(events[e].Time)).Append(", \"name\": \"").Append(events[e].Name).Append('"');
+
+                    if (!string.IsNullOrEmpty(events[e].Value))
+                    {
+                        sb.Append(", \"value\": ").Append(JsonSerializer.Serialize(events[e].Value, ValueWriteOptions));
+                    }
+
+                    sb.Append(" }");
+                }
+
+                sb.Append("\n      ]");
+            }
+
+            sb.Append(" }");
         }
 
         sb.Append("\n  ]\n}\n");
@@ -169,6 +192,9 @@ public static class MotionsJson
             Duration = dto.Duration,
             End = end,
             Channels = channels,
+            Events = dto.Events is { Count: > 0 }
+                ? dto.Events.Where(e => e is not null).Select(e => new MotionEvent { Time = e!.T, Name = e.Name ?? "", Value = string.IsNullOrEmpty(e.Value) ? null : e.Value }).ToArray()
+                : null,
         };
 
         return true;
@@ -271,7 +297,17 @@ public static class MotionsJson
         public float Duration { get; set; }
         public string? End { get; set; }
         public List<ChannelDto?>? Channels { get; set; }
+        public List<EventDto?>? Events { get; set; }
     }
+
+    private sealed class EventDto
+    {
+        public float T { get; set; }
+        public string? Name { get; set; }
+        public string? Value { get; set; }
+    }
+
+    private static readonly JsonSerializerOptions ValueWriteOptions = new() { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     private sealed class ChannelDto
     {

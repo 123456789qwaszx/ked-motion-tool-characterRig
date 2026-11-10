@@ -37,6 +37,9 @@ public static class MotionAssetCodec
             Duration = asset.Duration,
             End = asset.End,
             Channels = channels,
+            Events = asset.Events.Count == 0
+                ? null
+                : asset.Events.Select(e => new MotionEvent { Time = e.T, Name = e.Name, Value = string.IsNullOrEmpty(e.Value) ? null : e.Value }).ToArray(),
         };
     }
 
@@ -53,6 +56,11 @@ public static class MotionAssetCodec
             End = clip.End,
             PreviewMode = MotionModeToken.Default,
         };
+
+        foreach (MotionEvent e in clip.Events ?? Array.Empty<MotionEvent>())
+        {
+            asset.Events.Add(new MotionEventAsset { T = e.Time, Name = e.Name ?? "", Value = string.IsNullOrEmpty(e.Value) ? null : e.Value });
+        }
 
         if (clip.Channels is not null)
         {

@@ -1419,6 +1419,40 @@ public sealed class ViewportView : Control
             : _template.Clone();
     }
 
+    // ── 이벤트 키 ─────────────────────────────────────────────────────
+
+    /// <summary>이벤트가 울린 뒤 화면에 남아 있는 시간(초) — 미리보기에서 "여기서 울린다"를 본다.</summary>
+    public const double EventFlash = 0.4;
+
+    /// <summary>
+    /// 방금(<see cref="EventFlash"/> 안에) 울린 이벤트 키들 — "이름 값" 또는 클립이면 "오브젝트: 이름 값". 스크럽해도 그 자리의 것이 보인다.
+    /// </summary>
+    public IReadOnlyList<string> RecentEvents()
+    {
+        double now = _clock.Time;
+        static string Text(string name, string? value) => string.IsNullOrEmpty(value) ? name : $"{name} {value}";
+
+        if (_editor is not null && ShownClip is { } clip)
+        {
+            return ClipPreview.EventsBetween(_editor.Document, clip, now - EventFlash, now, IsClipTrackMuted)
+                .Select(e => e.ObjectId is null ? Text(e.Name, e.Value) : $"{e.ObjectId}: {Text(e.Name, e.Value)}").ToList();
+        }
+
+        return Motion is { Events.Count: > 0 } bound
+            ? ClipPreview.EventsBetween(bound, now - EventFlash, now).Select(e => Text(e.Name, e.Value)).ToList()
+            : Array.Empty<string>();
+    }
+
+    private void DrawRecentEvents(DrawingContext context, Rect stage)
+    {
+        IReadOnlyList<string> fired = RecentEvents();
+
+        for (int i = 0; i < fired.Count; i++)
+        {
+            DrawLabel(context, "⚑ " + fired[i], new Point(stage.X + 8, stage.Y + 24 + i * 16));
+        }
+    }
+
     // ── 불투명도(알파 채널, PLAN-parts.md P4) ───────────────────────────
 
     /// <summary>그리는 중인 프레임의 불투명도 표 — Render가 포즈와 함께 채운다.</summary>
@@ -1572,6 +1606,8 @@ public sealed class ViewportView : Control
         DrawObjects(context, pose);
         DrawOutside(context, stage);
         context.DrawRectangle(StagePen, stage);
+        DrawRecentEvents(context, stage);
+
         if (CameraRig.IsCamera(motion) && CameraValue() is { } shot)
         {
             DrawLabel(context, $"카메라 모션 {motion!.Name} · zoom {shot.Zoom:0.##} · pan {shot.PanX:0.#}, {shot.PanY:0.#}", new Point(stage.X + 8, stage.Y + 6));
