@@ -925,13 +925,14 @@ public partial class MainWindow : Window
         };
 
         // 타임라인은 탭이 아니라 그래프·도프 시트 **위**에 선다(클립을 고른 동안만) — 블록을 고르면 바로 아래에서 그 모션의 커브를 고친다.
-        var editors = new DockPanel();
-        Control timeline = BuildTimeline();
-        DockPanel.SetDock(timeline, Dock.Top);
-        editors.Children.Add(timeline);
-        editors.Children.Add(_editorTabs);
-        Grid.SetRow(editors, 2);
-        grid.Children.Add(editors);
+        // 둘 사이의 스플리터를 끌면 타임라인의 높이가 바뀌고 설정에 남는다. 트랙이 높이보다 많으면 타임라인 안에서 세로로 굴린다.
+        _editorsGrid.Children.Add(BuildTimeline());
+        Grid.SetRow(_timelineSplitter, 1);
+        _editorsGrid.Children.Add(_timelineSplitter);
+        Grid.SetRow(_editorTabs, 2);
+        _editorsGrid.Children.Add(_editorTabs);
+        Grid.SetRow(_editorsGrid, 2);
+        grid.Children.Add(_editorsGrid);
         return grid;
     }
 
@@ -2137,7 +2138,8 @@ public partial class MainWindow : Window
         "  LMB  블록 선택(아래 그래프가 그 모션을 묶는다 — 클립 안에서 바로 고친다) · 빈 곳/눈금자 스크럽\n" +
         "  블록 드래그(LMB·MMB)  이동(가로 시각 · 세로 트랙)      더블클릭  그 모션만 열기(클립을 떠난다)\n" +
         "  우클릭  모션 놓기 · 상태 놓기(보이기·자리·층·오프셋) · 카메라 트랙 · 상대값/절대값 · 배역 끄기 · 새 모션으로 굽기 · 트랙 추가/삭제      Ctrl+D  이어서 한 번 더      Del  삭제\n" +
-        "  줄 머리 🔊  그 배역 끄기/켜기(미리보기에서만 빠진다)\n\n" +
+        "  줄 머리 🔊  그 배역 끄기/켜기(미리보기에서만 빠진다)      M  고른 블록 하나만 끄기/켜기(파일에 남는다)\n" +
+        "  블록을 고르고 그 블록 안의 시각이면 뷰포트 끌기·채널 박스·S가 그 블록의 모션에 키를 놓는다      아래 경계를 끌면 타임라인 높이\n\n" +
         "타임 슬라이더\n" +
         "  클릭·드래그  스크럽      Shift+드래그  프레임 범위 선택      범위 안 MMB  범위의 키 이동      범위 밖 MMB  포즈 들고 스크럽(S로 키)\n" +
         "  우클릭  복사·붙여넣기·삭제·스냅 · 재생 범위 · 재생 모드 메뉴\n\n" +

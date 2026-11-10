@@ -74,15 +74,43 @@ public partial class MainWindow
         });
     }
 
+    private readonly Grid _editorsGrid = new() { RowDefinitions = new RowDefinitions("0,Auto,*") };
+    private readonly GridSplitter _timelineSplitter = new() { ResizeDirection = GridResizeDirection.Rows, Height = 5, Background = Avalonia.Media.Brushes.Transparent, IsVisible = false };
+    private readonly ScrollViewer _timelineScroll = new() { VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled, IsVisible = false };
+
+    /// <summary>테스트 손잡이 — 타임라인 줄(그래프 위)의 높이. 끌어서 바꾼 것처럼 넣을 수도 있다.</summary>
+    internal double TimelineRowHeight
+    {
+        get => _editorsGrid.RowDefinitions[0].Height.Value;
+        set
+        {
+            _editorsGrid.RowDefinitions[0].Height = new GridLength(value, GridUnitType.Pixel);
+            RememberTimelineHeight();
+        }
+    }
+
+    /// <summary>스플리터를 놓았다 — 그 높이를 설정에 남긴다(다음부터 트랙 수 대신 이 높이).</summary>
+    private void RememberTimelineHeight()
+    {
+        if (_timelineScroll.IsVisible)
+        {
+            _settings.TimelineHeight = Math.Max(MinTimelineHeight, _editorsGrid.RowDefinitions[0].Height.Value);
+        }
+    }
+
+    private const double MinTimelineHeight = ClipTimelineView.RulerHeight + ClipTimelineView.RowHeight + 4;
+
     private Control BuildTimeline()
     {
-        _timeline.IsVisible = false;
+        _timelineScroll.Content = _timeline;
+        _timelineSplitter.DragCompleted += (_, _) => RememberTimelineHeight();
+        ToolTip.SetTip(_timelineSplitter, "끌어서 타임라인과 그래프 사이를 조절한다 — 높이는 설정에 남는다");
         _timeline.Viewport = _viewport;
         _timeline.SelectionChanged += (_, _) => SyncBlockContext();
         _timeline.BlockOpened += (_, at) => Guard("모션 편집", () => OpenClipBlock(at.Track, at.Index));
         _timeline.BakeRequested += (_, track) => Guard("굽기", () => BakeClipActor(track));
         _timeline.SelectionChanged += (_, _) => RefreshClipBlockInspector();
-        return _timeline;
+        return _timelineScroll;
     }
 
     /// <summary>
@@ -104,6 +132,9 @@ public partial class MainWindow
                 : null;
         string? motion = block is { IsMotion: true } && _session.Editor.Document.Find(block.Motion) is not null ? block.Motion : null;
         _blockOffset = motion is null ? 0 : block!.At;
+
+        // 뷰포트도 같은 블록을 본다 — 끌기·채널 박스·S가 그 블록의 모션에 키를 놓는다(2단계).
+        _viewport.ClipBlockContext = motion is null ? null : _timeline.SelectedBlock;
 
         if (_graph.MotionName != motion)
         {
@@ -223,9 +254,34 @@ public partial class MainWindow
     private void RefreshTimelineLayout()
     {
         ClipAsset? clip = CurrentClip;
-        _timeline.IsVisible = clip is not null;
-        int rows = Math.Clamp(clip?.Tracks.Count ?? 0, 2, 8);
-        _timeline.Height = ClipTimelineView.RulerHeight + rows * ClipTimelineView.RowHeight + 4;
+        bool show = clip is not null;
+        _timeline.IsVisible = show;
+        _timelineScroll.IsVisible = show;
+        _timelineSplitter.IsVisible = show;
+        RowDefinition row = _editorsGrid.RowDefinitions[0];
+
+        if (!show)
+        {
+            row.MinHeight = 0;
+            row.Height = new GridLength(0, GridUnitType.Pixel);
+            return;
+        }
+
+        // 타임라인 자체는 트랙을 다 담는 높이다 — 줄이 그보다 낮으면 스크롤 뷰어가 굴린다.
+        int tracks = Math.Max(2, clip!.Tracks.Count);
+        double natural = ClipTimelineView.RulerHeight + tracks * ClipTimelineView.RowHeight + 4;
+        _timeline.Height = natural;
+        row.MinHeight = MinTimelineHeight;
+
+        // 끌어서 정한 높이가 있으면 그것, 없으면 트랙 수에 맞춘다(여덟 줄까지).
+        double wanted = _settings.TimelineHeight > 0
+            ? _settings.TimelineHeight
+            : Math.Min(natural, ClipTimelineView.RulerHeight + 8 * ClipTimelineView.RowHeight + 4);
+
+        if (Math.Abs(row.Height.Value - wanted) > 0.5)
+        {
+            row.Height = new GridLength(wanted, GridUnitType.Pixel);
+        }
     }
 
     private void WithClip(Action<ClipAsset> action)
@@ -395,6 +451,10 @@ public partial class MainWindow
                 FontWeight = FontWeight.SemiBold,
                 TextWrapping = TextWrapping.Wrap,
             });
+            var off = new CheckBox { Content = "이 블록 끄기 (M)", IsChecked = block.IsMuted, FontSize = 11 };
+            ToolTip.SetTip(off, "자리는 그대로 두고 적용만 뺀다 — 미리보기·굽기·겹침 검사에서 없는 것처럼. 파일에 남는다(되돌리기 한 번)");
+            off.IsCheckedChanged += (_, _) => FromBlockControl(() => _timeline.SetSelectedMuted(off.IsChecked == true));
+            _clipBlock.Children.Add(off);
             _clipBlock.Children.Add(BlockNumber("시작(초)", block.At, v => b => b.At = v ?? 0f, "블록이 시작하는 시각. 타임라인에서 끌어도 된다"));
 
             if (block.IsMotion)

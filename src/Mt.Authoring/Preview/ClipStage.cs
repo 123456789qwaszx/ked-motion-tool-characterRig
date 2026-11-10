@@ -55,7 +55,7 @@ public sealed class ClipStage
             ClipBlock block = placed.Block;
             ClipTrack track = clip.Tracks[placed.Track];
 
-            if (block.IsMotion || isMuted?.Invoke(track) == true)
+            if (block.IsMotion || block.IsMuted || isMuted?.Invoke(track) == true)
             {
                 continue;
             }

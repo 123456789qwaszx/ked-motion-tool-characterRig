@@ -244,8 +244,106 @@ public sealed class ViewportView : Control
 
     public SceneObject? SelectedObject => _selectedObjectId is null ? null : Scene?.Find(_selectedObjectId);
 
-    /// <summary>선택 오브젝트의 노드 키 접두사("c1/"). 오브젝트가 없으면 빈 문자열.</summary>
-    private string Prefix => SelectedObject?.Prefix ?? "";
+    /// <summary>
+    /// 포즈를 잡는 오브젝트의 노드 키 접두사("c1/"). 보통은 선택 오브젝트이고, 클립 안에서 블록을 고치는 중이면 그 블록의 배역을 맡은 오브젝트다
+    /// (뷰포트에서 다른 오브젝트를 눌러도 키는 그 블록의 캐릭터에 놓인다). 오브젝트가 없으면 빈 문자열.
+    /// </summary>
+    private string Prefix => ContextActor?.Prefix ?? SelectedObject?.Prefix ?? "";
+
+    // ── 클립 안에서 블록의 모션을 고친다(PLAN-clip.md K4b 2단계) ─────────
+
+    private (int Track, int Index)? _contextBlock;
+
+    /// <summary>
+    /// 클립을 보는 중에 포즈를 잡을 블록(타임라인에서 고른 모션 블록). 끌기·채널 박스·S가 그 블록의 모션에 키를 놓는다 —
+    /// 시각은 클립 시각 − 블록의 시작, 재생 기준은 블록의 것, 시작값은 "이 블록이 얹히기 전의 상태"다. null이면 클립 층에서는 포즈를 잡지 않는다.
+    /// </summary>
+    public (int Track, int Index)? ClipBlockContext
+    {
+        get => _contextBlock;
+        set
+        {
+            if (_contextBlock == value)
+            {
+                return;
+            }
+
+            DiscardPending(); // 다른 블록의 키 없는 포즈를 들고 넘어가지 않는다
+            _contextBlock = value;
+
+            if (ContextActor is { } actor)
+            {
+                SelectedObjectId = actor.Id;
+            }
+
+            PendingChanged?.Invoke(this, EventArgs.Empty);
+            InvalidateVisual();
+        }
+    }
+
+    /// <summary>문맥의 블록 — 클립을 보는 중이고, 그 자리에 캐릭터 모션 블록이 있고, 꺼지지 않았을 때만.</summary>
+    private (ClipTrack Track, ClipBlock Block)? ContextEntry
+    {
+        get
+        {
+            if (_motionName is not null || ShownClip is not { } clip || _contextBlock is not { } at
+                || at.Track < 0 || at.Track >= clip.Tracks.Count || at.Index < 0 || at.Index >= clip.Tracks[at.Track].Blocks.Count)
+            {
+                return null;
+            }
+
+            ClipTrack track = clip.Tracks[at.Track];
+            ClipBlock block = track.Blocks[at.Index];
+            return block.IsMotion && !block.IsMuted && !track.IsCamera && !IsClipTrackMuted(track) ? (track, block) : null;
+        }
+    }
+
+    private SceneObject? ContextActor
+        => _editor is not null && ShownClip is { } clip && ContextEntry is { } entry ? ClipPreview.ObjectOf(_editor.Document, clip, entry.Track) : null;
+
+    /// <summary>
+    /// 포즈를 키로 바꿀 모션 — 묶인 모션, 또는 클립 안에서 고치는 블록의 모션. 블록은 **지금 시각이 그 블록 안일 때만** 고친다:
+    /// 블록 밖에서는 그 모션이 보이지 않아, 잡은 포즈가 어디로 가는지 알 수 없다.
+    /// </summary>
+    public MotionAsset? EditMotion
+    {
+        get
+        {
+            if (Motion is { } bound)
+            {
+                return bound;
+            }
+
+            if (_editor is null || ContextEntry is not { } entry || ContextActor is null || _editor.Document.Find(entry.Block.Motion) is not { } motion)
+            {
+                return null;
+            }
+
+            double local = _clock.Time - entry.Block.At;
+            return local >= -1e-6 && local <= motion.Duration + 1e-6 ? motion : null;
+        }
+    }
+
+    /// <summary>키를 놓는 시각(모션 기준) — 클립 안에서는 시계에서 블록의 시작을 뺀다.</summary>
+    private double EditTime => _clock.Time - (ContextEntry?.Block.At ?? 0f);
+
+    /// <summary>키 값을 읽는 기준 — 클립 안에서는 블록의 재생 기준(모션의 렌즈가 아니다).</summary>
+    private MotionChannelMode EditModeOf(MotionAsset motion) => ContextEntry?.Block.Mode ?? motion.PreviewMode;
+
+    /// <summary>
+    /// 키 값의 시작값 — 보통은 씬으로 세운 트리. 클립 안에서는 지금 시각의 클립 포즈에서 **이 블록만 뺀** 것이다
+    /// (앞 블록이 남긴 값·상태 블록이 옮긴 자리 위에 이 블록이 얹힌다 — 미리보기와 같은 함수라 놓은 키가 보이는 자리에 그대로 선다).
+    /// </summary>
+    private RectNodeState StartStateOf(string key)
+    {
+        if (_editor is not null && _template is not null && ShownClip is { } clip && ContextEntry is { } entry)
+        {
+            RectNodeTree start = ClipPreview.Pose(_clipStage?.TreeAt(_clock.Time) ?? _template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, _clipStage?.CameraAt(_clock.Time), entry.Block);
+            return start.GetState(key);
+        }
+
+        return _template!.GetState(key);
+    }
 
     /// <summary>선택 노드의 트리 키(접두사 포함).</summary>
     private string? SelectedKey => SelectedNode is null ? null : Prefix + SelectedNode;
@@ -473,7 +571,7 @@ public sealed class ViewportView : Control
     /// </summary>
     public void SetKey()
     {
-        MotionAsset? motion = Motion;
+        MotionAsset? motion = EditMotion;
 
         // 카메라 모션에는 캐릭터의 포즈를 키하지 않는다 — 카메라 값은 SetCameraValue로.
         if (_editor is null || motion is null || CameraRig.IsCamera(motion))
@@ -550,7 +648,7 @@ public sealed class ViewportView : Control
                 continue;
             }
 
-            RectNodeState start = _template.GetState(key);
+            RectNodeState start = StartStateOf(key);
             RectNodeState posed = pose.GetState(key);
             var values = new List<(Axis, float)>();
 
@@ -558,14 +656,14 @@ public sealed class ViewportView : Control
             {
                 if (channel.Get(axis) is not null)
                 {
-                    values.Add((axis, PoseEdit.KeyValueFor(channel.Kind, motion.PreviewMode, PoseEdit.Component(channel.Kind, start, axis), PoseEdit.Component(channel.Kind, posed, axis))));
+                    values.Add((axis, PoseEdit.KeyValueFor(channel.Kind, EditModeOf(motion), PoseEdit.Component(channel.Kind, start, axis), PoseEdit.Component(channel.Kind, posed, axis))));
                 }
             }
 
             items.Add((channel.Node, channel.Kind, values));
         }
 
-        float time = (float)Math.Max(0, SnapTime(_clock.Time));
+        float time = (float)Math.Max(0, SnapTime(EditTime));
         ClearPending();
         _editor.KeyPose(motion.Name, time, items, DefaultTangent);
         PoseKeyed?.Invoke(this, EventArgs.Empty);
@@ -608,7 +706,7 @@ public sealed class ViewportView : Control
     /// <summary>지금 포즈의 값으로 키를 놓는다 — 시작값은 덤프(템플릿), 키 값은 모션의 재생 기준(relative/absolute)를 따른다.</summary>
     private void KeyNow(string node, MotionChannelKind kind, IReadOnlyList<Axis> axes)
     {
-        MotionAsset? motion = Motion;
+        MotionAsset? motion = EditMotion;
         RectNodeTree? pose = CurrentPose();
 
         string key = Prefix + node;
@@ -618,8 +716,8 @@ public sealed class ViewportView : Control
             return;
         }
 
-        MotionChannelMode mode = motion.PreviewMode;
-        RectNodeState start = _template.GetState(key);
+        MotionChannelMode mode = EditModeOf(motion);
+        RectNodeState start = StartStateOf(key);
         RectNodeState posed = pose.GetState(key);
         var values = new List<(Axis, float)>();
 
@@ -630,7 +728,7 @@ public sealed class ViewportView : Control
 
         _overrides.Remove(key);
         _pending.Remove((node, kind));
-        _editor.KeyComponents(motion.Name, node, kind, (float)Math.Max(0, SnapTime(_clock.Time)), values, DefaultTangent);
+        _editor.KeyComponents(motion.Name, node, kind, (float)Math.Max(0, SnapTime(EditTime)), values, DefaultTangent);
         PendingChanged?.Invoke(this, EventArgs.Empty);
         PoseKeyed?.Invoke(this, EventArgs.Empty);
         InvalidateVisual();
@@ -707,12 +805,12 @@ public sealed class ViewportView : Control
     /// <summary>다음 키 시각으로(`.`). 없으면 그대로.</summary>
     public bool JumpToNextKey()
     {
-        if (Motion is not { } motion)
+        if (EditMotion is not { } motion)
         {
             return false;
         }
 
-        float? next = KeyTimes.Next(KeyTimes.All(motion), _clock.Time);
+        float? next = KeyTimes.Next(KeyTimes.All(motion), EditTime);
 
         if (next is null)
         {
@@ -720,19 +818,19 @@ public sealed class ViewportView : Control
         }
 
         Pause();
-        ScrubTo(next.Value);
+        ScrubTo(next.Value + (_clock.Time - EditTime));
         return true;
     }
 
     /// <summary>이전 키 시각으로(`,`). 없으면 그대로.</summary>
     public bool JumpToPreviousKey()
     {
-        if (Motion is not { } motion)
+        if (EditMotion is not { } motion)
         {
             return false;
         }
 
-        float? previous = KeyTimes.Previous(KeyTimes.All(motion), _clock.Time);
+        float? previous = KeyTimes.Previous(KeyTimes.All(motion), EditTime);
 
         if (previous is null)
         {
@@ -740,7 +838,7 @@ public sealed class ViewportView : Control
         }
 
         Pause();
-        ScrubTo(previous.Value);
+        ScrubTo(previous.Value + (_clock.Time - EditTime));
         return true;
     }
 
@@ -871,6 +969,7 @@ public sealed class ViewportView : Control
         _editor = editor;
         _motionName = motionName;
         _clipName = null;
+        _contextBlock = null;
 
         if (_editor is not null)
         {
@@ -890,7 +989,7 @@ public sealed class ViewportView : Control
 
     /// <summary>
     /// 연출 클립을 본다(<c>PLAN-clip.md</c> K3) — 시계의 길이는 클립 길이, 포즈는 <see cref="ClipPreview.Pose"/>(출연자 전부).
-    /// 모션은 묶이지 않는다: 클립 층에서는 포즈를 잡지 않는다(키는 모션 층에서만) — 매니퓰레이터·축을 그리지 않고 끌기도 받지 않는다.
+    /// 모션은 묶이지 않는다. 포즈는 <see cref="ClipBlockContext"/>로 고른 블록 안에서만 잡는다 — 그 밖에서는 매니퓰레이터·축을 그리지 않고 끌기도 받지 않는다.
     /// </summary>
     public void BindClip(MotionEditor? editor, string? clipName)
     {
@@ -1250,6 +1349,15 @@ public sealed class ViewportView : Control
 
         if (ShownClip is { } shown)
         {
+            // 고른 블록 안이면 그 캐릭터에 손잡이가 선다 — 클립 안에서 바로 포즈를 잡는다.
+            if (EditMotion is { } editing && ContextEntry is { } entry)
+            {
+                DrawAxes(context, pose);
+                DrawGizmo(context, pose);
+                DrawLabel(context, $"클립 {shown.Name} › {editing.Name} @ {entry.Block.At:0.###}s · {MotionModeLabel.Of(entry.Block.Mode)} — 이 블록의 모션에 키가 놓인다", new Point(stage.X + 8, stage.Y + 6));
+                return;
+            }
+
             DrawLabel(context, $"클립 {shown.Name} · {_clock.Duration:0.###}s · 출연 {shown.Roles.Count}", new Point(stage.X + 8, stage.Y + 6));
             return;
         }
@@ -1554,8 +1662,10 @@ public sealed class ViewportView : Control
             return;
         }
 
-        // 클립 층에서는 포즈를 잡지 않는다 — 오브젝트 고르기만.
-        if (ShownClip is null && !CameraRig.IsCamera(Motion) && TryStartManipulation(position))
+        // 클립 층에서는 고른 블록 안에서만 포즈를 잡는다(EditMotion). 카메라 모션에는 캐릭터의 포즈를 키하지 않는다.
+        bool canPose = ShownClip is null ? !CameraRig.IsCamera(Motion) : EditMotion is not null && ContextEntry is not null;
+
+        if (canPose && TryStartManipulation(position))
         {
             Pause();
             e.Pointer.Capture(this);
@@ -1719,7 +1829,7 @@ public sealed class ViewportView : Control
     /// <summary>놓는 순간: Auto Key거나 그 시각에 이미 키가 있으면 키로, 아니면 키 없는 포즈로 남긴다.</summary>
     private void EndManipulation()
     {
-        MotionAsset? motion = Motion;
+        MotionAsset? motion = EditMotion;
         string? node = SelectedNode;
 
         if (motion is null || node is null || !_overrides.TryGetValue(Prefix + node, out RectNodeState posed))
@@ -1743,7 +1853,7 @@ public sealed class ViewportView : Control
     private void CommitPose(MotionAsset motion, string node, MotionChannelKind kind, IReadOnlyList<Axis> axes)
     {
         ChannelAsset? channel = motion.FindChannel(node, kind);
-        float time = (float)SnapTime(_clock.Time);
+        float time = (float)SnapTime(EditTime);
         bool keyExists = channel is not null && axes.Any(a => channel.Get(a)?.Keys.Any(k => Math.Abs(k.T - time) <= MotionRules.Tolerance) == true);
 
         if (AutoKey || keyExists)
@@ -1794,7 +1904,7 @@ public sealed class ViewportView : Control
     public void SetComponents(string node, MotionChannelKind kind, IReadOnlyList<(Axis Axis, float Value)> values)
     {
         ArgumentNullException.ThrowIfNull(values);
-        MotionAsset? motion = Motion;
+        MotionAsset? motion = EditMotion;
         RectNodeTree? pose = CurrentPose();
         string key = Prefix + node;
 

@@ -72,7 +72,7 @@ public static class ClipPreview
 
             ClipTrack track = clip.Tracks[placed.Track];
 
-            if (!track.IsCamera || !block.IsMotion || isMuted?.Invoke(track) == true
+            if (!track.IsCamera || !block.IsMotion || block.IsMuted || isMuted?.Invoke(track) == true
                 || document.Find(block.Motion) is not { } motion || !CameraRig.IsCamera(motion))
             {
                 continue;
@@ -92,7 +92,8 @@ public static class ClipPreview
     /// </summary>
     /// <param name="isMuted">끈 트랙(배역 끄기) — 그 블록은 없는 것처럼 건너뛴다. 보기 상태라 문서에는 없다. null이면 없음.</param>
     /// <param name="startCamera">그 시각의 카메라 값(<see cref="ClipStage.CameraAt"/>). null이면 씬의 카메라 — 카메라 모션이 여기서 시작한다.</param>
-    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, ClipAsset clip, double seconds, Func<ClipTrack, bool>? isMuted = null, CameraSettings? startCamera = null)
+    /// <param name="except">이 블록은 얹지 않는다 — 클립 안에서 그 블록의 모션을 고칠 때 "이 블록이 얹히기 전의 상태"(키 값의 시작값)를 낸다.</param>
+    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, ClipAsset clip, double seconds, Func<ClipTrack, bool>? isMuted = null, CameraSettings? startCamera = null, ClipBlock? except = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(document);
@@ -111,7 +112,7 @@ public static class ClipPreview
 
             ClipTrack track = clip.Tracks[placed.Track];
 
-            if (isMuted?.Invoke(track) == true)
+            if (block.IsMuted || ReferenceEquals(block, except) || isMuted?.Invoke(track) == true)
             {
                 continue;
             }

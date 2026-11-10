@@ -60,6 +60,9 @@ public sealed class ToolSettings
 
     public double GraphRowStar { get; set; } = 3;
 
+    /// <summary>타임라인(그래프 위)의 높이 px — 사이의 스플리터를 끌면 남는다. 0이면 트랙 수에 맞춘다.</summary>
+    public double TimelineHeight { get; set; }
+
     /// <summary>시간 표시 — 마야처럼 프레임이 기본.</summary>
     public Graph.TimeDisplay TimeDisplay { get; set; } = Graph.TimeDisplay.Frames;
 

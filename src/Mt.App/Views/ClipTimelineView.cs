@@ -350,6 +350,26 @@ public sealed class ClipTimelineView : Control
         return name;
     }
 
+    /// <summary>고른 블록을 끄거나 켠다(M · 메뉴 · 인스펙터) — 자리는 그대로, 적용만 빠진다. 되돌리기 한 칸.</summary>
+    public void SetSelectedMuted(bool muted)
+    {
+        if (_editor is null || ShownClip is not { } clip || _selected is not { } s || Resolve(s) is null)
+        {
+            return;
+        }
+
+        _editor.SetClipBlockMuted(clip.Name, s.Track, s.Index, muted);
+        SelectionChanged?.Invoke(this, EventArgs.Empty); // 같은 블록이지만 고칠 수 있는지가 바뀌었다
+    }
+
+    public void ToggleSelectedMuted()
+    {
+        if (Resolve(_selected) is { } block)
+        {
+            SetSelectedMuted(!block.IsMuted);
+        }
+    }
+
     public void SetSelectedMode(MotionChannelMode mode)
     {
         if (_editor is null || ShownClip is not { } clip || _selected is not { } s)
@@ -539,6 +559,11 @@ public sealed class ClipTimelineView : Control
             DuplicateSelected();
             e.Handled = true;
         }
+        else if (e.Key == Key.M && e.KeyModifiers == KeyModifiers.None)
+        {
+            ToggleSelectedMuted();
+            e.Handled = true;
+        }
     }
 
     private void OpenMenu(Point position, (int Track, int Index)? hit)
@@ -569,6 +594,7 @@ public sealed class ClipTimelineView : Control
                 menu.Items.Add(Item("모션만 열기 (더블클릭)", () => BlockOpened?.Invoke(this, h)));
             }
 
+            menu.Items.Add(Item(block.IsMuted ? "블록 켜기 (M)" : "블록 끄기 (M)", ToggleSelectedMuted));
             menu.Items.Add(Item("이어서 한 번 더 (Ctrl+D)", DuplicateSelected));
             menu.Items.Add(Item("블록 삭제 (Del)", RemoveSelected));
         }
@@ -746,13 +772,16 @@ public sealed class ClipTimelineView : Control
                     : track.IsCamera ? CameraBrush
                     : roleIndex < 0 ? MissingBrush : RoleBrushes[roleIndex % RoleBrushes.Length];
                 Pen? pen = _selected == (t, i) ? SelectedPen : overlapping.Contains((t, i)) ? OverlapPen : null;
+
+                // 끈 블록은 흐리게, 이름 앞에 표시 — 자리는 남아 있다.
+                using IDisposable? off = block.IsMuted && !muted ? context.PushOpacity(0.35) : null;
                 context.DrawRectangle(fill, pen, rect, 3, 3);
 
-                string text = !block.IsMotion
+                string text = (block.IsMuted ? "🔇 " : "") + (!block.IsMotion
                     ? block.Describe()
                     : motion is null
                     ? $"{block.Motion} (없음)"
-                    : $"{block.Motion} · {(block.Mode == MotionChannelMode.Relative ? "rel" : "abs")} · {(motion.End == MotionEnd.Restore ? "restore" : "commit")}";
+                    : $"{block.Motion} · {(block.Mode == MotionChannelMode.Relative ? "rel" : "abs")} · {(motion.End == MotionEnd.Restore ? "restore" : "commit")}");
 
                 // 길이 없는 상태 블록은 막대가 좁다 — 이름은 막대 옆에 쓴다.
                 if (!block.IsMotion && rect.Width < 40)

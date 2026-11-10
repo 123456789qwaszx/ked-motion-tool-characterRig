@@ -538,7 +538,7 @@ public class ClipShellTests
                 // 오프셋 블록(메뉴의 "상태 놓기"와 같은 길) — 놓으면 골라지고 인스펙터에 칸이 선다.
                 timeline.PlaceState(0, new ClipBlock { Kind = ClipBlockKind.Offset, Duration = 1f, X = 0f, Y = 0f, Rotation = 0f, ScaleX = 1f, ScaleY = 1f }, 0);
                 Assert.Equal((0, 0), timeline.SelectedBlock);
-                Assert.Equal(9, window.ClipBlockRows); // 제목 · 시작 · 길이 · 이징 · X · Y · 회전 · 배율 둘
+                Assert.Equal(10, window.ClipBlockRows); // 제목 · 끄기 · 시작 · 길이 · 이징 · X · Y · 회전 · 배율 둘
                 Assert.Equal(1.0, window.Viewport.Clock.Duration, 4); // 상태 블록도 클립 길이를 민다
 
                 // 칸에 값을 넣고 Enter — 되돌리기 한 칸이고 선택은 그대로다.
@@ -589,7 +589,7 @@ public class ClipShellTests
 
                 // 모션 블록을 고르면 인스펙터는 시작·재생 기준뿐이다.
                 timeline.Select((0, 0));
-                Assert.Equal(3, window.ClipBlockRows);
+                Assert.Equal(4, window.ClipBlockRows); // 제목 · 끄기 · 시작 · 재생 기준
                 window.UpdateSelectedClipBlock(b => b.Mode = MotionChannelMode.Absolute);
                 Assert.Equal(MotionChannelMode.Absolute, editor.Document.FindClip("clip")!.Tracks[0].Blocks[0].Mode);
             }
@@ -956,6 +956,182 @@ public class ClipShellTests
                 Assert.Null(editor.Document.Find("nod_clip"));
                 Assert.Equal(new[] { ("nod", 0.5f) }, Blocks(window, 1));
                 Assert.Equal("nod", window.Graph.MotionName);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    // ── K4b 2단계 — 클립 안에서 뷰포트·채널 박스·S로 키를 놓는다 ────────
+
+    [Fact]
+    public void 클립_안에서_잡은_포즈는_고른_블록의_모션에_블록_기준으로_키가_된다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                ClipTimelineView timeline = PrepareTimeline(window);
+                MotionEditor editor = window.Session.Editor;
+
+                // lean: Sway z 0 → 5 (0.5초, commit). s1에 bow(절대값 8) 뒤에 lean(상대값)을 잇는다. s2에는 nod.
+                editor.AddMotion("lean", "character", 0.5f, MotionEnd.Commit);
+                editor.AddChannel("lean", Sway, MotionChannelKind.Euler);
+                editor.SetKeys("lean", Sway, MotionChannelKind.Euler, Axis.Z, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.5f, 5f) });
+                timeline.PlaceMotion(0, "bow", 0);
+                timeline.PlaceMotion(1, "nod", 0.5);
+                timeline.PlaceMotion(0, "lean", 1.0);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.Viewport.AutoKey = false;
+                window.Viewport.SnapEnabled = false; // 이 테스트의 시각(0.3초 등)은 프레임 눈금이 아니다
+
+                // 블록을 고르면 뷰포트도 그 블록을 보고, 그 배역의 캐릭터가 골라진다.
+                timeline.Select((1, 0)); // nod @ 0.5 (s2)
+                Assert.Equal((1, 0), window.Viewport.ClipBlockContext);
+                Assert.Equal("s2", window.Viewport.SelectedObjectId);
+
+                // 블록 밖(0.2초)에서는 포즈를 잡지 않는다 — 그 모션이 보이지 않는 자리다.
+                window.Viewport.ScrubTo(0.2);
+                Assert.Null(window.Viewport.EditMotion);
+                long revision = editor.Revision;
+                window.Viewport.SetComponent(MoveY, MotionChannelKind.Position, Axis.Y, -30f);
+                window.Viewport.SetKey();
+                Assert.Equal(revision, editor.Revision);
+                Assert.False(window.Viewport.HasPending);
+
+                // 블록 안(클립 0.8초 = nod의 0.3초): 그 시각에 키가 있으니 값 입력이 곧 키다 — nod의 0.3초 키가 바뀐다.
+                window.Viewport.ScrubTo(0.8);
+                Assert.Equal("nod", window.Viewport.EditMotion?.Name);
+                window.Viewport.SetComponent(MoveY, MotionChannelKind.Position, Axis.Y, -30f);
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.Equal(new[] { (0f, 0f), (0.3f, -30f), (0.6f, 0f) }, editor.Document.Find("nod")!.Channels[0].Y!.Keys.Select(k => (k.T, k.V)));
+                Assert.Equal(-30f, MoveYOf(window, "s2"), 2);
+                Assert.Equal("clip", window.SelectedClip);     // 클립을 떠나지 않는다
+                Assert.Equal(0.8, window.Viewport.Time, 4);     // 시각도 그대로
+                Assert.Equal((1, 0), timeline.SelectedBlock);
+
+                // 키가 없는 시각(클립 0.75초 = 0.25초): 키 없는 포즈로 남고, S가 모션 기준 시각에 키한다 — 한 칸.
+                window.Viewport.ScrubTo(0.75);
+                window.Viewport.SetComponent(MoveY, MotionChannelKind.Position, Axis.Y, -10f);
+                Assert.True(window.Viewport.HasPending);
+                Assert.Equal(3, editor.Document.Find("nod")!.Channels[0].Y!.Keys.Count);
+                window.KeyPressQwerty(PhysicalKey.S, RawInputModifiers.None);
+                Assert.False(window.Viewport.HasPending);
+                Assert.Contains(editor.Document.Find("nod")!.Channels[0].Y!.Keys, k => Math.Abs(k.T - 0.25f) < 1e-4f && Math.Abs(k.V + 10f) < 1e-3f);
+                editor.Undo();
+                Assert.Equal(3, editor.Document.Find("nod")!.Channels[0].Y!.Keys.Count);
+                Assert.True(window.Viewport.HasPending); // 키 확정 직전의 포즈로 돌아온다
+                window.Viewport.ScrubTo(0.8);            // 스크럽이 버린다
+
+                // 시작값은 "이 블록이 얹히기 전의 상태"다: lean(상대값)은 bow가 남긴 8 위에 얹힌다 — 20이 보이게 하려면 키는 12.
+                timeline.Select((0, 1)); // lean @ 1.0 (s1)
+                Assert.Equal("s1", window.Viewport.SelectedObjectId);
+                window.Viewport.ScrubTo(1.5);
+                Assert.Equal(13f, SwayZOf(window, "s1"), 2);
+                window.Viewport.SetComponent(Sway, MotionChannelKind.Euler, Axis.Z, 20f);
+                Assert.Equal(12f, editor.Document.Find("lean")!.Channels[0].Z!.Keys[^1].V, 3);
+                Assert.Equal(20f, SwayZOf(window, "s1"), 2);
+
+                // 재생 기준은 블록의 것이다: 절대값 블록이면 키가 곧 그 값(모션의 렌즈는 그대로 상대값).
+                timeline.SetSelectedMode(MotionChannelMode.Absolute);
+                window.Viewport.SetComponent(Sway, MotionChannelKind.Euler, Axis.Z, 30f);
+                Assert.Equal(30f, editor.Document.Find("lean")!.Channels[0].Z!.Keys[^1].V, 3);
+                Assert.Equal(MotionChannelMode.Relative, editor.Document.Find("lean")!.PreviewMode);
+                Assert.Equal(30f, SwayZOf(window, "s1"), 2);
+
+                // 없던 채널도 클립 안에서 생긴다(Auto Key) — 모션으로 건너갈 일이 없다.
+                window.Viewport.AutoKey = true;
+                window.Viewport.ScrubTo(1.25);
+                window.Viewport.SetComponent(MoveY, MotionChannelKind.Position, Axis.Y, 15f);
+                ChannelAsset added = Assert.Single(editor.Document.Find("lean")!.Channels, c => c.Node == MoveY);
+                Assert.Equal((0.25f, 15f), (added.Y!.Keys[0].T, added.Y.Keys[0].V));
+                Assert.Equal("clip", window.SelectedClip);
+
+                // 블록을 끄면 그 블록에는 키를 놓지 않고, 미리보기에서도 빠진다.
+                window.Viewport.ScrubTo(1.5);
+                timeline.SetSelectedMuted(true);
+                Assert.Null(window.Viewport.EditMotion);
+                Assert.Equal(8f, SwayZOf(window, "s1"), 2); // bow가 남긴 값만
+                editor.Undo();
+                Assert.Equal(30f, SwayZOf(window, "s1"), 2);
+
+                // 빈 곳을 고르면 다시 포즈를 잡지 않는다.
+                timeline.Select(null);
+                Assert.Null(window.Viewport.ClipBlockContext);
+                Assert.Null(window.Viewport.EditMotion);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void 블록은_M으로_끄고_켜고_타임라인과_그래프_사이는_끌어서_조절하면_설정에_남는다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                ClipTimelineView timeline = PrepareTimeline(window);
+                MotionEditor editor = window.Session.Editor;
+                timeline.PlaceMotion(0, "nod", 0);
+                timeline.PlaceMotion(0, "bow", 0);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+                // 같은 배역 안에서 블록 하나만 끈다 — 다른 블록은 그대로 돈다.
+                window.Viewport.ScrubTo(0.3);
+                Assert.Equal(-18f, MoveYOf(window, "s1"), 2);
+                Assert.InRange(SwayZOf(window, "s1"), 4f, 8f);
+                timeline.Select((0, 0));
+                string first = editor.Document.FindClip("clip")!.Tracks[0].Blocks[0].Motion;
+                long revision = editor.Revision;
+                timeline.Focus();
+                window.KeyPressQwerty(PhysicalKey.M, RawInputModifiers.None);
+                Assert.True(editor.Document.FindClip("clip")!.Tracks[0].Blocks[0].IsMuted);
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.False(window.Viewport.IsClipRoleMuted("a")); // 배역은 켜져 있다
+
+                if (first == "nod")
+                {
+                    Assert.Equal(0f, MoveYOf(window, "s1"), 2);
+                    Assert.InRange(SwayZOf(window, "s1"), 4f, 8f);
+                }
+                else
+                {
+                    Assert.Equal(-18f, MoveYOf(window, "s1"), 2);
+                    Assert.Equal(0f, SwayZOf(window, "s1"), 2);
+                }
+
+                window.KeyPressQwerty(PhysicalKey.M, RawInputModifiers.None);
+                Assert.False(editor.Document.FindClip("clip")!.Tracks[0].Blocks[0].IsMuted);
+                Assert.Equal(-18f, MoveYOf(window, "s1"), 2);
+                editor.Undo();
+                Assert.True(editor.Document.FindClip("clip")!.Tracks[0].Blocks[0].IsMuted);
+                editor.Undo();
+
+                // 타임라인 줄의 높이: 처음엔 트랙 수에 맞고, 끌어서 바꾸면 설정에 남아 다시 클립을 고를 때 돌아온다.
+                double natural = ClipTimelineView.RulerHeight + 2 * ClipTimelineView.RowHeight + 4;
+                Assert.Equal(natural, window.TimelineRowHeight, 1);
+                Assert.Equal(0, window.Settings.TimelineHeight);
+                window.TimelineRowHeight = 150;
+                Assert.Equal(150, window.Settings.TimelineHeight, 1);
+
+                window.SelectMotion("nod");
+                Assert.Equal(0, window.TimelineRowHeight, 1); // 모션 층에서는 자리를 안 차지한다
+                Assert.Equal(150, window.Settings.TimelineHeight, 1);
+                window.SelectClip("clip");
+                Assert.Equal(150, window.TimelineRowHeight, 1);
+                Assert.True(window.Timeline.IsVisible);
             }
             finally
             {

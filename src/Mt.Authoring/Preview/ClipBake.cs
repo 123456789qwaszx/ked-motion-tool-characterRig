@@ -57,7 +57,7 @@ public static class ClipBake
 
             foreach (ClipBlock block in track.Blocks)
             {
-                if (document.Find(block.Motion) is not { } motion)
+                if (block.IsMuted || !block.IsMotion || document.Find(block.Motion) is not { } motion)
                 {
                     continue;
                 }

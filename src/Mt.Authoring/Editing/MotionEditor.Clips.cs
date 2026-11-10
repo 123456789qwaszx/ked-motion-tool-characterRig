@@ -222,7 +222,7 @@ public sealed partial class MotionEditor
         if (block.IsMotion)
         {
             RequireFits(target, Require(value.Motion));
-            next = new ClipBlock { At = ClampAt(value.At), Motion = value.Motion, Mode = value.Mode };
+            next = new ClipBlock { At = ClampAt(value.At), Motion = value.Motion, Mode = value.Mode, Muted = value.IsMuted ? true : null };
         }
         else
         {
@@ -275,6 +275,7 @@ public sealed partial class MotionEditor
         block.Motion = "";
         block.Mode = MotionChannelMode.Relative;
         block.Duration = state.Duration is > 0f ? state.Duration : null; // 0과 빈 칸은 같은 뜻 — 한 가지로 적는다
+        block.Muted = state.IsMuted ? true : null;
         return block;
     }
 
@@ -323,6 +324,13 @@ public sealed partial class MotionEditor
         }
 
         Mutate(MotionChangeKind.Clip, () => block.Mode = mode);
+    }
+
+    /// <summary>블록을 끄거나 켠다 — 자리는 그대로, 적용만 빠진다(미리보기·굽기·겹침 검사). 되돌리기 한 칸.</summary>
+    public void SetClipBlockMuted(string clipName, int track, int index, bool muted)
+    {
+        ClipBlock block = RequireBlock(RequireTrack(RequireClip(clipName), track), index);
+        Mutate(MotionChangeKind.Clip, () => block.Muted = muted ? true : null);
     }
 
     /// <summary>블록이 가리키는 모션을 바꾼다(자리는 그대로).</summary>

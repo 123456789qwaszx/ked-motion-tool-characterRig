@@ -460,4 +460,59 @@ public class ClipPreviewTests
         Assert.Equal(new[] { 0, 2, 4 }, ClipBake.Reduce(times, new[] { 0f, 1f, 2f, 1f, 0f }));
         Assert.Equal(new[] { 0, 1, 2, 4 }, ClipBake.Reduce(times, new[] { 0f, 0f, 5f, 5f, 5f }));
     }
+
+    [Fact]
+    public void 끈_블록은_자리는_남고_적용만_빠진다()
+    {
+        MotionEditor editor = NewEditor();
+        editor.AddClipBlock("greet", 0, "bow", 0f);                               // Sway 8
+        editor.AddClipBlock("greet", 0, "lean", 0.2f, MotionChannelMode.Relative); // 같은 노드에 겹친다 — 막힌다
+        editor.AddClipBlock("greet", 0, "step", 0f);
+        Assert.Contains(ClipValidator.ValidateClip(editor.Document, Greet(editor), RigFile.NodeIds), p => p.Blocking);
+        Assert.Equal(2, ClipValidator.OverlappingBlocks(editor.Document, Greet(editor)).Count);
+
+        // lean을 끈다 — 한 칸. 겹침이 풀리고, 미리보기에서 빠지고, 길이는 그대로(자리가 남는다).
+        int lean = Greet(editor).Tracks[0].Blocks.FindIndex(b => b.Motion == "lean");
+        long revision = editor.Revision;
+        editor.SetClipBlockMuted("greet", 0, lean, true);
+        Assert.Equal(revision + 1, editor.Revision);
+        Assert.DoesNotContain(ClipValidator.ValidateClip(editor.Document, Greet(editor), RigFile.NodeIds), p => p.Blocking);
+        Assert.Empty(ClipValidator.OverlappingBlocks(editor.Document, Greet(editor)));
+        Near(8f, SwayZ(Pose(editor, 9.0), "s1"));
+        Near(80f, TrackXOf(Pose(editor, 9.0), "s1"));
+        Assert.Equal(0.7f, ClipTiming.DurationOf(editor.Document, Greet(editor)), 4);
+
+        // 굽기에도 안 든다.
+        MotionAsset baked = ClipBake.Bake(editor, Template(editor), "greet", "s1", "baked");
+        Near(8f, SwayZ(MotionPreview.Pose(Template(editor), baked, 9.0, null, "s1/"), "s1"));
+        editor.Undo();
+
+        // 저작본: 끈 블록만 muted가 적힌다. 값을 고쳐도 끈 채로 남는다.
+        string json = Mt.Authoring.Serialization.MotionDocumentJson.Write(editor.Document);
+        Assert.Equal(1, json.Split("\"muted\": true").Length - 1);
+        Assert.DoesNotContain("\"muted\": false", json, StringComparison.Ordinal);
+        Assert.True(Mt.Authoring.Serialization.MotionDocumentJson.Read(json).FindClip("greet")!.Tracks[0].Blocks[lean].IsMuted);
+        int moved = editor.UpdateClipBlock("greet", 0, lean, new ClipBlock { At = 0.3f, Motion = "lean", Mode = MotionChannelMode.Relative, Muted = true });
+        Assert.True(Greet(editor).Tracks[0].Blocks[moved].IsMuted);
+
+        // 다시 켜면 돌아온다 — 같은 값은 흔적이 없다.
+        editor.SetClipBlockMuted("greet", 0, moved, false);
+        Assert.Null(Greet(editor).Tracks[0].Blocks[moved].Muted);
+        Near(13f, SwayZ(Pose(editor, 9.0), "s1"));
+        revision = editor.Revision;
+        editor.SetClipBlockMuted("greet", 0, moved, false);
+        Assert.Equal(revision, editor.Revision);
+    }
+
+    [Fact]
+    public void except로_뺀_블록_없이_그_시각의_상태를_낸다()
+    {
+        MotionEditor editor = NewEditor();
+        editor.AddClipBlock("greet", 0, "bow", 0f);
+        editor.AddClipBlock("greet", 0, "lean", 1f, MotionChannelMode.Relative);
+        ClipBlock lean = Greet(editor).Tracks[0].Blocks[1];
+
+        Near(13f, SwayZ(Pose(editor, 1.5), "s1"));
+        Near(8f, SwayZ(ClipPreview.Pose(Template(editor), editor.Document, Greet(editor), 1.5, null, null, lean), "s1")); // lean의 시작값
+    }
 }

@@ -158,6 +158,11 @@ public static class ClipValidator
                     Block($"{where}: 클립 길이 {limit:0.###}s를 넘는다(끝 {stateEnd:0.###}s)");
                 }
 
+                if (block.IsMuted)
+                {
+                    continue; // 끈 블록은 겹침을 다투지 않는다
+                }
+
                 // 같은 줄(배역·카메라)의 같은 종류가 같은 때에 겹치면 어느 값으로 가는지 흐려진다.
                 (string, ClipBlockKind) stateKey = (track.Role, block.Kind);
 
@@ -219,7 +224,7 @@ public static class ClipValidator
                 Block($"{where}: 모션의 리그 '{motion.Rig}'가 배역 '{role.Name}'의 리그 '{role.Rig}'에 안 맞는다");
             }
 
-            foreach (ChannelAsset channel in motion.Channels)
+            foreach (ChannelAsset channel in block.IsMuted ? Enumerable.Empty<ChannelAsset>() : motion.Channels)
             {
                 var key = (track.Role, channel.Node, channel.Kind);
 
@@ -330,7 +335,7 @@ public static class ClipValidator
 
         foreach (PlacedBlock placed in ClipPreview.Ordered(clip))
         {
-            if (!placed.Block.IsMotion || document.Find(placed.Block.Motion) is not { } motion)
+            if (!placed.Block.IsMotion || placed.Block.IsMuted || document.Find(placed.Block.Motion) is not { } motion)
             {
                 continue;
             }

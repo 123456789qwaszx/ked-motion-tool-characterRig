@@ -123,6 +123,15 @@ public sealed class ClipBlock
     public float? PanX { get; set; }
     public float? PanY { get; set; }
 
+    /// <summary>
+    /// 끈 블록(true) — 놓인 자리는 그대로 두고 적용만 뺀다: 미리보기·굽기·겹침 검사에서 없는 것처럼 본다. 문서에 남는다(되돌리기 한 칸).
+    /// 켜져 있으면 null로 적는다(파일에 안 나온다). 배역 끄기(줄 머리)는 보기 상태이고, 이것은 블록 하나의 저작 상태다.
+    /// </summary>
+    public bool? Muted { get; set; }
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsMuted => Muted == true;
+
     [System.Text.Json.Serialization.JsonIgnore]
     public bool IsMotion => Kind == ClipBlockKind.Motion;
 
