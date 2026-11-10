@@ -68,5 +68,19 @@ public static class TestAppBuilder
 {
     public static AppBuilder BuildAvaloniaApp() => AppBuilder
         .Configure<App>()
-        .UseHeadless(new AvaloniaHeadlessPlatformOptions());
+        .UseSkiaIfRendering()
+        .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = !RenderShots.Enabled });
+}
+
+/// <summary>
+/// 눈으로 볼 장면을 그림 파일로 뽑는 길 — <c>MT_RENDER_DIR</c>이 있을 때만 켜진다(그때는 헤드리스가 Skia로 진짜 그린다).
+/// 보통의 테스트 실행에서는 꺼져 있어 아무것도 그리지 않는다.
+/// </summary>
+internal static class RenderShots
+{
+    public static string? Directory => Environment.GetEnvironmentVariable("MT_RENDER_DIR") is { Length: > 0 } d ? d : null;
+
+    public static bool Enabled => Directory is not null;
+
+    public static AppBuilder UseSkiaIfRendering(this AppBuilder builder) => Enabled ? builder.UseSkia() : builder;
 }

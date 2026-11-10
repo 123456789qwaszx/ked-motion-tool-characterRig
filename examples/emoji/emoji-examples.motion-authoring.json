@@ -1,0 +1,2716 @@
+{
+  "schema": "motion-authoring/2",
+  "motions": [
+    {
+      "name": "emoji_pop",
+      "rig": "emoji",
+      "duration": 0.25,
+      "end": "commit",
+      "previewMode": "absolute",
+      "channels": [
+        {
+          "node": "Emoji_Body",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.15,
+                "v": 1.2,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.25,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.15,
+                "v": 1.2,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.25,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Body",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 12.5,
+                "outTangent": 12.5,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.08,
+                "v": 1,
+                "inTangent": 12.5,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.25,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "emoji_pop_frames",
+      "rig": "emoji",
+      "duration": 0.25,
+      "end": "commit",
+      "previewMode": "absolute",
+      "channels": [
+        {
+          "node": "Emoji_Body",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.15,
+                "v": 1.2,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.25,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.15,
+                "v": 1.2,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.25,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Body",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 12.5,
+                "outTangent": 12.5,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.08,
+                "v": 1,
+                "inTangent": 12.5,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.25,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part2",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.25,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part3",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.25,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part4",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.25,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "emoji_drop",
+      "rig": "emoji",
+      "duration": 0.3,
+      "end": "commit",
+      "previewMode": "absolute",
+      "channels": [
+        {
+          "node": "Emoji_Body",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 40,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.3,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Body",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 6.6666665,
+                "outTangent": 6.6666665,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.15,
+                "v": 1,
+                "inTangent": 6.6666665,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.3,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "blossom_in",
+      "rig": "emoji",
+      "duration": 0.5,
+      "end": "commit",
+      "previewMode": "absolute",
+      "channels": [
+        {
+          "node": "Emoji_Part1",
+          "kind": "position",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -150,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": -150,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 40,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 40,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part1",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.16,
+                "v": 1.25,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.26,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.16,
+                "v": 1.25,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.26,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part1",
+          "kind": "euler",
+          "z": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -40,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part2",
+          "kind": "position",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 150,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 150,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -30,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": -30,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part2",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.12,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.26,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.34,
+                "v": 0.8,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 0.8,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.12,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.26,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.34,
+                "v": 0.8,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 0.8,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part2",
+          "kind": "euler",
+          "z": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -40,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part3",
+          "kind": "position",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 120,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 120,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 130,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 130,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part3",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.24,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.38,
+                "v": 0.6875,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.45999998,
+                "v": 0.55,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 0.55,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.24,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.38,
+                "v": 0.6875,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.45999998,
+                "v": 0.55,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 0.55,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part3",
+          "kind": "euler",
+          "z": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -40,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "emoji_bob",
+      "rig": "emoji",
+      "duration": 0.8,
+      "end": "restore",
+      "previewMode": "relative",
+      "channels": [
+        {
+          "node": "Emoji_Body",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.4,
+                "v": 6,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.8,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "emoji_wobble",
+      "rig": "emoji",
+      "duration": 0.6,
+      "end": "restore",
+      "previewMode": "relative",
+      "channels": [
+        {
+          "node": "Emoji_Body",
+          "kind": "euler",
+          "z": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.15,
+                "v": 8,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.45,
+                "v": -8,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.6,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "emoji_beat",
+      "rig": "emoji",
+      "duration": 0.5,
+      "end": "restore",
+      "previewMode": "absolute",
+      "channels": [
+        {
+          "node": "Emoji_Body",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.12,
+                "v": 1.14,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.3,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.12,
+                "v": 1.14,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.3,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "emoji_shake",
+      "rig": "emoji",
+      "duration": 0.24,
+      "end": "restore",
+      "previewMode": "relative",
+      "channels": [
+        {
+          "node": "Emoji_Body",
+          "kind": "position",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 66.66667,
+                "outTangent": 66.66667,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.06,
+                "v": 4,
+                "inTangent": 66.66667,
+                "outTangent": -66.666664,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.18,
+                "v": -4,
+                "inTangent": -66.666664,
+                "outTangent": 66.66668,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.24,
+                "v": 0,
+                "inTangent": 66.66668,
+                "outTangent": 66.66668,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "emoji_drip",
+      "rig": "emoji",
+      "duration": 0.9,
+      "end": "commit",
+      "previewMode": "absolute",
+      "channels": [
+        {
+          "node": "Emoji_Body",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.9,
+                "v": -28,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Body",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.6,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": -3.333334,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.9,
+                "v": 0,
+                "inTangent": -3.333334,
+                "outTangent": -3.333334,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "emoji_float",
+      "rig": "emoji",
+      "duration": 1.2,
+      "end": "commit",
+      "previewMode": "absolute",
+      "channels": [
+        {
+          "node": "Emoji_Body",
+          "kind": "position",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.4,
+                "v": 5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.8,
+                "v": -5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.2,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.2,
+                "v": 18,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Body",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.8,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": -1.6249998,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 1.2,
+                "v": 0.35,
+                "inTangent": -1.6249998,
+                "outTangent": -1.6249998,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "emoji_frames2",
+      "rig": "emoji",
+      "duration": 0.6,
+      "end": "commit",
+      "previewMode": "absolute",
+      "channels": [
+        {
+          "node": "Emoji_Part1",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.28,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": -49.999973,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.3,
+                "v": 0,
+                "inTangent": -49.999973,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.6,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part2",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.28,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 49.999973,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.3,
+                "v": 1,
+                "inTangent": 49.999973,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.6,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "emoji_frames3",
+      "rig": "emoji",
+      "duration": 0.6,
+      "end": "commit",
+      "previewMode": "absolute",
+      "channels": [
+        {
+          "node": "Emoji_Part1",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.18,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": -50.00001,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.2,
+                "v": 0,
+                "inTangent": -50.00001,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.6,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part2",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.18,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 50.00001,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.2,
+                "v": 1,
+                "inTangent": 50.00001,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.38,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": -49.999973,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.4,
+                "v": 0,
+                "inTangent": -49.999973,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.6,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part3",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.38,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 49.999973,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.4,
+                "v": 1,
+                "inTangent": 49.999973,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.6,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "dots_frames",
+      "rig": "emoji",
+      "duration": 2,
+      "end": "commit",
+      "previewMode": "absolute",
+      "channels": [
+        {
+          "node": "Emoji_Part1",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.32999998,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": -49.999973,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.35,
+                "v": 0,
+                "inTangent": -49.999973,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 2,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part2",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.32999998,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 49.999973,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.35,
+                "v": 1,
+                "inTangent": 49.999973,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.68,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": -50.00005,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.7,
+                "v": 0,
+                "inTangent": -50.00005,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 2,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part3",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.68,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 50.00005,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 0.7,
+                "v": 1,
+                "inTangent": 50.00005,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 1.03,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": -50.00005,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 1.05,
+                "v": 0,
+                "inTangent": -50.00005,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 2,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part4",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 1.03,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 50.00005,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 1.05,
+                "v": 1,
+                "inTangent": 50.00005,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 2,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "blossom_sway",
+      "rig": "emoji",
+      "duration": 1,
+      "end": "restore",
+      "previewMode": "relative",
+      "channels": [
+        {
+          "node": "Emoji_Part1",
+          "kind": "euler",
+          "z": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 7,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part2",
+          "kind": "euler",
+          "z": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": -7,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "Emoji_Part3",
+          "kind": "euler",
+          "z": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 7,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "emoji_fade",
+      "rig": "emoji",
+      "duration": 0.25,
+      "end": "commit",
+      "previewMode": "absolute",
+      "channels": [
+        {
+          "node": "Emoji_Body",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": -4,
+                "outTangent": -4,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 0.25,
+                "v": 0,
+                "inTangent": -4,
+                "outTangent": -4,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "emoji_pop_out",
+      "rig": "emoji",
+      "duration": 0.15,
+      "end": "commit",
+      "previewMode": "absolute",
+      "channels": [
+        {
+          "node": "Emoji_Body",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.05,
+                "v": 1.15,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.15,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.05,
+                "v": 1.15,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.15,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "react_surprise",
+      "rig": "character",
+      "duration": 0.5,
+      "end": "restore",
+      "previewMode": "relative",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move_Y",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.12,
+                "v": 26,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.3,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 0.05,
+          "name": "emoji",
+          "value": "빨간경고막대기"
+        }
+      ]
+    },
+    {
+      "name": "react_happy",
+      "rig": "character",
+      "duration": 1.2,
+      "end": "restore",
+      "previewMode": "relative",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move_Y",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.2,
+                "v": 14,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.6,
+                "v": 14,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.8,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.2,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 0.1,
+          "name": "emoji",
+          "value": "행복한벚꽃"
+        }
+      ]
+    },
+    {
+      "name": "react_think",
+      "rig": "character",
+      "duration": 0.8,
+      "end": "restore",
+      "previewMode": "relative",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move_Y",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.4,
+                "v": -10,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.8,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 0.2,
+          "name": "emoji",
+          "value": "말줄임점풍선_우"
+        }
+      ]
+    },
+    {
+      "name": "react_calm",
+      "rig": "character",
+      "duration": 0.4,
+      "end": "restore",
+      "previewMode": "relative",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move_Y",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.2,
+                "v": -6,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 0,
+          "name": "emoji_off"
+        }
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "scene",
+      "camera": {
+        "zoom": 0,
+        "panX": 0,
+        "panY": 0
+      },
+      "objects": [
+        {
+          "id": "s1",
+          "rig": "character",
+          "stage": "stage00",
+          "layer": "mid",
+          "place": "center",
+          "positionX": 0,
+          "positionY": 0,
+          "rotationZ": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "visible": true
+        },
+        {
+          "id": "e1",
+          "rig": "emoji",
+          "stage": "stage00",
+          "layer": "mid",
+          "positionX": 0,
+          "positionY": 0,
+          "rotationZ": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "visible": true,
+          "attachTo": "s1",
+          "attachNode": "CharSlot_Scale"
+        }
+      ]
+    }
+  ],
+  "activeScene": "scene",
+  "clips": [
+    {
+      "name": "emoji_demo",
+      "scene": "scene",
+      "roles": [
+        {
+          "name": "a",
+          "rig": "character",
+          "object": "s1"
+        }
+      ],
+      "tracks": [
+        {
+          "role": "a",
+          "blocks": [
+            {
+              "at": 0.3,
+              "kind": "motion",
+              "motion": "react_surprise",
+              "mode": "relative"
+            },
+            {
+              "at": 2,
+              "kind": "motion",
+              "motion": "react_happy",
+              "mode": "relative"
+            },
+            {
+              "at": 4.5,
+              "kind": "motion",
+              "motion": "react_calm",
+              "mode": "relative"
+            },
+            {
+              "at": 5.5,
+              "kind": "motion",
+              "motion": "react_think",
+              "mode": "relative"
+            },
+            {
+              "at": 9,
+              "kind": "motion",
+              "motion": "react_calm",
+              "mode": "relative"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "skins": [
+    {
+      "name": "느낌물음표",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/exclaim_question.png"
+      }
+    },
+    {
+      "name": "반짝별",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/sparkle.png"
+      }
+    },
+    {
+      "name": "큰땀삐질",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/big_sweat.png"
+      }
+    },
+    {
+      "name": "난감빗선",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/gloom_lines.png"
+      }
+    },
+    {
+      "name": "빠직",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/anger.png"
+      }
+    },
+    {
+      "name": "팟놀란왕관",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/shock_crown.png"
+      }
+    },
+    {
+      "name": "아이디어전구",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/idea_bulb.png"
+      }
+    },
+    {
+      "name": "빠밤작대기들",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/tada_lines.png"
+      }
+    },
+    {
+      "name": "빨간경고막대기",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/alert.png"
+      }
+    },
+    {
+      "name": "띠링물음표",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/question.png"
+      }
+    },
+    {
+      "name": "후우하는구름",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/sigh_cloud.png"
+      }
+    },
+    {
+      "name": "화내는부우구름",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/huff_cloud.png"
+      }
+    },
+    {
+      "name": "쑥스럼풍선_우",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/shy_r.png"
+      }
+    },
+    {
+      "name": "쑥스럼풍선_좌",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/shy_l.png"
+      }
+    },
+    {
+      "name": "난감실타래",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/tangle_1.png",
+        "Emoji_Part2": "art/tangle_2.png"
+      }
+    },
+    {
+      "name": "왁자지껄",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/chatter_1.png",
+        "Emoji_Part2": "art/chatter_2.png"
+      }
+    },
+    {
+      "name": "삐질삐질땀방울",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/sweat_1.png",
+        "Emoji_Part2": "art/sweat_2.png",
+        "Emoji_Part3": "art/sweat_3.png"
+      }
+    },
+    {
+      "name": "플러팅하트",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/heart.png"
+      }
+    },
+    {
+      "name": "곰곰생각구름",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/think_cloud.png"
+      }
+    },
+    {
+      "name": "ZZZ",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/zzz.png"
+      }
+    },
+    {
+      "name": "신나는음표",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/note.png"
+      }
+    },
+    {
+      "name": "말줄임점풍선_우",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/dots_r_1.png",
+        "Emoji_Part2": "art/dots_r_2.png",
+        "Emoji_Part3": "art/dots_r_3.png",
+        "Emoji_Part4": "art/dots_r_4.png"
+      }
+    },
+    {
+      "name": "말줄임점풍선_좌",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/dots_l_1.png",
+        "Emoji_Part2": "art/dots_l_2.png",
+        "Emoji_Part3": "art/dots_l_3.png",
+        "Emoji_Part4": "art/dots_l_4.png"
+      }
+    },
+    {
+      "name": "행복한벚꽃",
+      "rig": "emoji",
+      "parts": {
+        "Emoji_Part1": "art/blossom.png",
+        "Emoji_Part2": "art/blossom.png",
+        "Emoji_Part3": "art/blossom.png"
+      }
+    }
+  ],
+  "emojis": [
+    {
+      "name": "느낌물음표",
+      "rig": "emoji",
+      "skin": "느낌물음표",
+      "enter": "emoji_pop",
+      "hold": "emoji_wobble",
+      "exit": "emoji_fade",
+      "holdSeconds": 1.2,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "반짝별",
+      "rig": "emoji",
+      "skin": "반짝별",
+      "enter": "emoji_pop",
+      "hold": "emoji_beat",
+      "exit": "emoji_pop_out",
+      "holdSeconds": 1,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "큰땀삐질",
+      "rig": "emoji",
+      "skin": "큰땀삐질",
+      "enter": "emoji_drop",
+      "hold": "emoji_drip",
+      "exit": "emoji_fade",
+      "holdSeconds": 1.8,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 40,
+      "locator": "faceAura"
+    },
+    {
+      "name": "난감빗선",
+      "rig": "emoji",
+      "skin": "난감빗선",
+      "enter": "emoji_drop",
+      "exit": "emoji_fade",
+      "holdSeconds": 1.5,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": -190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "빠직",
+      "rig": "emoji",
+      "skin": "빠직",
+      "enter": "emoji_pop",
+      "hold": "emoji_beat",
+      "exit": "emoji_fade",
+      "holdSeconds": 1.25,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "팟놀란왕관",
+      "rig": "emoji",
+      "skin": "팟놀란왕관",
+      "enter": "emoji_pop",
+      "exit": "emoji_fade",
+      "holdSeconds": 0.8,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": -190,
+      "offsetY": 60,
+      "locator": "faceAura"
+    },
+    {
+      "name": "아이디어전구",
+      "rig": "emoji",
+      "skin": "아이디어전구",
+      "enter": "emoji_pop",
+      "hold": "emoji_bob",
+      "exit": "emoji_fade",
+      "holdSeconds": 1.6,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 0,
+      "offsetY": 130,
+      "locator": "faceAura"
+    },
+    {
+      "name": "빠밤작대기들",
+      "rig": "emoji",
+      "skin": "빠밤작대기들",
+      "enter": "emoji_pop",
+      "hold": "emoji_beat",
+      "exit": "emoji_fade",
+      "holdSeconds": 1,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 60,
+      "locator": "faceAura"
+    },
+    {
+      "name": "빨간경고막대기",
+      "rig": "emoji",
+      "skin": "빨간경고막대기",
+      "enter": "emoji_pop",
+      "hold": "emoji_shake",
+      "exit": "emoji_fade",
+      "holdSeconds": 0.96,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "띠링물음표",
+      "rig": "emoji",
+      "skin": "띠링물음표",
+      "enter": "emoji_pop",
+      "hold": "emoji_wobble",
+      "exit": "emoji_fade",
+      "holdSeconds": 1.2,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "후우하는구름",
+      "rig": "emoji",
+      "skin": "후우하는구름",
+      "enter": "emoji_pop",
+      "hold": "emoji_float",
+      "exit": "emoji_fade",
+      "holdSeconds": 1.2,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 170,
+      "offsetY": -60,
+      "locator": "face"
+    },
+    {
+      "name": "화내는부우구름",
+      "rig": "emoji",
+      "skin": "화내는부우구름",
+      "enter": "emoji_pop",
+      "hold": "emoji_float",
+      "exit": "emoji_fade",
+      "holdSeconds": 1.2,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 170,
+      "offsetY": -60,
+      "locator": "face"
+    },
+    {
+      "name": "쑥스럼풍선_우",
+      "rig": "emoji",
+      "skin": "쑥스럼풍선_우",
+      "enter": "emoji_pop",
+      "hold": "emoji_bob",
+      "exit": "emoji_fade",
+      "holdSeconds": 1.6,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "쑥스럼풍선_좌",
+      "rig": "emoji",
+      "skin": "쑥스럼풍선_좌",
+      "enter": "emoji_pop",
+      "hold": "emoji_bob",
+      "exit": "emoji_fade",
+      "holdSeconds": 1.6,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": -190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "난감실타래",
+      "rig": "emoji",
+      "skin": "난감실타래",
+      "enter": "emoji_pop_frames",
+      "hold": "emoji_frames2",
+      "exit": "emoji_fade",
+      "holdSeconds": 1.8,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": -190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "왁자지껄",
+      "rig": "emoji",
+      "skin": "왁자지껄",
+      "enter": "emoji_pop_frames",
+      "hold": "emoji_frames2",
+      "exit": "emoji_fade",
+      "holdSeconds": 1.8,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "삐질삐질땀방울",
+      "rig": "emoji",
+      "skin": "삐질삐질땀방울",
+      "enter": "emoji_pop_frames",
+      "hold": "emoji_frames3",
+      "exit": "emoji_fade",
+      "holdSeconds": 1.8,
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 40,
+      "locator": "faceAura"
+    },
+    {
+      "name": "플러팅하트",
+      "rig": "emoji",
+      "skin": "플러팅하트",
+      "enter": "emoji_pop",
+      "hold": "emoji_beat",
+      "exit": "emoji_pop_out",
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "곰곰생각구름",
+      "rig": "emoji",
+      "skin": "곰곰생각구름",
+      "enter": "emoji_pop",
+      "hold": "emoji_bob",
+      "exit": "emoji_fade",
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 60,
+      "locator": "faceAura"
+    },
+    {
+      "name": "ZZZ",
+      "rig": "emoji",
+      "skin": "ZZZ",
+      "enter": "emoji_pop",
+      "hold": "emoji_float",
+      "exit": "emoji_fade",
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "신나는음표",
+      "rig": "emoji",
+      "skin": "신나는음표",
+      "enter": "emoji_pop",
+      "hold": "emoji_bob",
+      "exit": "emoji_fade",
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "말줄임점풍선_우",
+      "rig": "emoji",
+      "skin": "말줄임점풍선_우",
+      "enter": "emoji_pop_frames",
+      "hold": "dots_frames",
+      "exit": "emoji_fade",
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "말줄임점풍선_좌",
+      "rig": "emoji",
+      "skin": "말줄임점풍선_좌",
+      "enter": "emoji_pop_frames",
+      "hold": "dots_frames",
+      "exit": "emoji_fade",
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": -190,
+      "offsetY": 20,
+      "locator": "faceAura"
+    },
+    {
+      "name": "행복한벚꽃",
+      "rig": "emoji",
+      "skin": "행복한벚꽃",
+      "enter": "blossom_in",
+      "hold": "blossom_sway",
+      "exit": "emoji_fade",
+      "anchorNode": "Emoji_Anchor",
+      "offsetX": 0,
+      "offsetY": 0,
+      "locator": "faceAura"
+    }
+  ],
+  "rigs": [
+    {
+      "kind": "emoji",
+      "nodes": [
+        {
+          "id": "Emoji_Anchor",
+          "parent": "",
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "image": false,
+          "alpha": false
+        },
+        {
+          "id": "Emoji_Body",
+          "parent": "Emoji_Anchor",
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "image": false,
+          "alpha": true
+        },
+        {
+          "id": "Emoji_Part1",
+          "parent": "Emoji_Body",
+          "x": 0,
+          "y": 0,
+          "width": 160,
+          "height": 160,
+          "image": true,
+          "alpha": true
+        },
+        {
+          "id": "Emoji_Part2",
+          "parent": "Emoji_Body",
+          "x": 0,
+          "y": 0,
+          "width": 160,
+          "height": 160,
+          "image": true,
+          "alpha": true
+        },
+        {
+          "id": "Emoji_Part3",
+          "parent": "Emoji_Body",
+          "x": 0,
+          "y": 0,
+          "width": 160,
+          "height": 160,
+          "image": true,
+          "alpha": true
+        },
+        {
+          "id": "Emoji_Part4",
+          "parent": "Emoji_Body",
+          "x": 0,
+          "y": 0,
+          "width": 160,
+          "height": 160,
+          "image": true,
+          "alpha": true
+        }
+      ]
+    }
+  ]
+}
