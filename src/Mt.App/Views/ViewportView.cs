@@ -334,6 +334,57 @@ public sealed class ViewportView : Control
     public double EmojiPhaseTimeOffset
         => _editor is not null && _emojiPhase is { } phase && ShownEmoji is { } emoji ? EmojiPreview.PhaseWindow(_editor.Document, emoji, phase, _clock.Time).Offset : 0;
 
+    /// <summary>
+    /// 클립·이모지 안에서 고치는 모션의 키가 **시계의** 어디에 놓였는가 — 타임 슬라이더가 틱으로 보인다. 되풀이되는 것(머묾 · 반복하는 블록)은 바퀴마다 다시 나온다.
+    /// 고치는 것이 없으면 빈 목록.
+    /// </summary>
+    public IReadOnlyList<double> ContextKeyTimes()
+    {
+        var times = new List<double>();
+
+        if (_editor is null)
+        {
+            return times;
+        }
+
+        if (_emojiPhase is { } phase && ShownEmoji is { } emoji && _editor.Document.Find(EmojiPreview.MotionNameOf(emoji, phase) ?? "") is { } phaseMotion)
+        {
+            EmojiPhases phases = EmojiPreview.PhasesOf(_editor.Document, emoji);
+            List<float> keys = KeyTimes.All(phaseMotion);
+
+            switch (phase)
+            {
+                case EmojiPhase.Enter:
+                    times.AddRange(keys.Select(k => (double)k));
+                    break;
+
+                case EmojiPhase.Exit:
+                    times.AddRange(keys.Select(k => phases.ExitStart + (double)k));
+                    break;
+
+                default:
+                    for (double from = phases.HoldStart; phaseMotion.Duration > 0f && from < phases.ExitStart - 1e-6; from += phaseMotion.Duration)
+                    {
+                        times.AddRange(keys.Select(k => from + k).Where(t => t <= phases.ExitStart + 1e-6));
+                    }
+
+                    break;
+            }
+        }
+        else if (ShownClip is not null && AnyContextEntry is { } entry && _editor.Document.Find(entry.Block.Motion) is { } blockMotion)
+        {
+            List<float> keys = KeyTimes.All(blockMotion);
+
+            for (int cycle = 0; cycle < entry.Block.Cycles; cycle++)
+            {
+                double from = entry.Block.At + cycle * (double)blockMotion.Duration;
+                times.AddRange(keys.Select(k => from + k));
+            }
+        }
+
+        return times;
+    }
+
     /// <summary>문맥의 블록 — 클립을 보는 중이고, 그 자리에 캐릭터 모션 블록이 있고, 꺼지지 않았을 때만.</summary>
     private (ClipTrack Track, ClipBlock Block)? ContextEntry => AnyContextEntry is { } entry && !entry.Track.IsCamera ? entry : null;
 

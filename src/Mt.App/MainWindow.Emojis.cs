@@ -323,6 +323,7 @@ public partial class MainWindow
             _graph.CurrentTime = _viewport.Time - _blockOffset;
             _dope.CurrentTime = _viewport.Time - _blockOffset;
         });
+        _timeSlider.InvalidateVisual(); // 고치는 모션의 키 틱
         RefreshEmojiPhaseRow();
     }
 

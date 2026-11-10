@@ -977,6 +977,9 @@ public class SkinShellTests
                 Assert.Equal("bob", window.Viewport.EditMotion?.Name);
                 Assert.InRange(window.Viewport.Time, 0.2, 0.21);
                 Assert.Contains("함께 쓴다: other", window.EmojiPhaseState.Note, StringComparison.Ordinal);
+
+                // 타임 슬라이더의 키 틱 — bob의 키(0 · 0.2 · 0.4)가 머묾의 바퀴마다 시계의 자리에: 0.2부터 0.4씩, 머무는 시간(1초)이 다하는 1.2까지.
+                Assert.Equal(new[] { 0.2, 0.4, 0.6, 0.6, 0.8, 1.0, 1.0, 1.2 }, window.Viewport.ContextKeyTimes().Select(t => Math.Round(t, 3)));
                 Assert.True(window.EmojiPhaseState.CanMakeUnique);
 
                 // 둘째 바퀴의 0.1초(수명 0.7초) — 그래프의 시각은 모션 기준이다.
@@ -1019,9 +1022,11 @@ public class SkinShellTests
                 window.EditEmojiPhase(EmojiPhase.Enter);
                 Assert.Equal("pop", window.Graph.MotionName);
                 Assert.InRange(window.Viewport.Time, 0.0, 0.2);
+                Assert.Equal(new[] { 0.0, 0.2 }, window.Viewport.ContextKeyTimes().Select(t => Math.Round(t, 3)));
                 window.EditEmojiPhase(null);
                 Assert.Null(window.Graph.MotionName);
                 Assert.Null(window.Viewport.EditMotion);
+                Assert.Empty(window.Viewport.ContextKeyTimes());
 
                 // 모션 목록에서 모션을 고르면 이모지를 떠난다(보통의 모션 편집).
                 window.SelectMotion("pop");
