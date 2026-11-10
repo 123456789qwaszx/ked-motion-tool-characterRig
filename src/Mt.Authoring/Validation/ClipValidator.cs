@@ -72,6 +72,12 @@ public static class ClipValidator
             Block($"길이는 0 이상의 수다 ({given})");
         }
 
+        // 배역의 리그가 스키마에 있는가 — 스키마 계약 한 곳이 센다.
+        if (rigNodeIds is not null)
+        {
+            problems.AddRange(Schema.SchemaContract.Clip(rigNodeIds, clip).Select(v => new ClipProblem(clip.Name, $"배역 '{v.Subject}': {v.Message}", v.Blocking)));
+        }
+
         // ── 배역 ──
         var roleNames = new HashSet<string>(StringComparer.Ordinal);
         SceneAsset? scene = ClipPreview.SceneOf(document, clip);
@@ -96,11 +102,6 @@ public static class ClipValidator
             {
                 Block($"배역 '{role.Name}'에 리그(rigKind)가 없다");
             }
-            else if (rigNodeIds is not null && !rigNodeIds.ContainsKey(role.Rig))
-            {
-                Block($"배역 '{role.Name}': 리그 덤프에 rigKind '{role.Rig}'가 없다. 있는 것: [{string.Join(", ", rigNodeIds.Keys)}]");
-            }
-
             if (scene is null)
             {
                 continue;

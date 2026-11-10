@@ -299,7 +299,7 @@ public class ClipPreviewTests
         Assert.Contains(problems, p => !p.Blocking && p.Message.Contains("오브젝트 's1'는 'character'", StringComparison.Ordinal));
 
         editor.SetClipRoleRig("greet", "a", "nope");
-        Assert.Contains(Problems(editor), p => p.Blocking && p.Message.Contains("rigKind 'nope'가 없다", StringComparison.Ordinal));
+        Assert.Contains(Problems(editor), p => p.Blocking && p.Message.Contains("리그 'nope'가 스키마에 없다", StringComparison.Ordinal));
 
         // rigKind 이름이 달라도 채널의 노드가 전부 그 리그에 있으면 입는다(CanWear와 같은 판정).
         var shared = new Dictionary<string, ICollection<string>> { ["character"] = RigFile.NodeIds["character"], ["twin"] = RigFile.NodeIds["character"] };

@@ -407,7 +407,7 @@ public class SkinShellTests
                 Assert.Contains(RigTemplates.EmojiKind, window.Session.Rig!.RigKinds);          // 세션의 리그에 합쳐졌다
                 Assert.True(window.Viewport.CurrentPose()!.Contains($"{id}/Emoji_Part1"));       // 뷰포트에 섰다
                 Assert.Equal("s1/CharSlot_Scale", window.Viewport.CurrentPose()!.GetParentKey($"{id}/__root"));
-                Assert.Equal(0, window.ProblemRowsShown);
+                Assert.Equal(1, window.ProblemRowsShown); // 문서가 정의한 리그라는 알림 하나 — 막는 문제는 없다
 
                 // 스킨 칸이 서고(조각 넷), 스킨을 입혀 조각을 그린다.
                 window.InspectorTab = 1;
@@ -426,7 +426,7 @@ public class SkinShellTests
                 window.Viewport.SelectedObjectId = id;
                 window.Viewport.SelectedNode = "Emoji_Part1";
                 Assert.True(window.Viewport.CanTakeAlpha("Emoji_Part1"));
-                Assert.Equal(0, window.ProblemRowsShown);
+                Assert.Equal(1, window.ProblemRowsShown); // 문서가 정의한 리그라는 알림 하나 — 막는 문제는 없다
 
                 // 이모지 정의 — 리그가 이미 있으니 그대로 쓴다.
                 window.InspectorTab = 4;
@@ -435,7 +435,7 @@ public class SkinShellTests
                 window.UpdateSelectedEmoji(e => { e.Enter = "pop"; e.HoldSeconds = 0.5f; });
                 Assert.Equal(RigTemplates.EmojiKind, editor.Document.FindEmoji("emoji")!.Rig);
                 Assert.Equal(0.7, window.Viewport.Clock.Duration, 4);
-                Assert.Equal(0, window.ProblemRowsShown);
+                Assert.Equal(1, window.ProblemRowsShown); // 문서가 정의한 리그라는 알림 하나 — 막는 문제는 없다
 
                 // 리그 칸: 조각 수를 둘로 — 한 칸. 스킨 칸의 조각 줄도 따라 준다.
                 Assert.Equal(("4", "160", true), (window.RigPartBoxes.Count.Text, window.RigPartBoxes.Size.Text, window.RigPartBoxes.Editable));

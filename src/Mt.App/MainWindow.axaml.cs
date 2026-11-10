@@ -18,6 +18,7 @@ using Mt.Authoring.Model;
 using Mt.Authoring.Presets;
 using Mt.Authoring.Preview;
 using Mt.Authoring.Rig;
+using Mt.Authoring.Schema;
 using Mt.Authoring.Settings;
 using Mt.Authoring.Validation;
 using Avalonia.Threading;
@@ -3687,7 +3688,8 @@ public partial class MainWindow : Window
         IReadOnlyList<ClipProblem> clipProblems = ClipValidator.Validate(_session.Editor.Document, _session.RigNodeIds);
         ProblemsPanel.Children.Clear();
         IReadOnlyList<EmojiProblem> emojiProblems = EmojiValidator.Validate(_session.Editor.Document, _session.RigNodeIds);
-        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count + emojiProblems.Count > 0;
+        IReadOnlyList<SchemaViolation> definedRigs = SchemaContract.DefinedRigs(_session.Editor.Document);
+        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count + emojiProblems.Count + definedRigs.Count > 0;
 
         foreach (MotionProblem problem in problems)
         {
@@ -3726,6 +3728,19 @@ public partial class MainWindow : Window
         foreach (EmojiProblem problem in emojiProblems)
         {
             ProblemsPanel.Children.Add(EmojiProblemRow(problem));
+        }
+
+        // 문서가 정의한 리그 — 스키마 계약의 알림(구조는 유니티가 정한다).
+        foreach (SchemaViolation violation in definedRigs)
+        {
+            ProblemsPanel.Children.Add(new TextBlock
+            {
+                Text = (violation.Blocking ? "⚠ " : "△ ") + violation,
+                FontSize = 11,
+                Foreground = violation.Blocking ? Brushes.OrangeRed : Brushes.Goldenrod,
+                TextWrapping = TextWrapping.Wrap,
+                MaxWidth = 700,
+            });
         }
     }
 

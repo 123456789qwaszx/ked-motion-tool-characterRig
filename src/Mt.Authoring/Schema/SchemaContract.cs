@@ -1,62 +1,106 @@
 using Mt.Authoring.Model;
-using Mt.Authoring.Rig;
 
 namespace Mt.Authoring.Schema;
 
-/// <summary>스키마에 어긋난 것 하나 — 무엇이(모션 · 이모지 · 리그), 어느 것이, 왜.</summary>
-public sealed record SchemaViolation(string Kind, string Subject, string Message)
+/// <summary>
+/// 스키마에 어긋난 것 하나 — 무엇이(모션 · 이모지 · 배역 · 리그), 어느 것이, 왜.
+/// <see cref="Blocking"/>이 false면 알림이다 — 내보내기를 막지 않는다.
+/// </summary>
+public sealed record SchemaViolation(string Kind, string Subject, string Message, bool Blocking = true)
 {
     public override string ToString() => $"{Kind} '{Subject}': {Message}";
 }
 
 /// <summary>
-/// 스키마 계약(<c>docs/PLAN-characterRig.md</c> §3) — **방향을 보이는 코드**다(아직 툴에 물리지 않았다).
+/// 스키마 계약(<c>docs/PLAN-characterRig.md</c> §3의 1) — **구조는 유니티가 정한다.**
+/// 문서(모션 · 이모지 · 클립의 배역)는 스키마에 있는 리그와 노드만 쓴다. "스키마에 없는 리그 · 노드"를 보는 곳은 여기 하나다 —
+/// 모션 · 이모지 · 클립 검증이 이것을 불러 **막는 문제**로 올린다(어긋난 문서는 내보내지 못한다).
 ///
-/// 이 툴의 원칙: **구조는 유니티가 정한다.** 유니티가 덤프한 리그 스키마(<c>rig-schemas.json</c>)가 유일한 진실이고,
-/// 문서(모션 · 이모지)는 그 스키마에 있는 리그와 노드만 쓴다. 이 함수는 그 계약을 한 자리에서 센다 —
-/// 지금은 같은 검사가 모션 검증 · 이모지 검증 · 리그 합치기에 흩어져 있고, 일부는 알림일 뿐이다(막지 않는다).
-/// 단단하게 만든다는 것은 이것을 **막는 문제**로 올리고, 덤프가 바뀌었을 때(유니티 쪽 구조가 달라졌을 때) 무엇이 끊겼는지를 한 번에 보이는 것이다.
+/// 스키마는 rigKind → 노드 id 목록으로 받는다. 툴은 덤프에 문서가 정의한 리그와 카메라의 가짜 리그를 더한 것을 넘긴다 —
+/// 문서가 정의한 리그는 <see cref="DefinedRigs"/>가 따로 알린다.
 /// </summary>
 public static class SchemaContract
 {
-    /// <summary>문서가 스키마(덤프)에 어긋난 곳들 — 없으면 빈 목록.</summary>
-    public static IReadOnlyList<SchemaViolation> Check(RigSchemaFile schema, MotionDocument document)
+    /// <summary>모션의 리그와 채널의 노드.</summary>
+    public static IReadOnlyList<SchemaViolation> Motion(IReadOnlyDictionary<string, ICollection<string>> schema, MotionAsset motion)
+    {
+        ArgumentNullException.ThrowIfNull(schema);
+        ArgumentNullException.ThrowIfNull(motion);
+        var violations = new List<SchemaViolation>();
+
+        if (!schema.TryGetValue(motion.Rig ?? "", out ICollection<string>? known))
+        {
+            violations.Add(new SchemaViolation("모션", motion.Name, MissingRig(schema, motion.Rig)));
+            return violations;
+        }
+
+        // 빈 노드는 모양 규칙(코어 MotionRules)이 말한다 — 여기서는 이름이 있는데 스키마에 없는 것만.
+        foreach (string node in motion.Channels.Select(c => c.Node).Where(n => !string.IsNullOrEmpty(n)).Distinct(StringComparer.Ordinal).Where(n => !known.Contains(n)))
+        {
+            violations.Add(new SchemaViolation("모션", motion.Name, MissingNode("노드", node, motion.Rig!)));
+        }
+
+        return violations;
+    }
+
+    /// <summary>이모지의 리그 · 자리 노드, 그리고 그 리그의 스킨(그림 · 반전 판)이 그림을 준 조각.</summary>
+    public static IReadOnlyList<SchemaViolation> Emoji(IReadOnlyDictionary<string, ICollection<string>> schema, MotionDocument document, EmojiAsset emoji)
     {
         ArgumentNullException.ThrowIfNull(schema);
         ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(emoji);
         var violations = new List<SchemaViolation>();
-        IReadOnlyDictionary<string, ICollection<string>> nodes = schema.NodeIds;
 
-        // 문서가 정의한 리그 — 구조는 유니티가 정한다. 스키마에 같은 이름이 있으면 덤프를 가리고(어느 쪽이 진실인지 흐려진다), 없으면 런타임에 없는 리그다.
-        foreach (RigAsset rig in document.Rigs)
+        if (!schema.TryGetValue(emoji.Rig ?? "", out ICollection<string>? known))
         {
-            violations.Add(new SchemaViolation("리그", rig.Kind, nodes.ContainsKey(rig.Kind)
-                ? "문서가 스키마의 리그를 다시 정의한다 — 덤프의 것을 가린다"
-                : "문서가 정의한 리그다 — 유니티의 스키마에 없다"));
+            violations.Add(new SchemaViolation("이모지", emoji.Name, MissingRig(schema, emoji.Rig)));
+            return violations;
         }
 
-        foreach (MotionAsset motion in document.Motions)
+        if (!known.Contains(emoji.AnchorNode))
         {
-            if (!nodes.TryGetValue(motion.Rig, out ICollection<string>? known))
-            {
-                violations.Add(new SchemaViolation("모션", motion.Name, $"리그 '{motion.Rig}'가 스키마에 없다"));
-                continue;
-            }
-
-            foreach (string node in motion.Channels.Select(c => c.Node).Distinct(StringComparer.Ordinal).Where(n => !known.Contains(n)))
-            {
-                violations.Add(new SchemaViolation("모션", motion.Name, $"노드 '{node}'가 리그 '{motion.Rig}'의 스키마에 없다"));
-            }
+            violations.Add(new SchemaViolation("이모지", emoji.Name, MissingNode("자리 노드", emoji.AnchorNode, emoji.Rig!)));
         }
 
-        foreach (EmojiAsset emoji in document.Emojis)
+        // 리그가 다른 스킨은 이모지 검증이 따로 막는다 — 그 노드는 이 리그의 것이 아니다.
+        foreach (SkinAsset skin in new[] { emoji.Skin, emoji.SkinFlipped }.Distinct(StringComparer.Ordinal).Select(document.FindSkin).OfType<SkinAsset>()
+                     .Where(s => string.Equals(s.Rig, emoji.Rig, StringComparison.Ordinal)))
         {
-            if (!nodes.ContainsKey(emoji.Rig))
+            foreach (string node in skin.Parts.Keys.Where(n => !known.Contains(n)).OrderBy(n => n, StringComparer.Ordinal))
             {
-                violations.Add(new SchemaViolation("이모지", emoji.Name, $"리그 '{emoji.Rig}'가 스키마에 없다"));
+                violations.Add(new SchemaViolation("이모지", emoji.Name, MissingNode($"스킨 '{skin.Name}'의 조각", node, emoji.Rig!)));
             }
         }
 
         return violations;
     }
+
+    /// <summary>클립의 배역이 입는 리그. 리그를 안 적은 배역은 클립 검증이 말한다.</summary>
+    public static IReadOnlyList<SchemaViolation> Clip(IReadOnlyDictionary<string, ICollection<string>> schema, ClipAsset clip)
+    {
+        ArgumentNullException.ThrowIfNull(schema);
+        ArgumentNullException.ThrowIfNull(clip);
+        return clip.Roles
+            .Where(r => !string.IsNullOrEmpty(r.Rig) && !schema.ContainsKey(r.Rig))
+            .Select(r => new SchemaViolation("배역", r.Name, MissingRig(schema, r.Rig)))
+            .ToList();
+    }
+
+    /// <summary>
+    /// 문서가 정의한 리그 — 구조는 유니티가 정한다. 덤프에 같은 이름이 있으면 그것을 가리고(어느 쪽이 진실인지 흐려진다), 없으면 런타임에 없는 리그다.
+    /// 아직은 알림이다 — 툴이 정의하는 리그를 어떻게 할지는 R3에서 정한다(<c>docs/PLAN-characterRig.md</c> §7의 1).
+    /// </summary>
+    public static IReadOnlyList<SchemaViolation> DefinedRigs(MotionDocument document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        return document.Rigs
+            .Select(rig => new SchemaViolation("리그", rig.Kind, "문서가 정의한 리그다 — 유니티가 덤프한 스키마의 것이 아니다(같은 이름이 덤프에 있으면 그것을 가린다)", Blocking: false))
+            .ToList();
+    }
+
+    private static string MissingRig(IReadOnlyDictionary<string, ICollection<string>> schema, string? rig)
+        => $"리그 '{rig}'가 스키마에 없다. 있는 것: [{string.Join(", ", schema.Keys)}]";
+
+    private static string MissingNode(string what, string node, string rig)
+        => $"{what} '{node}'가 리그 '{rig}'의 스키마에 없다";
 }

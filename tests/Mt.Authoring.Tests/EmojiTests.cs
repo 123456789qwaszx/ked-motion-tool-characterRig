@@ -193,11 +193,12 @@ public class EmojiTests
         editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "face" });
         Assert.Contains(EmojiValidator.Validate(editor.Document, RigFile.NodeIds), p => p.Blocking && p.Message.Contains("리그 'character'의 것", StringComparison.Ordinal));
 
-        // 알림: 그림 없음 · 없는 자리 노드.
+        // 그림 없음은 알림, 스키마에 없는 자리 노드는 막는다(스키마 계약).
         editor.UpdateEmoji("sweat", new EmojiAsset { AnchorNode = "Nowhere" });
-        IReadOnlyList<EmojiProblem> notices = EmojiValidator.Validate(editor.Document, RigFile.NodeIds);
-        Assert.All(notices, p => Assert.False(p.Blocking));
-        Assert.Equal(2, notices.Count);
+        IReadOnlyList<EmojiProblem> anchorProblems = EmojiValidator.Validate(editor.Document, RigFile.NodeIds);
+        Assert.Equal(2, anchorProblems.Count);
+        Assert.Contains(anchorProblems, p => !p.Blocking && p.Message.Contains("그림(스킨)이 없다", StringComparison.Ordinal));
+        Assert.Contains(anchorProblems, p => p.Blocking && p.Message.Contains("자리 노드 'Nowhere'", StringComparison.Ordinal));
 
         // 이모지가 쓰는 모션이 규칙을 어기면 그것도 막는다.
         editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "땀", Enter = "pop" });

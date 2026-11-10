@@ -2,6 +2,7 @@ using Ked.Presentation.Core;
 using Mt.Authoring.Graph;
 using Mt.Authoring.Model;
 using Mt.Authoring.Rig;
+using Mt.Authoring.Schema;
 
 namespace Mt.Authoring.Validation;
 
@@ -19,7 +20,7 @@ public sealed record MotionProblem(string MotionName, string Message, bool Block
 /// 편집 중 계속 돌리는 검증. 규칙은 코어 <see cref="MotionRules"/> 한 벌뿐이다 — 런타임 로더와 Unity 내보내기가
 /// 같은 규칙을 쓰므로 "툴에서는 되는데 재생에서 사라지는" 모션이 안 생긴다. 문구도 코어의 것을 그대로 보인다.
 ///
-/// 여기서 더 보는 것은 문서 수준(같은 이름 둘, 리그 덤프에 없는 rigKind)과 **경고** 하나다:
+/// 스키마에 없는 리그 · 노드는 스키마 계약(<see cref="SchemaContract"/>)이 센다. 여기서 더 보는 것은 문서 수준(같은 이름 둘)과 **경고** 하나다:
 /// restore인데 마지막 키가 중립값이 아니면 재생이 끝에서 시작값을 되써 튄다 — 규칙(motions/2)은 막지 않으므로
 /// 경고로만 보이고 내보내기는 된다. 첫 키가 중립값이 아닌 것은 알리지 않는다 — "지금 값 +140에서 시작"은 뜻이다.
 /// </summary>
@@ -28,7 +29,7 @@ public static class MotionValidator
     /// <summary>컨트롤러 경고의 문구 머리 — 돕는 손이 이것으로 고른다.</summary>
     public const string AbsoluteControllerWarning = "absolute로 재생하는 컨트롤러";
 
-    /// <param name="rigNodeIds">rigKind → 노드 id 목록. null이면 노드 존재 검사를 생략한다(덤프가 아직 없는 자리).</param>
+    /// <param name="rigNodeIds">rigKind → 노드 id 목록. null이면 스키마 계약을 생략한다(덤프가 아직 없는 자리).</param>
     /// <param name="controllers">컨트롤러 표. 주면 자리·깊이(absolute) 컨트롤러가 든 relative 미리보기 모션에 경고한다.</param>
     /// <param name="alphaNodeIds">rigKind → 불투명도를 받을 수 있는 노드(덤프의 hasCanvasGroup). 주면 알파 채널이 그 노드에 놓였는지 본다.</param>
     public static IReadOnlyList<MotionProblem> Validate(
@@ -71,22 +72,16 @@ public static class MotionValidator
         ArgumentNullException.ThrowIfNull(motion);
 
         var problems = new List<MotionProblem>();
-        ICollection<string>? nodeIds = null;
 
+        // 리그와 노드가 스키마에 있는가 — 스키마 계약 한 곳이 센다.
         if (rigNodeIds is not null)
         {
-            if (!rigNodeIds.TryGetValue(motion.Rig ?? "", out nodeIds))
-            {
-                problems.Add(new MotionProblem(
-                    motion.Name,
-                    $"리그 덤프에 rigKind '{motion.Rig}'가 없다. 있는 것: [{string.Join(", ", rigNodeIds.Keys)}]"));
-                return problems;
-            }
+            problems.AddRange(SchemaContract.Motion(rigNodeIds, motion).Select(v => new MotionProblem(motion.Name, v.Message, v.Blocking)));
         }
 
         MotionClip clip = MotionAssetCodec.ToClip(motion);
 
-        if (!MotionRules.TryValidate(clip, nodeIds, out string reason))
+        if (!MotionRules.TryValidate(clip, null, out string reason))
         {
             problems.Add(new MotionProblem(motion.Name, reason));
         }

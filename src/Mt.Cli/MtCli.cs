@@ -8,6 +8,7 @@ using Mt.Authoring.Editing;
 using Mt.Authoring.Model;
 using Mt.Authoring.Preview;
 using Mt.Authoring.Rig;
+using Mt.Authoring.Schema;
 using Mt.Authoring.Serialization;
 using Mt.Authoring.Validation;
 
@@ -369,6 +370,13 @@ public static class MtCli
         {
             problems.Add(new JsonObject { ["kind"] = "clip", ["name"] = p.ClipName, ["message"] = p.Message, ["blocking"] = p.Blocking });
             blocking |= p.Blocking;
+        }
+
+        // 문서가 정의한 리그 — 스키마 계약의 알림(구조는 유니티가 정한다).
+        foreach (SchemaViolation v in SchemaContract.DefinedRigs(document))
+        {
+            problems.Add(new JsonObject { ["kind"] = "rig", ["name"] = v.Subject, ["message"] = v.Message, ["blocking"] = v.Blocking });
+            blocking |= v.Blocking;
         }
 
         return (problems, blocking);

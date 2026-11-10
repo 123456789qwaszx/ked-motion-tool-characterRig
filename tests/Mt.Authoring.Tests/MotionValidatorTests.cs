@@ -39,7 +39,7 @@ public class MotionValidatorTests
         // relative 전 구간 중립값이면 성분이 내보내기에서 빠지므로 가운데 키를 둔다 — 보려는 것은 노드 검사뿐이다.
         editor.SetKeys("a", "NoSuchNode", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, 5f), Fixtures.Key(1f, 0f) });
 
-        Assert.Contains("리그 스키마에 없는 노드", Assert.Single(MotionValidator.Validate(editor.Document, RigFile.NodeIds)).Message, StringComparison.Ordinal);
+        Assert.Contains("노드 'NoSuchNode'가 리그 'character'의 스키마에 없다", Assert.Single(MotionValidator.Validate(editor.Document, RigFile.NodeIds)).Message, StringComparison.Ordinal);
         Assert.Empty(MotionValidator.Validate(editor.Document));
     }
 
@@ -50,7 +50,7 @@ public class MotionValidatorTests
         editor.AddMotion("a", "robot", 1f);
 
         MotionProblem problem = Assert.Single(MotionValidator.Validate(editor.Document, RigFile.NodeIds));
-        Assert.Contains("rigKind 'robot'", problem.Message, StringComparison.Ordinal);
+        Assert.Contains("리그 'robot'가 스키마에 없다", problem.Message, StringComparison.Ordinal);
         Assert.Contains("character", problem.Message, StringComparison.Ordinal);
     }
 

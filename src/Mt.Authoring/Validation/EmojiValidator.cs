@@ -12,7 +12,7 @@ public sealed record EmojiProblem(string EmojiName, string Message, bool Blockin
 }
 
 /// <summary>
-/// 이모지 정의의 검증(<c>PLAN-parts.md</c> §8). 막는 것: 키·참조(스킨·모션)의 어긋남, 리그가 안 맞는 스킨·모션. 알리는 것: 그림 없음, 없는 자리 노드.
+/// 이모지 정의의 검증(<c>PLAN-parts.md</c> §8). 막는 것: 키·참조(스킨·모션)의 어긋남, 리그가 안 맞는 스킨·모션, 스키마에 없는 리그·노드(스키마 계약). 알리는 것: 그림 없음.
 /// </summary>
 public static class EmojiValidator
 {
@@ -42,11 +42,10 @@ public static class EmojiValidator
                 Block("같은 키가 둘이다");
             }
 
-            ICollection<string>? nodes = null;
-
-            if (rigNodeIds is not null && !rigNodeIds.TryGetValue(emoji.Rig ?? "", out nodes))
+            // 리그 · 자리 노드 · 스킨의 조각이 스키마에 있는가 — 스키마 계약 한 곳이 센다.
+            if (rigNodeIds is not null)
             {
-                Block($"리그 덤프에 rigKind '{emoji.Rig}'가 없다. 있는 것: [{string.Join(", ", rigNodeIds.Keys)}]");
+                problems.AddRange(Schema.SchemaContract.Emoji(rigNodeIds, document, emoji).Select(v => new EmojiProblem(emoji.Name, v.Message, v.Blocking)));
             }
 
             if (emoji.Skin is null)
@@ -98,11 +97,6 @@ public static class EmojiValidator
             if (emoji.HoldSeconds is { } hold && (!float.IsFinite(hold) || hold < 0f))
             {
                 Block($"머무는 시간은 0 이상의 수다 ({hold})");
-            }
-
-            if (nodes is not null && !nodes.Contains(emoji.AnchorNode))
-            {
-                Notice($"자리 노드 '{emoji.AnchorNode}'가 리그에 없다 — 오프셋이 루트에 들어간다");
             }
         }
 

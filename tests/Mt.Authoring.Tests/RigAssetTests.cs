@@ -158,7 +158,8 @@ public class RigAssetTests
         }
 
         Assert.Equal(0, Run(out JsonNode? validated, "validate", document)); // 내장 덤프에는 emoji가 없다 — 문서의 리그로 통과한다
-        Assert.Empty(validated!["problems"]!.AsArray());
+        JsonNode definedRig = Assert.Single(validated!["problems"]!.AsArray())!; // 문서가 정의한 리그라는 알림 하나 — 막지는 않는다
+        Assert.Equal(("rig", false), (definedRig["kind"]!.GetValue<string>(), definedRig["blocking"]!.GetValue<bool>()));
         Assert.Equal(0, Run(out JsonNode? pose, "pose", document, "--motion", "pop", "--time", "0.2"));
         Assert.Equal(40.0, pose!["nodes"]!["Emoji_Body"]!["position"]![1]!.GetValue<double>(), 3);
 
