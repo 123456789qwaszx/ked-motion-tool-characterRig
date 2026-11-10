@@ -228,4 +228,57 @@ public class EmojiEventTests
         Vec2 anchor = WorldOf(posed, "e1/Emoji_Anchor");
         Near(FocusOf(rest, "s1", "faceAura"), anchor);
     }
+
+    [Fact]
+    public void 배역_키를_적으면_자리와_붙는_자리가_기준점_표의_그_배역_값으로_풀린다()
+    {
+        // 픽스처의 표: bust 820 · faceAura 950, 배역 bandi는 공통 −20 · bust +10 → bust 810 · faceAura 930.
+        MotionEditor editor = NewEditor();
+        editor.UpdateEmoji("sweat", new EmojiAsset { Enter = "pop", Exit = "out", HoldSeconds = 1f, Locator = "faceAura" });
+        editor.SetObjectPlace(null, "s1", "center");
+        RectNodeTree Rest() => ScenePreview.Build(RigFile, Scene(editor), null, null, null, Focus);
+        Vec2 PointOf(RectNodeTree tree, string key, string preset)
+            => SettledFocusMath.FocusPointInRigSpace(tree.BuildChainTo($"s1/{PlaceFocusStageReduction.MeasureNodeId}"), tree.RootSpace, FocusOffsetMath.Resolve(Focus.Body, key, preset, Vec2.Zero));
+        Vec2 AnchorWorld(RectNodeTree rest)
+        {
+            EmojiAsset sweat = editor.Document.FindEmoji("sweat")!;
+            SceneObject actor = Scene(editor).Find("e1")!;
+            return WorldOf(EmojiPreview.Pose(rest, editor.Document, sweat, actor, 0.5, null, EmojiPreview.LocatorPoint(rest, Scene(editor), sweat, actor, Focus)), "e1/Emoji_Anchor");
+        }
+
+        // 배역 키 없이: 표의 기본값의 가슴 점이 화면 가운데에 온다.
+        RectNodeTree plain = Rest();
+        Near(Vec2.Zero, PointOf(plain, "", "bust"));
+        Vec2 plainFocus = plain.GetState("s1/CharSlot_Track_Focus").AnchoredPosition;
+        Vec2 plainAnchor = AnchorWorld(plain);
+
+        // 배역 키 — 한 칸, 앞뒤 빈칸은 버리고 같은 값은 무기록.
+        long revision = editor.Revision;
+        editor.SetObjectCharacter(null, "s1", " bandi ");
+        editor.SetObjectCharacter(null, "s1", "bandi");
+        Assert.Equal(revision + 1, editor.Revision);
+        Assert.Equal("bandi", Scene(editor).Find("s1")!.Character);
+
+        // 자리: 이제 bandi의 가슴 점(810)이 가운데에 온다 — 캐릭터가 10만큼 올라가 선다.
+        RectNodeTree cast = Rest();
+        Near(Vec2.Zero, PointOf(cast, "bandi", "bust"));
+        Assert.Equal(plainFocus.Y + 10f, cast.GetState("s1/CharSlot_Track_Focus").AnchoredPosition.Y, 2);
+
+        // 붙는 자리: bandi의 faceAura(930)에 선다 — 가슴에서 120 위(기본값이면 130 위였다).
+        Near(PointOf(cast, "bandi", "faceAura"), AnchorWorld(cast));
+        Assert.Equal(130f, plainAnchor.Y, 1);
+        Assert.Equal(120f, AnchorWorld(cast).Y, 1);
+
+        // 표에 없는 배역은 기본값과 같다. 지우면 돌아온다.
+        editor.SetObjectCharacter(null, "s1", "nobody");
+        Assert.Equal(plainFocus.Y, Rest().GetState("s1/CharSlot_Track_Focus").AnchoredPosition.Y, 3);
+        editor.SetObjectCharacter(null, "s1", "  ");
+        Assert.Null(Scene(editor).Find("s1")!.Character);
+
+        // 저작본: 적었을 때만 실린다.
+        Assert.DoesNotContain("\"character\":", Mt.Authoring.Serialization.MotionDocumentJson.Write(editor.Document), StringComparison.Ordinal);
+        editor.SetObjectCharacter(null, "s1", "bandi");
+        string json = Mt.Authoring.Serialization.MotionDocumentJson.Write(editor.Document);
+        Assert.Equal("bandi", Mt.Authoring.Serialization.MotionDocumentJson.Read(json).ActiveSceneAsset!.Find("s1")!.Character);
+    }
 }

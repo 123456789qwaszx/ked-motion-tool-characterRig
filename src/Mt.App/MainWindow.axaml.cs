@@ -149,6 +149,10 @@ public partial class MainWindow : Window
 
     private readonly CheckBox _objVisible = new() { Content = "보이기", FontSize = 11 };
     private readonly TextBox _objId = new() { FontSize = 11, Width = 90 };
+    private readonly TextBox _objCharacter = new() { FontSize = 11, Width = 90, PlaceholderText = "(기본값)" };
+
+    /// <summary>테스트 손잡이 — "씬" 탭의 배역 키 칸.</summary>
+    internal TextBox ObjectCharacterBox => _objCharacter;
     private readonly TextBlock _objSummary = new() { FontSize = 11, Opacity = 0.8, TextWrapping = TextWrapping.Wrap };
     private readonly Expander _placementExpander = new() { Header = "시작 배치", FontSize = 11, IsExpanded = false };
     private readonly Expander _cameraExpander = new() { Header = "카메라(샷)", FontSize = 11, IsExpanded = false };
@@ -1892,6 +1896,15 @@ public partial class MainWindow : Window
             Spacing = 4,
             Children = { Small("자리"), _objPlace, Small("focus"), _objPlaceFocus },
         });
+        panel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { Small("배역"), _objCharacter } });
+        ToolTip.SetTip(_objCharacter, "배역 키(런타임 cast의 characterKey) — 기준점 표(presets/focus.json)의 그 배역 값으로 자리·깊이·이모지의 붙는 자리를 푼다. 비우면 표의 기본값");
+        OnCommit(_objCharacter, text =>
+        {
+            if (!_refreshing && _viewport.SelectedObject is { } o)
+            {
+                Guard("배역", () => _session.Editor.SetObjectCharacter(null, o.Id, text));
+            }
+        });
         ToolTip.SetTip(_objPlace, "place — focus 프리셋 점이 이 화면 지점에 오도록 CharSlot_Track_Focus를 푼다(코어 place 폴드, 런타임과 같은 함수). 없으면 Track_Focus는 0");
         ToolTip.SetTip(_objPlaceFocus, "place가 맞추는 focus 프리셋(bust 기본)");
         _objPlace.SelectionChanged += (_, _) =>
@@ -2288,6 +2301,8 @@ public partial class MainWindow : Window
                 : $"{selected.Id} · {selected.Rig} · {StageNodes.ContentOf(selected.Stage, selected.Layer)}"
                   + (_viewport.Motion is null || _viewport.CanWear(selected) ? "" : " · 지금 모션은 이 리그에 안 맞는다");
             _objId.Text = selected?.Id ?? "";
+            _objCharacter.Text = selected?.Character ?? "";
+            _objCharacter.IsEnabled = has && attachedTo is null;
             _objStage.SelectedIndex = selected is null ? -1 : StageNodes.Stages.ToList().IndexOf(selected.Stage);
 
             var places = new List<string> { NoPlaceToken };

@@ -560,4 +560,47 @@ public class SkinShellTests
             }
         });
     }
+
+    [Fact]
+    public void 씬_탭의_배역_칸에_키를_적으면_한_칸으로_들어가고_붙은_오브젝트에서는_잠긴다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                window.Session.LoadRig(EmojiRigFixture.WriteDump(TestDocuments.FixturePath("rig-schemas.json")));
+                MotionEditor editor = window.Session.Editor;
+                string id = window.CreateAttachedFromMenu(EmojiRigFixture.RigKind, "s1");
+                window.InspectorTab = 1; // 씬 탭
+                window.Viewport.SelectedObjectId = "s1";
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.True(window.ObjectCharacterBox.IsEnabled);
+                Assert.Equal("", window.ObjectCharacterBox.Text);
+
+                long revision = editor.Revision;
+                window.ObjectCharacterBox.Focus();
+                window.ObjectCharacterBox.Text = "bandi";
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal("bandi", editor.Document.ActiveSceneAsset!.Find("s1")!.Character);
+                Assert.Equal(revision + 1, editor.Revision);
+
+                editor.Undo();
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.Null(editor.Document.ActiveSceneAsset!.Find("s1")!.Character);
+                Assert.Equal("", window.ObjectCharacterBox.Text);
+
+                // 붙은 것은 부모의 배역을 따른다 — 칸이 잠긴다.
+                window.Viewport.SelectedObjectId = id;
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.False(window.ObjectCharacterBox.IsEnabled);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
 }

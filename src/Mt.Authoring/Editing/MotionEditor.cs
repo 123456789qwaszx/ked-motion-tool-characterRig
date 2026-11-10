@@ -300,6 +300,19 @@ public sealed partial class MotionEditor
         });
     }
 
+    /// <summary>배역 키 — 기준점 표의 그 배역 값을 쓴다. 빈 글·null이면 지운다(표의 기본값). 앞뒤 빈칸은 버린다.</summary>
+    public void SetObjectCharacter(string? sceneName, string id, string? character)
+    {
+        SceneAsset scene = RequireScene(sceneName);
+        SceneObject o = RequireObject(scene, id);
+        string? key = string.IsNullOrWhiteSpace(character) ? null : character.Trim();
+
+        if (o.Character != key)
+        {
+            Mutate(MotionChangeKind.Scene, () => o.Character = key);
+        }
+    }
+
     /// <summary>레이어(far · back · mid · front · close).</summary>
     public void SetObjectLayer(string? sceneName, string id, string layer)
     {

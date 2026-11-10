@@ -95,6 +95,13 @@ public sealed class SceneObject
     /// <summary>리그 덤프의 rigKind. 지금은 character만 만든다.</summary>
     public string Rig { get; set; } = DefaultRig;
 
+    /// <summary>
+    /// 배역 키(런타임 <c>cast</c>의 characterKey — <c>bandi</c> 등). 기준점 표(<c>presets/focus.json</c>)의 **그 배역 값**을 고른다:
+    /// 자리(place)·깊이의 focus 보존·붙는 자리(로케이터)가 이 캐릭터의 머리·가슴 높이로 풀린다. null이면 표의 기본값만(배역이 정해지지 않은 슬롯).
+    /// 표에 그 배역의 항목이 없으면 기본값과 같다. 모션과는 무관하다 — 모션은 rigKind의 것이다.
+    /// </summary>
+    public string? Character { get; set; }
+
     /// <summary>무대(stage00·stage01·stage02) — 런타임 slot 커맨드의 어휘. 뼈대의 <c>Stage{NN}_Root</c>.</summary>
     public string Stage { get; set; } = DefaultStage;
 

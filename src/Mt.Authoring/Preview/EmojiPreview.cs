@@ -173,8 +173,8 @@ public static class EmojiPreview
             return null;
         }
 
-        // 툴은 배역 키를 두지 않는다 — place와 같이 표의 기본값(base)만 쓴다.
-        Vec2 offset = FocusOffsetMath.Resolve(focus?.Body, "", preset, Vec2.Zero);
+        // 붙은 캐릭터의 배역 값(place와 같은 합) — 배역 키가 없으면 표의 기본값만.
+        Vec2 offset = FocusOffsetMath.Resolve(focus?.Body, parent.Character ?? "", preset, Vec2.Zero);
         Vec2 point = SettledFocusMath.FocusPointInRigSpace(rest.BuildChainTo(measureKey), rest.RootSpace, offset);
 
         RectNodeState[] chain = rest.BuildChainTo(anchorKey);
