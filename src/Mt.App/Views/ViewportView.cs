@@ -282,7 +282,35 @@ public sealed class ViewportView : Control
     }
 
     /// <summary>문맥의 블록 — 클립을 보는 중이고, 그 자리에 캐릭터 모션 블록이 있고, 꺼지지 않았을 때만.</summary>
-    private (ClipTrack Track, ClipBlock Block)? ContextEntry
+    private (ClipTrack Track, ClipBlock Block)? ContextEntry => AnyContextEntry is { } entry && !entry.Track.IsCamera ? entry : null;
+
+    /// <summary>
+    /// 문맥이 카메라 모션 블록일 때 — 그 블록과 모션. 지금 시각이 블록 안일 때만(캐릭터와 같은 까닭: 밖에서는 그 모션이 보이지 않는다).
+    /// 캐릭터의 포즈는 안 잡히고, 카메라 값 칸(<see cref="SetCameraValue"/>)만 그 블록의 모션에 키를 놓는다.
+    /// </summary>
+    private (ClipBlock Block, MotionAsset Motion)? CameraContext
+    {
+        get
+        {
+            if (_editor is null || AnyContextEntry is not { } entry || !entry.Track.IsCamera
+                || _editor.Document.Find(entry.Block.Motion) is not { } motion || !CameraRig.IsCamera(motion))
+            {
+                return null;
+            }
+
+            double local = _clock.Time - entry.Block.At;
+            return local >= -1e-6 && local <= motion.Duration + 1e-6 ? (entry.Block, motion) : null;
+        }
+    }
+
+    /// <summary>그 시각의 클립 카메라 — 카메라 블록(상태)까지 반영한 값에 카메라 모션을 얹은 것. <paramref name="except"/>는 빼고.</summary>
+    private CameraSettings ClipCameraAt(ClipAsset clip, double seconds, ClipBlock? except)
+    {
+        CameraSettings stage = _clipStage?.CameraAt(seconds) ?? Scene?.Camera ?? new CameraSettings();
+        return ClipPreview.CameraAt(_editor!.Document, clip, stage, seconds, IsClipTrackMuted, except) ?? stage;
+    }
+
+    private (ClipTrack Track, ClipBlock Block)? AnyContextEntry
     {
         get
         {
@@ -294,7 +322,7 @@ public sealed class ViewportView : Control
 
             ClipTrack track = clip.Tracks[at.Track];
             ClipBlock block = track.Blocks[at.Index];
-            return block.IsMotion && !block.IsMuted && !track.IsCamera && !IsClipTrackMuted(track) ? (track, block) : null;
+            return block.IsMotion && !block.IsMuted && !IsClipTrackMuted(track) ? (track, block) : null;
         }
     }
 
@@ -918,9 +946,15 @@ public sealed class ViewportView : Control
 
     /// <summary>카메라 모션을 보는 중일 때 지금 시각의 카메라 값(zoom·pan). 카메라 모션이 아니면 null.</summary>
     public CameraSettings? CameraValue()
-        => Motion is { } motion && CameraRig.IsCamera(motion) && Scene is { } scene
-            ? CameraRig.Pose(scene.Camera, motion, _clock.Time, motion.PreviewMode, _flags.IsMuted)
-            : null;
+    {
+        if (Motion is { } motion && CameraRig.IsCamera(motion) && Scene is { } scene)
+        {
+            return CameraRig.Pose(scene.Camera, motion, _clock.Time, motion.PreviewMode, _flags.IsMuted);
+        }
+
+        // 클립 안에서 카메라 모션 블록을 고쳤으면 — 그 시각의 클립 카메라(보이는 그 값).
+        return ShownClip is { } clip && CameraContext is not null ? ClipCameraAt(clip, _clock.Time, null) : null;
+    }
 
     /// <summary>
     /// 카메라 값을 지금 시각에 키한다(마야 채널 박스에 값을 넣은 것) — 그 성분의 키 하나, 되돌리기 한 칸.
@@ -928,6 +962,17 @@ public sealed class ViewportView : Control
     /// </summary>
     public void SetCameraValue(string node, Axis axis, float value)
     {
+        // 클립 안: 고른 카메라 모션 블록에 키를 놓는다 — 시각은 시계 − 블록의 시작, 재생 기준은 블록의 것,
+        // 시작값은 그 시각의 클립 카메라에서 이 블록만 뺀 값(카메라 블록이 보낸 값·앞 카메라 모션이 남긴 값 위에 이 블록이 얹힌다).
+        if (_editor is not null && ShownClip is { } clip && CameraContext is { } context)
+        {
+            CameraSettings before = ClipCameraAt(clip, _clock.Time, context.Block);
+            float from = node == CameraRig.ZoomNode ? before.Zoom : axis == Axis.X ? before.PanX : before.PanY;
+            float at = (float)Math.Max(0, SnapTime(_clock.Time - context.Block.At));
+            _editor.KeyComponents(context.Motion.Name, node, MotionChannelKind.Position, at, new[] { (axis, CameraRig.KeyValueFor(context.Block.Mode, from, value)) }, DefaultTangent);
+            return;
+        }
+
         if (_editor is null || Motion is not { } motion || !CameraRig.IsCamera(motion) || Scene is not { } scene)
         {
             return;
@@ -1355,6 +1400,12 @@ public sealed class ViewportView : Control
                 DrawAxes(context, pose);
                 DrawGizmo(context, pose);
                 DrawLabel(context, $"클립 {shown.Name} › {editing.Name} @ {entry.Block.At:0.###}s · {MotionModeLabel.Of(entry.Block.Mode)} — 이 블록의 모션에 키가 놓인다", new Point(stage.X + 8, stage.Y + 6));
+                return;
+            }
+
+            if (CameraContext is { } cameraEdit)
+            {
+                DrawLabel(context, $"클립 {shown.Name} › 카메라 모션 {cameraEdit.Motion.Name} @ {cameraEdit.Block.At:0.###}s · {MotionModeLabel.Of(cameraEdit.Block.Mode)} — '모션' 탭의 카메라 칸이 이 블록에 키를 놓는다", new Point(stage.X + 8, stage.Y + 6));
                 return;
             }
 

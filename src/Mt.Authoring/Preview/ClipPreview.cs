@@ -55,7 +55,8 @@ public static class ClipPreview
     /// 시각 t의 카메라 — 카메라 트랙에 놓인 카메라 모션 블록을 시작 시각 순으로 얹은 값(캐릭터 블록과 같은 규칙: 앞 블록이 남긴 값이 뒤 블록의 시작값).
     /// 시작한 카메라 모션 블록이 하나도 없으면 null — 무대의 카메라를 건드릴 일이 없다.
     /// </summary>
-    public static CameraSettings? CameraAt(MotionDocument document, ClipAsset clip, CameraSettings? start, double seconds, Func<ClipTrack, bool>? isMuted = null)
+    /// <param name="except">이 블록은 얹지 않는다 — 클립 안에서 그 카메라 모션을 고칠 때의 시작값을 낸다.</param>
+    public static CameraSettings? CameraAt(MotionDocument document, ClipAsset clip, CameraSettings? start, double seconds, Func<ClipTrack, bool>? isMuted = null, ClipBlock? except = null)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(clip);
@@ -72,7 +73,7 @@ public static class ClipPreview
 
             ClipTrack track = clip.Tracks[placed.Track];
 
-            if (!track.IsCamera || !block.IsMotion || block.IsMuted || isMuted?.Invoke(track) == true
+            if (!track.IsCamera || !block.IsMotion || block.IsMuted || ReferenceEquals(block, except) || isMuted?.Invoke(track) == true
                 || document.Find(block.Motion) is not { } motion || !CameraRig.IsCamera(motion))
             {
                 continue;

@@ -1139,4 +1139,86 @@ public class ClipShellTests
             }
         });
     }
+
+    [Fact]
+    public void 클립_안에서_카메라_모션_블록을_고르면_카메라_값_칸이_그_블록에_키를_놓는다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                Prepare(window);
+                MotionEditor editor = window.Session.Editor;
+                window.AddCameraMotionFromForm(); // camera: zoom·pan 0, 0~1초, 유지·절대값
+                window.AddClipFromForm();
+                window.Viewport.SelectedObjectId = "s1";
+                window.AddClipRoleFromForm();
+                int camera = editor.AddClipTrack("clip", ClipTrack.CameraRole);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                ClipTimelineView timeline = window.Timeline;
+                window.Viewport.SnapEnabled = false;
+                window.InspectorTab = 2; // 모션 탭 — 카메라 칸이 있는 자리
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+                // 카메라 블록이 pan x를 40으로 보내 두고(그 순간), 그 뒤에 카메라 모션을 상대값으로 얹는다.
+                timeline.PlaceState(camera, new ClipBlock { Kind = ClipBlockKind.Camera, PanX = 40f }, 0);
+                timeline.PlaceMotion(camera, "camera", 0.5);
+                timeline.SetSelectedMode(MotionChannelMode.Relative);
+                Assert.Equal("camera", window.Graph.MotionName);
+                Assert.Equal("clip", window.SelectedClip);
+
+                // 블록 밖(0.2초): 칸이 없고 값을 넣어도 아무 일 없다.
+                window.Viewport.ScrubTo(0.2);
+                Assert.False(window.CameraBoxes.Visible);
+                long revision = editor.Revision;
+                window.Viewport.SetCameraValue(CameraRig.PanNode, Axis.X, 999f);
+                Assert.Equal(revision, editor.Revision);
+
+                // 블록 안(클립 1.5초 = 모션의 1초): 칸이 서고 보이는 값(40 + 0)을 보인다.
+                window.Viewport.ScrubTo(1.5);
+                Assert.True(window.CameraBoxes.Visible);
+                Assert.Equal("40", window.CameraBoxes.PanX.Text);
+                Assert.Equal("0", window.CameraBoxes.Zoom.Text);
+
+                // 칸에 100 → Enter: 그 블록의 모션에 키 하나. 시작값이 40이니 상대값 키는 60, 시각은 모션의 1초.
+                TextBox pan = window.CameraBoxes.PanX;
+                pan.Focus();
+                pan.Text = "100";
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal(revision + 1, editor.Revision);
+                List<KeyAsset> keys = editor.Document.Find("camera")!.FindChannel(CameraRig.PanNode, MotionChannelKind.Position)!.X!.Keys;
+                Assert.Equal(new[] { (0f, 0f), (1f, 60f) }, keys.Select(k => (k.T, k.V)));
+                Assert.Equal(100f, PanXOf(window), 2);
+                Assert.Equal("clip", window.SelectedClip); // 클립을 떠나지 않는다
+                Assert.Equal(1.5, window.Viewport.Time, 4);
+                Assert.Equal("100", window.CameraBoxes.PanX.Text);
+
+                // 가운데(클립 1.0초 = 0.5초)에 zoom 2 — 새 키가 모션 기준 시각에 끼어든다.
+                window.Viewport.ScrubTo(1.0);
+                window.Viewport.SetCameraValue(CameraRig.ZoomNode, Axis.X, 2f);
+                Assert.Contains(editor.Document.Find("camera")!.FindChannel(CameraRig.ZoomNode, MotionChannelKind.Position)!.X!.Keys, k => Math.Abs(k.T - 0.5f) < 1e-4f && Math.Abs(k.V - 2f) < 1e-3f);
+                Assert.Equal(ShotIntentMath.EvaluateCameraScale(2f), ZoomScaleOf(window), 3);
+
+                // 절대값 블록이면 키가 곧 그 값이다.
+                timeline.SetSelectedMode(MotionChannelMode.Absolute);
+                window.Viewport.ScrubTo(1.5);
+                window.Viewport.SetCameraValue(CameraRig.PanNode, Axis.X, 70f);
+                Assert.Equal(70f, editor.Document.Find("camera")!.FindChannel(CameraRig.PanNode, MotionChannelKind.Position)!.X!.Keys[^1].V, 3);
+                Assert.Equal(70f, PanXOf(window), 2);
+
+                // 캐릭터 블록을 고르면 카메라 칸은 숨는다. 캐릭터의 포즈는 카메라 블록에서 잡히지 않는다.
+                timeline.Select((camera, 1));
+                Assert.Null(window.Viewport.EditMotion);
+                timeline.PlaceMotion(0, "nod", 1.2);
+                Assert.False(window.CameraBoxes.Visible);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
 }

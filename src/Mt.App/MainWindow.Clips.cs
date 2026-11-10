@@ -146,6 +146,8 @@ public partial class MainWindow
             RefreshKeyInspector();
         }
 
+        RefreshCameraPanel(); // 카메라 모션 블록이면 '모션' 탭의 카메라 값 칸이 그 블록을 본다
+
         // 시계는 하나다 — 그래프의 현재 시각을 클립 시각에서 블록 시작을 뺀 자리로.
         SyncTime(() =>
         {
