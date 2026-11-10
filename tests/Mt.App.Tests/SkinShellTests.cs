@@ -470,4 +470,85 @@ public class SkinShellTests
             }
         });
     }
+
+    [Fact]
+    public void 캐릭터_모션의_emoji_이벤트가_울리면_붙은_이모지가_정의의_스킨을_입고_뜬다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            MainWindow window = NewWindow();
+            window.Show();
+
+            try
+            {
+                window.Session.LoadRig(EmojiRigFixture.WriteDump(TestDocuments.FixturePath("rig-schemas.json")));
+                MotionEditor editor = window.Session.Editor;
+                string id = window.CreateAttachedFromMenu(EmojiRigFixture.RigKind, "s1");
+                SceneObject Emoji() => editor.Document.ActiveSceneAsset!.Find(id)!;
+                editor.AddSkin("땀", EmojiRigFixture.RigKind);
+                editor.SetSkinPart("땀", "Emoji_Part1", "art/sweat.png");
+
+                KeyAsset Linear(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
+                editor.AddMotion("pop", EmojiRigFixture.RigKind, 0.2f, MotionEnd.Commit, MotionChannelMode.Absolute);
+                editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
+                editor.SetKeys("pop", "Emoji_Body", MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.2f, 40f) });
+                editor.AddEmoji("sweat", EmojiRigFixture.RigKind);
+                editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "땀", Enter = "pop", HoldSeconds = 0.2f, OffsetX = 120f });
+
+                // 캐릭터 모션 nod(0.6초)의 0.1초에 emoji sweat.
+                editor.AddMotion("nod", "character", 0.6f, MotionEnd.Restore, MotionChannelMode.Relative);
+                editor.AddChannel("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position);
+                editor.SetKeys("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.3f, -18f), Linear(0.6f, 0f) });
+                editor.AddMotionEvent("nod", 0.1f, "emoji", "sweat");
+                window.SelectMotion("nod");
+                window.Viewport.SelectedObjectId = "s1";
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                float BodyY() => window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Body").AnchoredPosition.Y;
+
+                // 울리기 전: 부리는 오브젝트는 안 보인다(스킨도 안 입었다).
+                window.Viewport.ScrubTo(0.05);
+                Assert.Empty(window.Viewport.EmojiPlaysAt(0.05));
+                Assert.True(window.Viewport.IsDormantEmoji(id));
+                Assert.Empty(window.Viewport.DrawnParts(Emoji()));
+
+                // 울린 뒤: 정의의 스킨을 입고 등장이 돈다. 자리는 정의의 오프셋.
+                window.Viewport.ScrubTo(0.2);
+                Assert.False(window.Viewport.IsDormantEmoji(id));
+                Assert.Equal(new[] { "Emoji_Part1" }, window.Viewport.DrawnParts(Emoji()));
+                Assert.Equal(20f, BodyY(), 2);
+                Assert.Equal(120f, window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Anchor").AnchoredPosition.X, 2);
+                window.Viewport.ScrubTo(0.4);
+                Assert.Equal(40f, BodyY(), 2);
+
+                // 수명(0.4초)이 다하면 다시 사라진다.
+                window.Viewport.ScrubTo(0.55);
+                Assert.True(window.Viewport.IsDormantEmoji(id));
+                Assert.False(window.Viewport.IsDormantEmoji("s1"));
+
+                // 클립에서도 같다 — 블록이 놓인 시각부터 센다.
+                editor.AddClip("clip");
+                editor.AddClipRole("clip", "a", "character", "s1");
+                editor.AddClipTrack("clip", "a");
+                editor.AddClipBlock("clip", 0, "nod", 1f);
+                window.SelectClip("clip");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                window.Viewport.ScrubTo(0.5);
+                Assert.True(window.Viewport.IsDormantEmoji(id));
+                window.Viewport.ScrubTo(1.2);
+                Assert.Equal(20f, BodyY(), 2);
+                Assert.Equal(new[] { "Emoji_Part1" }, window.Viewport.DrawnParts(Emoji()));
+
+                // 모르는 이모지 키는 문제 목록이 알린다(막지는 않는다).
+                Assert.Equal(0, window.ProblemRowsShown);
+                editor.UpdateMotionEvent("nod", 0, 0.1f, "emoji", "ghost");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.Equal(1, window.ProblemRowsShown);
+                Assert.False(window.Viewport.IsDormantEmoji(id)); // 부리는 이벤트가 없으니 보통 오브젝트다
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
 }

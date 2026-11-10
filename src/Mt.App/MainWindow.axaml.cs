@@ -1652,6 +1652,26 @@ public partial class MainWindow : Window
         _viewport.StageSize = _session.StageSize;
         _viewport.ClearPortraits();
 
+        // 이모지 정의의 스킨 — 이벤트 키로 뜰 때 붙은 이모지 리그가 입는다.
+        foreach (string skin in _session.Editor.Document.Emojis.Select(e => e.Skin).OfType<string>().Distinct(StringComparer.Ordinal))
+        {
+            foreach ((string node, string? skinPath) in _session.PartImagesOfSkin(skin))
+            {
+                Bitmap? image = null;
+
+                try
+                {
+                    image = skinPath is null ? null : new Bitmap(skinPath);
+                }
+                catch (Exception exception)
+                {
+                    _session.SetStatus($"스킨 {skin}의 조각 {node} 그림을 읽지 못했다: {exception.Message}");
+                }
+
+                _viewport.SetSkinImage(skin, node, image);
+            }
+        }
+
         foreach (SceneObject o in _viewport.SceneObjects)
         {
             // 스킨의 조각 그림 — 파일이 없거나 못 읽으면 null을 넣는다(자리표시로 그려진다).

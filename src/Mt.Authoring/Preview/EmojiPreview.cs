@@ -36,13 +36,43 @@ public static class EmojiPreview
 
     /// <summary>그 시각에 떠 있는가 — 수명 안(0 ≤ t ≤ 끝).</summary>
     public static bool IsAlive(MotionDocument document, EmojiAsset emoji, double seconds)
-        => seconds >= 0 && seconds <= PhasesOf(document, emoji).Total + 1e-6;
+        => IsAlive(PhasesOf(document, emoji), seconds);
+
+    public static bool IsAlive(in EmojiPhases phases, double seconds) => seconds >= 0 && seconds <= (double)phases.Total + 1e-6;
+
+    /// <summary>머무는 이모지가 "아직 끄라는 말이 없다"일 때의 머묾 길이 — 사실상 끝없음.</summary>
+    public const float Forever = 1e9f;
+
+    /// <summary>
+    /// 이벤트로 뜬 이모지의 구간들 — 미리보기용 어림(<see cref="PhasesOf"/>)이 아니라 **실제로 도는 길이**다.
+    /// 머무는 시간이 있으면 그만큼, 없으면 끄라고 할 때까지(<see cref="Forever"/>). <paramref name="offAfter"/>는 뜬 뒤 몇 초에 끄라는 말(<c>emoji_off</c>)이 왔는가 —
+    /// 오면 그때 퇴장이 시작한다(등장은 끝까지 돈다. 제 수명이 먼저 다했으면 그것이 이긴다).
+    /// </summary>
+    public static EmojiPhases PlayPhases(MotionDocument document, EmojiAsset emoji, double? offAfter)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(emoji);
+        float enter = Find(document, emoji.Enter)?.Duration ?? 0f;
+        float exit = Find(document, emoji.Exit)?.Duration ?? 0f;
+        float hold = emoji.HoldSeconds is { } seconds ? Math.Max(0f, seconds) : Forever;
+
+        if (offAfter is { } off)
+        {
+            hold = Math.Min(hold, (float)Math.Max(0, off - enter));
+        }
+
+        return new EmojiPhases(enter, hold, exit, emoji.HoldSeconds is null && offAfter is null);
+    }
 
     /// <summary>
     /// 수명의 시각 t 포즈 — <paramref name="actor"/>(이모지 리그의 오브젝트)에 얹는다. 자리(<see cref="EmojiAsset.AnchorNode"/>의 오프셋)도 여기서 넣는다.
     /// 수명 밖이면 template 그대로(호출부가 <see cref="IsAlive"/>로 안 그린다).
     /// </summary>
     public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, EmojiAsset emoji, SceneObject actor, double seconds, IDictionary<string, float>? alphas = null)
+        => Pose(template, document, emoji, actor, seconds, alphas, PhasesOf(document, emoji));
+
+    /// <summary>구간을 정해 준 포즈 — 이벤트로 뜬 이모지(<see cref="PlayPhases"/>)가 쓴다.</summary>
+    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, EmojiAsset emoji, SceneObject actor, double seconds, IDictionary<string, float>? alphas, EmojiPhases phases)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(document);
@@ -52,12 +82,11 @@ public static class EmojiPreview
         RectNodeTree tree = template.Clone();
         ApplyAnchor(tree, emoji, actor);
 
-        if (!IsAlive(document, emoji, seconds))
+        if (!IsAlive(phases, seconds))
         {
             return tree;
         }
 
-        EmojiPhases phases = PhasesOf(document, emoji);
         string prefix = actor.Prefix;
 
         // 등장 — 한 번. 끝났으면 끝 규칙대로(commit이면 남고 restore면 처음 자세).

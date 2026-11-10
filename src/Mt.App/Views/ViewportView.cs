@@ -71,6 +71,9 @@ public sealed class ViewportView : Control
 
     /// <summary>조각 그림 — (오브젝트 id, 조각 노드 id) → 비트맵. 스킨이 그림을 준 조각만 든다(파일을 못 읽었으면 null — 자리표시).</summary>
     private readonly Dictionary<(string Object, string Node), Bitmap?> _partImages = new();
+
+    // 스킨의 조각 그림(스킨 이름, 조각) — 이벤트로 뜬 이모지가 정의의 스킨을 입을 때 쓴다(오브젝트가 입은 것 대신).
+    private readonly Dictionary<(string Skin, string Node), Bitmap?> _skinImages = new();
     private string? _selectedObjectId;
     public bool ShowGrid { get; set; } = true;
     private Vec2 _stageSize = BaseResolutionFile.Default;
@@ -1200,6 +1203,64 @@ public sealed class ViewportView : Control
         InvalidateVisual();
     }
 
+    /// <summary>스킨의 조각 그림 — 이벤트 키로 뜨는 이모지의 스킨(이모지 정의가 가리키는 것)을 싣는다.</summary>
+    public void SetSkinImage(string skin, string node, Bitmap? image)
+    {
+        ArgumentNullException.ThrowIfNull(skin);
+        ArgumentNullException.ThrowIfNull(node);
+        _skinImages[(skin, node)] = image;
+        InvalidateVisual();
+    }
+
+    // ── 이벤트 키로 뜨는 이모지 (PLAN-parts.md §10) ───────────────────
+
+    /// <summary>처음부터 그 시각까지 울린 이벤트 키(연기하는 오브젝트와 함께) — 클립이면 블록들의 것, 모션 하나면 고른 오브젝트가 연기하는 것.</summary>
+    private List<(double Time, string? ObjectId, string Name, string? Value)> FiredUntil(double seconds)
+    {
+        if (_editor is null || ShownEmoji is not null)
+        {
+            return new();
+        }
+
+        if (ShownClip is { } clip)
+        {
+            return ClipPreview.EventsBetween(_editor.Document, clip, double.NegativeInfinity, seconds, IsClipTrackMuted);
+        }
+
+        return Motion is { Events.Count: > 0 } motion && SelectedObject is { } o && CanWear(o)
+            ? ClipPreview.EventsBetween(motion, double.NegativeInfinity, seconds).Select(e => (Time: (double)e.T, ObjectId: (string?)o.Id, e.Name, e.Value)).ToList()
+            : new();
+    }
+
+    private SceneAsset? SceneAtTime(double seconds) => ShownClip is not null && _clipStage is { } stage ? stage.SceneAt(seconds) : Scene;
+
+    /// <summary>그 시각에 이벤트 키(<c>emoji</c>)로 떠서 돌고 있는 이모지들 — 캐릭터에 붙은 이모지 리그가 정의의 수명을 돈다.</summary>
+    public IReadOnlyList<EmojiPlay> EmojiPlaysAt(double seconds)
+        => _editor is not null && SceneAtTime(seconds) is { } scene && FiredUntil(seconds) is { Count: > 0 } fired
+            ? EmojiEvents.Resolve(_editor.Document, scene, fired, seconds)
+            : Array.Empty<EmojiPlay>();
+
+    private EmojiPlay? EmojiPlayOn(string objectId)
+    {
+        foreach (EmojiPlay play in EmojiPlaysAt(_clock.Time))
+        {
+            if (play.Target.Id == objectId)
+            {
+                return play;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>이벤트가 부리는 이모지 오브젝트인데 지금은 안 떠 있다 — 안 그린다.</summary>
+    public bool IsDormantEmoji(string objectId)
+        => _editor is not null && SceneAtTime(_clock.Time) is { } scene && FiredUntil(double.PositiveInfinity) is { Count: > 0 } all
+            && EmojiEvents.Targets(_editor.Document, scene, all).Contains(objectId) && EmojiPlayOn(objectId) is null;
+
+    private bool TryPartImage(SceneObject o, string node, out Bitmap? image)
+        => EmojiPlayOn(o.Id) is { Emoji.Skin: { } skin } ? _skinImages.TryGetValue((skin, node), out image) : _partImages.TryGetValue((o.Id, node), out image);
+
     /// <summary>
     /// 그 오브젝트에서 그려지는 조각 노드들(그리는 순서) — 리그의 조각 가운데 입은 스킨이 그림을 준 것. 조각이 없는 리그나 스킨을 안 입었으면 빈 목록.
     /// </summary>
@@ -1208,7 +1269,9 @@ public sealed class ViewportView : Control
         ArgumentNullException.ThrowIfNull(o);
 
         // 이모지 정의를 보는 중이면 그 오브젝트는 정의의 스킨을 입는다(오브젝트가 입은 것 대신).
-        string? skinName = ShownEmoji is { } emoji && EmojiActor is { } actor && actor.Id == o.Id ? emoji.Skin : o.Skin;
+        // 이벤트로 떠 있는 동안에도 그렇다.
+        string? skinName = ShownEmoji is { } emoji && EmojiActor is { } actor && actor.Id == o.Id ? emoji.Skin
+            : EmojiPlayOn(o.Id) is { } play ? play.Emoji.Skin : o.Skin;
 
         if (_editor?.Document.FindSkin(skinName) is not { } skin || !string.Equals(skin.Rig, o.Rig, StringComparison.Ordinal))
         {
@@ -1233,7 +1296,7 @@ public sealed class ViewportView : Control
 
         Quad rect = PortraitLayout.RectQuad(pose, key);
 
-        if (!_partImages.TryGetValue((o.Id, node), out Bitmap? image) || image is not { PixelSize: { Width: > 0, Height: > 0 } })
+        if (!TryPartImage(o, node, out Bitmap? image) || image is not { PixelSize: { Width: > 0, Height: > 0 } })
         {
             return rect;
         }
@@ -1261,6 +1324,7 @@ public sealed class ViewportView : Control
     public void ClearPortraits()
     {
         _partImages.Clear();
+        _skinImages.Clear();
         _portraits.Clear();
         RebuildTemplate();
         InvalidateVisual();
@@ -1441,6 +1505,15 @@ public sealed class ViewportView : Control
     public RectNodeTree? PoseAt(double seconds) => PoseAt(seconds, null);
 
     private RectNodeTree? PoseAt(double seconds, IDictionary<string, float>? alphas)
+    {
+        // 캐릭터들의 포즈 위에, 이벤트 키로 뜬 이모지를 얹는다.
+        RectNodeTree? tree = BasePoseAt(seconds, alphas);
+        return tree is not null && _editor is not null && EmojiPlaysAt(seconds) is { Count: > 0 } plays
+            ? EmojiEvents.Pose(tree, _editor.Document, plays, alphas)
+            : tree;
+    }
+
+    private RectNodeTree? BasePoseAt(double seconds, IDictionary<string, float>? alphas)
     {
         MotionAsset? motion = Motion;
         if (_template is null)
@@ -1780,7 +1853,7 @@ public sealed class ViewportView : Control
             {
                 float opacity = stage.OpacityOf(o.Id, _clock.Time);
 
-                if (opacity <= 0.001f)
+                if (opacity <= 0.001f || IsDormantEmoji(o.Id))
                 {
                     continue;
                 }
@@ -1799,7 +1872,7 @@ public sealed class ViewportView : Control
 
         foreach (SceneObject o in scene.DrawOrder())
         {
-            if (!o.Visible || o.Id == emojiActor)
+            if (!o.Visible || o.Id == emojiActor || IsDormantEmoji(o.Id))
             {
                 continue;
             }
@@ -1846,7 +1919,7 @@ public sealed class ViewportView : Control
             {
                 if (PartQuadOf(pose, o, node) is { } part)
                 {
-                    _partImages.TryGetValue((o.Id, node), out Bitmap? image);
+                    TryPartImage(o, node, out Bitmap? image);
                     float alpha = EffectiveAlpha(pose, o.KeyOf(node), o.Prefix, _drawAlphas);
 
                     if (alpha <= 0.001f)

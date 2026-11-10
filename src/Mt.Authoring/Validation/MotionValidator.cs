@@ -50,6 +50,13 @@ public static class MotionValidator
             }
 
             problems.AddRange(ValidateMotion(motion, rigNodeIds, controllers, alphaNodeIds));
+
+            // 이모지를 띄우는 이벤트 키 — 값이 문서의 이모지 키여야 미리보기에서 뜬다. 런타임의 이모지 표는 따로일 수 있어 막지는 않고,
+            // 문서가 이모지를 하나도 정의하지 않았으면(표가 밖에 있다) 말하지 않는다.
+            foreach (MotionEventAsset e in motion.Events.Where(e => document.Emojis.Count > 0 && e.Name == Preview.EmojiEvents.Show && document.FindEmoji(e.Value) is null))
+            {
+                problems.Add(new MotionProblem(motion.Name, $"이벤트 emoji: 이모지 '{e.Value}'가 문서에 없다 — 미리보기에서 안 뜬다", Blocking: false));
+            }
         }
 
         return problems;
