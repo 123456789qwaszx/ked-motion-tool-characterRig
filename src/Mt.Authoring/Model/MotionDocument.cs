@@ -75,8 +75,36 @@ public sealed class MotionDocument
     public ClipAsset? FindClip(string? name)
         => name is null ? null : Clips.FirstOrDefault(c => string.Equals(c.Name, name, StringComparison.Ordinal));
 
+    /// <summary>
+    /// 이모지들(<c>docs/PLAN-emoji.md</c>). <c>motions.json</c>에는 안 나가고 <c>emojis.json</c>으로 나간다.
+    /// 저작본에는 <see cref="EmojisOrNull"/>로 실린다: 이모지가 없는 문서는 전과 같은 글자다.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public List<EmojiAsset> Emojis { get; set; } = new();
+
+    /// <summary>저작본의 <c>emojis</c> 자리 — 비면 쓰지 않는다. 코드는 <see cref="Emojis"/>를 쓴다.</summary>
+    [System.Text.Json.Serialization.JsonPropertyName("emojis")]
+    public List<EmojiAsset>? EmojisOrNull
+    {
+        get => Emojis.Count == 0 ? null : Emojis;
+        set => Emojis = value ?? new List<EmojiAsset>();
+    }
+
+    public EmojiAsset? FindEmoji(string? name)
+        => name is null ? null : Emojis.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
+
+    /// <summary>
+    /// 이름으로 모션을 찾는다 — 내보내는 모션(<see cref="Motions"/>)과 이모지의 타임라인(<c>emoji:이름</c>) 둘 다.
+    /// 편집 기반(그래프 · 도프 시트 · 키 연산)이 이름 하나로 둘을 같이 다룬다.
+    /// </summary>
     public MotionAsset? Find(string name)
-        => Motions.FirstOrDefault(m => string.Equals(m.Name, name, StringComparison.Ordinal));
+        => EmojiAsset.IsTimelineName(name, out string emoji)
+            ? FindEmoji(emoji)?.Timeline
+            : Motions.FirstOrDefault(m => string.Equals(m.Name, name, StringComparison.Ordinal));
+
+    /// <summary>문서의 모션 전부 — 내보내는 모션과 이모지의 타임라인.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public IEnumerable<MotionAsset> AllMotions => Motions.Concat(Emojis.Select(e => e.Timeline));
 }
 
 public sealed class RigSchemasReference

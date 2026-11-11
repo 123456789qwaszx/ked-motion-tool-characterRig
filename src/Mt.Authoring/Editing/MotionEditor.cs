@@ -502,14 +502,14 @@ public sealed partial class MotionEditor
 
     public void RemoveMotion(string name)
     {
-        MotionAsset motion = Require(name);
+        MotionAsset motion = RequireExported(name);
         Mutate(MotionChangeKind.Structure, () => Document.Motions.Remove(motion));
     }
 
     public void RenameMotion(string name, string newName)
     {
         ArgumentNullException.ThrowIfNull(newName);
-        MotionAsset motion = Require(name);
+        MotionAsset motion = RequireExported(name);
 
         if (string.Equals(name, newName, StringComparison.Ordinal))
         {
@@ -588,7 +588,7 @@ public sealed partial class MotionEditor
     public MotionAsset? SplitMotion(string name, string newName, Func<ChannelAsset, bool> moveToNew, MotionChannelMode newPreviewMode)
     {
         ArgumentNullException.ThrowIfNull(moveToNew);
-        MotionAsset motion = Require(name);
+        MotionAsset motion = RequireExported(name);
 
         if (!MotionNames.IsValid(newName))
         {
@@ -1321,7 +1321,7 @@ public sealed partial class MotionEditor
     /// </summary>
     private void StepAlwaysSteppedChannels()
     {
-        foreach (MotionAsset motion in Document.Motions)
+        foreach (MotionAsset motion in Document.AllMotions)
         {
             foreach (ChannelAsset channel in motion.Channels.Where(c => ChannelKinds.IsAlwaysStepped(c.Kind)))
             {
@@ -1451,6 +1451,9 @@ public enum MotionChangeKind
 
     /// <summary>연출 클립 — 클립·배역·트랙·블록(<c>PLAN-clip.md</c>). 모션의 키는 그대로다.</summary>
     Clip,
+
+    /// <summary>이모지 — 구성(오프셋 · 리그 · 그림 · 기본 자리) · 구간 · 잇기(<c>PLAN-emoji.md</c>). 타임라인의 키는 <see cref="Keys"/>다.</summary>
+    Emoji,
 }
 
 public sealed class MotionChangedEventArgs : EventArgs

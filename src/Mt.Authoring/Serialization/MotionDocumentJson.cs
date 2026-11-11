@@ -78,7 +78,23 @@ public static class MotionDocumentJson
             }
         }
 
-        foreach (MotionAsset motion in document.Motions)
+        foreach (EmojiAsset emoji in document.Emojis)
+        {
+            emoji.Rigs ??= new List<EmojiRigAsset>();
+            emoji.Spans ??= new List<EmojiSpan>();
+            emoji.Timeline ??= new MotionAsset();
+
+            foreach (EmojiRigAsset rig in emoji.Rigs)
+            {
+                rig.Images ??= new List<string>();
+            }
+
+            // 타임라인의 이름 · 리그는 이모지가 정한다 — 손으로 쓴 문서가 비워 두어도 된다.
+            emoji.Timeline.Name = EmojiAsset.TimelineNameOf(emoji.Name);
+            emoji.Timeline.Rig = Rig.EmojiRigFrame.RigKind;
+        }
+
+        foreach (MotionAsset motion in document.AllMotions)
         {
             motion.Channels ??= new List<ChannelAsset>();
 
@@ -103,6 +119,18 @@ public static class MotionDocumentJson
         channel.X = NormalizeCurve(channel.X);
         channel.Y = NormalizeCurve(channel.Y);
         channel.Z = NormalizeCurve(channel.Z);
+
+        // 그림 채널의 키는 언제나 계단이다 — 손으로 쓴 문서가 다른 종류를 적어도 읽을 때 바로잡는다(편집기는 조작마다 지킨다).
+        if (ChannelKinds.IsAlwaysStepped(channel.Kind))
+        {
+            foreach (KeyAsset key in new[] { channel.X, channel.Y, channel.Z }.OfType<ComponentCurve>().SelectMany(c => c.Keys))
+            {
+                key.Tangent = TangentMode.Step;
+                key.InTangent = 0f;
+                key.OutTangent = 0f;
+                key.Broken = false;
+            }
+        }
     }
 
     // 키가 없는 성분은 "건드리지 않는다"(null)로 — 빈 목록과 null을 두 가지 뜻으로 두지 않는다.
