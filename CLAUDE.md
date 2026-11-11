@@ -23,10 +23,10 @@ dotnet build KedMotionTool.sln -c Release
 dotnet test KedMotionTool.sln -c Release --no-build
 ```
 
-화면을 그림으로 뽑는다(헤드리스가 Skia로 실제 렌더 — 고친 화면은 눈으로 확인한다). `MT_RENDER_DIR`이 있을 때만 켜지고, 장면 테스트는 `RenderShots`(`tests/Mt.App.Tests/HeadlessUi.cs`)로 그림을 낸다 — 이모지 화면의 장면은 `PLAN-emoji.md` E6에서 다시 선다:
+화면을 그림으로 뽑는다(헤드리스가 Skia로 실제 렌더 — 고친 화면은 눈으로 확인한다). `MT_RENDER_DIR`이 있을 때만 켜지고, 장면 테스트는 `RenderShots`(`tests/Mt.App.Tests/HeadlessUi.cs`)로 그림을 낸다 — 이모지 화면은 `EmojiShots`:
 
 ```bash
-MT_RENDER_DIR=<폴더> dotnet test tests/Mt.App.Tests -c Release --filter <장면 테스트>
+MT_RENDER_DIR=<폴더> dotnet test tests/Mt.App.Tests -c Release --filter EmojiShots
 ```
 
 ## 관습

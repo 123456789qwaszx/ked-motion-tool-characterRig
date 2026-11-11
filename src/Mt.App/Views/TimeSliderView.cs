@@ -30,6 +30,9 @@ public enum KeyTickMode
 ///
 /// 시계는 뷰포트의 것이다. 편집은 <see cref="MotionEditor"/> 명령뿐이다.
 /// </summary>
+/// <summary>타임 슬라이더 위의 이름 붙은 띠 — 이모지의 구간(타임라인 보기)이나 단계(수명 보기). 시각은 초.</summary>
+public sealed record SliderMark(string Label, double Start, double End, IBrush Brush);
+
 public sealed class TimeSliderView : Control
 {
     public const double SliderHeight = 34;
@@ -51,6 +54,7 @@ public sealed class TimeSliderView : Control
     private static readonly Pen HoldPen = new(new SolidColorBrush(Color.FromRgb(0xF0, 0xA0, 0x50)), 1, DashStyle.Dash);
 
     private ViewportView? _viewport;
+    private IReadOnlyList<SliderMark> _marks = Array.Empty<SliderMark>();
     private MotionEditor? _editor;
     private string? _motionName;
     private KeySelection _selection = new();
@@ -295,6 +299,17 @@ public sealed class TimeSliderView : Control
         return true;
     }
 
+    /// <summary>이름 붙은 띠들 — 바꾸면 다시 그린다.</summary>
+    public IReadOnlyList<SliderMark> Marks
+    {
+        get => _marks;
+        set
+        {
+            _marks = value ?? Array.Empty<SliderMark>();
+            InvalidateVisual();
+        }
+    }
+
     // ── 그리기 ────────────────────────────────────────────────────────
 
     public override void Render(DrawingContext context)
@@ -378,6 +393,17 @@ public sealed class TimeSliderView : Control
             }
 
             DrawLabel(context, TimeText.Format(clock.Time, TimeDisplay), new Point(x + 3, 2), CurrentFrameLabel, 10);
+        }
+
+        // 이름 붙은 띠(이모지의 구간 · 단계) — 눈금 아래, 키 틱 밑에 깐다. 겹치는 띠는 줄을 바꾼다.
+        for (int m = 0; m < _marks.Count; m++)
+        {
+            SliderMark mark = _marks[m];
+            double x0 = XAtTime(mark.Start);
+            double x1 = Math.Max(x0 + 2, XAtTime(mark.End));
+            double y = track.Height - 9 - (m % 2) * 6;
+            context.FillRectangle(mark.Brush, new Rect(x0, y, x1 - x0, 4));
+            DrawLabel(context, mark.Label, new Point(x0 + 2, y - 11), mark.Brush, 9);
         }
 
         // 키 틱 — 현재 프레임 상자 위에.

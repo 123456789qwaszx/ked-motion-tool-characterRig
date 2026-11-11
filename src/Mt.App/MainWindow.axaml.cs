@@ -234,14 +234,14 @@ public partial class MainWindow : Window
             SyncTime(() =>
             {
                 // 그래프·도프 시트는 모션의 시각, 뷰포트는 시계의 시각 — 클립 안에서 블록의 모션을 고칠 때는 블록의 시작만큼 어긋난다.
-                _viewport.ScrubTo(_graph.CurrentTime + _blockOffset);
+                ScrubViewportFromGraph(_graph.CurrentTime);
                 _dope.CurrentTime = _graph.CurrentTime;
             });
         };
         _dope.CurrentTimeChanged += (_, _) => SyncTime(() =>
         {
             _graph.CurrentTime = _dope.CurrentTime;
-            _viewport.ScrubTo(_dope.CurrentTime + _blockOffset);
+            ScrubViewportFromGraph(_dope.CurrentTime);
         });
         _graph.CurvesChanged += (_, _) =>
         {
@@ -256,10 +256,15 @@ public partial class MainWindow : Window
                 _blockOffset = _viewport.ClipBlockTimeOffset;
             }
 
+            // 이모지의 수명 보기 — 그래프 · 도프 시트는 지금 클립의 프레임이 잘려 나온 타임라인의 자리를 따라간다.
+            double graphTime = _viewport.EmojiName is not null && _viewport.EmojiLife
+                ? _viewport.EmojiTimelineTime ?? _graph.CurrentTime
+                : _viewport.Time - _blockOffset;
+
             SyncTime(() =>
             {
-                _graph.CurrentTime = _viewport.Time - _blockOffset;
-                _dope.CurrentTime = _viewport.Time - _blockOffset;
+                _graph.CurrentTime = graphTime;
+                _dope.CurrentTime = graphTime;
             });
             RefreshChannelBox();
             RefreshCameraPanel();
@@ -581,7 +586,7 @@ public partial class MainWindow : Window
             _showStageSkeleton.IsChecked = _settings.ShowStageSkeleton;
             _collapsedGroups.Clear();
             _collapsedGroups.UnionWith(_settings.CollapsedChannelBoxGroups);
-            _inspectorTabs.SelectedIndex = Math.Clamp(_settings.InspectorTab, 0, 3);
+            _inspectorTabs.SelectedIndex = Math.Clamp(_settings.InspectorTab, 0, 4);
             int autoSaveIndex = Array.IndexOf(AutoSaveMinutes, _settings.AutoSaveMinutes);
             _autoSaveCombo.SelectedIndex = autoSaveIndex < 0 ? 2 : autoSaveIndex;
             _timeDisplayCombo.SelectedIndex = (int)_settings.TimeDisplay;
@@ -1045,6 +1050,7 @@ public partial class MainWindow : Window
             SmallButton("linear", (_, _) => _graph.SetTangentMode(TangentMode.Linear)),
             SmallButton("flat", (_, _) => _graph.SetTangentMode(TangentMode.Flat)),
             SmallButton("plateau", (_, _) => _graph.SetTangentMode(TangentMode.Plateau)),
+            StepButton(),
             SmallButton("끊기", (_, _) => _graph.SetBroken(true)),
             SmallButton("붙이기", (_, _) => _graph.SetBroken(false)),
             Separator());
@@ -1057,7 +1063,7 @@ public partial class MainWindow : Window
         Add(_snap, _valueSnap, Separator());
         Add(new TextBlock { Text = "무한", FontSize = 10, Opacity = 0.7 }, _preInfinity, _postInfinity, Separator());
         Add(new TextBlock { Text = "값", FontSize = 10, Opacity = 0.7 }, _keyValue);
-        ToolTip.SetTip(bar, "툴 Q 선택 · W 이동 · R 스케일 · I 현재 시각에 키 끼우기 · A 전체 맞춤 · F 선택 맞춤 · 탄젠트 Ctrl+1 auto · 2 flat · 3 linear · 4 free · 5 spline · 6 plateau · 버퍼 Ctrl+B 찍기 / Ctrl+Shift+B 바꾸기");
+        ToolTip.SetTip(bar, "툴 Q 선택 · W 이동 · R 스케일 · I 현재 시각에 키 끼우기 · A 전체 맞춤 · F 선택 맞춤 · 탄젠트 Ctrl+1 auto · 2 flat · 3 linear · 4 free · 5 spline · 6 plateau · step(계단 — 이모지의 타임라인만) · 버퍼 Ctrl+B 찍기 / Ctrl+Shift+B 바꾸기");
         RefreshToolButtons();
         return bar;
     }
@@ -1599,21 +1605,29 @@ public partial class MainWindow : Window
     private void BindMotion(string? name)
     {
         _followSelection = true; // 모션을 바꾸면 다시 따라간다
-        _graph.Bind(_session.Editor, name);
-        _dope.Controllers = _session.ControllersOf(name is null ? null : _session.Editor.Document.Find(name)?.Rig);
-        _dope.Bind(_session.Editor, name);
+        string? graphName = GraphMotionFor(name); // 모션이 없고 이모지를 골랐으면 그 타임라인
+        _graph.Bind(_session.Editor, graphName);
+        _dope.Controllers = _session.ControllersOf(graphName is null ? null : _session.Editor.Document.Find(graphName)?.Rig);
+        _dope.Bind(_session.Editor, graphName);
 
         // 모션이 없고 클립을 골랐으면 뷰포트(와 그 시계)는 클립의 것이다 — 그래프·도프 시트·타임 슬라이더의 키 틱은 빈다.
+        // 이모지를 골랐으면 뷰포트는 그 이모지를 보인다(시계 = 타임라인, 또는 수명).
         if (name is null && SelectedClip is { } clip)
         {
             _viewport.BindClip(_session.Editor, clip);
+        }
+        else if (name is null && SelectedEmoji is { } emoji)
+        {
+            _viewport.BindEmoji(_session.Editor, emoji);
+            _viewport.EmojiLife = _emojiLifeToggle.IsChecked == true;
         }
         else
         {
             _viewport.Bind(_session.Editor, name);
         }
 
-        _timeSlider.Bind(_session.Editor, name);
+        _timeSlider.Bind(_session.Editor, graphName);
+        RefreshEmojiMarks();
         _timeline.Bind(_session.Editor);
         _blockOffset = 0;
         SyncBlockContext(); // 클립을 보는 중이면 고른 블록의 모션을 그래프에 다시 묶는다
@@ -1621,6 +1635,27 @@ public partial class MainWindow : Window
     }
 
     /// <summary>뷰포트가 축을 그릴 노드 — 선택한 키의 노드, 없으면 첫 채널의 노드.</summary>
+    /// <summary>
+    /// 그래프 · 도프 시트에서 시각을 옮겼다 — 뷰포트도 옮긴다(블록 안이면 블록의 시작만큼 더해서).
+    /// 이모지의 수명 보기에서는 타임라인 보기로 돌아간다 — 그래프의 시각은 타임라인의 시각이다.
+    /// </summary>
+    private void ScrubViewportFromGraph(double graphTime)
+    {
+        if (_viewport.EmojiName is not null && _viewport.EmojiLife)
+        {
+            _emojiLifeToggle.IsChecked = false;
+        }
+
+        _viewport.ScrubTo(graphTime + _blockOffset);
+    }
+
+    private Button StepButton()
+    {
+        Button button = SmallButton("step", (_, _) => _graph.SetTangentMode(TangentMode.Step));
+        ToolTip.SetTip(button, "계단 — 다음 키까지 그 값으로 멈춘다(마야 stepped). 이모지의 타임라인에만 쓴다 — 캐릭터 모션(motions/2)에 있으면 검증이 막는다");
+        return button;
+    }
+
     private void RefreshSelectedNode()
     {
         MotionAsset? motion = _graph.Motion;
@@ -1667,6 +1702,7 @@ public partial class MainWindow : Window
             }
         }
 
+        LoadEmojiImages();
         _dope.Controllers = _session.ControllersOf(_graph.Motion?.Rig);
         RefreshChannelBox();
         RefreshObjects();
@@ -1785,6 +1821,7 @@ public partial class MainWindow : Window
         });
 
         BuildClipLeft();
+        BuildEmojiLeft();
     }
 
     /// <summary>
@@ -1799,6 +1836,7 @@ public partial class MainWindow : Window
             new TabItem { Header = "씬", Content = BuildSceneTab(), FontSize = 12 },
             new TabItem { Header = "모션", Content = BuildMotionTab(), FontSize = 12 },
             new TabItem { Header = "클립", Content = BuildClipTab(), FontSize = 12 },
+            new TabItem { Header = "이모지", Content = BuildEmojiTab(), FontSize = 12 },
         };
         _inspectorTabs.SelectionChanged += (_, _) =>
         {
@@ -2143,7 +2181,7 @@ public partial class MainWindow : Window
         "  Ctrl+C / X / V · Del  키 복사·잘라내기·붙여넣기·삭제      Ctrl+Z / Y  되돌리기·다시 하기\n" +
         "  F1  이 창\n\n" +
         "뷰포트\n" +
-        "  휠  커서 축으로 확대·축소      MMB 드래그  보기 이동      F  보기 맞춤\n" +
+        "  휠  커서 축으로 확대·축소      MMB 드래그  보기 이동      F  보기 맞춤(이모지를 보면 이모지에)\n" +
         "  LMB  오브젝트 고르기 · 기즈모 끌기(Auto Key면 놓는 순간 키)      Home / End  처음·끝      ← / →  한 프레임\n\n" +
         "그래프 에디터 (마야)\n" +
         "  LMB  키 선택 · 빈 자리 드래그 박스 선택(키가 들면 키만, 커브만 지나면 커브) · Ctrl+드래그 라소\n" +
@@ -2151,7 +2189,7 @@ public partial class MainWindow : Window
         "  RMB 드래그  선택 키 둘레면 한 축만 이동, 빈 자리면 팬      Alt+MMB  팬      Alt+RMB  줌 드래그      휠  줌\n" +
         "  더블클릭  커브 위에 키      I  현재 시각에 키      A / F  전체 · 선택 맞춤\n" +
         "  Q / W / R  선택·이동·스케일 툴(그래프 안)      Ctrl+1…6  탄젠트 auto·flat·linear·free·spline·plateau\n" +
-        "  Ctrl+B / Ctrl+Shift+B  버퍼 커브 찍기·바꾸기\n\n" +
+        "  Ctrl+B / Ctrl+Shift+B  버퍼 커브 찍기·바꾸기      툴바 step  계단 키(이모지의 타임라인만 — 그림 바꾸기는 늘 계단)\n\n" +
         "도프 시트\n" +
         "  블록 드래그  시간 이동      Alt+드래그  복제      범위 띠 양끝  시간 스케일      더블클릭  키      노드 행 클릭  접기\n\n" +
         "타임라인 (연출 클립 — 왼쪽 '클립'에서 고른다)\n" +
@@ -2160,6 +2198,9 @@ public partial class MainWindow : Window
         "  우클릭  모션 놓기 · 상태 놓기(보이기·자리·층·오프셋) · 카메라 트랙 · 상대값/절대값 · 배역 끄기 · 새 모션으로 굽기 · 트랙 추가/삭제      Ctrl+D  이어서 한 번 더      Del  삭제\n" +
         "  줄 머리 🔊  그 배역 끄기/켜기(미리보기에서만 빠진다)      M  고른 블록 하나만 끄기/켜기(파일에 남는다)\n" +
         "  블록을 고르고 그 블록 안의 시각이면 뷰포트 끌기·채널 박스·S가 그 블록의 모션에 키를 놓는다      아래 경계를 끌면 타임라인 높이\n\n" +
+        "이모지 (왼쪽 '이모지'에서 고른다 — 그래프 · 도프 시트 · 뷰포트가 그 타임라인을 본다)\n" +
+        "  뷰포트의 그림 끌기  리그의 기본 자리(키가 아니다)      F  이모지에 맞춤      이모지 탭 '수명 재생'  등장 → 머묾 × 바퀴 → 퇴장\n" +
+        "  그래프 목록 '키 없음' ＋  지금 값에 키(이모지 전체 · 리그마다 position · scale · rotate · alpha · image)\n\n" +
         "타임 슬라이더\n" +
         "  클릭·드래그  스크럽      Shift+드래그  프레임 범위 선택      범위 안 MMB  범위의 키 이동      범위 밖 MMB  포즈 들고 스크럽(S로 키)\n" +
         "  우클릭  복사·붙여넣기·삭제·스냅 · 재생 범위 · 재생 모드 메뉴\n\n" +
@@ -2212,6 +2253,7 @@ public partial class MainWindow : Window
     {
         RefreshMotionList();
         RefreshClips();
+        RefreshEmojis();
         RefreshMotionInspector();
         RefreshKeyInspector();
         RefreshProblems();
@@ -2959,6 +3001,7 @@ public partial class MainWindow : Window
     {
         RefreshMotionList();
         RefreshClips();
+        RefreshEmojis();
         RefreshChannels();
         RefreshMotionInspector();
         RefreshKeyInspector();
@@ -3015,7 +3058,8 @@ public partial class MainWindow : Window
 
         if (SelectedMotion is not null)
         {
-            DeselectClip(); // 시간의 주인은 모션 · 클립 중 하나다
+            DeselectClip(); // 시간의 주인은 모션 · 클립 · 이모지 중 하나다
+            DeselectEmoji();
         }
 
         BindMotion(SelectedMotion);
@@ -3233,26 +3277,87 @@ public partial class MainWindow : Window
     private const int UnkeyedRowsMaxNodes = 16;
 
     /// <summary>테스트 손잡이 — 그래프 목록의 "키 없음" 줄들(노드 · 종류).</summary>
-    internal IReadOnlyList<(string Node, ChannelKind Kind)> UnkeyedRows => _unkeyedRows;
+    internal IReadOnlyList<(string Node, ChannelKind Kind)> UnkeyedRows => _unkeyedRows.Select(t => (t.Node, t.Kind)).ToList();
 
-    internal void KeyUnkeyedRow(string node, ChannelKind kind) => KeyUnkeyed(node, kind);
+    internal void KeyUnkeyedRow(string node, ChannelKind kind) => _unkeyedRows.First(t => t.Node == node && t.Kind == kind).Key();
 
-    private readonly List<(string Node, ChannelKind Kind)> _unkeyedRows = new();
+    /// <summary>"키 없음" 줄 하나 — 노드 · 종류 · 보이는 이름, ＋(지금 값에 키)와 이름 클릭(고르기)의 손.</summary>
+    private sealed record UnkeyedTarget(string Node, ChannelKind Kind, string Label, Action Key, Action Pick);
+
+    private readonly List<UnkeyedTarget> _unkeyedRows = new();
 
     /// <summary>
     /// 아직 키가 없는 채널들을 흐리게 — 이 모션이 안 건드리는 노드·종류(위치·배율·회전)도 보이고, 눌러서 그 노드를 고르거나 ＋로 지금 값에 키를 놓는다.
-    /// "배율만 있는 모션에 살짝 위치도" 같은 손을 목록에서 바로 간다.
+    /// "배율만 있는 모션에 살짝 위치도" 같은 손을 목록에서 바로 간다. 이모지의 타임라인이면 키를 받는 노드와 이모지의 종류만.
     /// </summary>
     private void AddUnkeyedRows(MotionAsset motion, string query, ControllerRig? labels)
     {
         _unkeyedRows.Clear();
+        IReadOnlyList<UnkeyedTarget>? targets = EmojiAsset.IsTimelineName(motion.Name, out string emojiName)
+            ? EmojiUnkeyedTargets(emojiName)
+            : RigUnkeyedTargets(motion, labels);
 
-        if (_session.Rig is not { } rig || !rig.NodeIds.TryGetValue(motion.Rig, out ICollection<string>? nodes) || nodes.Count > UnkeyedRowsMaxNodes)
+        if (targets is null)
         {
             return;
         }
 
         bool headed = false;
+
+        foreach (UnkeyedTarget target in targets)
+        {
+            if (motion.FindChannel(target.Node, target.Kind) is not null)
+            {
+                continue;
+            }
+
+            string kindLabel = ChannelKindLabel.Of(target.Kind);
+
+            if (query.Length > 0 && !target.Node.Contains(query, StringComparison.OrdinalIgnoreCase) && !target.Label.Contains(query, StringComparison.OrdinalIgnoreCase) && !kindLabel.Contains(query, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (!headed)
+            {
+                headed = true;
+                _channelRows.Children.Add(new TextBlock { Text = "키 없음", FontSize = 10, Opacity = 0.55, Margin = new Avalonia.Thickness(4, 8, 2, 0) });
+            }
+
+            _unkeyedRows.Add(target);
+            var row = new DockPanel { Margin = new Avalonia.Thickness(2, 1, 2, 0), Opacity = 0.5 };
+            Button add = SmallButton("＋", (_, _) => Guard("키 놓기", target.Key));
+            ToolTip.SetTip(add, "지금 값을 현재 시각에 키 — 채널이 생긴다. 그 뒤 그래프·뷰포트에서 고친다");
+            DockPanel.SetDock(add, Dock.Right);
+            row.Children.Add(add);
+            var title = new TextBlock
+            {
+                Text = $"{target.Label} · {kindLabel}",
+                FontSize = 11,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                Cursor = new Cursor(StandardCursorType.Hand),
+            };
+            ToolTip.SetTip(title, $"{target.Node}\n{target.Kind} — 이 모션에 아직 키가 없다\n클릭: 이 노드를 고른다 · ＋: 지금 값에 키");
+            title.PointerPressed += (_, e) =>
+            {
+                target.Pick();
+                e.Handled = true;
+            };
+            row.Children.Add(title);
+            _channelRows.Children.Add(row);
+        }
+    }
+
+    /// <summary>캐릭터 · 카메라 모션의 "키 없음" 줄들 — 리그 덤프의 노드마다 위치 · 배율 · 회전. 노드가 너무 많으면 null.</summary>
+    private IReadOnlyList<UnkeyedTarget>? RigUnkeyedTargets(MotionAsset motion, ControllerRig? labels)
+    {
+        if (_session.Rig is not { } rig || !rig.NodeIds.TryGetValue(motion.Rig, out ICollection<string>? nodes) || nodes.Count > UnkeyedRowsMaxNodes)
+        {
+            return null;
+        }
+
+        var targets = new List<UnkeyedTarget>();
 
         foreach (string node in nodes)
         {
@@ -3265,49 +3370,22 @@ public partial class MainWindow : Window
 
             foreach (ChannelKind kind in new[] { ChannelKind.Position, ChannelKind.Scale, ChannelKind.Euler })
             {
-                if (motion.FindChannel(node, kind) is not null)
-                {
-                    continue;
-                }
-
-                if (query.Length > 0 && !node.Contains(query, StringComparison.OrdinalIgnoreCase) && !nodeLabel.Contains(query, StringComparison.OrdinalIgnoreCase) && !ChannelKindLabel.Of(kind).Contains(query, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                if (!headed)
-                {
-                    headed = true;
-                    _channelRows.Children.Add(new TextBlock { Text = "키 없음", FontSize = 10, Opacity = 0.55, Margin = new Avalonia.Thickness(4, 8, 2, 0) });
-                }
-
-                _unkeyedRows.Add((node, kind));
                 string capturedNode = node;
                 ChannelKind capturedKind = kind;
-                var row = new DockPanel { Margin = new Avalonia.Thickness(2, 1, 2, 0), Opacity = 0.5 };
-                Button add = SmallButton("＋", (_, _) => Guard("키 놓기", () => KeyUnkeyed(capturedNode, capturedKind)));
-                ToolTip.SetTip(add, "지금 값을 현재 시각에 키 — 채널이 생긴다. 그 뒤 그래프·뷰포트에서 고친다");
-                DockPanel.SetDock(add, Dock.Right);
-                row.Children.Add(add);
-                var title = new TextBlock
-                {
-                    Text = $"{nodeLabel} · {ChannelKindLabel.Of(kind)}",
-                    FontSize = 11,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    TextTrimming = TextTrimming.CharacterEllipsis,
-                    Cursor = new Cursor(StandardCursorType.Hand),
-                };
-                ToolTip.SetTip(title, $"{node}\n{kind} — 이 모션에 아직 키가 없다\n클릭: 이 노드를 고른다(뷰포트의 손잡이·채널 박스가 이 노드를 본다) · ＋: 지금 값에 키");
-                title.PointerPressed += (_, e) =>
-                {
-                    _viewport.SelectedNode = capturedNode;
-                    RefreshChannelBox();
-                    e.Handled = true;
-                };
-                row.Children.Add(title);
-                _channelRows.Children.Add(row);
+                targets.Add(new UnkeyedTarget(
+                    node,
+                    kind,
+                    nodeLabel,
+                    () => KeyUnkeyed(capturedNode, capturedKind),
+                    () =>
+                    {
+                        _viewport.SelectedNode = capturedNode;
+                        RefreshChannelBox();
+                    }));
             }
         }
+
+        return targets;
     }
 
     /// <summary>키 없는 채널에 지금 값을 지금 시각의 키로 — 채널이 생긴다. 뷰포트의 길(클립 안이면 그 문맥의 시각과 시작값)로 놓는다.</summary>
@@ -3618,9 +3696,10 @@ public partial class MainWindow : Window
     {
         IReadOnlyList<MotionProblem> problems = _session.Problems;
         IReadOnlyList<ClipProblem> clipProblems = ClipValidator.Validate(_session.Editor.Document, _session.RigNodeIds);
+        IReadOnlyList<EmojiProblem> emojiProblems = _session.EmojiProblems;
         ProblemsPanel.Children.Clear();
         SchemaDiff schemaChange = _session.SchemaChange;
-        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count > 0 || !schemaChange.IsEmpty;
+        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count + emojiProblems.Count > 0 || !schemaChange.IsEmpty;
 
         foreach (MotionProblem problem in problems)
         {
@@ -3654,6 +3733,11 @@ public partial class MainWindow : Window
         foreach (ClipProblem problem in clipProblems)
         {
             ProblemsPanel.Children.Add(ClipProblemRow(problem));
+        }
+
+        foreach (EmojiProblem problem in emojiProblems)
+        {
+            ProblemsPanel.Children.Add(EmojiProblemRow(problem));
         }
 
         AddSchemaChangeRows(schemaChange);

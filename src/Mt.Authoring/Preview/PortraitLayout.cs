@@ -88,6 +88,13 @@ public static class PortraitLayout
     public static Vec2 ToCanvas(Vec2 root, Vec2 stageSize)
         => new(stageSize.X / 2f + root.X, stageSize.Y / 2f - root.Y);
 
+    /// <summary>노드의 피벗을 가운데로 하는 w × h 사각형 — 원본 픽셀 크기로 선 그림(이모지의 그림 노드, 런타임 SetNativeSize).</summary>
+    public static Quad CenteredQuad(RectNodeTree tree, string key, float width, float height)
+    {
+        ArgumentNullException.ThrowIfNull(tree);
+        return Transform(tree, key, -width / 2f, -height / 2f, width, height);
+    }
+
     private static Quad Transform(RectNodeTree tree, string key, float left, float bottom, float width, float height)
     {
         return new Quad(

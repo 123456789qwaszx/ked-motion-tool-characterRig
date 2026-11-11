@@ -67,11 +67,37 @@ public static class EmojiPreview
         ArgumentNullException.ThrowIfNull(frame);
 
         RectNodeTree tree = RigSchemaLoader.BuildTree(frame.Assemble(emoji), space ?? new RectSpace(BuiltinTuning.BaseResolution, Vec2.Half));
+        (float alpha, IReadOnlyList<EmojiRigPose> rigs) = Apply(tree, "", emoji, frame, clip, clipFrame);
+        return new EmojiPose(tree, alpha, rigs);
+    }
+
+    /// <summary>
+    /// 이미 있는 트리(씬)에 조립한 리그를 세운다 — 런타임처럼 캐릭터의 <c>CharSlot_Scale</c> 밑(로케이터 자리)에.
+    /// <paramref name="parentKey"/>가 null이면 트리의 루트 공간 직속. 노드의 키는 <paramref name="keyPrefix"/>를 머리로 단다.
+    /// </summary>
+    public static void Attach(RectNodeTree tree, EmojiAsset emoji, EmojiRigFrame frame, string keyPrefix, string? parentKey)
+    {
+        ArgumentNullException.ThrowIfNull(tree);
+        ArgumentNullException.ThrowIfNull(emoji);
+        ArgumentNullException.ThrowIfNull(frame);
+        RigSchemaLoader.AddRigTo(tree, frame.Assemble(emoji), keyPrefix ?? "", parentKey);
+    }
+
+    /// <summary>
+    /// 세운 리그(<paramref name="keyPrefix"/>를 머리로 단 노드)에 그 프레임의 값을 옮긴다 — 런타임 <c>EmojiPlaybackSystem.Apply</c>와 같은 법.
+    /// 이모지 전체의 불투명도와 리그마다(그리는 순서)의 불투명도 · 그림을 돌려준다.
+    /// </summary>
+    public static (float Alpha, IReadOnlyList<EmojiRigPose> Rigs) Apply(RectNodeTree tree, string keyPrefix, EmojiAsset emoji, EmojiRigFrame frame, EmojiClip? clip, float clipFrame)
+    {
+        ArgumentNullException.ThrowIfNull(tree);
+        ArgumentNullException.ThrowIfNull(emoji);
+        ArgumentNullException.ThrowIfNull(frame);
+        keyPrefix ??= "";
 
         // 이모지 전체 — 자리의 키는 오프셋 값에 더한다.
         EmojiNodePose whole = EmojiClipMath.SampleNode(clip, "", clipFrame);
-        RectNodeState offset = tree.GetState(frame.OffsetNode);
-        tree.SetState(frame.OffsetNode, offset
+        string offsetKey = keyPrefix + frame.OffsetNode;
+        tree.SetState(offsetKey, tree.GetState(offsetKey)
             .WithAnchoredPosition(new Vec2(emoji.OffsetX + whole.Position.X, emoji.OffsetY + whole.Position.Y))
             .WithLocalScale(new Vec3(whole.Scale.X, whole.Scale.Y, 1f))
             .WithLocalEuler(new Vec3(0f, 0f, whole.Rotation)));
@@ -81,9 +107,8 @@ public static class EmojiPreview
         foreach (EmojiRigAsset rig in emoji.Rigs)
         {
             EmojiNodePose pose = EmojiClipMath.SampleNode(clip, rig.Name, clipFrame);
-            string node = frame.ImageNodeOf(rig.Name);
-            RectNodeState image = tree.GetState(node);
-            tree.SetState(node, image
+            string node = keyPrefix + frame.ImageNodeOf(rig.Name);
+            tree.SetState(node, tree.GetState(node)
                 .WithAnchoredPosition(pose.Position)
                 .WithLocalScale(new Vec3(pose.Scale.X, pose.Scale.Y, 1f))
                 .WithLocalEuler(new Vec3(0f, 0f, pose.Rotation)));
@@ -92,7 +117,7 @@ public static class EmojiPreview
             rigs.Add(new EmojiRigPose(rig.Name, node, pose.Alpha, sprite, ImageOf(rig, sprite)));
         }
 
-        return new EmojiPose(tree, whole.Alpha, rigs);
+        return (whole.Alpha, rigs);
     }
 
     /// <summary>

@@ -303,6 +303,11 @@ public partial class MainWindow
             return;
         }
 
+        if (SelectedClip is not null)
+        {
+            DeselectEmoji(); // 시간의 주인은 하나
+        }
+
         if (SelectedClip is not null && SelectedMotion is not null)
         {
             // 모션 선택을 푼다 — 그 알림(OnMotionSelected)이 BindMotion(null)을 불러 뷰포트가 클립을 묶는다.

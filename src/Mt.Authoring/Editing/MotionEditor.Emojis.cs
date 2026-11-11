@@ -1,4 +1,5 @@
 using Ked.Presentation.Core;
+using Mt.Authoring.Graph;
 using Mt.Authoring.Model;
 using Mt.Authoring.Rig;
 
@@ -196,6 +197,61 @@ public sealed partial class MotionEditor
         }
 
         Mutate(MotionChangeKind.Emoji, () => rig.Images = list);
+    }
+
+    /// <summary>
+    /// 그림 넘기기를 한 번에 깐다 — <paramref name="startFrame"/>부터 <paramref name="everyFrames"/>프레임마다 다음 장(0 → 1 → … → 처음으로)을
+    /// <paramref name="count"/>번. 그 범위에 있던 그림 키는 바뀐다. 그림 채널이 없으면 만든다. 타임라인 밖은 깔지 않는다. 한 칸이다.
+    /// </summary>
+    /// <param name="frame">이모지 리그의 틀(그림 노드의 이름). null이면 내장 덤프의 것.</param>
+    /// <returns>깐 키의 수.</returns>
+    public int LayEmojiImageFlips(string emojiName, string rigName, int startFrame, int everyFrames, int count, EmojiRigFrame? frame = null)
+    {
+        EmojiAsset emoji = RequireEmoji(emojiName);
+        EmojiRigAsset rig = RequireRig(emoji, rigName);
+
+        if (rig.Images.Count == 0)
+        {
+            throw new InvalidOperationException($"리그 '{rigName}'에 그림이 없다 — 넘길 장이 없다.");
+        }
+
+        if (startFrame < 0 || everyFrames < 1 || count < 1)
+        {
+            throw new InvalidOperationException($"시작 ≥ 0 · 간격 ≥ 1 · 횟수 ≥ 1이어야 한다 ({startFrame} · {everyFrames} · {count})");
+        }
+
+        List<int> frames = Enumerable.Range(0, count).Select(i => startFrame + i * everyFrames).Where(f => f <= emoji.LastFrame).ToList();
+
+        if (frames.Count == 0)
+        {
+            return 0;
+        }
+
+        string node = (frame ?? EmojiRigFrame.Builtin).ImageNodeOf(rigName);
+        float from = EmojiAsset.SecondsOf(frames[0]) - MotionRules.Tolerance;
+        float to = EmojiAsset.SecondsOf(frames[^1]) + MotionRules.Tolerance;
+
+        Mutate(MotionChangeKind.Keys, () =>
+        {
+            ChannelAsset channel = emoji.Timeline.FindChannel(node, ChannelKind.Image) ?? AddTo(emoji.Timeline, new ChannelAsset { Node = node, Kind = ChannelKind.Image });
+            List<KeyAsset> keys = channel.X?.Keys.Where(k => k.T < from || k.T > to).ToList() ?? new List<KeyAsset>();
+
+            for (int i = 0; i < frames.Count; i++)
+            {
+                keys.Add(new KeyAsset { T = EmojiAsset.SecondsOf(frames[i]), V = i % rig.Images.Count, Tangent = TangentMode.Step });
+            }
+
+            channel.X = new ComponentCurve { Keys = keys.OrderBy(k => k.T).ToList() };
+            TangentMath.Recompute(channel.X.Keys);
+        });
+
+        return frames.Count;
+
+        static ChannelAsset AddTo(MotionAsset timeline, ChannelAsset channel)
+        {
+            timeline.Channels.Add(channel);
+            return channel;
+        }
     }
 
     // ── 구간과 잇기 ───────────────────────────────────────────────────

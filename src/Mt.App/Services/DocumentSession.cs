@@ -39,7 +39,8 @@ public sealed class DocumentSession
 
     private static string AssetFingerprintOf(MotionDocument document)
         => "rig=" + (document.RigSchemas?.Path ?? "") + "\nbase=" + (document.BaseResolution?.Path ?? "") + "\n"
-           + string.Join("\n", document.Scenes.SelectMany(scene => scene.Objects).Select(o => $"portrait {o.Id}={o.Portrait ?? ""}"));
+           + string.Join("\n", document.Scenes.SelectMany(scene => scene.Objects).Select(o => $"portrait {o.Id}={o.Portrait ?? ""}"))
+           + "\nemoji images=" + string.Join("|", document.Emojis.SelectMany(e => e.Rigs).SelectMany(r => r.Images).Distinct(StringComparer.Ordinal).OrderBy(i => i, StringComparer.Ordinal));
 
     private void OnEditorChanged(object? sender, MotionChangedEventArgs e)
     {
@@ -161,6 +162,44 @@ public sealed class DocumentSession
     public IReadOnlyDictionary<string, ICollection<string>>? RigNodeIds => Mt.Authoring.Preview.CameraRig.WithCamera(Rig?.NodeIds);
 
     public IReadOnlyList<MotionProblem> Problems => MotionValidator.Validate(Editor.Document, RigNodeIds, Controllers);
+
+    /// <summary>이모지 리그의 틀 — 실은 덤프의 것, 덤프에 없으면 null(검증이 알린다).</summary>
+    public EmojiRigFrame? EmojiFrame => EmojiRigFrame.TryRead(Rig ?? BuiltinTuning.RigSchemas, out EmojiRigFrame frame, out _) ? frame : null;
+
+    public IReadOnlyList<EmojiProblem> EmojiProblems => EmojiValidator.Validate(Editor.Document, Rig ?? BuiltinTuning.RigSchemas);
+
+    /// <summary>문서 기준 경로 → 절대 경로(그림 파일을 읽을 때). 파일이 없으면 null.</summary>
+    public string? ExistingFileOf(string documentPath)
+    {
+        ArgumentNullException.ThrowIfNull(documentPath);
+        string resolved = ResolveFromDocument(documentPath);
+        return File.Exists(resolved) ? resolved : null;
+    }
+
+    /// <summary>절대 경로 → 문서 기준 경로(문서가 아직 저장되지 않았으면 절대 경로). 문서에 적는 글자다.</summary>
+    public string DocumentRelative(string path) => RelativeToDocument(path);
+
+    /// <summary>
+    /// <c>emojis.json</c>(<c>emojis/2</c>)을 쓴다 — 막는 문제가 0건이고 런타임 로더가 다시 읽을 때만. 정규 바이트(UTF-8 BOM 없음 · LF).
+    /// </summary>
+    public bool ExportEmojis(string path)
+    {
+        if (EmojiFrame is not { } frame)
+        {
+            SetStatus("이모지 내보내기 막힘 — 리그 덤프에 이모지 리그(emoji)가 없다.");
+            return false;
+        }
+
+        if (!EmojiExport.TryExport(Editor.Document, frame, out string json, out IReadOnlyList<EmojiProblem> problems))
+        {
+            SetStatus($"이모지 내보내기 막힘 — 문제 {problems.Count}건: {string.Join(" ", problems.Take(3))}");
+            return false;
+        }
+
+        File.WriteAllBytes(path, new System.Text.UTF8Encoding(false).GetBytes(json));
+        SetStatus($"내보냈다: {path} — 이모지 {Editor.Document.Emojis.Count}개");
+        return true;
+    }
 
     public void SetStatus(string status)
     {

@@ -25,7 +25,7 @@ namespace Mt.App.Views;
 /// 타임 슬라이더는 따로(<see cref="TimeSliderView"/>)다. 재생 토글은 전역 Alt+`(셸), Home/End 처음/끝.
 /// <b>포즈 들고 스크럽</b>(마야 MMB 드래그): <see cref="HoldScrubTo"/>로 시각을 옮겨도 보이는 포즈는 그대로라 S로 그 포즈를 다른 프레임에 키한다.
 /// </summary>
-public sealed class ViewportView : Control
+public sealed partial class ViewportView : Control
 {
     private const double Pad = 8;
 
@@ -161,7 +161,7 @@ public sealed class ViewportView : Control
     /// <summary>보기 이동(컨트롤 픽셀) — MMB 드래그.</summary>
     public Vector ViewPan => _viewPan;
 
-    /// <summary>보기 맞춤(F) — 배율 1, 이동 0.</summary>
+    /// <summary>보기 맞춤 — 배율 1, 이동 0. F는 이모지를 보고 있으면 <see cref="FrameEmoji"/>.</summary>
     public void ResetView()
     {
         _viewZoom = 1;
@@ -1070,6 +1070,16 @@ public sealed class ViewportView : Control
         _editor = editor;
         _motionName = motionName;
         _clipName = null;
+
+        // 이모지에 맞춘 보기는 이모지를 놓으면 무대 맞춤으로 돌아온다(이모지로 다시 묶으면 BindEmoji가 정한다).
+        if (_emojiName is not null && (motionName is null || !EmojiAsset.IsTimelineName(motionName, out _)))
+        {
+            ResetView();
+        }
+
+        _emojiName = null;
+        _emojiDrag = null;
+        _emojiDragPlace = null;
         _contextBlock = null;
 
         if (_editor is not null)
@@ -1208,7 +1218,12 @@ public sealed class ViewportView : Control
 
     private void SyncDuration()
     {
-        if (Motion is { } motion)
+        if (EmojiLifeDuration() is { } life)
+        {
+            _clock.SetDuration(life);
+            RangeChanged?.Invoke(this, EventArgs.Empty);
+        }
+        else if (Motion is { } motion)
         {
             _clock.SetDuration(motion.Duration);
             RangeChanged?.Invoke(this, EventArgs.Empty);
@@ -1429,6 +1444,12 @@ public sealed class ViewportView : Control
             {
                 DrawWorld(context, stage);
             }
+        }
+
+        if (ShownEmoji is not null)
+        {
+            RenderEmoji(context, stage);
+            return;
         }
 
         if (_template is null)
@@ -1770,6 +1791,19 @@ public sealed class ViewportView : Control
             return;
         }
 
+        // 이모지를 보는 중 — 리그의 그림을 끌어 기본 자리를 옮긴다(타임라인 보기). 캐릭터의 포즈는 잡지 않는다.
+        if (ShownEmoji is not null)
+        {
+            if (TryStartEmojiDrag(position))
+            {
+                Pause();
+                e.Pointer.Capture(this);
+                e.Handled = true;
+            }
+
+            return;
+        }
+
         // 클립 층에서는 고른 블록 안에서만 포즈를 잡는다(EditMotion). 카메라 모션에는 캐릭터의 포즈를 키하지 않는다.
         bool canPose = ShownClip is null ? !CameraRig.IsCamera(Motion) : EditMotion is not null && ContextEntry is not null;
 
@@ -2100,6 +2134,13 @@ public sealed class ViewportView : Control
             return;
         }
 
+        if (_emojiDrag is not null)
+        {
+            DragEmojiPlace(e.GetPosition(this));
+            e.Handled = true;
+            return;
+        }
+
         switch (_drag)
         {
             case Drag.MoveFree:
@@ -2122,6 +2163,14 @@ public sealed class ViewportView : Control
         if (_panning)
         {
             _panning = false;
+            e.Pointer.Capture(null);
+            e.Handled = true;
+            return;
+        }
+
+        if (_emojiDrag is not null)
+        {
+            EndEmojiDrag();
             e.Pointer.Capture(null);
             e.Handled = true;
             return;
@@ -2172,7 +2221,12 @@ public sealed class ViewportView : Control
         switch (e.Key)
         {
             case Key.F when e.KeyModifiers == KeyModifiers.None:
-                ResetView();
+                // 이모지를 보고 있으면 이모지에, 아니면 무대에 맞춘다.
+                if (!FrameEmoji())
+                {
+                    ResetView();
+                }
+
                 break;
             case Key.Home:
                 Pause();
