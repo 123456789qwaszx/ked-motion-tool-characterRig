@@ -1104,7 +1104,6 @@ public partial class MainWindow : Window
     /// </summary>
     private void RefreshChannelBox()
     {
-        RefreshAlphaPanel(); // 고른 노드가 바뀌면 불투명도 칸도
         _refreshDepth++;
 
         try
@@ -1992,8 +1991,6 @@ public partial class MainWindow : Window
         ToolTip.SetTip(_motionDefaultMode, "키 값을 어떻게 읽나 — 상대값(relative) = 시작값 + 키(배율은 ×) · 절대값(absolute) = 키 그대로. 뷰포트 미리보기와 매니퓰레이터·채널 박스가 포즈를 키 값으로 바꿀 때 쓴다. 파일에는 안 나간다: 재생은 대본의 <<motion slot 이름 relative|absolute>>가 정한다(생략 = relative)");
 
         panel.Children.Add(BuildCameraPanel());
-        panel.Children.Add(BuildAlphaPanel());
-        panel.Children.Add(BuildEventPanel());
 
         OnCommit(_motionName, text => WithMotion(m =>
         {
@@ -3299,7 +3296,7 @@ public partial class MainWindow : Window
     private readonly List<(string Node, MotionChannelKind Kind)> _unkeyedRows = new();
 
     /// <summary>
-    /// 아직 키가 없는 채널들을 흐리게 — 이 모션이 안 건드리는 노드·종류(위치·배율·회전·불투명도)도 보이고, 눌러서 그 노드를 고르거나 ＋로 지금 값에 키를 놓는다.
+    /// 아직 키가 없는 채널들을 흐리게 — 이 모션이 안 건드리는 노드·종류(위치·배율·회전)도 보이고, 눌러서 그 노드를 고르거나 ＋로 지금 값에 키를 놓는다.
     /// "배율만 있는 모션에 살짝 위치도" 같은 손을 목록에서 바로 간다.
     /// </summary>
     private void AddUnkeyedRows(MotionAsset motion, string query, ControllerRig? labels)
@@ -3311,7 +3308,6 @@ public partial class MainWindow : Window
             return;
         }
 
-        rig.AlphaNodeIds.TryGetValue(motion.Rig, out ICollection<string>? alphaNodes);
         bool headed = false;
 
         foreach (string node in nodes)
@@ -3323,9 +3319,9 @@ public partial class MainWindow : Window
 
             string nodeLabel = DopeSheetRows.NodeLabel(node, labels);
 
-            foreach (MotionChannelKind kind in new[] { MotionChannelKind.Position, MotionChannelKind.Scale, MotionChannelKind.Euler, MotionChannelKind.Alpha })
+            foreach (MotionChannelKind kind in new[] { MotionChannelKind.Position, MotionChannelKind.Scale, MotionChannelKind.Euler })
             {
-                if (motion.FindChannel(node, kind) is not null || (kind == MotionChannelKind.Alpha && alphaNodes?.Contains(node) != true))
+                if (motion.FindChannel(node, kind) is not null)
                 {
                     continue;
                 }
@@ -3374,13 +3370,6 @@ public partial class MainWindow : Window
     private void KeyUnkeyed(string node, MotionChannelKind kind)
     {
         _viewport.SelectedNode = node;
-
-        if (kind == MotionChannelKind.Alpha)
-        {
-            _viewport.SetAlphaValue(node, _viewport.AlphaValue(node) ?? 1f);
-            return;
-        }
-
         _viewport.KeyComponents(node, kind, kind == MotionChannelKind.Euler ? new[] { Axis.Z } : new[] { Axis.X, Axis.Y });
     }
 
@@ -3658,7 +3647,6 @@ public partial class MainWindow : Window
         {
             _refreshDepth--;
             RefreshCameraPanel();
-            RefreshEventPanel();
         }
     }
 

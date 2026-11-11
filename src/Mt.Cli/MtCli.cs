@@ -31,7 +31,7 @@ public static class MtCli
           mt export   <문서> <motions.json> [--rig <덤프>]     motions.json 내보내기(검증을 지나야 나간다)
           mt pose     <문서> --motion <이름> --time <초> [--object <id>] [--mode relative|absolute] [--rig <덤프>]
           mt pose     <문서> --clip <이름> --time <초> [--rig <덤프>]
-                                                               그 시각의 포즈 — 모션·클립이 건드리는 노드의 값, 불투명도, 방금 울린 이벤트
+                                                               그 시각의 포즈 — 모션·클립이 건드리는 노드의 값과 오브젝트의 불투명도
           mt bake     <문서> --clip <이름> --object <id> --name <새 모션> [--out <문서>] [--rig <덤프>]
                                                                클립에서 그 캐릭터에 얹힌 블록을 모션 하나로 구워 문서에 더한다
 
@@ -107,7 +107,6 @@ public static class MtCli
                 ["duration"] = m.Duration,
                 ["end"] = m.End == MotionEnd.Restore ? "restore" : "commit",
                 ["channels"] = new JsonArray(m.Channels.Select(c => (JsonNode)$"{c.Node} {ChannelKindLabel.Of(c.Kind)}").ToArray()),
-                ["events"] = m.Events.Count,
             });
         }
 
@@ -157,7 +156,7 @@ public static class MtCli
         string target = options.Positional(1, "내보낼 motions.json 경로");
         MotionDocument document = Load(options, out RigSchemaFile rig);
 
-        if (!MotionExport.TryExport(document, rig.NodeIds, out string json, out IReadOnlyList<MotionProblem> problems, null, rig.AlphaNodeIds))
+        if (!MotionExport.TryExport(document, rig.NodeIds, out string json, out IReadOnlyList<MotionProblem> problems))
         {
             Write(stdout, new JsonObject
             {
@@ -172,7 +171,7 @@ public static class MtCli
         {
             ["ok"] = true,
             ["path"] = Path.GetFullPath(target),
-            ["schema"] = json.Contains(AuthoringFormat.ExportSchemaV3, StringComparison.Ordinal) ? AuthoringFormat.ExportSchemaV3 : AuthoringFormat.ExportSchema,
+            ["schema"] = AuthoringFormat.ExportSchema,
             ["motions"] = new JsonArray(MotionExport.ToClips(document).Select(c => (JsonNode)c.Name).ToArray()),
         });
         return 0;
@@ -183,7 +182,7 @@ public static class MtCli
         string target = options.Positional(1, "내보낼 emojis.json 경로");
         MotionDocument document = Load(options, out RigSchemaFile rig);
 
-        if (!EmojisJson.TryExport(document, CameraRig.WithCamera(rig.NodeIds), out string json, out IReadOnlyList<string> problems, rig.AlphaNodeIds))
+        if (!EmojisJson.TryExport(document, CameraRig.WithCamera(rig.NodeIds), out string json, out IReadOnlyList<string> problems))
         {
             Write(stdout, new JsonObject { ["ok"] = false, ["problems"] = new JsonArray(problems.Select(p => (JsonNode)p).ToArray()) });
             return 1;
@@ -229,7 +228,6 @@ public static class MtCli
     {
         MotionDocument document = Load(options, out RigSchemaFile rig);
         double time = options.Number("time");
-        var alphas = new Dictionary<string, float>(StringComparer.Ordinal);
         var result = new JsonObject { ["ok"] = true, ["time"] = time };
 
         if (options.Value("clip") is { } clipName)
@@ -237,7 +235,7 @@ public static class MtCli
             ClipAsset clip = document.FindClip(clipName) ?? throw new KeyNotFoundException($"클립 '{clipName}'이 없다.");
             SceneAsset scene = ClipPreview.SceneOf(document, clip) ?? throw new InvalidOperationException($"클립 '{clipName}'의 씬이 없다.");
             ClipStage stage = ClipStage.Build(document, clip, s => BuildTree(rig, s))!;
-            RectNodeTree pose = ClipPreview.Pose(stage.TreeAt(time), document, clip, time, null, stage.CameraAt(time), null, alphas);
+            RectNodeTree pose = ClipPreview.Pose(stage.TreeAt(time), document, clip, time, null, stage.CameraAt(time));
             CameraSettings camera = ClipPreview.CameraAt(document, clip, stage.CameraAt(time), time) ?? stage.CameraAt(time);
 
             // 클립이 건드리는 노드만 — 배역마다, 그 배역의 블록이 쓰는 (노드, 종류).
@@ -255,7 +253,7 @@ public static class MtCli
 
                 foreach (ChannelAsset channel in track.Blocks.Where(b => b.IsMotion).SelectMany(b => document.Find(b.Motion)?.Channels ?? Enumerable.Empty<ChannelAsset>()))
                 {
-                    AddNodeValue(nodes, pose, alphas, actor, channel);
+                    AddNodeValue(nodes, pose, actor, channel);
                 }
 
                 nodes["opacity"] = stage.OpacityOf(actor.Id, time);
@@ -265,8 +263,6 @@ public static class MtCli
             result["duration"] = ClipTiming.DurationOf(document, clip);
             result["objects"] = objects;
             result["camera"] = new JsonObject { ["zoom"] = camera.Zoom, ["panX"] = camera.PanX, ["panY"] = camera.PanY };
-            result["events"] = new JsonArray(ClipPreview.EventsBetween(document, clip, time - EventWindow, time)
-                .Select(e => (JsonNode)new JsonObject { ["time"] = e.Time, ["object"] = e.ObjectId, ["name"] = e.Name, ["value"] = e.Value }).ToArray());
             _ = scene;
         }
         else if (options.Value("motion") is { } motionName)
@@ -290,20 +286,17 @@ public static class MtCli
                 SceneObject actor = options.Value("object") is { } id
                     ? scene.Find(id) ?? throw new KeyNotFoundException($"오브젝트 '{id}'가 없다.")
                     : scene.Objects.FirstOrDefault(o => o.Rig == motion.Rig) ?? throw new InvalidOperationException($"씬에 리그 '{motion.Rig}'의 오브젝트가 없다 — --object로 고른다.");
-                RectNodeTree pose = MotionPreview.Pose(BuildTree(rig, scene), motion, time, mode, null, actor.Prefix, alphas);
+                RectNodeTree pose = MotionPreview.Pose(BuildTree(rig, scene), motion, time, mode, null, actor.Prefix);
                 var nodes = new JsonObject();
 
                 foreach (ChannelAsset channel in motion.Channels)
                 {
-                    AddNodeValue(nodes, pose, alphas, actor, channel);
+                    AddNodeValue(nodes, pose, actor, channel);
                 }
 
                 result["object"] = actor.Id;
                 result["nodes"] = nodes;
             }
-
-            result["events"] = new JsonArray(ClipPreview.EventsBetween(motion, time - EventWindow, time)
-                .Select(e => (JsonNode)new JsonObject { ["time"] = e.T, ["name"] = e.Name, ["value"] = e.Value }).ToArray());
         }
         else
         {
@@ -338,15 +331,11 @@ public static class MtCli
             ["end"] = baked.End == MotionEnd.Restore ? "restore" : "commit",
             ["channels"] = new JsonArray(baked.Channels.Select(c => (JsonNode)$"{c.Node} {ChannelKindLabel.Of(c.Kind)}").ToArray()),
             ["keys"] = baked.Channels.Sum(c => (c.X?.Keys.Count ?? 0) + (c.Y?.Keys.Count ?? 0) + (c.Z?.Keys.Count ?? 0)),
-            ["events"] = baked.Events.Count,
         });
         return 0;
     }
 
     // ── helper ────────────────────────────────────────────────────────
-
-    /// <summary>pose가 "방금 울린 이벤트"로 치는 구간(초) — 앱의 뷰포트와 같다.</summary>
-    private const double EventWindow = 0.4;
 
     private static (JsonArray Problems, bool Blocking) Problems(MotionDocument document, RigSchemaFile rig)
     {
@@ -354,7 +343,7 @@ public static class MtCli
         bool blocking = false;
         IReadOnlyDictionary<string, ICollection<string>>? nodeIds = CameraRig.WithCamera(rig.NodeIds);
 
-        foreach (MotionProblem p in MotionValidator.Validate(document, nodeIds, null, rig.AlphaNodeIds))
+        foreach (MotionProblem p in MotionValidator.Validate(document, nodeIds))
         {
             problems.Add(new JsonObject { ["kind"] = "motion", ["name"] = p.MotionName, ["message"] = p.Message, ["blocking"] = p.Blocking });
             blocking |= p.Blocking;
@@ -399,7 +388,7 @@ public static class MtCli
     private static RectNodeTree BuildTree(RigSchemaFile rig, SceneAsset scene)
         => ScenePreview.Build(rig, scene, null, null, BuiltinTuning.Depth, BuiltinTuning.Focus, BuiltinTuning.StageRig);
 
-    private static void AddNodeValue(JsonObject nodes, RectNodeTree pose, Dictionary<string, float> alphas, SceneObject actor, ChannelAsset channel)
+    private static void AddNodeValue(JsonObject nodes, RectNodeTree pose, SceneObject actor, ChannelAsset channel)
     {
         string key = actor.KeyOf(channel.Node);
 
@@ -422,9 +411,6 @@ public static class MtCli
                 break;
             case MotionChannelKind.Euler:
                 entry["euler"] = new JsonArray(Round(state.LocalEulerAngles.X), Round(state.LocalEulerAngles.Y), Round(state.LocalEulerAngles.Z));
-                break;
-            case MotionChannelKind.Alpha:
-                entry["alpha"] = Round(alphas.TryGetValue(key, out float alpha) ? alpha : 1f);
                 break;
         }
     }

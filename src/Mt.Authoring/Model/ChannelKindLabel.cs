@@ -15,7 +15,6 @@ public static class ChannelKindLabel
         MotionChannelKind.Position => "position",
         MotionChannelKind.Scale => "scale",
         MotionChannelKind.Euler => "rotate",
-        MotionChannelKind.Alpha => "alpha",
         _ => kind.ToString().ToLowerInvariant(),
     };
 }

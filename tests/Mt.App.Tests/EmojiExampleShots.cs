@@ -101,15 +101,6 @@ public class EmojiExampleShots
                 window.Viewport.ScrubTo(0.4);
                 Shot("phase-edit");
                 window.EditEmojiPhase(null);
-
-                window.SelectClip("emoji_demo");
-
-                foreach (double t in new[] { 0.6, 3.0, 7.5 })
-                {
-                    Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                    window.Viewport.ScrubTo(t);
-                    Shot($"clip-{t:0.0}");
-                }
             }
             finally
             {

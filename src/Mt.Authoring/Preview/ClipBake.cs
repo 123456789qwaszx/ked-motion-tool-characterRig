@@ -135,14 +135,13 @@ public static class ClipBake
 
         for (int i = 0; i < times.Count; i++)
         {
-            var alphas = new Dictionary<string, float>(StringComparer.Ordinal);
-            RectNodeTree pose = ClipPreview.Pose(template, document, clip, times[i], isMuted, null, null, alphas);
+            RectNodeTree pose = ClipPreview.Pose(template, document, clip, times[i], isMuted);
 
             for (int c = 0; c < targets.Count; c++)
             {
                 string key = actor.KeyOf(targets[c].Node);
-                Vec3 start = ValueOf(targets[c].Kind, template.GetState(key), null, key);
-                Vec3 now = ValueOf(targets[c].Kind, pose.GetState(key), alphas, key);
+                Vec3 start = ValueOf(targets[c].Kind, template.GetState(key));
+                Vec3 now = ValueOf(targets[c].Kind, pose.GetState(key));
 
                 foreach (Axis axis in AxesOf(targets[c].Kind))
                 {
@@ -157,8 +156,7 @@ public static class ClipBake
         }
 
         // 끝난 뒤에 남는 것 — 길이를 지난 포즈로 본다(restore 블록은 돌아간 뒤다).
-        var afterAlphas = new Dictionary<string, float>(StringComparer.Ordinal);
-        RectNodeTree after = ClipPreview.Pose(template, document, clip, duration + 1.0, isMuted, null, null, afterAlphas);
+        RectNodeTree after = ClipPreview.Pose(template, document, clip, duration + 1.0, isMuted);
         bool leaves = false;
         var kept = new List<(int Target, Axis Axis, float[] Values)>();
 
@@ -178,7 +176,7 @@ public static class ClipBake
                 }
 
                 kept.Add((c, axis, values));
-                float end = Delta(targets[c].Kind, Component(ValueOf(targets[c].Kind, template.GetState(key), null, key), axis), Component(ValueOf(targets[c].Kind, after.GetState(key), afterAlphas, key), axis));
+                float end = Delta(targets[c].Kind, Component(ValueOf(targets[c].Kind, template.GetState(key)), axis), Component(ValueOf(targets[c].Kind, after.GetState(key)), axis));
                 leaves |= Math.Abs(end - neutral) > Tolerance;
 
                 // commit이면 마지막 키가 남는 값이어야 한다 — 길이 자리의 표본을 끝난 뒤의 값으로.
@@ -207,15 +205,6 @@ public static class ClipBake
                 }
 
                 editor.SetKeys(newName, node, kind, axis, Reduce(times, values).Select(i => new KeyAsset { T = times[i], V = values[i], Tangent = TangentMode.Linear }));
-            }
-
-            // 이 출연자의 블록에 든 이벤트 키도 옮겨 온다 — 구운 모션 하나가 같은 때에 같은 것을 울린다.
-            foreach ((double time, string? objectId, string name, string? value) in ClipPreview.EventsBetween(document, clip, -1.0, duration, isMuted))
-            {
-                if (string.Equals(objectId, actor.Id, StringComparison.Ordinal))
-                {
-                    editor.AddMotionEvent(newName, (float)time, name, value);
-                }
             }
         });
 
@@ -261,14 +250,10 @@ public static class ClipBake
     }
 
     private static Axis[] AxesOf(MotionChannelKind kind)
-        => kind == MotionChannelKind.Euler ? new[] { Axis.X, Axis.Y, Axis.Z }
-            : kind == MotionChannelKind.Alpha ? new[] { Axis.X }
-            : new[] { Axis.X, Axis.Y };
+        => kind == MotionChannelKind.Euler ? new[] { Axis.X, Axis.Y, Axis.Z } : new[] { Axis.X, Axis.Y };
 
-    /// <summary>그 종류의 지금 값. 불투명도는 트리가 아니라 표에서 읽는다(없으면 1 — 시작 상태).</summary>
-    private static Vec3 ValueOf(MotionChannelKind kind, in RectNodeState state, IDictionary<string, float>? alphas, string key) => kind switch
+    private static Vec3 ValueOf(MotionChannelKind kind, in RectNodeState state) => kind switch
     {
-        MotionChannelKind.Alpha => new Vec3(alphas is not null && alphas.TryGetValue(key, out float alpha) ? alpha : 1f, 1f, 1f),
         MotionChannelKind.Position => new Vec3(state.AnchoredPosition.X, state.AnchoredPosition.Y, 0f),
         MotionChannelKind.Scale => state.LocalScale,
         _ => state.LocalEulerAngles,
@@ -283,5 +268,5 @@ public static class ClipBake
 
     /// <summary>relative의 뜻대로 — 위치·회전은 차, 배율은 비(시작 배율이 0이면 비를 못 낸다: 1로 둔다).</summary>
     private static float Delta(MotionChannelKind kind, float start, float now)
-        => kind is MotionChannelKind.Scale or MotionChannelKind.Alpha ? (Math.Abs(start) < 1e-9f ? 1f : now / start) : now - start;
+        => kind == MotionChannelKind.Scale ? (Math.Abs(start) < 1e-9f ? 1f : now / start) : now - start;
 }

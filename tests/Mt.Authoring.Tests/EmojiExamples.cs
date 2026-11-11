@@ -28,7 +28,6 @@ internal static class EmojiExamples
 
         Motions(editor);
         Emojis(editor);
-        Character(editor);
         return editor;
     }
 
@@ -53,15 +52,13 @@ internal static class EmojiExamples
         const MotionChannelMode Abs = MotionChannelMode.Absolute;
 
         // ── 등장(한 번, 유지) ──
-        // 톡 튀어나온다: 0 → 1.2 → 1, 처음 0.08초에 나타난다.
+        // 톡 튀어나온다: 0 → 1.2 → 1.
         editor.AddMotion("emoji_pop", Rig, 0.25f, MotionEnd.Commit, Abs);
         Scale(editor, "emoji_pop", Body, K(0f, 0f), K(0.15f, 1.2f), K(0.25f, 1f));
-        Curve(editor, "emoji_pop", Body, MotionChannelKind.Alpha, Axis.X, L(0f, 0f), L(0.08f, 1f), L(0.25f, 1f));
 
         // 위에서 내려앉는다(땀·빗선).
         editor.AddMotion("emoji_drop", Rig, 0.3f, MotionEnd.Commit, Abs);
         Curve(editor, "emoji_drop", Body, MotionChannelKind.Position, Axis.Y, K(0f, 40f), K(0.3f, 0f));
-        Curve(editor, "emoji_drop", Body, MotionChannelKind.Alpha, Axis.X, L(0f, 0f), L(0.15f, 1f), L(0.3f, 1f));
 
         // 조각 셋이 차례로 핀다 — 어디에 얼마만 하게 놓이는가는 스킨의 놓임이 정한다(꽃이든 별이든 이 모션을 쓴다).
         editor.AddMotion("emoji_bloom", Rig, 0.5f, MotionEnd.Commit, Abs);
@@ -91,14 +88,12 @@ internal static class EmojiExamples
         Curve(editor, "emoji_shake", Body, MotionChannelKind.Position, Axis.X, L(0f, 0f), L(0.06f, 4f), L(0.18f, -4f), L(0.24f, 0f));
 
         // 되풀이하며 "끝에서 처음으로 튀는" 머묾은 복원 모션일 수 없다(복원은 중립값에서 끝나야 한다) — 유지로 두고, 이모지의 머묾이 바퀴마다 처음 자세에서 다시 돌린다.
-        editor.AddMotion("emoji_drip", Rig, 0.9f, MotionEnd.Commit, Abs); // 주르륵 — 흘러내리며 사라졌다가 다시
+        editor.AddMotion("emoji_drip", Rig, 0.9f, MotionEnd.Commit, Abs); // 주르륵 — 흘러내렸다가 다시
         Curve(editor, "emoji_drip", Body, MotionChannelKind.Position, Axis.Y, K(0f, 0f), K(0.9f, -28f));
-        Curve(editor, "emoji_drip", Body, MotionChannelKind.Alpha, Axis.X, L(0f, 1f), L(0.6f, 1f), L(0.9f, 0f));
 
-        editor.AddMotion("emoji_float", Rig, 1.2f, MotionEnd.Commit, Abs); // 떠오르며 흐려졌다가 다시
+        editor.AddMotion("emoji_float", Rig, 1.2f, MotionEnd.Commit, Abs); // 떠올랐다가 다시
         Curve(editor, "emoji_float", Body, MotionChannelKind.Position, Axis.Y, K(0f, 0f), K(1.2f, 18f));
         Curve(editor, "emoji_float", Body, MotionChannelKind.Position, Axis.X, K(0f, 0f), K(0.4f, 5f), K(0.8f, -5f), K(1.2f, 0f));
-        Curve(editor, "emoji_float", Body, MotionChannelKind.Alpha, Axis.X, L(0f, 1f), L(0.8f, 1f), L(1.2f, 0.35f));
 
         editor.AddMotion("emoji_sway", Rig, 1f); // 조각들이 살랑
         for (int i = 1; i <= 3; i++)
@@ -107,9 +102,10 @@ internal static class EmojiExamples
             Curve(editor, "emoji_sway", Part(i), MotionChannelKind.Euler, Axis.Z, K(0f, 0f), K(0.5f, lean), K(1f, 0f));
         }
 
-        // ── 퇴장(한 번) ──
-        editor.AddMotion("emoji_fade", Rig, 0.25f, MotionEnd.Commit, Abs);
-        Curve(editor, "emoji_fade", Body, MotionChannelKind.Alpha, Axis.X, L(0f, 1f), L(0.25f, 0f));
+        // ── 퇴장(한 번) ── 흐려지는 것은 모션이 아니다(불투명도는 모션 규약 밖 — 런타임 PLAN_emoji §8-4).
+        editor.AddMotion("emoji_lift", Rig, 0.25f, MotionEnd.Commit, Abs); // 살짝 떠오르며 작아진다
+        Curve(editor, "emoji_lift", Body, MotionChannelKind.Position, Axis.Y, K(0f, 0f), K(0.25f, 16f));
+        Scale(editor, "emoji_lift", Body, K(0f, 1f), K(0.25f, 0.6f));
 
         editor.AddMotion("emoji_pop_out", Rig, 0.15f, MotionEnd.Commit, Abs);
         Scale(editor, "emoji_pop_out", Body, K(0f, 1f), K(0.05f, 1.15f), K(0.15f, 0f));
@@ -145,36 +141,36 @@ internal static class EmojiExamples
         const float Up = 20f;  // 머리 옆, 살짝 위
 
         // 잠깐 뜨는 것(머무는 시간이 있다)
-        Simple(editor, "느낌물음표", "exclaim_question", "emoji_pop", "emoji_wobble", "emoji_fade", 1.2f, R, Up);
+        Simple(editor, "느낌물음표", "exclaim_question", "emoji_pop", "emoji_wobble", "emoji_lift", 1.2f, R, Up);
         Simple(editor, "반짝별", "sparkle", "emoji_pop", "emoji_beat", "emoji_pop_out", 1f, R, Up);
-        Simple(editor, "큰땀삐질", "big_sweat", "emoji_drop", "emoji_drip", "emoji_fade", 1.8f, R, 40f);
-        Simple(editor, "난감빗선", "gloom_lines", "emoji_drop", null, "emoji_fade", 1.5f, -R, Up);
-        Simple(editor, "빠직", "anger", "emoji_pop", "emoji_beat", "emoji_fade", 1.25f, R, Up);
-        Simple(editor, "팟놀란왕관", "shock_crown", "emoji_pop", null, "emoji_fade", 0.8f, -R, Up + 40f);
-        Simple(editor, "아이디어전구", "idea_bulb", "emoji_pop", "emoji_bob", "emoji_fade", 1.6f, 0f, Up + 110f);
-        Simple(editor, "빠밤작대기들", "tada_lines", "emoji_pop", "emoji_beat", "emoji_fade", 1f, R, Up + 40f);
-        Simple(editor, "빨간경고막대기", "alert", "emoji_pop", "emoji_shake", "emoji_fade", 0.96f, R, Up);
-        Simple(editor, "띠링물음표", "question", "emoji_pop", "emoji_wobble", "emoji_fade", 1.2f, R, Up);
-        Simple(editor, "후우하는구름", "sigh_cloud", "emoji_pop", "emoji_float", "emoji_fade", 1.2f, 170f, -60f, "face");
-        Simple(editor, "화내는부우구름", "huff_cloud", "emoji_pop", "emoji_float", "emoji_fade", 1.2f, 170f, -60f, "face");
+        Simple(editor, "큰땀삐질", "big_sweat", "emoji_drop", "emoji_drip", "emoji_lift", 1.8f, R, 40f);
+        Simple(editor, "난감빗선", "gloom_lines", "emoji_drop", null, "emoji_lift", 1.5f, -R, Up);
+        Simple(editor, "빠직", "anger", "emoji_pop", "emoji_beat", "emoji_lift", 1.25f, R, Up);
+        Simple(editor, "팟놀란왕관", "shock_crown", "emoji_pop", null, "emoji_lift", 0.8f, -R, Up + 40f);
+        Simple(editor, "아이디어전구", "idea_bulb", "emoji_pop", "emoji_bob", "emoji_lift", 1.6f, 0f, Up + 110f);
+        Simple(editor, "빠밤작대기들", "tada_lines", "emoji_pop", "emoji_beat", "emoji_lift", 1f, R, Up + 40f);
+        Simple(editor, "빨간경고막대기", "alert", "emoji_pop", "emoji_shake", "emoji_lift", 0.96f, R, Up);
+        Simple(editor, "띠링물음표", "question", "emoji_pop", "emoji_wobble", "emoji_lift", 1.2f, R, Up);
+        Simple(editor, "후우하는구름", "sigh_cloud", "emoji_pop", "emoji_float", "emoji_lift", 1.2f, 170f, -60f, "face");
+        Simple(editor, "화내는부우구름", "huff_cloud", "emoji_pop", "emoji_float", "emoji_lift", 1.2f, 170f, -60f, "face");
 
         // 그림을 넘기는 것 — 조각 하나에 장을 여럿 준다(스킨의 그림 넘기기). 모션은 한 장짜리와 같은 것을 쓴다.
         Skin(editor, "난감실타래", new[] { "tangle_1", "tangle_2" });
         editor.SetSkinPartSetup("난감실타래", Part(1), new SkinPartSetup { Frames = { "art/tangle_2.png" }, FrameSeconds = 0.3f });
-        Emoji(editor, "난감실타래", "emoji_pop", "emoji_bob", "emoji_fade", 1.8f, -R, Up);
+        Emoji(editor, "난감실타래", "emoji_pop", "emoji_bob", "emoji_lift", 1.8f, -R, Up);
 
         Skin(editor, "왁자지껄", new[] { "chatter_1", "chatter_2" });
         editor.SetSkinPartSetup("왁자지껄", Part(1), new SkinPartSetup { Frames = { "art/chatter_2.png" }, FrameSeconds = 0.3f });
-        Emoji(editor, "왁자지껄", "emoji_pop", "emoji_shake", "emoji_fade", 1.8f, R, Up);
+        Emoji(editor, "왁자지껄", "emoji_pop", "emoji_shake", "emoji_lift", 1.8f, R, Up);
 
         Skin(editor, "삐질삐질땀방울", new[] { "sweat_1", "sweat_2", "sweat_3" }); // 장당 0.2초(기본값), 되풀이
-        Emoji(editor, "삐질삐질땀방울", "emoji_pop", null, "emoji_fade", 1.8f, R, 40f);
+        Emoji(editor, "삐질삐질땀방울", "emoji_pop", null, "emoji_lift", 1.8f, R, 40f);
 
         // 끌 때까지 머무는 것(emoji_off)
         Simple(editor, "플러팅하트", "heart", "emoji_pop", "emoji_beat", "emoji_pop_out", null, R, Up);
-        Simple(editor, "곰곰생각구름", "think_cloud", "emoji_pop", "emoji_bob", "emoji_fade", null, R, Up + 40f);
-        Simple(editor, "ZZZ", "zzz", "emoji_pop", "emoji_float", "emoji_fade", null, R, Up);
-        Simple(editor, "신나는음표", "note", "emoji_pop", "emoji_bob", "emoji_fade", null, R, Up);
+        Simple(editor, "곰곰생각구름", "think_cloud", "emoji_pop", "emoji_bob", "emoji_lift", null, R, Up + 40f);
+        Simple(editor, "ZZZ", "zzz", "emoji_pop", "emoji_float", "emoji_lift", null, R, Up);
+        Simple(editor, "신나는음표", "note", "emoji_pop", "emoji_bob", "emoji_lift", null, R, Up);
 
         // 좌·우 판 — 정의는 하나, 반전 판 스킨만 따로. 캐릭터가 좌우 반전이면 자리는 뒤집히고 그림은 반전 판을 뒤집지 않고 쓴다.
         // 말줄임점: 빈 풍선 → 점 하나 → 둘 → 셋에서 멈춘다(되풀이 안 함).
@@ -188,49 +184,17 @@ internal static class EmojiExamples
             editor.SetSkinPartSetup(name, Part(1), dots);
         }
 
-        Emoji(editor, "말줄임점풍선", "emoji_pop", "emoji_bob", "emoji_fade", null, R, Up, flipped: "말줄임점풍선_반전");
+        Emoji(editor, "말줄임점풍선", "emoji_pop", "emoji_bob", "emoji_lift", null, R, Up, flipped: "말줄임점풍선_반전");
 
         Skin(editor, "쑥스럼풍선", new[] { "shy_r" });
         Skin(editor, "쑥스럼풍선_반전", new[] { "shy_l" });
-        Emoji(editor, "쑥스럼풍선", "emoji_pop", "emoji_bob", "emoji_fade", 1.6f, R, Up, flipped: "쑥스럼풍선_반전");
+        Emoji(editor, "쑥스럼풍선", "emoji_pop", "emoji_bob", "emoji_lift", 1.6f, R, Up, flipped: "쑥스럼풍선_반전");
 
         // 조각 셋이 같은 그림 — 어디에 얼마만 하게 놓이는가는 스킨의 놓임. 모션(emoji_bloom · emoji_sway)은 자리를 모른다.
         Skin(editor, "행복한벚꽃", new[] { "blossom" }, new[] { "blossom" }, new[] { "blossom" });
         editor.SetSkinPartSetup("행복한벚꽃", Part(1), new SkinPartSetup { X = -150f, Y = 40f });
         editor.SetSkinPartSetup("행복한벚꽃", Part(2), new SkinPartSetup { X = 150f, Y = -30f, Scale = 0.8f });
         editor.SetSkinPartSetup("행복한벚꽃", Part(3), new SkinPartSetup { X = 120f, Y = 130f, Scale = 0.55f });
-        Emoji(editor, "행복한벚꽃", "emoji_bloom", "emoji_sway", "emoji_fade", null, 0f, 0f);
-    }
-
-    /// <summary>캐릭터 쪽 — 이벤트 키로 이모지를 띄우는 모션 셋과, 그것을 이어 놓은 클립.</summary>
-    private static void Character(MotionEditor editor)
-    {
-        const string Hop = "CharacterPortrait_Track_Move_Y";
-
-        editor.AddMotion("react_surprise", SceneObject.DefaultRig, 0.5f);
-        Curve(editor, "react_surprise", Hop, MotionChannelKind.Position, Axis.Y, K(0f, 0f), K(0.12f, 26f), K(0.3f, 0f), K(0.5f, 0f));
-        editor.AddMotionEvent("react_surprise", 0.05f, "emoji", "빨간경고막대기");
-
-        editor.AddMotion("react_happy", SceneObject.DefaultRig, 1.2f);
-        Curve(editor, "react_happy", Hop, MotionChannelKind.Position, Axis.Y, K(0f, 0f), K(0.2f, 14f), K(0.4f, 0f), K(0.6f, 14f), K(0.8f, 0f), K(1.2f, 0f));
-        editor.AddMotionEvent("react_happy", 0.1f, "emoji", "행복한벚꽃");
-
-        editor.AddMotion("react_think", SceneObject.DefaultRig, 0.8f);
-        Curve(editor, "react_think", Hop, MotionChannelKind.Position, Axis.Y, K(0f, 0f), K(0.4f, -10f), K(0.8f, 0f));
-        editor.AddMotionEvent("react_think", 0.2f, "emoji", "말줄임점풍선");
-
-        editor.AddMotion("react_calm", SceneObject.DefaultRig, 0.4f);
-        Curve(editor, "react_calm", Hop, MotionChannelKind.Position, Axis.Y, K(0f, 0f), K(0.2f, -6f), K(0.4f, 0f));
-        editor.AddMotionEvent("react_calm", 0f, "emoji_off");
-
-        // 놀람 → 기쁨(꽃이 머문다) → 진정(꽃이 진다) → 생각(점 풍선이 머문다) → 진정.
-        editor.AddClip("emoji_demo");
-        editor.AddClipRole("emoji_demo", "a", SceneObject.DefaultRig, "s1");
-        editor.AddClipTrack("emoji_demo", "a");
-        editor.AddClipBlock("emoji_demo", 0, "react_surprise", 0.3f);
-        editor.AddClipBlock("emoji_demo", 0, "react_happy", 2f);
-        editor.AddClipBlock("emoji_demo", 0, "react_calm", 4.5f);
-        editor.AddClipBlock("emoji_demo", 0, "react_think", 5.5f);
-        editor.AddClipBlock("emoji_demo", 0, "react_calm", 9f);
+        Emoji(editor, "행복한벚꽃", "emoji_bloom", "emoji_sway", "emoji_lift", null, 0f, 0f);
     }
 }

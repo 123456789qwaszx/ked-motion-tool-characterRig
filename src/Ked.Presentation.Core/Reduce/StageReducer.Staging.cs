@@ -237,7 +237,7 @@ namespace Ked.Presentation.Core
                 ref readonly MotionChannel channel = ref clip.Channels[i];
                 string nodeKey = StageState.NodeKeyOf(slotKey, channel.Node);
 
-                Vec3 start = MotionMath.StartOf(channel, state.Nodes.GetState(nodeKey), state.GetAlpha(nodeKey));
+                Vec3 start = MotionMath.StartOf(channel, state.Nodes.GetState(nodeKey));
                 state.Apply(MotionMath.ClaimFor(channel, mode, nodeKey, start));
             }
 

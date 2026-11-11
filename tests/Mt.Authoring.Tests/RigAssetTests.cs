@@ -36,7 +36,6 @@ public class RigAssetTests
         Assert.Same(Dump, RigAssets.Compose(Dump, new MotionDocument())); // 더할 것이 없으면 그대로
 
         Assert.Equal(new[] { "Emoji_Part1", "Emoji_Part2", "Emoji_Part3", "Emoji_Part4" }, RigParts.Of(rig, RigTemplates.EmojiKind));
-        Assert.Equal(new[] { "Emoji_Body", "Emoji_Part1", "Emoji_Part2", "Emoji_Part3", "Emoji_Part4" }, rig.AlphaNodeIds[RigTemplates.EmojiKind].OrderBy(n => n, StringComparer.Ordinal));
         Assert.Contains("Emoji_Anchor", rig.NodeIds[RigTemplates.EmojiKind]);
 
         // 씬에 서고(캐릭터의 슬롯 끝에 붙어), 조각은 정의한 크기다.
@@ -49,13 +48,12 @@ public class RigAssetTests
         editor.AddRig(new RigAsset { Kind = "prop", Nodes = { new RigNodeAsset { Id = "Hand" }, new RigNodeAsset { Id = "Leaf", Parent = "Hand", Width = 80, Height = 40, Image = true } } });
         RigSchemaFile both = RigAssets.Compose(Dump, editor.Document);
         Assert.Equal(new[] { "Leaf" }, RigParts.Of(both, "prop"));
-        Assert.Empty(both.AlphaNodeIds["prop"]);
 
         // 모션·스킨·이모지 검증이 이 리그의 노드로 선다.
         editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f);
-        editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Alpha);
-        editor.SetKeys("pop", "Emoji_Body", MotionChannelKind.Alpha, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.2f, 1f) });
-        Assert.Empty(MotionValidator.Validate(editor.Document, both.NodeIds, null, both.AlphaNodeIds));
+        editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
+        editor.SetKeys("pop", "Emoji_Body", MotionChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.1f, 6f), Fixtures.Key(0.2f, 0f) });
+        Assert.Empty(MotionValidator.Validate(editor.Document, both.NodeIds));
         Assert.NotEmpty(MotionValidator.Validate(editor.Document, Dump.NodeIds)); // 덤프만으로는 모르는 리그다
     }
 
@@ -126,7 +124,6 @@ public class RigAssetTests
         RigSchemaFile read = RigSchemaFile.Parse(System.Text.Encoding.UTF8.GetBytes(json)); // 캐릭터 덤프를 읽는 그 길
         Assert.Equal(new[] { RigTemplates.EmojiKind }, read.RigKinds);
         Assert.Equal(4, RigParts.Of(read, RigTemplates.EmojiKind).Count);
-        Assert.Equal(5, read.AlphaNodeIds[RigTemplates.EmojiKind].Count);
         Assert.Equal(RigTemplates.DefaultPartSize, read.BuildTree(RigTemplates.EmojiKind).GetRectSize("Emoji_Part1").X, 3);
 
         JsonNode root = JsonNode.Parse(json)!;

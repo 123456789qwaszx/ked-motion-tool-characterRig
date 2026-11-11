@@ -21,8 +21,8 @@ public class EmojiTests
 
     /// <summary>
     /// e1(이모지, s1에 붙음) · 스킨 땀 · 모션 셋:
-    /// pop(0.2초 commit, absolute): Body y 0 → 40 · bob(0.4초 restore, relative): Body y 0 → 10 → 0 · fade(0.3초 commit): Part1 알파 1 → 0.
-    /// 이모지 sweat: pop → bob을 1초 → fade.
+    /// pop(0.2초 commit, absolute): Body y 0 → 40 · bob(0.4초 restore, relative): Body y 0 → 10 → 0 · shrink(0.3초 commit): Part1 배율 1 → 0.
+    /// 이모지 sweat: pop → bob을 1초 → shrink.
     /// </summary>
     private static MotionEditor NewEditor()
     {
@@ -40,12 +40,12 @@ public class EmojiTests
         editor.AddChannel("bob", Body, MotionChannelKind.Position);
         editor.SetKeys("bob", Body, MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.2f, 10f), Linear(0.4f, 0f) });
 
-        editor.AddMotion("fade", EmojiRigFixture.RigKind, 0.3f, MotionEnd.Commit);
-        editor.AddChannel("fade", Part, MotionChannelKind.Alpha);
-        editor.SetKeys("fade", Part, MotionChannelKind.Alpha, Axis.X, new[] { Linear(0f, 1f), Linear(0.3f, 0f) });
+        editor.AddMotion("shrink", EmojiRigFixture.RigKind, 0.3f, MotionEnd.Commit, MotionChannelMode.Absolute);
+        editor.AddChannel("shrink", Part, MotionChannelKind.Scale);
+        editor.SetKeys("shrink", Part, MotionChannelKind.Scale, Axis.X, new[] { Linear(0f, 1f), Linear(0.3f, 0f) });
 
         editor.AddEmoji("sweat", EmojiRigFixture.RigKind);
-        editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "땀", Enter = "pop", Hold = "bob", Exit = "fade", HoldSeconds = 1f, OffsetX = 120f, OffsetY = 300f, Locator = "faceAura" });
+        editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "땀", Enter = "pop", Hold = "bob", Exit = "shrink", HoldSeconds = 1f, OffsetX = 120f, OffsetY = 300f, Locator = "faceAura" });
         return editor;
     }
 
@@ -55,8 +55,11 @@ public class EmojiTests
 
     private static RectNodeTree Template(MotionEditor editor) => ScenePreview.Build(RigFile, editor.Document.ActiveSceneAsset!);
 
-    private static float BodyY(MotionEditor editor, double t, IDictionary<string, float>? alphas = null)
-        => EmojiPreview.Pose(Template(editor), editor.Document, Sweat(editor), Actor(editor), t, alphas).GetState("e1/" + Body).AnchoredPosition.Y;
+    private static float BodyY(MotionEditor editor, double t)
+        => EmojiPreview.Pose(Template(editor), editor.Document, Sweat(editor), Actor(editor), t).GetState("e1/" + Body).AnchoredPosition.Y;
+
+    private static float PartScaleX(MotionEditor editor, double t)
+        => EmojiPreview.Pose(Template(editor), editor.Document, Sweat(editor), Actor(editor), t).GetState("e1/" + Part).LocalScale.X;
 
     private static void Near(float expected, float actual) => Assert.InRange(actual, expected - 1e-2f, expected + 1e-2f);
 
@@ -78,14 +81,11 @@ public class EmojiTests
         Near(50f, BodyY(editor, 0.8));
         Near(40f, BodyY(editor, 1.0));
 
-        // 머무는 시간(1초)이 딱 두 바퀴 반 — 꼭대기(50)에서 멈춘 채 퇴장이 시작한다. 퇴장은 조각을 흐린다.
+        // 머무는 시간(1초)이 딱 두 바퀴 반 — 꼭대기(50)에서 멈춘 채 퇴장이 시작한다. 퇴장은 조각을 줄인다.
         Near(50f, BodyY(editor, 1.2));
-        var alphas = new Dictionary<string, float>();
-        Near(50f, BodyY(editor, 1.35, alphas));
-        Near(0.5f, alphas["e1/" + Part]);
-        alphas = new Dictionary<string, float>();
-        BodyY(editor, 1.5, alphas);
-        Near(0f, alphas["e1/" + Part]);
+        Near(50f, BodyY(editor, 1.35));
+        Near(0.5f, PartScaleX(editor, 1.35));
+        Near(0f, PartScaleX(editor, 1.5));
 
         // 수명 밖에서는 떠 있지 않다.
         Assert.True(EmojiPreview.IsAlive(editor.Document, Sweat(editor), 0));
@@ -104,7 +104,7 @@ public class EmojiTests
         MotionEditor editor = NewEditor();
 
         // 머무는 시간이 없으면 머무는 이모지 — 미리보기는 머묾을 얼마간(세 바퀴, 적어도 2초) 보이고 퇴장한다.
-        editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "땀", Enter = "pop", Hold = "bob", Exit = "fade", HoldSeconds = null });
+        editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "땀", Enter = "pop", Hold = "bob", Exit = "shrink", HoldSeconds = null });
         EmojiPhases staying = EmojiPreview.PhasesOf(editor.Document, Sweat(editor));
         Assert.True(staying.Staying);
         Assert.Equal(2f, staying.Hold, 3);
@@ -162,11 +162,11 @@ public class EmojiTests
         MotionEditor editor = NewEditor();
         Assert.Empty(EmojiValidator.Validate(editor.Document, RigFile.NodeIds));
 
-        Assert.True(EmojisJson.TryExport(editor.Document, RigFile.NodeIds, out string json, out IReadOnlyList<string> problems, RigFile.AlphaNodeIds), string.Join("\n", problems));
+        Assert.True(EmojisJson.TryExport(editor.Document, RigFile.NodeIds, out string json, out IReadOnlyList<string> problems), string.Join("\n", problems));
         JsonNode root = JsonNode.Parse(json)!;
         Assert.Equal("emojis/1-draft", root["schema"]!.GetValue<string>());
         JsonNode sweat = Assert.Single(root["emojis"]!.AsArray())!;
-        Assert.Equal(("sweat", "emoji", "pop", "bob", "fade"), (sweat["name"]!.GetValue<string>(), sweat["rig"]!.GetValue<string>(), sweat["enter"]!.GetValue<string>(), sweat["hold"]!.GetValue<string>(), sweat["exit"]!.GetValue<string>()));
+        Assert.Equal(("sweat", "emoji", "pop", "bob", "shrink"), (sweat["name"]!.GetValue<string>(), sweat["rig"]!.GetValue<string>(), sweat["enter"]!.GetValue<string>(), sweat["hold"]!.GetValue<string>(), sweat["exit"]!.GetValue<string>()));
         Assert.Equal("art/sweat.png", sweat["parts"]![Part]!.GetValue<string>()); // 스킨 이름이 아니라 조각 → 그림
         Assert.Equal(1.0, sweat["holdSeconds"]!.GetValue<double>(), 3);
         Assert.Null(sweat["stay"]);
@@ -212,7 +212,7 @@ public class EmojiTests
     [Fact]
     public void 구간의_창은_그_모션의_0초가_수명의_몇_초인지_내고_머묾은_지금_바퀴의_처음이다()
     {
-        MotionEditor editor = NewEditor(); // pop 0.2 › bob 0.4를 1초 › fade 0.3
+        MotionEditor editor = NewEditor(); // pop 0.2 › bob 0.4를 1초 › shrink 0.3
         (bool, double) Window(EmojiPhase phase, double t) => EmojiPreview.PhaseWindow(editor.Document, Sweat(editor), phase, t);
         void Same((bool InRange, double Offset) expected, (bool InRange, double Offset) actual)
         {

@@ -183,11 +183,10 @@ public static class ScenePreview
     }
 
     /// <summary>모션을 오브젝트 하나에 얹은 시각 t의 포즈. 채널의 노드가 그 리그에 없으면 그 채널은 건너뛴다.</summary>
-    public static RectNodeTree Pose(RectNodeTree template, SceneObject target, MotionAsset motion, double seconds, Func<Graph.CurveRef, bool>? isMuted = null, IDictionary<string, float>? alphas = null)
+    public static RectNodeTree Pose(RectNodeTree template, SceneObject target, MotionAsset motion, double seconds, Func<Graph.CurveRef, bool>? isMuted = null)
     {
         ArgumentNullException.ThrowIfNull(target);
-        ArgumentNullException.ThrowIfNull(motion);
-        return MotionPreview.Pose(template, motion, seconds, motion.PreviewMode, isMuted, target.Prefix, alphas);
+        return MotionPreview.Pose(template, motion, seconds, isMuted, target.Prefix);
     }
 
     /// <summary>

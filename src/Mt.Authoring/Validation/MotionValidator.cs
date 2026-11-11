@@ -31,12 +31,10 @@ public static class MotionValidator
 
     /// <param name="rigNodeIds">rigKind → 노드 id 목록. null이면 스키마 계약을 생략한다(덤프가 아직 없는 자리).</param>
     /// <param name="controllers">컨트롤러 표. 주면 자리·깊이(absolute) 컨트롤러가 든 relative 미리보기 모션에 경고한다.</param>
-    /// <param name="alphaNodeIds">rigKind → 불투명도를 받을 수 있는 노드(덤프의 hasCanvasGroup). 주면 알파 채널이 그 노드에 놓였는지 본다.</param>
     public static IReadOnlyList<MotionProblem> Validate(
         MotionDocument document,
         IReadOnlyDictionary<string, ICollection<string>>? rigNodeIds = null,
-        ControllersFile? controllers = null,
-        IReadOnlyDictionary<string, ICollection<string>>? alphaNodeIds = null)
+        ControllersFile? controllers = null)
     {
         ArgumentNullException.ThrowIfNull(document);
 
@@ -50,14 +48,7 @@ public static class MotionValidator
                 problems.Add(new MotionProblem(motion.Name, "같은 이름이 둘이다"));
             }
 
-            problems.AddRange(ValidateMotion(motion, rigNodeIds, controllers, alphaNodeIds));
-
-            // 이모지를 띄우는 이벤트 키 — 값이 문서의 이모지 키여야 미리보기에서 뜬다. 런타임의 이모지 표는 따로일 수 있어 막지는 않고,
-            // 문서가 이모지를 하나도 정의하지 않았으면(표가 밖에 있다) 말하지 않는다.
-            foreach (MotionEventAsset e in motion.Events.Where(e => document.Emojis.Count > 0 && e.Name == Preview.EmojiEvents.Show && document.FindEmoji(e.Value) is null))
-            {
-                problems.Add(new MotionProblem(motion.Name, $"이벤트 emoji: 이모지 '{e.Value}'가 문서에 없다 — 미리보기에서 안 뜬다", Blocking: false));
-            }
+            problems.AddRange(ValidateMotion(motion, rigNodeIds, controllers));
         }
 
         return problems;
@@ -66,8 +57,7 @@ public static class MotionValidator
     public static IReadOnlyList<MotionProblem> ValidateMotion(
         MotionAsset motion,
         IReadOnlyDictionary<string, ICollection<string>>? rigNodeIds = null,
-        ControllersFile? controllers = null,
-        IReadOnlyDictionary<string, ICollection<string>>? alphaNodeIds = null)
+        ControllersFile? controllers = null)
     {
         ArgumentNullException.ThrowIfNull(motion);
 
@@ -84,20 +74,6 @@ public static class MotionValidator
         if (!MotionRules.TryValidate(clip, null, out string reason))
         {
             problems.Add(new MotionProblem(motion.Name, reason));
-        }
-
-        // 알파 채널은 불투명도를 받을 수 있는 노드에만 — 호스트가 쓸 CanvasGroup이 없으면 재생에서 아무 일도 안 일어난다.
-        if (alphaNodeIds is not null && alphaNodeIds.TryGetValue(motion.Rig ?? "", out ICollection<string>? alphaNodes))
-        {
-            for (int i = 0; i < motion.Channels.Count; i++)
-            {
-                if (motion.Channels[i].Kind == MotionChannelKind.Alpha && !alphaNodes.Contains(motion.Channels[i].Node))
-                {
-                    problems.Add(new MotionProblem(
-                        motion.Name,
-                        $"채널 {i}: '{motion.Channels[i].Node}'는 불투명도를 받을 수 없는 노드다(덤프에 CanvasGroup이 없다). 받을 수 있는 노드: [{string.Join(", ", alphaNodes)}]"));
-                }
-            }
         }
 
         // 경고는 모양 규칙과 무관하게 본다 — 고치는 순서를 작가가 고른다.

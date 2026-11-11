@@ -13,20 +13,17 @@
 | 테스트 | 순수 테스트(유니티·런타임·DOTween 참조 없는 것)만 `tests/Ked.Presentation.Core.Tests/EditMode/`로 |
 | 이쪽 살림 | `Ked.Presentation.Core.csproj`·`vendoring.md` (동기화 때 유지) |
 
-## 선반영 — 런타임 반영 대기 (2026-11-10, 소유자 지시: "런타임은 완성이 되었다고 가정하고 진행")
+## 선반영 — 런타임 반영 대기
 
-툴이 규약을 먼저 만들어 가는 중이라, 아래는 **정본보다 이 사본이 앞서 있다**. "사본을 고치지 않는다"의 예외이고, 다음 동기화의 감사(ⓒ 이쪽에만 있는 멤버)에
-걸리는 것이 정상이다 — 저쪽이 같은 모양으로 들어오면 사라지고, 다르게 들어오면 소비자(`Mt.Authoring`)를 저쪽에 맞춘다. 명세는 `docs/PLAN-parts.md` §2.1.
+정본보다 이 사본이 앞선 것. "사본을 고치지 않는다"의 예외이고, 다음 동기화의 감사(ⓒ 이쪽에만 있는 멤버)에 걸리는 것이 정상이다.
 
-| 파일 | 선반영한 것 |
-|---|---|
-| `Motion/MotionClip.cs` | `MotionChannelKind.Alpha` |
-| `Motion/MotionMath.cs` | `Neutral`(Alpha = 1) · relative는 곱 · `ClaimFor` → `StageNodeClaim.CanvasAlpha` · `StartOf(channel, state, alpha)` 오버로드 |
-| `Motion/MotionRules.cs` | Alpha는 X만 · 키 값 0~1 |
-| `Reduce/StageReducer.Staging.cs` | `ApplyMotion`이 시작값에 `state.GetAlpha`를 넘긴다 |
-| `Motion/MotionClip.cs` | `MotionEvent`(Time·Name·Value) · `MotionClip.Events` — 이벤트 키(명세 `docs/PLAN-parts.md` §2.5) |
-| `Motion/MotionRules.cs` | 이벤트: 이름 규칙 · 시각 0~길이 · 오름차순 |
-| `Tuning/RigSchemaDto.cs` | `RigSchemaNodeDto.hasImage` — 그림 노드 표시(명세 `docs/PLAN-parts.md` §2.2). 툴이 정의한 리그(§9)가 이 필드로 조각을 가린다 |
+| 파일 | 선반영한 것 | 정본 |
+|---|---|---|
+| `Tuning/RigSchemaDto.cs` | `RigSchemaNodeDto.hasImage` — 그림 노드 표시 | **들어갔다** — `ked-presentation-runtime` `465f5d43`(2026-11-11)에 같은 이름 · 같은 뜻으로. 다음 동기화에서 사라진다 |
+
+**걷어 낸 것(2026-11-11, `docs/PLAN-characterRig.md` R3).** 모션의 불투명도 채널(`MotionChannelKind.Alpha`)과 이벤트 키(`MotionEvent` · `MotionClip.Events`)는
+런타임이 받지 않기로 했다(런타임 `docs/PLAN_emoji.md` §8-4 · 이모지는 대본의 커맨드로 띄운다). `Motion/MotionClip.cs` · `MotionMath.cs` · `MotionRules.cs` ·
+`Reduce/StageReducer.Staging.cs`를 반입본(`ea59698`)으로 되돌렸다 — 산출물은 다시 `motions/2` 하나다.
 
 ## 동기화 절차
 

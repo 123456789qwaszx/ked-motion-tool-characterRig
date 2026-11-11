@@ -77,29 +77,6 @@ namespace Ked.Presentation.Core
                 }
             }
 
-            MotionEvent[] events = clip.Events ?? System.Array.Empty<MotionEvent>();
-
-            for (int i = 0; i < events.Length; i++)
-            {
-                if (string.IsNullOrEmpty(events[i].Name) || !NameRule.IsMatch(events[i].Name))
-                {
-                    reason = $"이벤트 {i}: 이름은 [a-z0-9_]+ 여야 한다 ('{events[i].Name}')";
-                    return false;
-                }
-
-                if (events[i].Time < -Tolerance || events[i].Time > clip.Duration + Tolerance)
-                {
-                    reason = $"이벤트 {i}: 시각이 0~길이 밖이다 ({events[i].Time})";
-                    return false;
-                }
-
-                if (i > 0 && events[i].Time < events[i - 1].Time)
-                {
-                    reason = $"이벤트 {i}: 시각이 오름차순이 아니다";
-                    return false;
-                }
-            }
-
             reason = null;
             return true;
         }
@@ -138,25 +115,6 @@ namespace Ked.Presentation.Core
             {
                 reason = $"{channel.Kind}에는 Z 성분이 없다";
                 return false;
-            }
-
-            if (channel.Kind == MotionChannelKind.Alpha)
-            {
-                if (channel.Y != null)
-                {
-                    reason = "Alpha에는 X 성분만 있다";
-                    return false;
-                }
-
-                // 불투명도는 0~1이다. 키가 범위 밖이면 호스트의 CanvasGroup이 죄어 버려 보이는 것과 파일이 달라진다.
-                for (int k = 0; channel.X != null && k < channel.X.Length; k++)
-                {
-                    if (channel.X[k].Value < -Tolerance || channel.X[k].Value > 1f + Tolerance)
-                    {
-                        reason = $"Alpha 키 값은 0~1이어야 한다 ({channel.X[k].Value})";
-                        return false;
-                    }
-                }
             }
 
             if (!channel.HasX && !channel.HasY && !channel.HasZ)

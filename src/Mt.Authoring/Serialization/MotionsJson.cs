@@ -26,9 +26,7 @@ public static class MotionsJson
         ArgumentNullException.ThrowIfNull(clips);
 
         var sb = new StringBuilder();
-        // 알파 채널이나 이벤트 키가 있을 때만 motions/3 — 없으면 전과 같은 글자다.
-        bool hasAlpha = clips.Any(c => c.Events is { Length: > 0 } || (c.Channels is not null && c.Channels.Any(ch => ch.Kind == MotionChannelKind.Alpha)));
-        sb.Append("{\n  \"schema\": \"").Append(hasAlpha ? AuthoringFormat.ExportSchemaV3 : AuthoringFormat.ExportSchema).Append("\",\n  \"motions\": [");
+        sb.Append("{\n  \"schema\": \"").Append(AuthoringFormat.ExportSchema).Append("\",\n  \"motions\": [");
 
         for (int m = 0; m < clips.Count; m++)
         {
@@ -51,30 +49,7 @@ public static class MotionsJson
                 sb.Append(" }");
             }
 
-            sb.Append("\n      ]");
-
-            // 이벤트 키 — 있을 때만(motions/3). 값은 JSON 문자열로(한글은 그대로).
-            if (clip.Events is { Length: > 0 } events)
-            {
-                sb.Append(",\n      \"events\": [");
-
-                for (int e = 0; e < events.Length; e++)
-                {
-                    sb.Append(e > 0 ? ",\n" : "\n");
-                    sb.Append("        { \"t\": ").Append(F(events[e].Time)).Append(", \"name\": \"").Append(events[e].Name).Append('"');
-
-                    if (!string.IsNullOrEmpty(events[e].Value))
-                    {
-                        sb.Append(", \"value\": ").Append(JsonSerializer.Serialize(events[e].Value, ValueWriteOptions));
-                    }
-
-                    sb.Append(" }");
-                }
-
-                sb.Append("\n      ]");
-            }
-
-            sb.Append(" }");
+            sb.Append("\n      ] }");
         }
 
         sb.Append("\n  ]\n}\n");
@@ -117,8 +92,7 @@ public static class MotionsJson
         {
             problems.Add($"schema '{file.Schema}' — 채널의 mode는 무시한다(motions/2: relative/absolute는 motion 커맨드가 정한다). 키 값은 그대로 읽는다.");
         }
-        else if (!string.Equals(file.Schema, AuthoringFormat.ExportSchema, StringComparison.Ordinal)
-                 && !string.Equals(file.Schema, AuthoringFormat.ExportSchemaV3, StringComparison.Ordinal))
+        else if (!string.Equals(file.Schema, AuthoringFormat.ExportSchema, StringComparison.Ordinal))
         {
             problems.Add($"schema '{file.Schema}' (기대 '{AuthoringFormat.ExportSchema}'). 읽기는 시도한다.");
         }
@@ -192,9 +166,6 @@ public static class MotionsJson
             Duration = dto.Duration,
             End = end,
             Channels = channels,
-            Events = dto.Events is { Count: > 0 }
-                ? dto.Events.Where(e => e is not null).Select(e => new MotionEvent { Time = e!.T, Name = e.Name ?? "", Value = string.IsNullOrEmpty(e.Value) ? null : e.Value }).ToArray()
-                : null,
         };
 
         return true;
@@ -226,7 +197,6 @@ public static class MotionsJson
             case "position": kind = MotionChannelKind.Position; return true;
             case "scale": kind = MotionChannelKind.Scale; return true;
             case "euler": kind = MotionChannelKind.Euler; return true;
-            case "alpha": kind = MotionChannelKind.Alpha; return true;
             default: kind = default; return false;
         }
     }
@@ -261,7 +231,7 @@ public static class MotionsJson
     }
 
     private static string KindToken(MotionChannelKind kind)
-        => kind switch { MotionChannelKind.Position => "position", MotionChannelKind.Scale => "scale", MotionChannelKind.Alpha => "alpha", _ => "euler" };
+        => kind switch { MotionChannelKind.Position => "position", MotionChannelKind.Scale => "scale", _ => "euler" };
 
     /// <summary>invariant "R" — 정수는 소수점 없이, 음수 0은 0 (규약 §7).</summary>
     public static string F(float v)
@@ -297,17 +267,7 @@ public static class MotionsJson
         public float Duration { get; set; }
         public string? End { get; set; }
         public List<ChannelDto?>? Channels { get; set; }
-        public List<EventDto?>? Events { get; set; }
     }
-
-    private sealed class EventDto
-    {
-        public float T { get; set; }
-        public string? Name { get; set; }
-        public string? Value { get; set; }
-    }
-
-    private static readonly JsonSerializerOptions ValueWriteOptions = new() { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     private sealed class ChannelDto
     {

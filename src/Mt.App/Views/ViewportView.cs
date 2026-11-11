@@ -528,14 +528,14 @@ public sealed class ViewportView : Control
     {
         if (_editor is not null && _template is not null && ShownClip is { } clip && ContextEntry is { } entry)
         {
-            RectNodeTree start = ClipPreview.Pose(_clipStage?.TreeAt(_clock.Time) ?? _template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, _clipStage?.CameraAt(_clock.Time), entry.Block, null, ContextCycle);
+            RectNodeTree start = ClipPreview.Pose(_clipStage?.TreeAt(_clock.Time) ?? _template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, _clipStage?.CameraAt(_clock.Time), entry.Block, ContextCycle);
             return start.GetState(key);
         }
 
         // 이모지 안에서는 그 구간이 얹히기 전의 자세(자리 · 앞 구간이 남긴 것).
         if (_editor is not null && _template is not null && _emojiPhase is { } phase && ShownEmoji is { } emoji && EmojiActor is { } actor)
         {
-            return EmojiPreview.PoseBefore(_template, _editor.Document, emoji, actor, phase, null, EmojiOrigin(emoji, actor, _clock.Time)).GetState(key);
+            return EmojiPreview.PoseBefore(_template, _editor.Document, emoji, actor, phase, EmojiOrigin(emoji, actor, _clock.Time)).GetState(key);
         }
 
         return _template!.GetState(key);
@@ -587,17 +587,14 @@ public sealed class ViewportView : Control
     private double SnapTime(double seconds) => SnapEnabled ? TimeSnap.Snap(seconds, SnapStep) : seconds;
 
     /// <summary>지금 보이는 포즈 — 시각의 포즈에 키 없는 포즈를 얹은 것.</summary>
-    public RectNodeTree? CurrentPose() => CurrentPose(null);
-
-    /// <param name="alphas">노드 키 → 불투명도(알파 채널이 얹힌 것만 든다, 없는 키는 1). 받은 표에 채워 준다.</param>
-    private RectNodeTree? CurrentPose(IDictionary<string, float>? alphas)
+    public RectNodeTree? CurrentPose()
     {
         if (_held is not null)
         {
             return _held;
         }
 
-        RectNodeTree? pose = PoseAt(_clock.Time, alphas);
+        RectNodeTree? pose = PoseAt(_clock.Time);
 
         if (pose is null)
         {
@@ -1337,31 +1334,7 @@ public sealed class ViewportView : Control
 
     // ── 이벤트 키로 뜨는 이모지 (PLAN-parts.md §10) ───────────────────
 
-    /// <summary>처음부터 그 시각까지 울린 이벤트 키(연기하는 오브젝트와 함께) — 클립이면 블록들의 것, 모션 하나면 고른 오브젝트가 연기하는 것.</summary>
-    private List<(double Time, string? ObjectId, string Name, string? Value)> FiredUntil(double seconds)
-    {
-        if (_editor is null || ShownEmoji is not null)
-        {
-            return new();
-        }
-
-        if (ShownClip is { } clip)
-        {
-            return ClipPreview.EventsBetween(_editor.Document, clip, double.NegativeInfinity, seconds, IsClipTrackMuted);
-        }
-
-        return Motion is { Events.Count: > 0 } motion && SelectedObject is { } o && CanWear(o)
-            ? ClipPreview.EventsBetween(motion, double.NegativeInfinity, seconds).Select(e => (Time: (double)e.T, ObjectId: (string?)o.Id, e.Name, e.Value)).ToList()
-            : new();
-    }
-
     private SceneAsset? SceneAtTime(double seconds) => ShownClip is not null && _clipStage is { } stage ? stage.SceneAt(seconds) : Scene;
-
-    /// <summary>그 시각에 이벤트 키(<c>emoji</c>)로 떠서 돌고 있는 이모지들 — 캐릭터에 붙은 이모지 리그가 정의의 수명을 돈다.</summary>
-    public IReadOnlyList<EmojiPlay> EmojiPlaysAt(double seconds)
-        => _editor is not null && SceneAtTime(seconds) is { } scene && FiredUntil(seconds) is { Count: > 0 } fired
-            ? EmojiEvents.Resolve(_editor.Document, scene, fired, seconds)
-            : Array.Empty<EmojiPlay>();
 
     /// <summary>붙는 자리(로케이터)가 푼 점 — 가만히 선 무대(클립이면 그 시각의 무대)에서 잰다. 못 풀면 null(오프셋만).</summary>
     private Vec2? EmojiOrigin(EmojiAsset emoji, SceneObject actor, double seconds)
@@ -1369,29 +1342,11 @@ public sealed class ViewportView : Control
             ? EmojiPreview.LocatorPoint(rest, scene, emoji, actor, _focus)
             : null;
 
-    private EmojiPlay? EmojiPlayOn(string objectId)
-    {
-        foreach (EmojiPlay play in EmojiPlaysAt(_clock.Time))
-        {
-            if (play.Target.Id == objectId)
-            {
-                return play;
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>이벤트가 부리는 이모지 오브젝트인데 지금은 안 떠 있다 — 안 그린다.</summary>
-    public bool IsDormantEmoji(string objectId)
-        => _editor is not null && SceneAtTime(_clock.Time) is { } scene && FiredUntil(double.PositiveInfinity) is { Count: > 0 } all
-            && EmojiEvents.Targets(_editor.Document, scene, all).Contains(objectId) && EmojiPlayOn(objectId) is null;
-
     /// <summary>그 오브젝트가 지금 입은 것 — 스킨, 그림 넘기기의 시각(뜬 뒤 몇 초), 반전 판인가(그림을 뒤집지 않고 그린다).</summary>
     private readonly record struct Worn(SkinAsset Skin, double Seconds, bool Upright);
 
     /// <summary>
-    /// 지금 입은 스킨 — 이모지 정의를 보는 중이거나 이벤트로 떠 있으면 정의의 스킨(오브젝트가 입은 것 대신), 그 캐릭터가 좌우 반전이고 반전 판이 있으면 그 판.
+    /// 지금 입은 스킨 — 이모지 정의를 보는 중이면 정의의 스킨(오브젝트가 입은 것 대신), 그 캐릭터가 좌우 반전이고 반전 판이 있으면 그 판.
     /// 그림 넘기기의 시각은 이모지면 뜬 뒤의 시간, 아니면 시계의 시각.
     /// </summary>
     private Worn? WornBy(RectNodeTree? pose, SceneObject o)
@@ -1403,12 +1358,6 @@ public sealed class ViewportView : Control
 
         EmojiAsset? emoji = ShownEmoji is { } shown && EmojiActor is { } actor && actor.Id == o.Id ? shown : null;
         double seconds = _clock.Time;
-
-        if (emoji is null && EmojiPlayOn(o.Id) is { } play)
-        {
-            emoji = play.Emoji;
-            seconds = play.Local;
-        }
 
         bool upright = false;
         string? name = emoji is null ? o.Skin : emoji.Skin;
@@ -1717,18 +1666,7 @@ public sealed class ViewportView : Control
 
     // ── 포즈 조회 (테스트·인스펙터) ───────────────────────────────────
 
-    public RectNodeTree? PoseAt(double seconds) => PoseAt(seconds, null);
-
-    private RectNodeTree? PoseAt(double seconds, IDictionary<string, float>? alphas)
-    {
-        // 캐릭터들의 포즈 위에, 이벤트 키로 뜬 이모지를 얹는다.
-        RectNodeTree? tree = BasePoseAt(seconds, alphas);
-        return tree is not null && _editor is not null && EmojiPlaysAt(seconds) is { Count: > 0 } plays
-            ? EmojiEvents.Pose(tree, _editor.Document, plays, alphas, play => EmojiOrigin(play.Emoji, play.Target, seconds))
-            : tree;
-    }
-
-    private RectNodeTree? BasePoseAt(double seconds, IDictionary<string, float>? alphas)
+    public RectNodeTree? PoseAt(double seconds)
     {
         MotionAsset? motion = Motion;
         if (_template is null)
@@ -1739,13 +1677,13 @@ public sealed class ViewportView : Control
         if (_editor is not null && ShownClip is { } clip)
         {
             // 무대(상태 블록)가 먼저 서고 모션이 그 위에 얹힌다.
-            return ClipPreview.Pose(_clipStage?.TreeAt(seconds) ?? _template, _editor.Document, clip, seconds, IsClipTrackMuted, _clipStage?.CameraAt(seconds), null, alphas);
+            return ClipPreview.Pose(_clipStage?.TreeAt(seconds) ?? _template, _editor.Document, clip, seconds, IsClipTrackMuted, _clipStage?.CameraAt(seconds));
         }
 
         // 이모지 정의 — 수명 한 번(등장 → 머묾 → 퇴장)을 그 리그의 오브젝트에 얹는다.
         if (_editor is not null && ShownEmoji is { } emoji)
         {
-            return EmojiActor is { } actor ? EmojiPreview.Pose(_template, _editor.Document, emoji, actor, seconds, alphas, EmojiOrigin(emoji, actor, seconds)) : _template.Clone();
+            return EmojiActor is { } actor ? EmojiPreview.Pose(_template, _editor.Document, emoji, actor, seconds, EmojiOrigin(emoji, actor, seconds)) : _template.Clone();
         }
 
         // 카메라 모션 — 씬의 카메라 값에 모션을 얹어 무대의 카메라 노드를 다시 세운다. 캐릭터는 시작 상태로 선다.
@@ -1757,125 +1695,8 @@ public sealed class ViewportView : Control
         }
 
         return motion is not null && SelectedObject is { } o && CanWear(o)
-            ? ScenePreview.Pose(_template, o, motion, seconds, _flags.IsMuted, alphas)
+            ? ScenePreview.Pose(_template, o, motion, seconds, _flags.IsMuted)
             : _template.Clone();
-    }
-
-    // ── 이벤트 키 ─────────────────────────────────────────────────────
-
-    /// <summary>이벤트가 울린 뒤 화면에 남아 있는 시간(초) — 미리보기에서 "여기서 울린다"를 본다.</summary>
-    public const double EventFlash = 0.4;
-
-    /// <summary>
-    /// 방금(<see cref="EventFlash"/> 안에) 울린 이벤트 키들 — "이름 값" 또는 클립이면 "오브젝트: 이름 값". 스크럽해도 그 자리의 것이 보인다.
-    /// </summary>
-    public IReadOnlyList<string> RecentEvents()
-    {
-        double now = _clock.Time;
-        static string Text(string name, string? value) => string.IsNullOrEmpty(value) ? name : $"{name} {value}";
-
-        if (_editor is not null && ShownClip is { } clip)
-        {
-            return ClipPreview.EventsBetween(_editor.Document, clip, now - EventFlash, now, IsClipTrackMuted)
-                .Select(e => e.ObjectId is null ? Text(e.Name, e.Value) : $"{e.ObjectId}: {Text(e.Name, e.Value)}").ToList();
-        }
-
-        return Motion is { Events.Count: > 0 } bound
-            ? ClipPreview.EventsBetween(bound, now - EventFlash, now).Select(e => Text(e.Name, e.Value)).ToList()
-            : Array.Empty<string>();
-    }
-
-    private void DrawRecentEvents(DrawingContext context, Rect stage)
-    {
-        IReadOnlyList<string> fired = RecentEvents();
-
-        for (int i = 0; i < fired.Count; i++)
-        {
-            DrawLabel(context, "⚑ " + fired[i], new Point(stage.X + 8, stage.Y + 24 + i * 16));
-        }
-    }
-
-    // ── 불투명도(알파 채널, PLAN-parts.md P4) ───────────────────────────
-
-    /// <summary>그리는 중인 프레임의 불투명도 표 — Render가 포즈와 함께 채운다.</summary>
-    private readonly Dictionary<string, float> _drawAlphas = new(StringComparer.Ordinal);
-
-    /// <summary>노드에서 그 오브젝트의 루트까지 불투명도를 곱한 값 — CanvasGroup이 겹치는 방식 그대로.</summary>
-    private static float EffectiveAlpha(RectNodeTree pose, string key, string prefix, IDictionary<string, float> alphas)
-    {
-        float alpha = 1f;
-
-        for (string? at = key; at is not null && at.StartsWith(prefix, StringComparison.Ordinal) && pose.Contains(at); at = pose.GetParentKey(at))
-        {
-            if (alphas.TryGetValue(at, out float own))
-            {
-                alpha *= own;
-            }
-        }
-
-        return Math.Clamp(alpha, 0f, 1f);
-    }
-
-    /// <summary>지금 시각에 그 노드가 그려지는 불투명도(부모들의 것까지 곱한 값). 오브젝트·노드가 없으면 null.</summary>
-    public float? NodeOpacity(string objectId, string node)
-    {
-        var alphas = new Dictionary<string, float>(StringComparer.Ordinal);
-
-        if (CurrentPose(alphas) is not { } pose || Scene?.Find(objectId) is not { } o || !pose.Contains(o.KeyOf(node)))
-        {
-            return null;
-        }
-
-        return EffectiveAlpha(pose, o.KeyOf(node), o.Prefix, alphas);
-    }
-
-    /// <summary>그 노드가 불투명도를 받을 수 있나 — 덤프에 CanvasGroup이 있는 노드만.</summary>
-    public bool CanTakeAlpha(string? node)
-        => node is not null && _rig is not null && (ContextActor ?? SelectedObject) is { } o
-           && _rig.AlphaNodeIds.TryGetValue(o.Rig, out ICollection<string>? nodes) && nodes.Contains(node);
-
-    /// <summary>
-    /// 고른 노드의 **제** 불투명도(부모 것은 안 곱한다) — 지금 시각. 불투명도를 받을 수 없는 노드거나 키를 놓을 모션이 없으면 null.
-    /// </summary>
-    public float? AlphaValue(string? node)
-    {
-        if (!CanTakeAlpha(node) || EditMotion is not { } motion || CameraRig.IsCamera(motion))
-        {
-            return null;
-        }
-
-        var alphas = new Dictionary<string, float>(StringComparer.Ordinal);
-        return CurrentPose(alphas) is null ? null : alphas.TryGetValue(Prefix + node, out float alpha) ? alpha : 1f;
-    }
-
-    /// <summary>
-    /// 불투명도를 지금 시각에 키한다(값 칸) — 알파 채널의 키 하나, 되돌리기 한 칸. 없던 채널이면 생긴다.
-    /// 클립 안에서는 블록의 규칙을 따른다: 시각 = 시계 − 블록의 시작, 재생 기준 = 블록의 것, 시작값 = 이 블록만 뺀 그 시각의 불투명도.
-    /// </summary>
-    public void SetAlphaValue(string node, float value)
-    {
-        if (_editor is null || !CanTakeAlpha(node) || EditMotion is not { } motion || CameraRig.IsCamera(motion) || _template is null)
-        {
-            return;
-        }
-
-        float start = 1f;
-
-        if (ShownClip is { } clip && ContextEntry is { } entry)
-        {
-            var before = new Dictionary<string, float>(StringComparer.Ordinal);
-            ClipPreview.Pose(_clipStage?.TreeAt(_clock.Time) ?? _template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, null, entry.Block, before, ContextCycle);
-            start = before.TryGetValue(Prefix + node, out float alpha) ? alpha : 1f;
-        }
-        else if (_emojiPhase is { } phase && ShownEmoji is { } emoji && EmojiActor is { } actor)
-        {
-            var before = new Dictionary<string, float>(StringComparer.Ordinal);
-            EmojiPreview.PoseBefore(_template, _editor.Document, emoji, actor, phase, before);
-            start = before.TryGetValue(Prefix + node, out float alpha) ? alpha : 1f;
-        }
-
-        float key = PoseEdit.KeyValueFor(MotionChannelKind.Alpha, EditModeOf(motion), start, Math.Clamp(value, 0f, 1f));
-        _editor.KeyComponents(motion.Name, node, MotionChannelKind.Alpha, (float)Math.Max(0, SnapTime(EditTime)), new[] { (Axis.X, Math.Clamp(key, 0f, 1f)) }, DefaultTangent);
     }
 
     /// <summary>지금 시각의 초상 사각형(루트 공간). 리그가 없으면 null.</summary>
@@ -1949,12 +1770,10 @@ public sealed class ViewportView : Control
         }
 
         // 오브젝트는 무대 밖도 그대로 그리고, 카메라에 안 잡히는 바깥을 회색으로 덮어 가른다. 축·손잡이는 그 위에.
-        _drawAlphas.Clear();
-        RectNodeTree pose = CurrentPose(_drawAlphas) ?? _template;
+        RectNodeTree pose = CurrentPose() ?? _template;
         DrawObjects(context, pose);
         DrawOutside(context, stage);
         context.DrawRectangle(StagePen, stage);
-        DrawRecentEvents(context, stage);
 
         if (_editor is not null && ShownEmoji is { } previewed)
         {
@@ -2093,7 +1912,7 @@ public sealed class ViewportView : Control
             {
                 float opacity = stage.OpacityOf(o.Id, _clock.Time);
 
-                if (opacity <= 0.001f || IsDormantEmoji(o.Id))
+                if (opacity <= 0.001f)
                 {
                     continue;
                 }
@@ -2112,7 +1931,7 @@ public sealed class ViewportView : Control
 
         foreach (SceneObject o in scene.DrawOrder())
         {
-            if (!o.Visible || o.Id == emojiActor || IsDormantEmoji(o.Id))
+            if (!o.Visible || o.Id == emojiActor)
             {
                 continue;
             }
@@ -2159,18 +1978,7 @@ public sealed class ViewportView : Control
             {
                 if (PartQuadOf(pose, o, node) is { } part)
                 {
-                    Bitmap? image = ImageOf(worn, node);
-                    float alpha = EffectiveAlpha(pose, o.KeyOf(node), o.Prefix, _drawAlphas);
-
-                    if (alpha <= 0.001f)
-                    {
-                        continue;
-                    }
-
-                    using (context.PushOpacity(alpha))
-                    {
-                        DrawImageQuad(context, part, image);
-                    }
+                    DrawImageQuad(context, part, ImageOf(worn, node));
                 }
             }
 
@@ -2211,7 +2019,6 @@ public sealed class ViewportView : Control
         }
 
         Quad quad = PortraitLayout.VisualQuad(pose, imageKey, AspectOf(o));
-        using IDisposable faded = context.PushOpacity(EffectiveAlpha(pose, imageKey, o.Prefix, _drawAlphas)); // 초상에 알파 모션이 얹혔으면
         Point topLeft = ToControl(quad.TopLeft);
         Point topRight = ToControl(quad.TopRight);
         Point bottomLeft = ToControl(quad.BottomLeft);

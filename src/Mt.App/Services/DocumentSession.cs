@@ -212,7 +212,7 @@ public sealed class DocumentSession
     /// <summary>이모지 정의를 <c>emojis.json</c>(초안)으로 내보낸다 — 막는 문제가 있으면 안 나간다.</summary>
     public bool ExportEmojis(string path)
     {
-        if (!EmojisJson.TryExport(Editor.Document, RigNodeIds, out string json, out IReadOnlyList<string> problems, Rig?.AlphaNodeIds))
+        if (!EmojisJson.TryExport(Editor.Document, RigNodeIds, out string json, out IReadOnlyList<string> problems))
         {
             SetStatus($"이모지 내보내기 막힘 — 문제 {problems.Count}건을 먼저 고친다: {problems[0]}");
             return false;
@@ -243,7 +243,7 @@ public sealed class DocumentSession
     /// <summary>검증에 쓰는 rigKind → 노드 표 — 덤프의 리그에 카메라 모션의 가짜 리그를 더한 것.</summary>
     public IReadOnlyDictionary<string, ICollection<string>>? RigNodeIds => Mt.Authoring.Preview.CameraRig.WithCamera(Rig?.NodeIds);
 
-    public IReadOnlyList<MotionProblem> Problems => MotionValidator.Validate(Editor.Document, RigNodeIds, Controllers, Rig?.AlphaNodeIds);
+    public IReadOnlyList<MotionProblem> Problems => MotionValidator.Validate(Editor.Document, RigNodeIds, Controllers);
 
     public void SetStatus(string status)
     {
@@ -503,7 +503,7 @@ public sealed class DocumentSession
     /// <param name="filter">내보낼 모션(null이면 전부). <paramref name="scopeLabel"/>은 상태 줄 글자.</param>
     public bool Export(string path, Func<MotionAsset, bool>? filter = null, string? scopeLabel = null)
     {
-        if (!MotionExport.TryExport(Editor.Document, RigNodeIds, out string json, out IReadOnlyList<MotionProblem> problems, filter, Rig?.AlphaNodeIds))
+        if (!MotionExport.TryExport(Editor.Document, RigNodeIds, out string json, out IReadOnlyList<MotionProblem> problems, filter))
         {
             SetStatus($"내보내기 막힘 — 문제 {problems.Count}건을 먼저 고친다.");
             return false;

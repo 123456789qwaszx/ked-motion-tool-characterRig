@@ -34,7 +34,7 @@ public class EmojiExampleTests
         MotionDocument document = editor.Document;
         RigSchemaFile rig = RigAssets.Compose(Dump, document);
 
-        Assert.True(!MotionValidator.Validate(document, rig.NodeIds, null, rig.AlphaNodeIds).Any(), string.Join("\n", MotionValidator.Validate(document, rig.NodeIds, null, rig.AlphaNodeIds).Select(p => $"{p.MotionName}: {p.Message}")));
+        Assert.True(!MotionValidator.Validate(document, rig.NodeIds).Any(), string.Join("\n", MotionValidator.Validate(document, rig.NodeIds).Select(p => $"{p.MotionName}: {p.Message}")));
         Assert.Empty(EmojiValidator.Validate(document, rig.NodeIds).Select(p => $"{p.EmojiName}: {p.Message}"));
         Assert.Empty(ClipValidator.Validate(document, rig.NodeIds).Select(p => p.Message));
         Assert.Equal(22, document.Emojis.Count);
@@ -52,24 +52,5 @@ public class EmojiExampleTests
 
         // 스킨이 가리키는 그림이 다 있다.
         Assert.All(document.Skins.SelectMany(s => s.AllImages()).Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
-    }
-
-    [Fact]
-    public void 예시_클립에서_이벤트가_이모지를_띄우고_끈다()
-    {
-        MotionEditor editor = EmojiExamples.Build();
-        MotionDocument document = editor.Document;
-        ClipAsset clip = document.FindClip("emoji_demo")!;
-        string? Playing(double t)
-            => EmojiEvents.Resolve(document, document.ActiveSceneAsset!, ClipPreview.EventsBetween(document, clip, double.NegativeInfinity, t), t).SingleOrDefault().Emoji?.Name;
-
-        Assert.Null(Playing(0.2));
-        Assert.Equal("빨간경고막대기", Playing(0.6));
-        Assert.Null(Playing(1.9));              // 잠깐 뜨고 사라졌다
-        Assert.Equal("행복한벚꽃", Playing(3.5)); // 머문다
-        Assert.Equal("행복한벚꽃", Playing(4.6)); // 끄라는 말이 왔다 — 퇴장 중
-        Assert.Null(Playing(5.0));
-        Assert.Equal("말줄임점풍선", Playing(8.0));
-        Assert.Null(Playing(9.5));
     }
 }

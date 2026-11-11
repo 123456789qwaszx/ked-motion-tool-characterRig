@@ -177,32 +177,8 @@ public sealed class MotionAsset
 
     public List<ChannelAsset> Channels { get; set; } = new();
 
-    /// <summary>
-    /// 이벤트 키(<c>PLAN-parts.md</c> §2.5, <c>motions/3</c>) — 재생이 그 시각을 지나는 순간 런타임이 이름과 값으로 알린다("이 프레임에 이모지·소리").
-    /// 시각 오름차순을 편집기가 지킨다. 저작본에는 <see cref="EventsOrNull"/>로 실린다(없으면 안 적는다).
-    /// </summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public List<MotionEventAsset> Events { get; set; } = new();
-
-    [System.Text.Json.Serialization.JsonPropertyName("events")]
-    public List<MotionEventAsset>? EventsOrNull
-    {
-        get => Events.Count == 0 ? null : Events;
-        set => Events = value ?? new List<MotionEventAsset>();
-    }
-
     public ChannelAsset? FindChannel(string node, MotionChannelKind kind)
         => Channels.FirstOrDefault(c => string.Equals(c.Node, node, StringComparison.Ordinal) && c.Kind == kind);
-}
-
-/// <summary>이벤트 키 하나 — 시각(초) · 이름(<c>[a-z0-9_]+</c>) · 딸린 값(자유 글, 없어도 된다).</summary>
-public sealed class MotionEventAsset
-{
-    public float T { get; set; }
-
-    public string Name { get; set; } = "";
-
-    public string? Value { get; set; }
 }
 
 /// <summary>노드 하나의 속성 하나. 성분이 null이면 "건드리지 않는다"(코어와 같은 뜻).</summary>

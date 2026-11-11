@@ -52,58 +52,6 @@ public static class ClipPreview
     }
 
     /// <summary>
-    /// 그 구간 (<paramref name="after"/>, <paramref name="until"/>]에 울리는 이벤트 키들 — 클립 시각, 맡은 오브젝트(카메라 트랙이면 null), 이름, 값.
-    /// 블록의 바퀴마다 다시 울린다. 끈 블록·끈 배역은 울리지 않는다. 모션 하나만 볼 때는 <see cref="EventsBetween(MotionAsset, double, double)"/>.
-    /// </summary>
-    public static List<(double Time, string? ObjectId, string Name, string? Value)> EventsBetween(
-        MotionDocument document, ClipAsset clip, double after, double until, Func<ClipTrack, bool>? isMuted = null)
-    {
-        ArgumentNullException.ThrowIfNull(document);
-        ArgumentNullException.ThrowIfNull(clip);
-        var fired = new List<(double, string?, string, string?)>();
-
-        foreach (PlacedBlock placed in Ordered(clip))
-        {
-            ClipBlock block = placed.Block;
-            ClipTrack track = clip.Tracks[placed.Track];
-
-            if (!block.IsMotion || block.IsMuted || isMuted?.Invoke(track) == true || document.Find(block.Motion) is not { Events.Count: > 0 } motion)
-            {
-                continue;
-            }
-
-            string? actor = track.IsCamera ? null : ObjectOf(document, clip, track)?.Id;
-
-            for (int cycle = 0; cycle < block.Cycles; cycle++)
-            {
-                double from = block.At + cycle * (double)motion.Duration;
-
-                foreach (MotionEventAsset e in motion.Events)
-                {
-                    double at = from + e.T;
-
-                    if (at > after + EventEpsilon && at <= until + EventEpsilon)
-                    {
-                        fired.Add((at, actor, e.Name, e.Value));
-                    }
-                }
-            }
-        }
-
-        return fired.OrderBy(f => f.Item1).ToList();
-    }
-
-    /// <summary>구간 끝의 여유 — 블록 시작 + 이벤트 시각의 float 잡음(1.3이 1.3000001로 나오는 것)이 구간을 넘나들지 않게.</summary>
-    private const double EventEpsilon = 1e-6;
-
-    /// <summary>모션 하나에서 그 구간 (after, until]에 울리는 이벤트 키들.</summary>
-    public static List<MotionEventAsset> EventsBetween(MotionAsset motion, double after, double until)
-    {
-        ArgumentNullException.ThrowIfNull(motion);
-        return motion.Events.Where(e => e.T > after + EventEpsilon && e.T <= until + EventEpsilon).ToList();
-    }
-
-    /// <summary>
     /// 시각 t의 카메라 — 카메라 트랙에 놓인 카메라 모션 블록을 시작 시각 순으로 얹은 값(캐릭터 블록과 같은 규칙: 앞 블록이 남긴 값이 뒤 블록의 시작값).
     /// 시작한 카메라 모션 블록이 하나도 없으면 null — 무대의 카메라를 건드릴 일이 없다.
     /// </summary>
@@ -158,7 +106,7 @@ public static class ClipPreview
     /// <param name="isMuted">끈 트랙(배역 끄기) — 그 블록은 없는 것처럼 건너뛴다. 보기 상태라 문서에는 없다. null이면 없음.</param>
     /// <param name="startCamera">그 시각의 카메라 값(<see cref="ClipStage.CameraAt"/>). null이면 씬의 카메라 — 카메라 모션이 여기서 시작한다.</param>
     /// <param name="except">이 블록은 얹지 않는다 — 클립 안에서 그 블록의 모션을 고칠 때 "이 블록이 얹히기 전의 상태"(키 값의 시작값)를 낸다.</param>
-    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, ClipAsset clip, double seconds, Func<ClipTrack, bool>? isMuted = null, CameraSettings? startCamera = null, ClipBlock? except = null, IDictionary<string, float>? alphas = null, int exceptFromCycle = 0)
+    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, ClipAsset clip, double seconds, Func<ClipTrack, bool>? isMuted = null, CameraSettings? startCamera = null, ClipBlock? except = null, int exceptFromCycle = 0)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(document);
@@ -201,7 +149,7 @@ public static class ClipPreview
                     break;
                 }
 
-                tree = MotionPreview.Pose(tree, motion, seconds - start, block.Mode, null, target.Prefix, alphas);
+                tree = MotionPreview.Pose(tree, motion, seconds - start, block.Mode, null, target.Prefix);
             }
         }
 

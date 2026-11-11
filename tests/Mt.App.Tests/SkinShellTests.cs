@@ -189,99 +189,6 @@ public class SkinShellTests
     }
 
     [Fact]
-    public void 불투명도_칸에_값을_넣으면_알파_채널의_키가_되고_조각이_그만큼_흐려진다()
-    {
-        HeadlessUi.Run(() =>
-        {
-            MainWindow window = NewWindow();
-            window.Show();
-
-            try
-            {
-                window.Session.LoadRig(EmojiRigFixture.WriteDump(TestDocuments.FixturePath("rig-schemas.json")));
-                MotionEditor editor = window.Session.Editor;
-                string id = window.CreateAttachedFromMenu(EmojiRigFixture.RigKind, "s1");
-                window.AddSkinFromForm();
-                editor.SetSkinPart("skin", "Emoji_Part1", "art/sweat.png");
-                editor.AddMotion("vanish", EmojiRigFixture.RigKind, 1f, MotionEnd.Commit);
-                window.SelectMotion("vanish");
-                window.Viewport.SelectedObjectId = id;
-                window.Viewport.SnapEnabled = false;
-                window.InspectorTab = 2; // 모션 탭
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-
-                // 불투명도를 받을 수 없는 노드(Anchor)를 고르면 칸이 없다. 조각을 고르면 선다.
-                window.Viewport.SelectedNode = "Emoji_Anchor";
-                window.Viewport.ScrubTo(0.0);
-                Assert.False(window.AlphaBox.Visible);
-                window.Viewport.SelectedNode = "Emoji_Part1";
-                window.Viewport.ScrubTo(0.0001);
-                window.Viewport.ScrubTo(0.0);
-                Assert.True(window.AlphaBox.Visible);
-                Assert.Equal("1", window.AlphaBox.Box.Text);
-
-                // 처음에 1, 끝에 0 — 값을 넣고 Enter가 그 시각의 키(한 칸). 없던 알파 채널이 생긴다.
-                window.Viewport.SetAlphaValue("Emoji_Part1", 1f);
-                window.Viewport.ScrubTo(1.0);
-                long revision = editor.Revision;
-                TextBox box = window.AlphaBox.Box;
-                box.Focus();
-                box.Text = "0";
-                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
-                Assert.Equal(revision + 1, editor.Revision);
-                ChannelAsset channel = Assert.Single(editor.Document.Find("vanish")!.Channels);
-                Assert.Equal(("Emoji_Part1", MotionChannelKind.Alpha), (channel.Node, channel.Kind));
-                Assert.Equal(new[] { (0f, 1f), (1f, 0f) }, channel.X!.Keys.Select(k => (k.T, k.V)));
-                Assert.Equal(0, window.ProblemRowsShown);
-
-                // 뷰포트: 가운데에서 절반, 끝에서 0(안 그려진다). 다른 조각은 그대로 1.
-                window.Viewport.ScrubTo(0.5);
-                Assert.Equal(0.5f, window.Viewport.NodeOpacity(id, "Emoji_Part1")!.Value, 2);
-                Assert.Equal(1f, window.Viewport.NodeOpacity(id, "Emoji_Part2")!.Value, 3);
-                Assert.Equal("0.5", window.AlphaBox.Box.Text);
-                window.Viewport.ScrubTo(1.0);
-                Assert.Equal(0f, window.Viewport.NodeOpacity(id, "Emoji_Part1")!.Value, 3);
-
-                // 묶음(Body)의 불투명도는 조각의 것과 곱해진다.
-                window.Viewport.SelectedNode = "Emoji_Body";
-                window.Viewport.ScrubTo(0.0);
-                window.Viewport.SetAlphaValue("Emoji_Body", 0.5f);
-                window.Viewport.ScrubTo(1.0);
-                window.Viewport.SetAlphaValue("Emoji_Body", 0.5f);
-                window.Viewport.ScrubTo(0.5);
-                Assert.Equal(0.25f, window.Viewport.NodeOpacity(id, "Emoji_Part1")!.Value, 2);
-                Assert.Equal(0.5f, window.Viewport.NodeOpacity(id, "Emoji_Part2")!.Value, 2);
-
-                // 범위 밖 값은 0~1로 죈다. 캐릭터의 노드(받을 수 없는 것)에는 안 놓인다.
-                window.Viewport.SetAlphaValue("Emoji_Body", 7f);
-                Assert.All(editor.Document.Find("vanish")!.FindChannel("Emoji_Body", MotionChannelKind.Alpha)!.X!.Keys, k => Assert.InRange(k.V, 0f, 1f));
-                revision = editor.Revision;
-                window.Viewport.SetAlphaValue("Emoji_Anchor", 0.3f);
-                Assert.Equal(revision, editor.Revision);
-
-                // 알파가 든 모션은 motions/3으로 나간다.
-                string export = Path.Combine(Path.GetTempPath(), $"ked-motion-tool-{Guid.NewGuid():N}.json");
-
-                try
-                {
-                    Assert.True(window.Session.Export(export), window.Session.Status);
-                    string json = File.ReadAllText(export);
-                    Assert.Contains("\"schema\": \"motions/3\"", json, StringComparison.Ordinal);
-                    Assert.Contains("\"kind\": \"alpha\"", json, StringComparison.Ordinal);
-                }
-                finally
-                {
-                    File.Delete(export);
-                }
-            }
-            finally
-            {
-                window.Close();
-            }
-        });
-    }
-
-    [Fact]
     public void 이모지_정의를_만들어_고르면_수명_한_번이_돌고_값을_고치면_바로_따라온다()
     {
         HeadlessUi.Run(() =>
@@ -298,7 +205,7 @@ public class SkinShellTests
                 editor.RenameSkin("skin", "땀");
                 editor.SetSkinPart("땀", "Emoji_Part1", "art/sweat.png");
 
-                // 모션 셋: pop(0.2초, Body y → 40, 유지·절대값) · bob(0.4초, Body y 0 → 10 → 0, 복원) · fade(0.3초, Part1 알파 → 0, 유지).
+                // 모션 셋: pop(0.2초, Body y → 40, 유지·절대값) · bob(0.4초, Body y 0 → 10 → 0, 복원) · shrink(0.3초, Part1 배율 → 0, 유지).
                 KeyAsset Linear(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
                 editor.AddMotion("pop", EmojiRigFixture.RigKind, 0.2f, MotionEnd.Commit, MotionChannelMode.Absolute);
                 editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
@@ -306,9 +213,9 @@ public class SkinShellTests
                 editor.AddMotion("bob", EmojiRigFixture.RigKind, 0.4f);
                 editor.AddChannel("bob", "Emoji_Body", MotionChannelKind.Position);
                 editor.SetKeys("bob", "Emoji_Body", MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.2f, 10f), Linear(0.4f, 0f) });
-                editor.AddMotion("fade", EmojiRigFixture.RigKind, 0.3f, MotionEnd.Commit);
-                editor.AddChannel("fade", "Emoji_Part1", MotionChannelKind.Alpha);
-                editor.SetKeys("fade", "Emoji_Part1", MotionChannelKind.Alpha, Axis.X, new[] { Linear(0f, 1f), Linear(0.3f, 0f) });
+                editor.AddMotion("shrink", EmojiRigFixture.RigKind, 0.3f, MotionEnd.Commit, MotionChannelMode.Absolute);
+                editor.AddChannel("shrink", "Emoji_Part1", MotionChannelKind.Scale);
+                editor.SetKeys("shrink", "Emoji_Part1", MotionChannelKind.Scale, Axis.X, new[] { Linear(0f, 1f), Linear(0.3f, 0f) });
                 window.SelectMotion("pop");
                 window.Viewport.SelectedObjectId = id;
                 window.InspectorTab = 4; // 이모지 탭
@@ -325,12 +232,12 @@ public class SkinShellTests
                 Assert.Equal(("emoji", "땀", (string?)null, (string?)null, (string?)null, "", true), window.EmojiFormState);
 
                 // 값을 채운다 — 칸마다 한 칸. 시계가 수명(0.2 + 1 + 0.3)을 따라간다.
-                window.UpdateSelectedEmoji(e => { e.Enter = "pop"; e.Hold = "bob"; e.Exit = "fade"; e.HoldSeconds = 1f; e.OffsetX = 120f; e.OffsetY = 300f; });
+                window.UpdateSelectedEmoji(e => { e.Enter = "pop"; e.Hold = "bob"; e.Exit = "shrink"; e.HoldSeconds = 1f; e.OffsetX = 120f; e.OffsetY = 300f; });
                 Assert.Equal(1.5, window.Viewport.Clock.Duration, 4);
-                Assert.Equal(("pop", "bob", "fade", "1"), (window.EmojiFormState.Enter, window.EmojiFormState.Hold, window.EmojiFormState.Exit, window.EmojiFormState.HoldSeconds));
+                Assert.Equal(("pop", "bob", "shrink", "1"), (window.EmojiFormState.Enter, window.EmojiFormState.Hold, window.EmojiFormState.Exit, window.EmojiFormState.HoldSeconds));
                 Assert.Equal(0, window.ProblemRowsShown);
 
-                // 수명: 등장(0 → 40) · 머묾(40 위에서 되풀이) · 퇴장(흐려짐). 자리는 정의의 오프셋.
+                // 수명: 등장(0 → 40) · 머묾(40 위에서 되풀이) · 퇴장(줄어듦). 자리는 정의의 오프셋.
                 float BodyY() => window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Body").AnchoredPosition.Y;
                 window.Viewport.ScrubTo(0.1);
                 Assert.Equal(20f, BodyY(), 2);
@@ -339,7 +246,7 @@ public class SkinShellTests
                 window.Viewport.ScrubTo(0.8);
                 Assert.Equal(50f, BodyY(), 2);
                 window.Viewport.ScrubTo(1.35);
-                Assert.Equal(0.5f, window.Viewport.NodeOpacity(id, "Emoji_Part1")!.Value, 2);
+                Assert.Equal(0.5f, window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Part1").LocalScale.X, 2);
                 Assert.Equal(120f, window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Anchor").AnchoredPosition.X, 2);
                 Assert.Equal(new[] { "Emoji_Part1" }, window.Viewport.DrawnParts(editor.Document.ActiveSceneAsset!.Find(id)!));
 
@@ -418,14 +325,13 @@ public class SkinShellTests
                 editor.SetSkinPart("skin", "Emoji_Part1", "art/sweat.png");
                 Assert.Equal(new[] { "Emoji_Part1" }, window.Viewport.DrawnParts(editor.Document.ActiveSceneAsset!.Find(id)!));
 
-                // 모션 — 이 리그의 노드에, 불투명도도.
+                // 모션 — 이 리그의 노드에.
                 editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f, MotionEnd.Commit, MotionChannelMode.Absolute);
                 editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
                 editor.SetKeys("pop", "Emoji_Body", MotionChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.2f, 40f) });
                 window.SelectMotion("pop");
                 window.Viewport.SelectedObjectId = id;
                 window.Viewport.SelectedNode = "Emoji_Part1";
-                Assert.True(window.Viewport.CanTakeAlpha("Emoji_Part1"));
                 Assert.Equal(1, window.ProblemRowsShown); // 문서가 정의한 리그라는 알림 하나 — 막는 문제는 없다
 
                 // 이모지 정의 — 리그가 이미 있으니 그대로 쓴다.
@@ -465,96 +371,6 @@ public class SkinShellTests
                 window.Session.Open(saved);
                 Assert.Contains(RigTemplates.EmojiKind, window.Session.Rig!.RigKinds);
                 Assert.True(window.Viewport.CurrentPose()!.Contains($"{id}/Emoji_Part1"));
-            }
-            finally
-            {
-                window.Close();
-            }
-        });
-    }
-
-    [Fact]
-    public void 캐릭터_모션의_emoji_이벤트가_울리면_붙은_이모지가_정의의_스킨을_입고_뜬다()
-    {
-        HeadlessUi.Run(() =>
-        {
-            MainWindow window = NewWindow();
-            window.Show();
-
-            try
-            {
-                window.Session.LoadRig(EmojiRigFixture.WriteDump(TestDocuments.FixturePath("rig-schemas.json")));
-                MotionEditor editor = window.Session.Editor;
-                string id = window.CreateAttachedFromMenu(EmojiRigFixture.RigKind, "s1");
-                SceneObject Emoji() => editor.Document.ActiveSceneAsset!.Find(id)!;
-                editor.AddSkin("땀", EmojiRigFixture.RigKind);
-                editor.SetSkinPart("땀", "Emoji_Part1", "art/sweat.png");
-
-                KeyAsset Linear(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
-                editor.AddMotion("pop", EmojiRigFixture.RigKind, 0.2f, MotionEnd.Commit, MotionChannelMode.Absolute);
-                editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
-                editor.SetKeys("pop", "Emoji_Body", MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.2f, 40f) });
-                editor.AddEmoji("sweat", EmojiRigFixture.RigKind);
-                editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "땀", Enter = "pop", HoldSeconds = 0.2f, OffsetX = 120f });
-
-                // 캐릭터 모션 nod(0.6초)의 0.1초에 emoji sweat.
-                editor.AddMotion("nod", "character", 0.6f, MotionEnd.Restore, MotionChannelMode.Relative);
-                editor.AddChannel("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position);
-                editor.SetKeys("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.3f, -18f), Linear(0.6f, 0f) });
-                editor.AddMotionEvent("nod", 0.1f, "emoji", "sweat");
-                window.SelectMotion("nod");
-                window.Viewport.SelectedObjectId = "s1";
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                float BodyY() => window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Body").AnchoredPosition.Y;
-
-                // 울리기 전: 부리는 오브젝트는 안 보인다(스킨도 안 입었다).
-                window.Viewport.ScrubTo(0.05);
-                Assert.Empty(window.Viewport.EmojiPlaysAt(0.05));
-                Assert.True(window.Viewport.IsDormantEmoji(id));
-                Assert.Empty(window.Viewport.DrawnParts(Emoji()));
-
-                // 울린 뒤: 정의의 스킨을 입고 등장이 돈다. 자리는 정의의 오프셋.
-                window.Viewport.ScrubTo(0.2);
-                Assert.False(window.Viewport.IsDormantEmoji(id));
-                Assert.Equal(new[] { "Emoji_Part1" }, window.Viewport.DrawnParts(Emoji()));
-                Assert.Equal(20f, BodyY(), 2);
-                Assert.Equal(120f, window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Anchor").AnchoredPosition.X, 2);
-                window.Viewport.ScrubTo(0.4);
-                Assert.Equal(40f, BodyY(), 2);
-
-                // 붙는 자리(faceAura)를 주면 자리 노드가 캐릭터의 그 점으로 간다 — 오프셋은 거기서부터(머리 쪽이라 위로 올라간다).
-                float before = window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Anchor").AnchoredPosition.Y;
-                EmojiAsset located = editor.Document.FindEmoji("sweat")!.Clone();
-                located.Locator = "faceAura";
-                editor.UpdateEmoji("sweat", located);
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.True(window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Anchor").AnchoredPosition.Y > before + 100f);
-                Assert.Equal(40f, BodyY(), 2);
-
-                // 수명(0.4초)이 다하면 다시 사라진다.
-                window.Viewport.ScrubTo(0.55);
-                Assert.True(window.Viewport.IsDormantEmoji(id));
-                Assert.False(window.Viewport.IsDormantEmoji("s1"));
-
-                // 클립에서도 같다 — 블록이 놓인 시각부터 센다.
-                editor.AddClip("clip");
-                editor.AddClipRole("clip", "a", "character", "s1");
-                editor.AddClipTrack("clip", "a");
-                editor.AddClipBlock("clip", 0, "nod", 1f);
-                window.SelectClip("clip");
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                window.Viewport.ScrubTo(0.5);
-                Assert.True(window.Viewport.IsDormantEmoji(id));
-                window.Viewport.ScrubTo(1.2);
-                Assert.Equal(20f, BodyY(), 2);
-                Assert.Equal(new[] { "Emoji_Part1" }, window.Viewport.DrawnParts(Emoji()));
-
-                // 모르는 이모지 키는 문제 목록이 알린다(막지는 않는다).
-                Assert.Equal(0, window.ProblemRowsShown);
-                editor.UpdateMotionEvent("nod", 0, 0.1f, "emoji", "ghost");
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.Equal(1, window.ProblemRowsShown);
-                Assert.False(window.Viewport.IsDormantEmoji(id)); // 부리는 이벤트가 없으니 보통 오브젝트다
             }
             finally
             {
@@ -990,12 +806,10 @@ public class SkinShellTests
 
                 Assert.Empty(window.Viewport.EmojiKeyTimes()); // 구간을 고르면 그 구간만(빨간 틱)
 
-                // 그래프 목록 — bob이 건드리는 것은 Body의 위치뿐이다. 나머지(다른 노드 · 배율 · 회전 · 불투명도)가 "키 없음"으로 흐리게 선다.
+                // 그래프 목록 — bob이 건드리는 것은 Body의 위치뿐이다. 나머지(다른 노드 · 배율 · 회전)가 "키 없음"으로 흐리게 선다.
                 Assert.DoesNotContain(("Emoji_Body", MotionChannelKind.Position), window.UnkeyedRows);
                 Assert.Contains(("Emoji_Body", MotionChannelKind.Scale), window.UnkeyedRows);
-                Assert.Contains(("Emoji_Body", MotionChannelKind.Alpha), window.UnkeyedRows);
                 Assert.Contains(("Emoji_Part1", MotionChannelKind.Euler), window.UnkeyedRows);
-                Assert.DoesNotContain(("Emoji_Anchor", MotionChannelKind.Alpha), window.UnkeyedRows); // 불투명도를 못 받는 노드
 
                 // ＋ — 지금 값이 지금 시각(bob의 0초)의 키가 되고 채널이 생긴다: 한 칸. 줄은 "키 없음"에서 빠진다.
                 long before = editor.Revision;

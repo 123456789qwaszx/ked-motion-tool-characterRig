@@ -13,13 +13,6 @@ namespace Ked.Presentation.Core
 
         /// <summary>localEulerAngles (X·Y·Z). 도.</summary>
         Euler,
-
-        /// <summary>
-        /// CanvasGroup alpha (X 하나, 0~1) — motions/3. StageNodeClaimKind.CanvasAlpha와 같은 축이다(fade가 쓰는 그것).
-        /// RectNodeState에 살지 않으므로 시작값은 상태의 alpha 저장소에서 온다(MotionMath.StartOf의 alpha 인자).
-        /// relative는 배율처럼 **곱**이다(중립값 1) — "지금 불투명도에서 흐려진다".
-        /// </summary>
-        Alpha,
     }
 
     /// <summary>
@@ -82,23 +75,6 @@ namespace Ked.Presentation.Core
     }
 
     /// <summary>
-    /// 모션의 이벤트 키 — motions/3. 재생이 Time을 지나는 순간 호스트가 (슬롯, Name, Value)로 한 번 알린다("이 프레임에 이모지·소리").
-    /// 상태가 아니다: 리듀서는 접지 않고, Skip·Load·Rollback에서 다시 울리지 않는다(효과음과 같은 급).
-    /// </summary>
-    [Serializable]
-    public struct MotionEvent
-    {
-        /// <summary>초. 0 ≤ Time ≤ 클립 길이.</summary>
-        public float Time;
-
-        /// <summary>이벤트 이름 — 커맨드 토큰과 같은 규칙([a-z0-9_]+). 호스트가 이 이름으로 받는 쪽을 고른다.</summary>
-        public string Name;
-
-        /// <summary>딸린 값(자유 문자열, 없으면 null). 예: 이모지 키 · 효과음 이름.</summary>
-        public string Value;
-    }
-
-    /// <summary>
     /// 모션 하나 — 이름 · 어느 리그용인지 · 길이(초) · 채널들.
     ///
     /// 이징 곡선(curves.json)이 **모양**이라면 모션은 **내용**이다: 어느 노드의 어느 값이 몇 초에 얼마인지, 여러 채널이 동시에.
@@ -123,8 +99,5 @@ namespace Ked.Presentation.Core
         public MotionEnd End;
 
         public MotionChannel[] Channels;
-
-        /// <summary>이벤트 키들(시각 오름차순). 없으면 null — motions/2의 클립은 언제나 null이다.</summary>
-        public MotionEvent[] Events;
     }
 }

@@ -119,13 +119,12 @@ public static class EmojisJson
         MotionDocument document,
         IReadOnlyDictionary<string, ICollection<string>>? rigNodeIds,
         out string json,
-        out IReadOnlyList<string> problems,
-        IReadOnlyDictionary<string, ICollection<string>>? alphaNodeIds = null)
+        out IReadOnlyList<string> problems)
     {
         ArgumentNullException.ThrowIfNull(document);
         var used = new HashSet<string>(document.Emojis.SelectMany(e => new[] { e.Enter, e.Hold, e.Exit }).OfType<string>(), StringComparer.Ordinal);
         var blocking = EmojiValidator.Validate(document, rigNodeIds).Where(p => p.Blocking).Select(p => p.ToString()).ToList();
-        blocking.AddRange(MotionValidator.Validate(document, rigNodeIds, null, alphaNodeIds).Where(p => p.Blocking && used.Contains(p.MotionName)).Select(p => p.ToString()));
+        blocking.AddRange(MotionValidator.Validate(document, rigNodeIds).Where(p => p.Blocking && used.Contains(p.MotionName)).Select(p => p.ToString()));
         problems = blocking;
 
         if (blocking.Count > 0)

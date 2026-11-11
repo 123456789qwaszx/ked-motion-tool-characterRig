@@ -30,12 +30,11 @@ public class MtCliTests
         return (code, json, text, stderr.ToString());
     }
 
-    /// <summary>nod·bow + 두 캐릭터 + 클립(s1에 bow@0 · lean 없이 nod@0.5는 s2) + nod에 이벤트 하나. 임시 폴더에 저장한다.</summary>
+    /// <summary>nod·bow + 두 캐릭터 + 클립(s1에 bow@0 · lean 없이 nod@0.5는 s2). 임시 폴더에 저장한다.</summary>
     private static string WriteDocument(Action<MotionEditor>? more = null)
     {
         var editor = new MotionEditor(Fixtures.NodBowDocument());
         editor.AddSceneObject(null, "s2", "character");
-        editor.AddMotionEvent("nod", 0.3f, "emoji", "땀");
         editor.AddClip("greet");
         editor.AddClipRole("greet", "a", "character", "s1");
         editor.AddClipRole("greet", "b", "character", "s2");
@@ -79,7 +78,6 @@ public class MtCliTests
         (int code, JsonNode? json, _, _) = Run("info", WriteDocument());
         Assert.Equal(0, code);
         Assert.Equal(new[] { "nod", "bow" }, json!["motions"]!.AsArray().Select(m => m!["name"]!.GetValue<string>()));
-        Assert.Equal(1, json["motions"]![0]!["events"]!.GetValue<int>());
         Assert.Equal("greet", json["clips"]![0]!["name"]!.GetValue<string>());
         Assert.Equal(1.1, json["clips"]![0]!["duration"]!.GetValue<double>(), 3);
         Assert.Equal(new[] { "s1", "s2" }, json["scenes"]![0]!["objects"]!.AsArray().Select(o => o!["id"]!.GetValue<string>()));
@@ -128,13 +126,11 @@ public class MtCliTests
         string target = Path.Combine(Path.GetDirectoryName(document)!, "motions.json");
         (int code, JsonNode? json, _, _) = Run("export", document, target);
         Assert.Equal(0, code);
-        Assert.Equal("motions/3", json!["schema"]!.GetValue<string>()); // 이벤트 키가 있다
-        string written = File.ReadAllText(target);
-        Assert.Contains("\"name\": \"emoji\", \"value\": \"땀\"", written, StringComparison.Ordinal);
-        Assert.True(MotionsJson.TryRead(written, out List<MotionClip> clips, out _));
+        Assert.Equal("motions/2", json!["schema"]!.GetValue<string>());
+        Assert.True(MotionsJson.TryRead(File.ReadAllText(target), out List<MotionClip> clips, out _));
         Assert.Equal(2, clips.Count);
 
-        // 이벤트가 없으면 견본과 바이트까지 같다.
+        // 견본과 바이트까지 같다.
         string plain = Path.Combine(Path.GetDirectoryName(document)!, "plain.motion-authoring.json");
         File.WriteAllText(plain, MotionDocumentJson.Write(Fixtures.NodBowDocument()));
         string plainOut = Path.Combine(Path.GetDirectoryName(document)!, "plain.json");
@@ -149,16 +145,15 @@ public class MtCliTests
     }
 
     [Fact]
-    public void pose는_그_시각의_값과_방금_울린_이벤트를_낸다()
+    public void pose는_그_시각의_값을_낸다()
     {
         string document = WriteDocument();
 
-        // 모션: nod의 0.3초 — 가장 깊은 자리(-18), 이벤트가 방금 울렸다.
+        // 모션: nod의 0.3초 — 가장 깊은 자리(-18).
         (int code, JsonNode? json, _, _) = Run("pose", document, "--motion", "nod", "--time", "0.3");
         Assert.Equal(0, code);
         Assert.Equal("s1", json!["object"]!.GetValue<string>());
         Assert.Equal(-18.0, json["nodes"]!["CharacterPortrait_Track_Move_Y"]!["position"]![1]!.GetValue<double>(), 3);
-        Assert.Equal("땀", json["events"]![0]!["value"]!.GetValue<string>());
 
         // 재생 기준을 바꿔 읽는다: bow는 절대값 모션 — 끝에서 z = 8.
         (_, json, _, _) = Run("pose", document, "--motion", "bow", "--time", "9", "--mode", "relative", "--object", "s2");
@@ -166,13 +161,12 @@ public class MtCliTests
         Assert.Equal(8.0, json["nodes"]!["CharacterPortrait_SwayPivot"]!["euler"]![2]!.GetValue<double>(), 3);
         Assert.Equal(1, Run("pose", document, "--motion", "bow", "--time", "0", "--object", "nobody").Code);
 
-        // 클립: 0.8초 — s1의 bow는 끝나 8이 남았고, s2는 nod의 0.3초이며 이벤트가 그 캐릭터 이름으로 울렸다.
+        // 클립: 0.8초 — s1의 bow는 끝나 8이 남았고, s2는 nod의 0.3초다.
         (code, json, _, _) = Run("pose", document, "--clip", "greet", "--time", "0.8");
         Assert.Equal(0, code);
         Assert.Equal(8.0, json!["objects"]!["s1"]!["CharacterPortrait_SwayPivot"]!["euler"]![2]!.GetValue<double>(), 3);
         Assert.Equal(-18.0, json["objects"]!["s2"]!["CharacterPortrait_Track_Move_Y"]!["position"]![1]!.GetValue<double>(), 3);
         Assert.Equal(1.0, json["objects"]!["s2"]!["opacity"]!.GetValue<double>(), 3);
-        Assert.Equal(("s2", "emoji"), (json["events"]![0]!["object"]!.GetValue<string>(), json["events"]![0]!["name"]!.GetValue<string>()));
         Assert.Equal(0.0, json["camera"]!["zoom"]!.GetValue<double>(), 3);
     }
 
@@ -185,7 +179,6 @@ public class MtCliTests
         Assert.Equal(0, code);
         Assert.Equal("greet_s2", json!["motion"]!.GetValue<string>());
         Assert.Equal("restore", json["end"]!.GetValue<string>());
-        Assert.Equal(1, json["events"]!.GetValue<int>());
 
         // 원본은 그대로, --out에 구운 모션이 든 문서가 선다 — 다시 읽어 pose로 확인한다.
         Assert.Null(MotionDocumentJson.Read(File.ReadAllText(document)).Find("greet_s2"));

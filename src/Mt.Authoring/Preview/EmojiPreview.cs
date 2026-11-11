@@ -49,40 +49,16 @@ public static class EmojiPreview
 
     public static bool IsAlive(in EmojiPhases phases, double seconds) => seconds >= 0 && seconds <= (double)phases.Total + 1e-6;
 
-    /// <summary>머무는 이모지가 "아직 끄라는 말이 없다"일 때의 머묾 길이 — 사실상 끝없음.</summary>
-    public const float Forever = 1e9f;
-
-    /// <summary>
-    /// 이벤트로 뜬 이모지의 구간들 — 미리보기용 어림(<see cref="PhasesOf"/>)이 아니라 **실제로 도는 길이**다.
-    /// 머무는 시간이 있으면 그만큼, 없으면 끄라고 할 때까지(<see cref="Forever"/>). <paramref name="offAfter"/>는 뜬 뒤 몇 초에 끄라는 말(<c>emoji_off</c>)이 왔는가 —
-    /// 오면 그때 퇴장이 시작한다(등장은 끝까지 돈다. 제 수명이 먼저 다했으면 그것이 이긴다).
-    /// </summary>
-    public static EmojiPhases PlayPhases(MotionDocument document, EmojiAsset emoji, double? offAfter)
-    {
-        ArgumentNullException.ThrowIfNull(document);
-        ArgumentNullException.ThrowIfNull(emoji);
-        float enter = Find(document, emoji.Enter)?.Duration ?? 0f;
-        float exit = Find(document, emoji.Exit)?.Duration ?? 0f;
-        float hold = emoji.HoldSeconds is { } seconds ? Math.Max(0f, seconds) : Forever;
-
-        if (offAfter is { } off)
-        {
-            hold = Math.Min(hold, (float)Math.Max(0, off - enter));
-        }
-
-        return new EmojiPhases(enter, hold, exit, emoji.HoldSeconds is null && offAfter is null);
-    }
-
     /// <summary>
     /// 수명의 시각 t 포즈 — <paramref name="actor"/>(이모지 리그의 오브젝트)에 얹는다. 자리(<see cref="EmojiAsset.AnchorNode"/>의 오프셋)도 여기서 넣는다.
     /// 수명 밖이면 template 그대로(호출부가 <see cref="IsAlive"/>로 안 그린다).
     /// </summary>
     /// <param name="origin">붙는 자리(<see cref="LocatorPoint"/>)가 푼 점 — 오프셋이 여기서부터다. null이면 붙는 노드에서부터.</param>
-    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, EmojiAsset emoji, SceneObject actor, double seconds, IDictionary<string, float>? alphas = null, Vec2? origin = null)
-        => Pose(template, document, emoji, actor, seconds, alphas, PhasesOf(document, emoji), origin);
+    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, EmojiAsset emoji, SceneObject actor, double seconds, Vec2? origin = null)
+        => Pose(template, document, emoji, actor, seconds, PhasesOf(document, emoji), origin);
 
-    /// <summary>구간을 정해 준 포즈 — 이벤트로 뜬 이모지(<see cref="PlayPhases"/>)가 쓴다.</summary>
-    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, EmojiAsset emoji, SceneObject actor, double seconds, IDictionary<string, float>? alphas, EmojiPhases phases, Vec2? origin = null)
+    /// <summary>구간을 정해 준 포즈.</summary>
+    public static RectNodeTree Pose(RectNodeTree template, MotionDocument document, EmojiAsset emoji, SceneObject actor, double seconds, EmojiPhases phases, Vec2? origin = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(document);
@@ -102,7 +78,7 @@ public static class EmojiPreview
         // 등장 — 한 번. 끝났으면 끝 규칙대로(commit이면 남고 restore면 처음 자세).
         if (Find(document, emoji.Enter) is { } enter)
         {
-            tree = MotionPreview.Pose(tree, enter, seconds, enter.PreviewMode, null, prefix, alphas);
+            tree = MotionPreview.Pose(tree, enter, seconds, enter.PreviewMode, null, prefix);
         }
 
         if (seconds <= phases.HoldStart)
@@ -122,7 +98,7 @@ public static class EmojiPreview
                 phase = hold.Duration;
             }
 
-            tree = MotionPreview.Pose(tree, hold, phase, hold.PreviewMode, null, prefix, alphas);
+            tree = MotionPreview.Pose(tree, hold, phase, hold.PreviewMode, null, prefix);
         }
 
         if (seconds <= phases.ExitStart)
@@ -133,7 +109,7 @@ public static class EmojiPreview
         // 퇴장 — 한 번.
         if (Find(document, emoji.Exit) is { } exit)
         {
-            tree = MotionPreview.Pose(tree, exit, Math.Min(seconds - phases.ExitStart, exit.Duration), exit.PreviewMode, null, prefix, alphas);
+            tree = MotionPreview.Pose(tree, exit, Math.Min(seconds - phases.ExitStart, exit.Duration), exit.PreviewMode, null, prefix);
         }
 
         return tree;
@@ -183,11 +159,11 @@ public static class EmojiPreview
     /// 그 구간의 모션이 얹히기 **전**의 포즈 — 그 모션에 키를 놓을 때의 시작값. 등장은 자리만 잡힌 처음 자세, 머묾은 등장이 끝난 자세(바퀴마다 같다),
     /// 퇴장은 머묾이 멈춘 자세. <see cref="Pose"/>와 같은 함수라 놓은 키가 보이는 자리에 그대로 선다.
     /// </summary>
-    public static RectNodeTree PoseBefore(RectNodeTree template, MotionDocument document, EmojiAsset emoji, SceneObject actor, EmojiPhase phase, IDictionary<string, float>? alphas = null, Vec2? origin = null)
+    public static RectNodeTree PoseBefore(RectNodeTree template, MotionDocument document, EmojiAsset emoji, SceneObject actor, EmojiPhase phase, Vec2? origin = null)
     {
         EmojiPhases phases = PhasesOf(document, emoji);
         double at = phase switch { EmojiPhase.Enter => -1, EmojiPhase.Hold => phases.HoldStart, _ => phases.ExitStart };
-        return Pose(template, document, emoji, actor, at, alphas, phases, origin);
+        return Pose(template, document, emoji, actor, at, phases, origin);
     }
 
     /// <summary>그 모션을 구간으로 쓰는 이모지의 수 — 함께 쓰는 모션을 고치면 다 바뀐다.</summary>
