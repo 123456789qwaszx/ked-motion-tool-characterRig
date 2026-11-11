@@ -42,6 +42,9 @@ namespace Ked.Presentation.Core
         public Float2Dto offset;
         public List<EmojiRigDto> rigs;
 
+        /// <summary>인물의 방향을 따르지 않는다 — 인물이 뒤집혀도 만든 쪽 그대로 선다. 없으면 따른다(거짓).</summary>
+        public bool fixedSide;
+
         public List<EmojiClipDto> clips;
 
         /// <summary>머묾이 없을 때 한 번 재생할 클립의 이름.</summary>
@@ -65,6 +68,9 @@ namespace Ked.Presentation.Core
 
         /// <summary>기본 회전(도). 없으면 0.</summary>
         public float rotation;
+
+        /// <summary>뒤집히면 안 되는 그림(물음표 · 글자) — 이모지가 거울에 비쳐도 이 리그의 그림은 바로 선다. 없으면 거짓.</summary>
+        public bool upright;
     }
 
     [Serializable]
@@ -166,7 +172,7 @@ namespace Ked.Presentation.Core
                 foreach (EmojiRigDto rig in dto.rigs)
                     rigs.Add(rig == null
                         ? null
-                        : new EmojiRigEntry(rig.name, rig.sprite, ToVec2(rig.place), rig.scale == 0f ? 1f : rig.scale, rig.rotation));
+                        : new EmojiRigEntry(rig.name, rig.sprite, ToVec2(rig.place), rig.scale == 0f ? 1f : rig.scale, rig.rotation, rig.upright));
             }
 
             List<EmojiClip> clips = new();
@@ -203,7 +209,7 @@ namespace Ked.Presentation.Core
                 return false;
             }
 
-            emoji = new EmojiDefinition(dto.name, ToVec2(dto.offset), rigs, fps, clips, main, @in, hold, @out);
+            emoji = new EmojiDefinition(dto.name, ToVec2(dto.offset), rigs, fps, clips, main, @in, hold, @out, dto.fixedSide);
             why = null;
             return true;
         }

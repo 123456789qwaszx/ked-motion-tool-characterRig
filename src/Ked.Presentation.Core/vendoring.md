@@ -20,10 +20,10 @@
 
 | 항목 | 값 |
 |---|---|
-| 원본 | `ked-presentation-runtime` `feat/emojiRigSchema` @ `007d4c16` (리그의 기본 배율 · 회전까지) |
+| 원본 | `ked-presentation-runtime` `feat/emojiRigSchema` @ `32858197` (좌우 — `fixedSide` · `upright` · `EmojiSide`까지). 처음 반입은 `007d4c16`(E1)이고, `32858197`에서 바뀐 `EmojiDefinition.cs` · `EmojisFileDto.cs`를 통째로 다시 들였다(E8-1). 아래 파일은 모두 `32858197`의 것과 같다 |
 | 파일 | `Emoji/EmojiClip.cs` · `Emoji/EmojiDefinition.cs` · `Emoji/EmojiPlayback.cs` · `Tuning/EmojisFileDto.cs` · `Tuning/RigSchemaDto.cs`(통째 교체 — `repeatsPerRig`가 들어오고 `hasImage`가 빠졌다) |
-| 테스트 | 런타임 `Tests/EditMode/EmojiPlaybackTests.cs`의 유니티를 쓰지 않는 절(형식의 규칙 · 그 프레임의 모습 · 재생의 단계)만 `EditMode/EmojiPlaybackTests.cs`로. 접기(`StageReducer.Emoji` — 사본에 없다)와 재생 시스템은 저쪽에 남는다 |
-| 덤프 | `Mt.Authoring/Defaults/ExportedTuning/rig-schemas.json` · `export-report.json`과 시험 픽스처 `tests/Mt.Authoring.Tests/Fixtures/rig-schemas.json`도 같은 커밋의 `ExportedTuning/`에서 |
+| 테스트 | 런타임 `Tests/EditMode/EmojiPlaybackTests.cs`의 유니티를 쓰지 않는 절(형식의 규칙 · 그 프레임의 모습 · 재생의 단계 · 좌우의 둘 — 형식의 표시와 `EmojiSide`의 부호)만 `EditMode/EmojiPlaybackTests.cs`로. 접기(`StageReducer.Emoji` — 사본에 없다)와 재생 시스템 · 뒤집힌 로케이터 밑의 노드는 저쪽에 남는다 |
+| 덤프 | `Mt.Authoring/Defaults/ExportedTuning/rig-schemas.json` · `export-report.json`과 시험 픽스처 `tests/Mt.Authoring.Tests/Fixtures/rig-schemas.json`은 `007d4c16`의 `ExportedTuning/`에서(`rig-schemas.json`은 `32858197`에서도 같다 — 로케이터의 자리 표 `presets/emoji-locator.json`은 툴이 읽지 않는다) |
 | 견본 | 시험 픽스처 `tests/Mt.Authoring.Tests/Fixtures/runtime-emojis.json`은 같은 커밋의 `Assets/Dialogue/emojis.json`(이모지 견본 셋) 그대로 — 툴의 예시(`examples/emoji`)가 이것과 프레임마다 같은지 잰다 |
 
 선반영은 이제 없다. `RigSchemaNodeDto.hasImage`(옛 이모지 설계의 그림 노드 표시)는 런타임 `465f5d43`에 들어갔다가 새 정의에서 `repeatsPerRig`(리그마다 되풀이되는 노드)로 바뀌었고, 이 반입으로 사본에서도 사라졌다.

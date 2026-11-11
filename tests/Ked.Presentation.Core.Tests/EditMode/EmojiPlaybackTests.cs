@@ -7,7 +7,8 @@ namespace Ked.Presentation.Tests
 {
     /// <summary>
     /// 이모지의 움직임(docs/emoji-format.md) — 형식의 규칙 · 그 프레임의 모습 · 재생의 단계.
-    /// 런타임 Tests/EditMode/EmojiPlaybackTests.cs에서 유니티를 쓰지 않는 절만 반입했다(접기 · 재생 시스템은 저쪽에 남는다).
+    /// 런타임 Tests/EditMode/EmojiPlaybackTests.cs에서 유니티를 쓰지 않는 절만 반입했다(접기 · 재생 시스템 · 뒤집힌 로케이터 밑의 노드는 저쪽에 남는다).
+    /// 좌우의 둘(형식의 표시 · 부호의 표)은 런타임 32858197에서.
     /// </summary>
     public sealed class EmojiPlaybackTests
     {
@@ -251,6 +252,59 @@ namespace Ked.Presentation.Tests
             EmojiPlayback shot = new(One(Shot()));
             shot.Settle();
             Assert.That(shot.IsDone, Is.True);
+        }
+
+        // ── 좌우 (docs/PLAN_emoji-placement.md §3) ───────────────────
+
+        // 오프셋 (100, 50) · 리그 둘: a는 보통, q는 바로 서야 하는 그림(기본 배율 0.5 · 회전 10°).
+        private static EmojiDto Sided(bool fixedSide) => new()
+        {
+            name = "sided",
+            fixedSide = fixedSide,
+            offset = new Float2Dto { x = 100f, y = 50f },
+            rigs = new List<EmojiRigDto>
+            {
+                new() { name = "a", sprite = "s", scale = 0.5f, rotation = 10f },
+                new() { name = "q", sprite = "s", scale = 0.5f, rotation = 10f, upright = true },
+            },
+        };
+
+        [Test]
+        public void 형식의_좌우_표시를_읽는다_없으면_거짓이다()
+        {
+            EmojiDefinition sided = One(Sided(fixedSide: true));
+
+            Assert.That(sided.FixedSide, Is.True);
+            Assert.That(sided.Rigs[0].Upright, Is.False);
+            Assert.That(sided.Rigs[1].Upright, Is.True);
+
+            EmojiDefinition plain = One(Static());
+
+            Assert.That(plain.FixedSide, Is.False);
+            Assert.That(plain.Rigs[0].Upright, Is.False);
+        }
+
+        [Test]
+        public void 좌우의_부호_누가_한_번_더_뒤집는가()
+        {
+            EmojiDefinition follows = One(Sided(fixedSide: false));
+            EmojiDefinition fixedSide = One(Sided(fixedSide: true));
+
+            // 로케이터가 뒤집히지 않았으면 아무도 뒤집지 않는다.
+            Assert.That(EmojiSide.IsMirrored(follows, false), Is.False);
+            Assert.That(EmojiSide.OffsetSign(fixedSide, false), Is.EqualTo(1f));
+            Assert.That(EmojiSide.PlaceSign(follows, follows.Rigs[1], false), Is.EqualTo(1f));
+
+            // 방향을 따르는 이모지 — 통째로 거울에 비치고, 바로 서야 하는 리그만 한 번 더 뒤집는다.
+            Assert.That(EmojiSide.IsMirrored(follows, true), Is.True);
+            Assert.That(EmojiSide.OffsetSign(follows, true), Is.EqualTo(1f));
+            Assert.That(EmojiSide.PlaceSign(follows, follows.Rigs[0], true), Is.EqualTo(1f));
+            Assert.That(EmojiSide.PlaceSign(follows, follows.Rigs[1], true), Is.EqualTo(-1f));
+
+            // 방향을 따르지 않는 이모지 — 오프셋에서 통째로 되돌린다. 리그는 더 뒤집지 않는다.
+            Assert.That(EmojiSide.IsMirrored(fixedSide, true), Is.False);
+            Assert.That(EmojiSide.OffsetSign(fixedSide, true), Is.EqualTo(-1f));
+            Assert.That(EmojiSide.PlaceSign(fixedSide, fixedSide.Rigs[1], true), Is.EqualTo(1f));
         }
     }
 }

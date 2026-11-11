@@ -17,6 +17,9 @@ namespace Ked.Presentation.Core
     //   · 머묾이 있다 → (In을 한 번 →) Hold를 되풀이하며 남는다. 내리면 (Out을 재생하고) 사라진다.
     //     Hold가 한 프레임짜리면 그 모습으로 멈춰 있다.
     //   · 클립이 하나도 없다 → 정의의 모습 그대로 서 있다(머무는 이모지다).
+    //
+    // **좌우**: 이모지는 뒤집히지 않은(오른쪽을 보는) 인물을 기준으로 만든다. 인물이 뒤집히면 로케이터가 뒤집혀
+    // 이모지 전체가 거울에 비친다 — 이모지의 값과 키는 그대로다. 예외 둘(FixedSide · Upright)의 부호는 EmojiSide가 낸다.
     // ─────────────────────────────────────────────────────────────────
 
     /// <summary>이모지 안의 리그 하나.</summary>
@@ -40,8 +43,16 @@ namespace Ked.Presentation.Core
         /// <summary>기본 회전(EmojiRig_Place, 도). 키의 회전은 이 위에 얹힌다.</summary>
         public float Rotation { get; }
 
-        public EmojiRigEntry(string name, string spriteKey, Vec2 place, float scale = 1f, float rotation = 0f)
+        /// <summary>
+        /// 뒤집히면 안 되는 그림(물음표 · 글자). 이모지가 거울에 비칠 때 이 리그는 EmojiRig_Place에서 한 번 더 뒤집힌다 —
+        /// 그림과 이 리그의 키는 만든 그대로 보이고, 기본 자리만 거울 쪽으로 간다.
+        /// </summary>
+        public bool Upright { get; }
+
+        public EmojiRigEntry(
+            string name, string spriteKey, Vec2 place, float scale = 1f, float rotation = 0f, bool upright = false)
         {
+            Upright = upright;
             Name = name;
             SpriteKey = spriteKey;
             Place = place;
@@ -84,6 +95,9 @@ namespace Ked.Presentation.Core
         /// <summary>머무는 이모지인가 — 건너뛴 뒤에도 서 있는가. 머묾이 있거나, 클립이 하나도 없다.</summary>
         public bool Stays => Hold != null || Clips.Count == 0;
 
+        /// <summary>인물의 방향을 따르지 않는다 — 인물이 뒤집혀도 만든 쪽 그대로 선다(머리 위 한가운데에 뜨는 것 같은).</summary>
+        public bool FixedSide { get; }
+
         public EmojiDefinition(
             string name,
             Vec2 offset,
@@ -93,8 +107,10 @@ namespace Ked.Presentation.Core
             EmojiClip main = null,
             EmojiClip @in = null,
             EmojiClip hold = null,
-            EmojiClip @out = null)
+            EmojiClip @out = null,
+            bool fixedSide = false)
         {
+            FixedSide = fixedSide;
             Name = name;
             Offset = offset;
             Rigs = rigs ?? Array.Empty<EmojiRigEntry>();
@@ -105,6 +121,32 @@ namespace Ked.Presentation.Core
             Hold = hold;
             Out = @out;
         }
+    }
+
+    /// <summary>
+    /// 좌우의 부호 — 인물이 뒤집혀 로케이터가 뒤집혔을 때(Emoji_Locator의 가로 배율 −1) 누가 한 번 더 뒤집는가.
+    /// 런타임(EmojiPlaybackSystem)과 툴의 미리보기가 같은 것을 쓴다.
+    ///
+    ///   보통의 이모지   — 로케이터를 따라 통째로 거울에 비친다. 아무도 더 뒤집지 않는다.
+    ///   FixedSide 이모지 — Emoji_Offset이 한 번 더 뒤집어 만든 쪽 그대로 선다(로케이터의 자리만 인물을 따라간다).
+    ///   Upright 리그    — 거울에 비친 이모지 안에서 EmojiRig_Place가 한 번 더 뒤집어 그림이 바로 선다.
+    ///
+    /// 부호가 −1인 노드는 자리의 x · 가로 배율 · 회전에 그 부호를 곱한다(Emoji_Offset),
+    /// 또는 가로 배율 · 회전에 곱한다(EmojiRig_Place — 자리는 부모를 따라 거울 쪽으로 간다).
+    /// </summary>
+    public static class EmojiSide
+    {
+        /// <summary>이 이모지가 실제로 거울에 비치는가.</summary>
+        public static bool IsMirrored(EmojiDefinition emoji, bool locatorFlipped)
+            => locatorFlipped && !emoji.FixedSide;
+
+        /// <summary>Emoji_Offset의 부호 — 뒤집힌 로케이터 밑의 FixedSide 이모지만 −1.</summary>
+        public static float OffsetSign(EmojiDefinition emoji, bool locatorFlipped)
+            => locatorFlipped && emoji.FixedSide ? -1f : 1f;
+
+        /// <summary>EmojiRig_Place의 부호 — 거울에 비친 이모지의 Upright 리그만 −1.</summary>
+        public static float PlaceSign(EmojiDefinition emoji, EmojiRigEntry rig, bool locatorFlipped)
+            => IsMirrored(emoji, locatorFlipped) && rig.Upright ? -1f : 1f;
     }
 
     /// <summary>
