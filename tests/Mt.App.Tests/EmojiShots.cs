@@ -42,6 +42,19 @@ public class EmojiShots
                 window.Viewport.ScrubTo(1.4);
                 Assert.Equal(EmojiPhase.Hold, window.Viewport.EmojiCurrentMoment()!.Value.Phase);
                 Shot(window, "emoji-star-life");
+
+                // 좌우(E8) — 물음표는 뒤집히지 않는 그림이다. 왼쪽을 보는 인물에게는 반대쪽에 뜨되 글자는 바로 선다.
+                window.SetEmojiLifeFromForm(false);
+                window.SelectEmoji("question");
+                window.Viewport.ScrubTo(EmojiAsset.SecondsOf(10));
+                Shot(window, "emoji-question-right");
+                float right = window.Viewport.EmojiRigCenter("mark")!.Value.X;
+                window.SetEmojiFacingLeftFromForm(true);
+                Assert.Contains("왼쪽을 보는 인물", window.Viewport.EmojiNow()!.Label);
+                Assert.NotEqual(right, window.Viewport.EmojiRigCenter("mark")!.Value.X);
+                window.Viewport.FrameEmoji();
+                Shot(window, "emoji-question-left");
+                window.SetEmojiFacingLeftFromForm(false);
             }
             finally
             {

@@ -5,7 +5,7 @@ using Mt.Authoring.Rig;
 namespace Mt.Authoring.Tests;
 
 /// <summary>
-/// 예시 문서(<c>examples/emoji</c>)를 짓는다 — 런타임의 견본 셋(<c>Assets/Dialogue/emojis.json</c>, 런타임 <c>007d4c16</c>)을
+/// 예시 문서(<c>examples/emoji</c>)를 짓는다 — 런타임의 견본 셋(<c>Assets/Dialogue/emojis.json</c>, 런타임 <c>32858197</c>)을
 /// 편집 명령으로 다시 지은 것(PLAN-emoji.md E7). 런타임의 클립을 한 타임라인에 이어 놓고, 머무는 이모지는 구간으로 다시 자른다.
 /// 키는 전부 flat(기울기 0 — 런타임 파일이 기울기를 적지 않았다). 고친 뒤 <c>MT_WRITE_EXAMPLES=1</c>로 예시 파일을 다시 쓴다.
 /// </summary>
@@ -44,7 +44,7 @@ internal static class EmojiExamples
         editor.SetEmojiLinks(name, "in", "hold", "out");
     }
 
-    /// <summary>question — 한 번(main): 튀어나와 흔들리고 떠오르며 사라진다.</summary>
+    /// <summary>question — 한 번(main): 튀어나와 흔들리고 떠오르며 사라진다. 물음표는 뒤집히면 안 되는 그림이다(upright — 런타임 32858197).</summary>
     private static void Question(MotionEditor editor)
     {
         const string name = "question";
@@ -52,6 +52,7 @@ internal static class EmojiExamples
         editor.SetEmojiOffset(name, -170f, 40f);
         editor.AddEmojiRig(name, "mark", new[] { "art/question.png" });
         editor.SetEmojiRigPlace(name, "mark", 0f, 0f, 0.45f, 0f);
+        editor.SetEmojiRigUpright(name, "mark", true);
 
         Keys(editor, name, "mark", ChannelKind.Scale, Both, (0, 0.45f), (3, 1.12f), (5, 1f), (21, 1f));
         Keys(editor, name, "mark", ChannelKind.Euler, Z, (0, -20f), (4, 8f), (8, -4f), (12, 0f));

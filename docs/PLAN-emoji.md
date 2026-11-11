@@ -6,8 +6,8 @@
 | | |
 |---|---|
 | 런타임 | `feat/emojiRigSchema` @ `007d4c16` — 틀(`EmojiRigSchema`) · 대본(`emoji` · `emoji_off`) · 형식(`emojis/2`) · 재생(`EmojiPlaybackSystem`)이 서 있다. `007d4c16`에서 리그의 기본 배율 · 회전이 들어왔다(`65f001f9` 다음) |
-| 툴의 지금 | `dev` @ `f842ace`(R3-2) 위에 **E1 ~ E7을 마쳤다**(2026-11-11, 단계마다 커밋 — E3 · E4도 따로) — 런타임의 이모지 코어와 새 덤프가 들어왔고, 버린 설계(공용 `emoji` 리그 · 스킨 · 공용 모션 셋 · 머무는 시간 · 붙는 리그)는 없다. 툴에서 새 정의의 이모지를 만들고 `emojis.json`(`emojis/2`)을 낸다 |
-| 상태 | **계획이 굳었다**(소유자, 2026-11-11 — §6). **E1 ~ E7 끝**(§5). **E8(좌우) — E8-1 ~ E8-4 끝, 다음은 E8-5**(§5 "E8 — 좌우"). 이어받는 길은 §8 |
+| 툴의 지금 | `dev` @ `f842ace`(R3-2) 위에 **E1 ~ E8을 마쳤다**(2026-11-12, 단계마다 커밋 — E8도 E8-1 ~ E8-5를 따로) — 런타임의 이모지 코어(`32858197`)와 새 덤프가 들어왔고, 버린 설계(공용 `emoji` 리그 · 스킨 · 공용 모션 셋 · 머무는 시간 · 붙는 리그)는 없다. 툴에서 새 정의의 이모지를 만들고, 왼쪽을 보는 인물에게 뜨는 모습까지 보고, `emojis.json`(`emojis/2`)을 낸다 |
+| 상태 | **계획이 굳었다**(소유자, 2026-11-11 — §6). **E1 ~ E7 끝**(§5). **E8(좌우) 끝**(2026-11-12 — 아래 "E8에서 한 것")(§5 "E8 — 좌우"). 이어받는 길은 §8 |
 
 ## 0. 한 줄
 
@@ -62,7 +62,7 @@
 | E5 | **미리보기와 대조** — 미리보기는 내보낸 정의를 코어(`EmojiPlayback` · `EmojiClipMath`)로 돌린다. 툴이 낸 파일을 코어 로더로 읽어 프레임마다 그래프의 값과 맞는지 잰다 | 툴 = 게임 — **끝** |
 | E6 | **화면** — 이모지 탭: 리그 목록(더하기 · 이름 · 순서 · 그림 · 기본 자리 끌기), 타임라인(그래프 · 도프 시트 · 타임 슬라이더), 구간 표지와 잇기, 재생(등장 → 머묾 되풀이 → 퇴장) | 툴에서 이모지를 만든다 — **끝** |
 | E7 | 예시(런타임의 견본 셋 — `star` · `question` · `twinkle`)를 툴 문서로 다시 짓는다. README · 사용 안내 | 툴이 낸 파일 = 런타임의 견본 — **끝** |
-| E8 | **좌우** — 런타임이 더한 두 칸(`fixedSide` · `upright`)과 부호 계산(`EmojiSide`)을 들이고, 모델 · 내보내기 · "왼쪽을 보는 인물로 보기" · 예시를 맞춘다 | 툴에서 양쪽을 다 보고, 낸 파일이 런타임의 견본과 같다 — **시작 전**(아래 "E8 — 좌우") |
+| E8 | **좌우** — 런타임이 더한 두 칸(`fixedSide` · `upright`)과 부호 계산(`EmojiSide`)을 들이고, 모델 · 내보내기 · "왼쪽을 보는 인물로 보기" · 예시를 맞춘다 | 툴에서 양쪽을 다 보고, 낸 파일이 런타임의 견본과 같다 — **끝**(아래 "E8에서 한 것") |
 
 ### E1에서 한 것 (2026-11-11)
 
@@ -173,7 +173,7 @@
 | E8-2 | **모델과 내보내기** — `EmojiAsset.FixedSide` · `EmojiRigAsset.Upright`, 편집 명령 둘(조작 하나 = 되돌리기 한 칸, 같은 값은 기록하지 않는다), 저작본 읽고 쓰기, 복제가 함께 가져간다, 문서 지문. `EmojiPreview.Definition`과 `EmojiExport`가 두 칸을 싣는다 — **거짓이면 파일에 적지 않는다**(지금 파일과 글자가 같게) | 문서에 두 칸을 담고 `emojis.json`에 나간다(화면 없이) — **끝** |
 | E8-3 | **미리보기** — "왼쪽을 보는 인물로 보기". 보기의 상태다(문서에 적지 않고 되돌리기에 들지 않는다). 켜면 미리보기의 로케이터를 뒤집고(가로 배율 −1 · 자리 x), 예외의 부호를 코어 **`EmojiSide`**로 곱한다 — `OffsetSign`은 `Emoji_Offset`의 자리 x · 가로 배율 · 회전에, `PlaceSign`은 `EmojiRig_Place`의 가로 배율 · 회전에. 런타임 `Stage/Emoji/EmojiPlaybackSystem.cs`의 `Apply`와 `EmojiLocatorSystem.cs`가 본이다 — **부호를 툴에서 따로 계산하지 않는다**. 켠 동안 뷰포트에서 그림을 끌어 기본 자리를 옮기는 것은 막는다(거울 속에서 끄는 값이 헷갈린다 — 끄고 옮긴다) | 툴에서 보는 뒤집힌 모습 = 게임 — **끝** |
 | E8-4 | **화면** — 이모지 탭에 칸 둘(이모지: 방향을 따르지 않는다 / 리그: 뒤집히지 않는 그림)과 보기 절의 "왼쪽을 보는 인물로". 테스트 손잡이(`internal … FromForm()`)와 헤드리스 테스트. `fixedSide`인 이모지에서는 리그의 `upright` 칸이 뜻이 없다 — 흐리게 하거나 한 줄로 알린다(막지는 않는다). F1 표 · README · `docs/USER-GUIDE.md` | 툴에서 두 칸을 고친다 — **끝** |
-| E8-5 | **예시와 대조** — 빌더(`tests/Mt.Authoring.Tests/EmojiExamples.cs`)에서 `question`의 리그 `mark`에 `upright`. 픽스처 `Fixtures/runtime-emojis.json`을 런타임 `32858197`의 `Assets/Dialogue/emojis.json`으로 다시 가져간다. `EmojiExampleTests`의 대조가 **두 칸도** 본다(이모지의 `FixedSide` · 리그의 `Upright`). 예시를 다시 쓴다(`MT_WRITE_EXAMPLES=1`). `EmojiShots`에 뒤집힌 보기 한 장 | 툴이 낸 파일 = 런타임의 견본(값으로) |
+| E8-5 | **예시와 대조** — 빌더(`tests/Mt.Authoring.Tests/EmojiExamples.cs`)에서 `question`의 리그 `mark`에 `upright`. 픽스처 `Fixtures/runtime-emojis.json`을 런타임 `32858197`의 `Assets/Dialogue/emojis.json`으로 다시 가져간다. `EmojiExampleTests`의 대조가 **두 칸도** 본다(이모지의 `FixedSide` · 리그의 `Upright`). 예시를 다시 쓴다(`MT_WRITE_EXAMPLES=1`). `EmojiShots`에 뒤집힌 보기 한 장 | 툴이 낸 파일 = 런타임의 견본(값으로) — **끝** |
 
 **알아 둘 것**
 
@@ -188,6 +188,35 @@
 - R6(코어 사본을 통째로 다시 들이기) · R4 · R5 — 이 단계의 밖이다.
 
 **끝나면** — 이 절 아래에 "E8에서 한 것"(된 것 · 정한 것 · 아직 불편한 것 · 테스트 수)을 적고 상태 줄을 고친다. 커밋은 소유자.
+
+### E8에서 한 것 (2026-11-12)
+
+**된 것**
+
+- **E8-1 들이기** — 런타임 `32858197`의 `Core/Emoji/EmojiDefinition.cs` · `Core/Tuning/EmojisFileDto.cs`를 통째로(바이트 그대로) 다시 들였다. 고친 것은 없다. 사본의 이모지 파일 다섯(`EmojiClip` · `EmojiDefinition` · `EmojiPlayback` · `EmojisFileDto` · `RigSchemaDto`)이 모두 `32858197`의 것과 같다.
+  순수 테스트 둘(`형식의_좌우_표시를_읽는다_없으면_거짓이다` · `좌우의_부호_누가_한_번_더_뒤집는가`)을 견본 `Sided`와 함께 가져왔다 — 런타임 테스트의 `Flip`(유니티 노드)은 뺐다. `vendoring.md`의 원본을 `32858197`로 고쳤다.
+- **E8-2 모델과 내보내기** — `EmojiAsset.FixedSide` · `EmojiRigAsset.Upright`(거짓이면 저작본에 적지 않는다), 편집 명령 `SetEmojiFixedSide` · `SetEmojiRigUpright`(한 칸, 같은 값은 기록하지 않는다), 복제는 저작본을 거쳐 함께 가져간다.
+  `EmojiExport`는 참일 때만 `"fixedSide": true`(이모지, `rigs` 다음) · `"upright": true`(리그, `rotation` 다음)를 적는다 — 두 칸이 없는 문서는 낸 글자가 전과 같다. `EmojiPreview.Definition`은 그 글자를 코어 로더로 읽으니 두 칸이 저절로 실린다.
+- **E8-3 미리보기** — `EmojiPreview.FlipLocator`(로케이터 = `Emoji_Offset`의 부모의 자리 x와 가로 배율을 뒤집는다 — 런타임 `EmojiLocatorSystem`), `EmojiPreview.Apply(…, definition, locatorFlipped)`가
+  코어 `EmojiSide.OffsetSign` · `PlaceSign`을 런타임 `EmojiPlaybackSystem.Apply`와 같은 자리에 곱한다(리그는 순번으로 맞춘다). 부호를 툴에서 따로 계산하지 않는다.
+  뷰포트 `EmojiFacingLeft`는 보기의 상태 — 켠 동안 그림을 눌러도 고르기만 하고 기본 자리를 끌지 않는다. `mt pose --emoji … --facing left`(리그마다 화면의 자리 `at`).
+- **E8-4 화면** — 이모지 탭의 "방향을 따르지 않는다 (fixedSide)" · 리그의 "뒤집히지 않는 그림 (upright)" · 보기의 "왼쪽을 보는 인물로". `fixedSide` 이모지에서는 `upright` 칸이 흐려지고 한 줄로 알린다(막지 않는다). F1 표 · README · USER-GUIDE.
+- **E8-5 예시와 대조** — 빌더에서 `question`의 `mark`에 `upright`. 픽스처를 런타임 `32858197`의 `emojis.json`으로 다시 가져왔고, `EmojiExampleTests`가 이모지의 `FixedSide` · 리그의 `Upright`도 본다. 예시를 다시 썼다.
+  **툴이 낸 `examples/emoji/emojis.json`이 런타임의 파일과 바이트까지 같다**(줄바꿈 LF로 견주어). `EmojiShots`에 `question`을 바로 본 것과 왼쪽을 보는 인물로 본 것 두 장.
+
+**정한 것**
+
+- **문서 지문에는 넣지 않았다** — `DocumentSession`의 지문은 그림을 다시 싣는 때를 가리는 것(그림 목록)이라 두 칸과 상관이 없다. 넣으면 칸을 누를 때마다 그림을 다시 읽는다. 두 칸은 저작본 글자에 들어가므로 "바뀌었나"와 되돌리기는 그대로 본다.
+- **미리보기의 부호는 코어 정의에서** — `EmojiSide`는 코어 `EmojiDefinition` · `EmojiRigEntry`를 받는다. 툴은 내보낸 글자를 코어 로더로 읽은 정의(`EmojiPreview.Definition`)를 넘긴다. 런타임이 거르는 이모지(정의가 없다)는 로케이터만 뒤집고 부호는 1이다 — 그때는 화면이 "런타임이 읽지 못한다"를 이미 알린다.
+- **거울 속에서는 끌지 않는다**(지시대로) — 누르면 리그를 고르기만 한다. 칸으로 자리를 고치는 것은 그대로 된다.
+
+**아직 불편한 것**
+
+- 로케이터의 자리는 덤프의 기본값(발의 가운데, x 0)이라, 툴에서는 캐릭터마다의 머리 자리 · 거울의 축 어긋남(런타임 `PLAN_emoji-placement.md` §3 "거울의 축")이 보이지 않는다.
+- "왼쪽을 보는 인물로"는 초상까지 뒤집지 않는다 — 이모지만 뒤집힌 인물 쪽 모습이다(인물의 `mirror`는 이 툴의 미리보기에 없다).
+- 코어 사본에서 모자란 것은 보이지 않았다 — 고친 것 없음.
+
+**확인** — 전체 테스트 814개 통과(코어 426 · 도메인 292 · 화면 96). `EmojiSideTests` 7개(모델 · 저작본 · 내보내기 · 뒤집힌 보기 셋 · `mt`), `EmojiShellTests` +2, 코어 +2.
 
 ## 6. 정해진 것 (소유자, 2026-11-11)
 

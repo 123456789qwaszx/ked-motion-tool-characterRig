@@ -290,7 +290,8 @@
           "placeX": 0,
           "placeY": 0,
           "scale": 0.45,
-          "rotation": 0
+          "rotation": 0,
+          "upright": true
         }
       ],
       "timeline": {

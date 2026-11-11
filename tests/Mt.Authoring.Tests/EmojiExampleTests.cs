@@ -9,7 +9,7 @@ namespace Mt.Authoring.Tests;
 
 /// <summary>
 /// 예시(PLAN-emoji.md E7) — 런타임의 견본 셋을 툴 문서로 다시 지었다. 툴이 낸 <c>emojis.json</c>을 코어 로더로 읽으면
-/// 런타임의 파일(<c>Fixtures/runtime-emojis.json</c>, 런타임 <c>007d4c16</c>의 <c>Assets/Dialogue/emojis.json</c>)과 프레임마다 같은 값이 나온다.
+/// 런타임의 파일(<c>Fixtures/runtime-emojis.json</c>, 런타임 <c>32858197</c>의 <c>Assets/Dialogue/emojis.json</c>)과 프레임마다 같은 값이 나온다 — 좌우의 두 칸까지.
 /// <c>examples/emoji</c>의 파일은 빌더(<see cref="EmojiExamples"/>)가 낸 바이트와 같다 — <c>MT_WRITE_EXAMPLES=1</c>이면 다시 쓴다.
 /// </summary>
 public sealed class EmojiExampleTests
@@ -33,6 +33,8 @@ public sealed class EmojiExampleTests
         Assert.DoesNotContain(EmojiValidator.Validate(document, (Rig.EmojiRigFrame?)null), p => p.Blocking);
         Assert.True(document.FindEmoji("star")!.Stays);
         Assert.False(document.FindEmoji("question")!.Stays);
+        Assert.True(document.FindEmoji("question")!.FindRig("mark")!.Upright); // 물음표는 뒤집히지 않는다
+        Assert.DoesNotContain(document.Emojis, e => e.FixedSide);
     }
 
     [Fact]
@@ -50,8 +52,9 @@ public sealed class EmojiExampleTests
             Assert.Equal(expected.Offset.Y, actual.Offset.Y, Tolerance);
             Assert.Equal(expected.Fps, actual.Fps);
             Assert.Equal(expected.Stays, actual.Stays);
+            Assert.Equal(expected.FixedSide, actual.FixedSide);
 
-            Assert.Equal(expected.Rigs.Select(r => (r.Name, r.SpriteKey)), actual.Rigs.Select(r => (r.Name, r.SpriteKey)));
+            Assert.Equal(expected.Rigs.Select(r => (r.Name, r.SpriteKey, r.Upright)), actual.Rigs.Select(r => (r.Name, r.SpriteKey, r.Upright)));
 
             for (int i = 0; i < expected.Rigs.Count; i++)
             {
