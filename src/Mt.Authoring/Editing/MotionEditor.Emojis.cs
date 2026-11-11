@@ -94,6 +94,21 @@ public sealed partial class MotionEditor
         });
     }
 
+    /// <summary>
+    /// 이모지가 인물의 방향을 따르지 않는가(<c>fixedSide</c>) — 참이면 인물이 뒤집혀도 만든 쪽 그대로 선다. 같은 값이면 기록하지 않는다.
+    /// </summary>
+    public void SetEmojiFixedSide(string name, bool fixedSide)
+    {
+        EmojiAsset emoji = RequireEmoji(name);
+
+        if (emoji.FixedSide == fixedSide)
+        {
+            return;
+        }
+
+        Mutate(MotionChangeKind.Emoji, () => emoji.FixedSide = fixedSide);
+    }
+
     // ── 리그 ──────────────────────────────────────────────────────────
 
     /// <summary>리그를 더한다(맨 위에 그려진다). 이름은 이모지 안에서 하나뿐이고 이름 규칙(<c>[a-z0-9_]+</c>)을 따른다.</summary>
@@ -181,6 +196,22 @@ public sealed partial class MotionEditor
             rig.Scale = scale;
             rig.Rotation = rotation;
         });
+    }
+
+    /// <summary>
+    /// 리그가 뒤집히면 안 되는 그림인가(<c>upright</c>) — 참이면 이모지가 거울에 비쳐도 그림과 키는 만든 그대로 보인다. 같은 값이면 기록하지 않는다.
+    /// </summary>
+    public void SetEmojiRigUpright(string emojiName, string rigName, bool upright)
+    {
+        EmojiAsset emoji = RequireEmoji(emojiName);
+        EmojiRigAsset rig = RequireRig(emoji, rigName);
+
+        if (rig.Upright == upright)
+        {
+            return;
+        }
+
+        Mutate(MotionChangeKind.Emoji, () => rig.Upright = upright);
     }
 
     /// <summary>리그의 그림들(문서 기준 경로) — 첫 장이 기본 스프라이트. 그림 바꾸기 키는 몇 번째인가로 가리키므로 순서를 바꾸면 키가 다른 장을 가리킨다.</summary>

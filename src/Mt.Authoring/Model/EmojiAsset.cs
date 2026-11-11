@@ -34,6 +34,14 @@ public sealed class EmojiAsset
     public List<EmojiRigAsset> Rigs { get; set; } = new();
 
     /// <summary>
+    /// 인물의 방향을 따르지 않는다(<c>fixedSide</c>, 런타임 <c>docs/emoji-format.md</c> §6) — 인물이 뒤집혀도 만든 쪽 그대로 선다
+    /// (로케이터의 자리만 인물을 따라간다). 이모지는 오른쪽을 보는 인물을 기준으로 만들고, 보통은 인물이 뒤집히면 통째로 거울에 비친다.
+    /// 거짓이면 저작본 · <c>emojis.json</c>에 적지 않는다.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool FixedSide { get; set; }
+
+    /// <summary>
     /// 이모지의 타임라인 — 이 이모지가 소유한 모션 하나. 이름은 <see cref="TimelineNameOf"/>로 이모지 이름을 따라간다.
     /// 채널의 대상은 <c>Emoji_Offset</c>(이모지 전체)과 리그마다의 그림 노드다(<see cref="Rig.EmojiRigFrame"/>). 시각은 초(24fps).
     /// </summary>
@@ -109,6 +117,14 @@ public sealed class EmojiRigAsset
 
     /// <summary>기본 회전(도). 키의 회전은 이 위에 얹힌다.</summary>
     public float Rotation { get; set; }
+
+    /// <summary>
+    /// 뒤집히면 안 되는 그림(<c>upright</c>, 런타임 <c>docs/emoji-format.md</c> §6 — 물음표 · 글자). 이모지가 거울에 비칠 때
+    /// 이 리그의 그림과 키는 만든 그대로 보이고 기본 자리만 거울 쪽으로 간다. 방향을 따르지 않는 이모지(<see cref="EmojiAsset.FixedSide"/>)에서는 뜻이 없다.
+    /// 거짓이면 저작본 · <c>emojis.json</c>에 적지 않는다.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool Upright { get; set; }
 
     /// <summary>그림 하나의 스프라이트 키 — 파일 이름(확장자 없이).</summary>
     public static string SpriteKeyOf(string imagePath) => Path.GetFileNameWithoutExtension(imagePath.Replace('\\', '/'));

@@ -118,8 +118,15 @@ public static class EmojiExport
             ["name"] = emoji.Name,
             ["offset"] = Xy(emoji.OffsetX, emoji.OffsetY),
             ["rigs"] = new JsonArray(emoji.Rigs.Select(r => (JsonNode)RigJson(r)).ToArray()),
-            ["clips"] = new JsonArray(ClipsOf(emoji).Select(c => (JsonNode)ClipJson(emoji, frame, c.Name, c.Start, c.End)).ToArray()),
         };
+
+        // 좌우의 예외 — 거짓이면 적지 않는다(런타임이 없으면 거짓으로 읽는다).
+        if (emoji.FixedSide)
+        {
+            json["fixedSide"] = true;
+        }
+
+        json["clips"] = new JsonArray(ClipsOf(emoji).Select(c => (JsonNode)ClipJson(emoji, frame, c.Name, c.Start, c.End)).ToArray());
 
         if (emoji.Stays)
         {
@@ -152,6 +159,11 @@ public static class EmojiExport
         if (rig.Rotation != 0f)
         {
             json["rotation"] = Round(rig.Rotation);
+        }
+
+        if (rig.Upright)
+        {
+            json["upright"] = true;
         }
 
         return json;
