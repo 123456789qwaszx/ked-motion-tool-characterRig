@@ -1831,7 +1831,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// 오른쪽 = 탭 셋(PLAN-inspector): 채널 박스(기본, 애니메이터) · 씬(무대 세팅) · 모션(속성). 설정·단축키는 툴바의 창으로,
+    /// 오른쪽 = 캐릭터 모션 모드의 탭 넷(PLAN-inspector): 채널 박스(기본, 애니메이터) · 씬(무대 세팅) · 모션(속성) · 클립, 그리고 이모지 모드의 칸(탭 밖). 설정·단축키는 툴바의 창으로,
     /// 단축키의 그림자 버튼(Q/W/E/R·S·Esc·복사·붙여넣기…)은 없다. 마지막 탭·접힌 묶음은 설정에 남는다.
     /// </summary>
     private void BuildRight()
@@ -1842,18 +1842,20 @@ public partial class MainWindow : Window
             new TabItem { Header = "씬", Content = BuildSceneTab(), FontSize = 12 },
             new TabItem { Header = "모션", Content = BuildMotionTab(), FontSize = 12 },
             new TabItem { Header = "클립", Content = BuildClipTab(), FontSize = 12 },
-            new TabItem { Header = "이모지", Content = BuildEmojiTab(), FontSize = 12 },
         };
         _inspectorTabs.ItemsSource = _inspectorTabItems;
         _inspectorTabs.SelectionChanged += (_, _) =>
         {
-            // 남기는 것은 캐릭터 모션 모드의 탭뿐이다 — 이모지 모드의 탭은 하나다.
-            if (!_refreshing && _inspectorTabs.SelectedIndex is >= 0 and < EmojiTabIndex)
+            if (!_refreshing && _inspectorTabs.SelectedIndex >= 0)
             {
                 _settings.InspectorTab = _inspectorTabs.SelectedIndex;
             }
         };
         RightPanel.Children.Add(_inspectorTabs);
+
+        // 이모지 모드의 오른쪽 — 탭이 아니다(하나뿐인 탭 줄은 뜻이 없다). 모드가 탭들과 이것 중 하나만 보인다.
+        _emojiPane = BuildEmojiPane();
+        RightPanel.Children.Add(_emojiPane);
         WireSettingsControls();
     }
 
@@ -3212,13 +3214,17 @@ public partial class MainWindow : Window
     {
         ControllerRig? labels = _session.ControllersOf(motion.Rig);
 
+        // 이모지의 타임라인은 만드는 사람의 말로 적는다(EmojiWords) — 노드 이름은 툴팁에 남는다.
+        bool emoji = EmojiAsset.IsTimelineName(motion.Name, out _);
+
         foreach (ChannelAsset channel in motion.Channels)
         {
             string node = channel.Node;
             ChannelKind kind = channel.Kind;
-            string nodeLabel = DopeSheetRows.NodeLabel(node, labels);
+            string nodeLabel = emoji ? EmojiWords.Target(node) : DopeSheetRows.NodeLabel(node, labels);
+            string kindLabel = emoji ? EmojiWords.Kind(kind) : ChannelKindLabel.Of(kind);
 
-            if (query.Length > 0 && !node.Contains(query, StringComparison.OrdinalIgnoreCase) && !nodeLabel.Contains(query, StringComparison.OrdinalIgnoreCase) && !ChannelKindLabel.Of(kind).Contains(query, StringComparison.OrdinalIgnoreCase))
+            if (query.Length > 0 && !node.Contains(query, StringComparison.OrdinalIgnoreCase) && !nodeLabel.Contains(query, StringComparison.OrdinalIgnoreCase) && !kindLabel.Contains(query, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -3257,7 +3263,7 @@ public partial class MainWindow : Window
 
             var title = new TextBlock
             {
-                Text = $"{nodeLabel} · {ChannelKindLabel.Of(kind)}",
+                Text = $"{nodeLabel} · {kindLabel}",
                 FontSize = 11,
                 FontWeight = FontWeight.SemiBold,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -3271,7 +3277,7 @@ public partial class MainWindow : Window
 
             foreach (CurveRef curveRef in axesOfChannel)
             {
-                _channelRows.Children.Add(ComponentRow(motion, curveRef, $"{ChannelKindLabel.Of(kind)} {curveRef.Axis.ToString().ToUpperInvariant()}", null));
+                _channelRows.Children.Add(ComponentRow(motion, curveRef, emoji ? EmojiWords.Component(kind, curveRef.Axis) : $"{kindLabel} {curveRef.Axis.ToString().ToUpperInvariant()}", null));
             }
         }
 
@@ -3285,6 +3291,41 @@ public partial class MainWindow : Window
 
     /// <summary>작은 리그에서만 키 없는 채널을 늘어놓는다 — 캐릭터 리그는 노드가 많아 목록이 묻힌다(그쪽은 컨트롤러 표가 그 일을 한다).</summary>
     private const int UnkeyedRowsMaxNodes = 16;
+
+    /// <summary>테스트 손잡이 — 그래프 목록에 적힌 글자들(채널의 머리글 · 성분 · "키 없음" 줄), 위에서 아래로.</summary>
+    internal IReadOnlyList<string> ChannelRowTexts
+    {
+        get
+        {
+            var texts = new List<string>();
+
+            void Walk(Control control)
+            {
+                switch (control)
+                {
+                    case TextBlock { Text: { Length: > 0 } text }:
+                        texts.Add(text);
+                        break;
+                    case Panel panel:
+                        foreach (Control child in panel.Children)
+                        {
+                            Walk(child);
+                        }
+
+                        break;
+                    case Decorator { Child: { } child }:
+                        Walk(child);
+                        break;
+                    case ContentControl { Content: Control content }:
+                        Walk(content);
+                        break;
+                }
+            }
+
+            Walk(_channelRows);
+            return texts;
+        }
+    }
 
     /// <summary>테스트 손잡이 — 그래프 목록의 "키 없음" 줄들(노드 · 종류).</summary>
     internal IReadOnlyList<(string Node, ChannelKind Kind)> UnkeyedRows => _unkeyedRows.Select(t => (t.Node, t.Kind)).ToList();
@@ -3321,7 +3362,7 @@ public partial class MainWindow : Window
                 continue;
             }
 
-            string kindLabel = ChannelKindLabel.Of(target.Kind);
+            string kindLabel = EmojiAsset.IsTimelineName(motion.Name, out _) ? EmojiWords.Kind(target.Kind) : ChannelKindLabel.Of(target.Kind);
 
             if (query.Length > 0 && !target.Node.Contains(query, StringComparison.OrdinalIgnoreCase) && !target.Label.Contains(query, StringComparison.OrdinalIgnoreCase) && !kindLabel.Contains(query, StringComparison.OrdinalIgnoreCase))
             {

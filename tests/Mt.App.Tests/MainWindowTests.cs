@@ -848,7 +848,7 @@ public class MainWindowTests
 
             try
             {
-                Assert.Equal(5, window.InspectorTabCount); // 채널 박스 · 씬 · 모션 · 클립 · 이모지
+                Assert.Equal(4, window.InspectorTabCount); // 채널 박스 · 씬 · 모션 · 클립 (이모지의 칸은 탭이 아니다 — PLAN-ux U3)
                 Assert.Equal(0, window.InspectorTab);
                 window.InspectorTab = 2;
                 Assert.Equal(2, window.Settings.InspectorTab);

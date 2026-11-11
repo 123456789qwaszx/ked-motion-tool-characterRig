@@ -8,9 +8,6 @@ namespace Mt.App.Tests;
 /// <summary>작업 모드(PLAN-ux.md U1) — 캐릭터 모션 / 이모지. 화면이 그 일에 쓰는 것만 보이고, 모드는 시간의 주인을 따라간다.</summary>
 public class WorkModeShellTests
 {
-    private static readonly string[] MotionTabs = { "채널 박스", "씬", "모션", "클립" };
-    private static readonly string[] EmojiTabs = { "이모지" };
-
     private static string NewSettings(string json = "{}")
     {
         string path = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", $"settings-{Guid.NewGuid():N}.json");
@@ -48,7 +45,9 @@ public class WorkModeShellTests
             var state = window.WorkModeFormState;
             Assert.True(state.MotionLeft);
             Assert.False(state.EmojiLeft);
-            Assert.Equal(MotionTabs, state.Tabs);
+            Assert.True(state.Tabs);
+            Assert.False(state.EmojiPane);
+            Assert.Equal(4, window.InspectorTabCount); // 채널 박스 · 씬 · 모션 · 클립 — 이모지의 칸은 탭이 아니다
             Assert.Equal(new[] { "motions.json 가져오기…", "motions.json 내보내기…" }, state.Exports);
         });
     }
@@ -65,9 +64,9 @@ public class WorkModeShellTests
             var state = window.WorkModeFormState;
             Assert.False(state.MotionLeft);
             Assert.True(state.EmojiLeft);
-            Assert.Equal(EmojiTabs, state.Tabs);
+            Assert.False(state.Tabs);
+            Assert.True(state.EmojiPane);
             Assert.Equal(new[] { "emojis.json 내보내기…" }, state.Exports);
-            Assert.Equal(4, window.InspectorTab);
         });
     }
 
@@ -143,8 +142,8 @@ public class WorkModeShellTests
             Assert.Equal(2, window.Settings.InspectorTab);
 
             window.SwitchWorkModeFromForm(WorkMode.Emoji);
-            Assert.Equal(4, window.InspectorTab);
-            Assert.Equal(2, window.Settings.InspectorTab); // 이모지 모드의 탭은 남기지 않는다
+            Assert.False(window.WorkModeFormState.Tabs);
+            Assert.Equal(2, window.Settings.InspectorTab);
 
             window.SwitchWorkModeFromForm(WorkMode.Motion);
             Assert.Equal(2, window.InspectorTab);
@@ -157,7 +156,7 @@ public class WorkModeShellTests
         Run(window =>
         {
             Assert.Equal(WorkMode.Emoji, window.Mode);
-            Assert.Equal(EmojiTabs, window.WorkModeFormState.Tabs);
+            Assert.True(window.WorkModeFormState.EmojiPane);
 
             window.SwitchWorkModeFromForm(WorkMode.Motion);
             Assert.Equal(WorkMode.Motion, window.Settings.WorkMode);
@@ -178,7 +177,7 @@ public class WorkModeShellTests
             Assert.True(state.EmojiFields);
             Assert.False(state.RigFields);
             Assert.False(state.Back);
-            Assert.StartsWith("emoji — 리그 1", state.Title);
+            Assert.Equal("emoji — 그림 1장 · 25프레임 · 한 번 재생하고 사라진다", state.Title);
             Assert.Null(window.Viewport.SelectedEmojiRig);
             Assert.Equal("이모지 전체", window.EmojiKeyTargetChoice);
 
@@ -188,7 +187,7 @@ public class WorkModeShellTests
             Assert.False(state.EmojiFields);
             Assert.True(state.RigFields);
             Assert.True(state.Back);
-            Assert.Equal("리그 body — emoji의 그림", state.Title);
+            Assert.Equal("그림 body — emoji", state.Title);
             Assert.Equal("body", window.Viewport.SelectedEmojiRig);
             Assert.Equal("body", window.EmojiKeyTargetChoice); // 키를 놓을 대상이 고른 리그를 따라온다
 
@@ -228,7 +227,7 @@ public class WorkModeShellTests
             Assert.True(window.EmojiInspectorState.RigFields);
 
             window.CommitEmojiField("rigName", "mark");
-            Assert.Equal("리그 mark — emoji의 그림", window.EmojiInspectorState.Title);
+            Assert.Equal("그림 mark — emoji", window.EmojiInspectorState.Title);
 
             window.Session.Editor.RemoveEmojiRig("emoji", "mark");
             Assert.True(window.EmojiInspectorState.EmojiFields);
@@ -250,6 +249,44 @@ public class WorkModeShellTests
             Assert.Equal("머무는 이모지", window.EmojiRowNote("star"));
             Assert.Equal("한 번 재생하고 사라진다", window.EmojiRowNote("question"));
             Assert.Equal("star.png", window.EmojiRigRowNote("body"));
+        });
+    }
+
+    // ── 화면의 말 (PLAN-ux.md U3) ────────────────────────────────
+
+    [Fact]
+    public void 그래프_목록은_이모지의_타임라인을_만드는_사람의_말로_적는다()
+    {
+        Run(window =>
+        {
+            window.Session.Open(Path.Combine(RepoRoot(), "examples", "emoji", "emoji-examples.motion-authoring.json"));
+            window.SelectEmoji("star");
+
+            IReadOnlyList<string> texts = window.ChannelRowTexts;
+
+            Assert.Contains("body · 크기", texts);
+            Assert.Contains("크기 X", texts);
+            Assert.Contains("body · 투명도", texts);
+            Assert.Contains("이모지 전체 · 투명도", texts);
+            Assert.Contains("투명도", texts);               // 성분이 하나뿐이면 축을 붙이지 않는다
+            Assert.Contains("이모지 전체 · 자리", texts);    // "키 없음" 줄
+            Assert.Contains("body · 그림", texts);
+            Assert.DoesNotContain(texts, t => t.Contains("EmojiRig_Image") || t.Contains("Emoji_Offset") || t.Contains("alpha") || t.Contains("scale"));
+        });
+    }
+
+    [Fact]
+    public void 캐릭터_모션의_그래프_목록은_전과_같다()
+    {
+        Run(window =>
+        {
+            MotionEditor editor = window.Session.Editor;
+            editor.AddMotion("nod", "character", 0.6f);
+            editor.KeyComponents("nod", "CharacterPortrait_Track_Y", Mt.Authoring.Model.ChannelKind.Position, 0f,
+                new[] { (Mt.Authoring.Model.Axis.Y, 1f) }, Mt.Authoring.Model.TangentMode.Flat);
+            window.SelectMotion("nod");
+
+            Assert.Contains(window.ChannelRowTexts, t => t.StartsWith("position", StringComparison.Ordinal));
         });
     }
 

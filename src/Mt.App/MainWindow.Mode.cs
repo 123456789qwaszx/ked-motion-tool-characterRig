@@ -6,23 +6,21 @@ namespace Mt.App;
 
 // 작업 모드(docs/PLAN-ux.md U1) — 캐릭터 모션 / 이모지. 화면이 그 일에 쓰는 것만 보인다.
 //
-//   캐릭터 모션: 왼쪽 = 씬 · 모션 · 클립, 오른쪽 = 채널 박스 · 씬 · 모션 · 클립 탭, 툴바 = motions.json 가져오기 · 내보내기
-//   이모지:     왼쪽 = 이모지 목록,       오른쪽 = 이모지 탭,                     툴바 = emojis.json 내보내기
+//   캐릭터 모션: 왼쪽 = 씬 · 모션 · 클립,          오른쪽 = 채널 박스 · 씬 · 모션 · 클립 탭, 툴바 = motions.json 가져오기 · 내보내기
+//   이모지:     왼쪽 = 이모지 · 그 이모지의 그림, 오른쪽 = 고른 것의 값(탭이 아니다),        툴바 = emojis.json 내보내기
 //
 // 가운데(뷰포트 · 타임 슬라이더 · 그래프 · 도프 시트)는 두 모드가 함께 쓴다 — 시간의 주인(모션 · 클립 · 이모지)이 묶는다.
 // 모드는 시간의 주인을 따라간다: 이모지를 고르면 이모지 모드, 모션이나 클립을 고르면 캐릭터 모션 모드.
 // 툴바에서 모드를 바꾸면 반대쪽의 선택이 풀린다(숨은 목록의 것이 가운데에 남지 않게).
 public partial class MainWindow
 {
-    /// <summary>오른쪽 탭에서 이모지 탭의 자리 — 그 앞은 캐릭터 모션 모드의 탭이다.</summary>
-    private const int EmojiTabIndex = 4;
-
     private readonly ToggleButton _modeMotion = new() { Content = "캐릭터 모션", FontSize = 11, Padding = new Avalonia.Thickness(10, 3) };
     private readonly ToggleButton _modeEmoji = new() { Content = "이모지", FontSize = 11, Padding = new Avalonia.Thickness(10, 3) };
     private readonly StackPanel _motionLeft = new() { Spacing = 6 };
     private readonly StackPanel _emojiLeft = new() { Spacing = 6 };
     private readonly List<(WorkMode Mode, Control Control)> _modeOnly = new();
     private TabItem[] _inspectorTabItems = Array.Empty<TabItem>();
+    private Control _emojiPane = new Panel();
     private WorkMode _workMode;
 
     /// <summary>테스트 손잡이 — 지금의 작업 모드.</summary>
@@ -31,11 +29,12 @@ public partial class MainWindow
     /// <summary>테스트 손잡이 — 툴바에서 모드를 고른다(단추를 누르는 것과 같은 길).</summary>
     internal void SwitchWorkModeFromForm(WorkMode mode) => SwitchWorkMode(mode);
 
-    /// <summary>테스트 손잡이 — 모드가 보이는 것: 왼쪽의 두 묶음 · 보이는 탭의 머리글 · 보이는 툴바의 내보내기.</summary>
-    internal (bool MotionLeft, bool EmojiLeft, IReadOnlyList<string> Tabs, IReadOnlyList<string> Exports) WorkModeFormState
+    /// <summary>테스트 손잡이 — 모드가 보이는 것: 왼쪽의 두 묶음 · 오른쪽의 탭들과 이모지의 칸 · 보이는 툴바의 내보내기.</summary>
+    internal (bool MotionLeft, bool EmojiLeft, bool Tabs, bool EmojiPane, IReadOnlyList<string> Exports) WorkModeFormState
         => (_motionLeft.IsVisible,
             _emojiLeft.IsVisible,
-            _inspectorTabItems.Where(t => t.IsVisible).Select(t => t.Header as string ?? "").ToList(),
+            _inspectorTabs.IsVisible,
+            _emojiPane.IsVisible,
             _modeOnly.Where(m => m.Control.IsVisible && m.Control is Button).Select(m => ((Button)m.Control).Content as string ?? "").ToList());
 
     private void BuildWorkModeSwitch()
@@ -102,12 +101,9 @@ public partial class MainWindow
                 control.IsVisible = only == mode;
             }
 
-            for (int i = 0; i < _inspectorTabItems.Length; i++)
-            {
-                _inspectorTabItems[i].IsVisible = (i == EmojiTabIndex) == emoji;
-            }
-
-            _inspectorTabs.SelectedIndex = emoji ? EmojiTabIndex : Math.Clamp(_settings.InspectorTab, 0, EmojiTabIndex - 1);
+            _inspectorTabs.IsVisible = !emoji;
+            _emojiPane.IsVisible = emoji;
+            _inspectorTabs.SelectedIndex = Math.Clamp(_settings.InspectorTab, 0, _inspectorTabItems.Length - 1);
         }
         finally
         {

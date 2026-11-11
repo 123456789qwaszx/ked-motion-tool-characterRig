@@ -130,7 +130,7 @@ public class EmojiShellTests
             // 그림은 리그에만 — 이모지 전체에는 막힌다(상태 줄).
             window.KeyEmojiNowFromForm(null, ChannelKind.Image);
             Assert.Null(timeline.FindChannel("Emoji_Offset", ChannelKind.Image));
-            Assert.Contains("그림 바꾸기는 리그에만", window.Session.Status);
+            Assert.Contains("그림 바꾸기는 그림에만", window.Session.Status);
 
             long before = editor.Revision;
             window.LayFlipsFromForm(0, 3, 5);

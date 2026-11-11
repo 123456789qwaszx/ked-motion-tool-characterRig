@@ -48,6 +48,9 @@ public static class DopeSheetRows
 
         var rows = new List<DopeRow>();
 
+        // 이모지의 타임라인은 만드는 사람의 말로 적는다 — 노드 이름 대신 그림의 이름, 채널 이름 대신 자리 · 크기 · 투명도(EmojiWords).
+        bool emoji = EmojiAsset.IsTimelineName(motion.Name, out _);
+
         foreach (IGrouping<string, ChannelAsset> node in motion.Channels.GroupBy(c => c.Node, StringComparer.Ordinal))
         {
             var nodeKeys = new List<KeyRef>();
@@ -76,17 +79,17 @@ public static class DopeSheetRows
                     channelKeys.AddRange(keys);
                     componentRows.Add(new DopeRow(
                         DopeRowLevel.Component, channel.Node, channel.Kind, axis,
-                        axis.ToString().ToLowerInvariant(), Group(motion, keys), curveRef));
+                        emoji ? EmojiWords.Component(channel.Kind, axis) : axis.ToString().ToLowerInvariant(), Group(motion, keys), curveRef));
                 }
 
                 nodeKeys.AddRange(channelKeys);
                 channelRows.Add(new DopeRow(
                     DopeRowLevel.Channel, channel.Node, channel.Kind, null,
-                    ChannelKindLabel.Of(channel.Kind), Group(motion, channelKeys), null));
+                    emoji ? EmojiWords.Kind(channel.Kind) : ChannelKindLabel.Of(channel.Kind), Group(motion, channelKeys), null));
                 channelRows.AddRange(componentRows);
             }
 
-            rows.Add(new DopeRow(DopeRowLevel.Node, node.Key, null, null, NodeLabel(node.Key, controllers), Group(motion, nodeKeys), null));
+            rows.Add(new DopeRow(DopeRowLevel.Node, node.Key, null, null, emoji ? EmojiWords.Target(node.Key) : NodeLabel(node.Key, controllers), Group(motion, nodeKeys), null));
 
             if (isCollapsed is null || !isCollapsed(node.Key))
             {
