@@ -232,6 +232,29 @@ public static class EmojiExport
             cut.Add((end, value, slope, slope, false));
         }
 
+        // 곡선은 첫 키 앞과 마지막 키 뒤에서 끝값으로 평평하다. 세운 끝 키가 그 바깥이면, 그쪽을 향한 진짜 키의 기울기를 0으로 —
+        // 남겨 두면 세운 키까지 Hermite가 휘어 모양이 달라진다.
+        if (keys.Count > 0)
+        {
+            float first = FrameOf(keys[0]);
+            float last = FrameOf(keys[^1]);
+
+            for (int c = 0; c < cut.Count; c++)
+            {
+                (float f, float v, float i, float o, bool step) = cut[c];
+
+                if (start < first - tolerance && Math.Abs(f - first) <= tolerance)
+                {
+                    cut[c] = (f, v, 0f, o, step);
+                }
+
+                if (end > last + tolerance && Math.Abs(f - last) <= tolerance)
+                {
+                    cut[c] = (f, v, cut[c].In, 0f, step);
+                }
+            }
+        }
+
         var json = new JsonArray();
 
         foreach ((float f, float v, float i, float o, bool step) in cut.OrderBy(c => c.F))

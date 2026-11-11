@@ -32,7 +32,9 @@ public static class MtCli
           mt emojis   <문서> <emojis.json> [--rig <덤프>]      emojis.json(emojis/2) 내보내기 — 구간마다 따로 선 클립, 런타임 로더로 다시 읽어 본다
           mt pose     <문서> --motion <이름> --time <초> [--object <id>] [--mode relative|absolute] [--rig <덤프>]
           mt pose     <문서> --clip <이름> --time <초> [--rig <덤프>]
-                                                               그 시각의 포즈 — 모션·클립이 건드리는 노드의 값과 오브젝트의 불투명도
+          mt pose     <문서> --emoji <이름> --time <초> [--off <초>] [--view life|timeline] [--rig <덤프>]
+                                                               그 시각의 포즈 — 모션·클립이 건드리는 노드의 값과 오브젝트의 불투명도,
+                                                               이모지는 수명(등장 → 머묾 ⟲ → --off에 내리면 퇴장) 또는 타임라인의 그 프레임
           mt bake     <문서> --clip <이름> --object <id> --name <새 모션> [--out <문서>] [--rig <덤프>]
                                                                클립에서 그 캐릭터에 얹힌 블록을 모션 하나로 구워 문서에 더한다
 
@@ -281,9 +283,13 @@ public static class MtCli
                 result["nodes"] = nodes;
             }
         }
+        else if (options.Value("emoji") is { } emojiName)
+        {
+            EmojiPose(document, rig, emojiName, time, options, result);
+        }
         else
         {
-            throw new UsageException("pose에는 --motion 또는 --clip이 있어야 한다");
+            throw new UsageException("pose에는 --motion · --clip · --emoji 중 하나가 있어야 한다");
         }
 
         Write(stdout, result);
@@ -354,6 +360,69 @@ public static class MtCli
         }
 
         return (problems, blocking);
+    }
+
+    /// <summary>이모지의 그 시각 — 수명(life, 기본)이면 코어 재생의 단계 · 클립 · 프레임, 타임라인(timeline)이면 그 프레임. 값은 미리보기와 같은 길(EmojiPreview).</summary>
+    private static void EmojiPose(MotionDocument document, RigSchemaFile rig, string emojiName, double time, Options options, JsonObject result)
+    {
+        EmojiAsset emoji = document.FindEmoji(emojiName) ?? throw new KeyNotFoundException($"이모지 '{emojiName}'이 없다.");
+
+        if (!EmojiRigFrame.TryRead(rig, out EmojiRigFrame frame, out string why))
+        {
+            throw new InvalidOperationException(why);
+        }
+
+        string view = options.Value("view") ?? "life";
+        EmojiClip? clip;
+        float clipFrame;
+        result["emoji"] = emoji.Name;
+        result["view"] = view;
+
+        if (view == "timeline")
+        {
+            clip = EmojiPreview.Timeline(emoji, frame) ?? throw new InvalidOperationException($"이모지 '{emoji.Name}'의 타임라인을 런타임이 읽지 못한다 — mt validate로 문제를 본다.");
+            clipFrame = Math.Clamp((float)time * EmojiAsset.Fps, 0f, clip.Length - 1);
+            result["frame"] = clipFrame;
+        }
+        else if (view == "life")
+        {
+            EmojiDefinition definition = EmojiPreview.Definition(emoji, frame, out string? reason)
+                ?? throw new InvalidOperationException($"이모지 '{emoji.Name}'을 런타임이 읽지 못한다 — {reason}");
+            double? off = options.Value("off") is null ? null : options.Number("off");
+            EmojiMoment moment = EmojiPreview.Moment(definition, time, off);
+            clip = moment.Clip;
+            clipFrame = moment.Frame;
+            result["phase"] = moment.Phase.ToString().ToLowerInvariant();
+            result["clip"] = moment.Clip?.Name;
+            result["frame"] = moment.Frame;
+        }
+        else
+        {
+            throw new UsageException($"--view는 life|timeline ('{view}')");
+        }
+
+        EmojiPose pose = EmojiPreview.Pose(emoji, frame, clip, clipFrame);
+        RectNodeState whole = pose.Tree.GetState(frame.OffsetNode);
+        result["offset"] = new JsonObject
+        {
+            ["position"] = new JsonArray(Round(whole.AnchoredPosition.X), Round(whole.AnchoredPosition.Y)),
+            ["scale"] = new JsonArray(Round(whole.LocalScale.X), Round(whole.LocalScale.Y)),
+            ["rotation"] = Round(whole.LocalEulerAngles.Z),
+            ["alpha"] = Round(pose.Alpha),
+        };
+        result["rigs"] = new JsonArray(pose.Rigs.Select(r =>
+        {
+            RectNodeState image = pose.Tree.GetState(r.ImageNode);
+            return (JsonNode)new JsonObject
+            {
+                ["name"] = r.Rig,
+                ["position"] = new JsonArray(Round(image.AnchoredPosition.X), Round(image.AnchoredPosition.Y)),
+                ["scale"] = new JsonArray(Round(image.LocalScale.X), Round(image.LocalScale.Y)),
+                ["rotation"] = Round(image.LocalEulerAngles.Z),
+                ["alpha"] = Round(r.Alpha),
+                ["sprite"] = r.Sprite,
+            };
+        }).ToArray());
     }
 
     /// <summary>앱의 뷰포트와 같은 조립 — 깊이·focus·무대 뼈대(내장본).</summary>
