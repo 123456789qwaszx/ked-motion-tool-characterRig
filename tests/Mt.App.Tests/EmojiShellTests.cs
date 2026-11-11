@@ -321,6 +321,43 @@ public class EmojiShellTests
     }
 
     [Fact]
+    public void 좌우의_두_칸은_한_칸씩이고_방향을_따르지_않으면_upright가_흐려진다()
+    {
+        Run(window =>
+        {
+            MotionEditor editor = window.Session.Editor;
+            window.AddEmojiFromForm();
+            window.SelectEmojiRigFromForm("body");
+            Assert.Equal((false, false, false, false, false), window.EmojiSideFormState);
+
+            long before = editor.Revision;
+            window.SetEmojiRigUprightFromForm(true);
+            Assert.Equal(before + 1, editor.Revision);
+            Assert.True(editor.Document.FindEmoji("emoji")!.FindRig("body")!.Upright);
+
+            window.SetEmojiFixedSideFromForm(true);
+            Assert.Equal(before + 2, editor.Revision);
+            Assert.True(editor.Document.FindEmoji("emoji")!.FixedSide);
+            Assert.Equal((true, true, true, true, false), window.EmojiSideFormState); // 막지 않고 흐리게 · 한 줄 알림
+
+            // 되돌리면 칸이 따라온다.
+            editor.Undo();
+            Assert.Equal((false, true, false, false, false), window.EmojiSideFormState);
+            editor.Undo();
+            Assert.False(window.EmojiSideFormState.Upright);
+            Assert.False(editor.Document.FindEmoji("emoji")!.FindRig("body")!.Upright);
+
+            // 보기의 칸 — 뷰포트만 바뀐다.
+            long revision = editor.Revision;
+            window.SetEmojiFacingLeftFromForm(true);
+            Assert.True(window.Viewport.EmojiFacingLeft);
+            Assert.Equal(revision, editor.Revision);
+            window.SetEmojiFacingLeftFromForm(false);
+            Assert.False(window.Viewport.EmojiFacingLeft);
+        });
+    }
+
+    [Fact]
     public void 이모지의_문제는_문제_칸에_나온다()
     {
         Run(window =>

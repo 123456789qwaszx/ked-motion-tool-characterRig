@@ -7,7 +7,7 @@
 |---|---|
 | 런타임 | `feat/emojiRigSchema` @ `007d4c16` — 틀(`EmojiRigSchema`) · 대본(`emoji` · `emoji_off`) · 형식(`emojis/2`) · 재생(`EmojiPlaybackSystem`)이 서 있다. `007d4c16`에서 리그의 기본 배율 · 회전이 들어왔다(`65f001f9` 다음) |
 | 툴의 지금 | `dev` @ `f842ace`(R3-2) 위에 **E1 ~ E7을 마쳤다**(2026-11-11, 단계마다 커밋 — E3 · E4도 따로) — 런타임의 이모지 코어와 새 덤프가 들어왔고, 버린 설계(공용 `emoji` 리그 · 스킨 · 공용 모션 셋 · 머무는 시간 · 붙는 리그)는 없다. 툴에서 새 정의의 이모지를 만들고 `emojis.json`(`emojis/2`)을 낸다 |
-| 상태 | **계획이 굳었다**(소유자, 2026-11-11 — §6). **E1 ~ E7 끝**(§5). **E8(좌우) — E8-1 ~ E8-3 끝, 다음은 E8-4**(§5 "E8 — 좌우"). 이어받는 길은 §8 |
+| 상태 | **계획이 굳었다**(소유자, 2026-11-11 — §6). **E1 ~ E7 끝**(§5). **E8(좌우) — E8-1 ~ E8-4 끝, 다음은 E8-5**(§5 "E8 — 좌우"). 이어받는 길은 §8 |
 
 ## 0. 한 줄
 
@@ -172,7 +172,7 @@
 | E8-1 | **들이기** — 런타임 `32858197`의 `Core/Emoji/EmojiDefinition.cs`(`EmojiRigEntry.Upright` · `EmojiDefinition.FixedSide` · `EmojiSide`) · `Core/Tuning/EmojisFileDto.cs`(`fixedSide` · `upright`)를 **통째로** 다시 들인다. `vendoring.md`의 "부분 반입"을 고친다(원본 커밋). 순수 테스트 둘을 가져온다 — 런타임 `EmojiPlaybackTests`의 `형식의_좌우_표시를_읽는다_없으면_거짓이다` · `좌우의_부호_누가_한_번_더_뒤집는가` | 사본이 런타임과 같다. 툴의 코드는 아직 두 칸을 쓰지 않는다 — **끝** |
 | E8-2 | **모델과 내보내기** — `EmojiAsset.FixedSide` · `EmojiRigAsset.Upright`, 편집 명령 둘(조작 하나 = 되돌리기 한 칸, 같은 값은 기록하지 않는다), 저작본 읽고 쓰기, 복제가 함께 가져간다, 문서 지문. `EmojiPreview.Definition`과 `EmojiExport`가 두 칸을 싣는다 — **거짓이면 파일에 적지 않는다**(지금 파일과 글자가 같게) | 문서에 두 칸을 담고 `emojis.json`에 나간다(화면 없이) — **끝** |
 | E8-3 | **미리보기** — "왼쪽을 보는 인물로 보기". 보기의 상태다(문서에 적지 않고 되돌리기에 들지 않는다). 켜면 미리보기의 로케이터를 뒤집고(가로 배율 −1 · 자리 x), 예외의 부호를 코어 **`EmojiSide`**로 곱한다 — `OffsetSign`은 `Emoji_Offset`의 자리 x · 가로 배율 · 회전에, `PlaceSign`은 `EmojiRig_Place`의 가로 배율 · 회전에. 런타임 `Stage/Emoji/EmojiPlaybackSystem.cs`의 `Apply`와 `EmojiLocatorSystem.cs`가 본이다 — **부호를 툴에서 따로 계산하지 않는다**. 켠 동안 뷰포트에서 그림을 끌어 기본 자리를 옮기는 것은 막는다(거울 속에서 끄는 값이 헷갈린다 — 끄고 옮긴다) | 툴에서 보는 뒤집힌 모습 = 게임 — **끝** |
-| E8-4 | **화면** — 이모지 탭에 칸 둘(이모지: 방향을 따르지 않는다 / 리그: 뒤집히지 않는 그림)과 보기 절의 "왼쪽을 보는 인물로". 테스트 손잡이(`internal … FromForm()`)와 헤드리스 테스트. `fixedSide`인 이모지에서는 리그의 `upright` 칸이 뜻이 없다 — 흐리게 하거나 한 줄로 알린다(막지는 않는다). F1 표 · README · `docs/USER-GUIDE.md` | 툴에서 두 칸을 고친다 |
+| E8-4 | **화면** — 이모지 탭에 칸 둘(이모지: 방향을 따르지 않는다 / 리그: 뒤집히지 않는 그림)과 보기 절의 "왼쪽을 보는 인물로". 테스트 손잡이(`internal … FromForm()`)와 헤드리스 테스트. `fixedSide`인 이모지에서는 리그의 `upright` 칸이 뜻이 없다 — 흐리게 하거나 한 줄로 알린다(막지는 않는다). F1 표 · README · `docs/USER-GUIDE.md` | 툴에서 두 칸을 고친다 — **끝** |
 | E8-5 | **예시와 대조** — 빌더(`tests/Mt.Authoring.Tests/EmojiExamples.cs`)에서 `question`의 리그 `mark`에 `upright`. 픽스처 `Fixtures/runtime-emojis.json`을 런타임 `32858197`의 `Assets/Dialogue/emojis.json`으로 다시 가져간다. `EmojiExampleTests`의 대조가 **두 칸도** 본다(이모지의 `FixedSide` · 리그의 `Upright`). 예시를 다시 쓴다(`MT_WRITE_EXAMPLES=1`). `EmojiShots`에 뒤집힌 보기 한 장 | 툴이 낸 파일 = 런타임의 견본(값으로) |
 
 **알아 둘 것**

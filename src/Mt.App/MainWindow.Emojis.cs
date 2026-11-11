@@ -42,6 +42,7 @@ public partial class MainWindow
     private readonly TextBox _emojiOffsetX = new() { FontSize = 11 };
     private readonly TextBox _emojiOffsetY = new() { FontSize = 11 };
     private readonly TextBox _emojiFrames = new() { FontSize = 11 };
+    private readonly CheckBox _emojiFixedSide = new() { Content = "방향을 따르지 않는다 (fixedSide)", FontSize = 11 };
 
     private readonly ListBox _emojiRigList = new() { MinHeight = 40, MaxHeight = 110, FontSize = 11 };
     private readonly StackPanel _emojiRigFields = new() { Spacing = 4 };
@@ -51,6 +52,8 @@ public partial class MainWindow
     private readonly TextBox _emojiRigY = new() { FontSize = 11 };
     private readonly TextBox _emojiRigScale = new() { FontSize = 11 };
     private readonly TextBox _emojiRigRotation = new() { FontSize = 11 };
+    private readonly CheckBox _emojiRigUpright = new() { Content = "뒤집히지 않는 그림 (upright)", FontSize = 11 };
+    private readonly TextBlock _emojiUprightNote = new() { FontSize = 10, Opacity = 0.7, TextWrapping = TextWrapping.Wrap, IsVisible = false, Text = "이 이모지는 방향을 따르지 않아 거울에 비치지 않는다 — upright는 뜻이 없다." };
     private readonly TextBox _flipStart = new() { FontSize = 11, Text = "0", Width = 34 };
     private readonly TextBox _flipEvery = new() { FontSize = 11, Text = "3", Width = 34 };
     private readonly TextBox _flipCount = new() { FontSize = 11, Text = "4", Width = 34 };
@@ -70,6 +73,7 @@ public partial class MainWindow
 
     private readonly ToggleButton _emojiLifeToggle = new() { Content = "수명 재생", FontSize = 10, Padding = new Avalonia.Thickness(6, 2) };
     private readonly TextBox _emojiHoldCycles = new() { FontSize = 11, Text = "2", Width = 34 };
+    private readonly ToggleButton _emojiFacingLeft = new() { Content = "왼쪽을 보는 인물로", FontSize = 10, Padding = new Avalonia.Thickness(6, 2) };
 
     internal string? SelectedEmoji => _emojiList.SelectedItem as string;
 
@@ -155,6 +159,18 @@ public partial class MainWindow
     /// <summary>테스트 손잡이 — 수명 재생을 켜고 끈다.</summary>
     internal void SetEmojiLifeFromForm(bool life) => _emojiLifeToggle.IsChecked = life;
 
+    /// <summary>테스트 손잡이 — 좌우의 두 칸(이모지의 fixedSide · 고른 리그의 upright)을 누른다.</summary>
+    internal void SetEmojiFixedSideFromForm(bool fixedSide) => _emojiFixedSide.IsChecked = fixedSide;
+
+    internal void SetEmojiRigUprightFromForm(bool upright) => _emojiRigUpright.IsChecked = upright;
+
+    /// <summary>테스트 손잡이 — "왼쪽을 보는 인물로" 보기를 켜고 끈다.</summary>
+    internal void SetEmojiFacingLeftFromForm(bool left) => _emojiFacingLeft.IsChecked = left;
+
+    /// <summary>테스트 손잡이 — 좌우 칸의 지금 상태(체크 · upright 칸이 흐린가 · 알림이 보이는가).</summary>
+    internal (bool FixedSide, bool Upright, bool UprightDimmed, bool UprightNote, bool FacingLeft) EmojiSideFormState
+        => (_emojiFixedSide.IsChecked == true, _emojiRigUpright.IsChecked == true, _emojiRigUpright.Opacity < 1, _emojiUprightNote.IsVisible, _emojiFacingLeft.IsChecked == true);
+
     /// <summary>테스트 손잡이 — 타임 슬라이더의 이름 붙은 띠.</summary>
     internal IReadOnlyList<SliderMark> TimeSliderMarks => _timeSlider.Marks;
 
@@ -195,6 +211,15 @@ public partial class MainWindow
         ToolTip.SetTip(_emojiName, "대본이 부르는 이름(<<emoji 누구 이름>>) — 영문 소문자 · 숫자 · _. 한 번 내보낸 이름은 바꾸지 않는다(대본이 가리킨다)");
         ToolTip.SetTip(_emojiOffsetX, "이모지별 오프셋(Emoji_Offset) — 로케이터(캐릭터 + 바리에이션의 자리) 기준 px. 이모지 전체를 움직이는 키는 이 값에 더해진다");
         ToolTip.SetTip(_emojiFrames, "타임라인의 마지막 프레임(24fps) — 프레임 0 … 이것까지. 키는 옮기지 않는다");
+        _emojiFields.Children.Add(_emojiFixedSide);
+        ToolTip.SetTip(_emojiFixedSide, "이모지는 오른쪽을 보는 인물을 기준으로 만들고, 인물이 뒤집히면 런타임이 통째로 거울에 비춘다. 켜면 인물의 방향을 따르지 않고 만든 쪽 그대로 선다(로케이터의 자리만 인물을 따라간다) — 머리 위 한가운데에 뜨는 것, 화면 기준으로 흐르는 것. emojis.json의 fixedSide");
+        _emojiFixedSide.IsCheckedChanged += (_, _) =>
+        {
+            if (!_refreshing && CurrentEmoji is { } emoji)
+            {
+                Guard("방향", () => _session.Editor.SetEmojiFixedSide(emoji.Name, _emojiFixedSide.IsChecked == true));
+            }
+        };
 
         // 리그
         _emojiFields.Children.Add(Header("리그 — 그림 하나에 리그 하나"));
@@ -234,6 +259,16 @@ public partial class MainWindow
         ToolTip.SetTip(_emojiRigImages, "그림 경로 — 한 줄에 하나. 첫 장이 기본 스프라이트, 나머지는 그림 바꾸기(image) 채널이 몇 번째인가로 고른다");
         ToolTip.SetTip(_emojiRigX, "기본 자리(EmojiRig_Place) — 키가 아니다. 뷰포트에서 그림을 끌어도 된다");
         ToolTip.SetTip(_emojiRigScale, "기본 배율 — 그림을 이 이모지에서 얼마만 하게 쓰는가. 키의 배율은 이 위에서 1을 기준으로 잡는다");
+        _emojiRigFields.Children.Add(_emojiRigUpright);
+        _emojiRigFields.Children.Add(_emojiUprightNote);
+        ToolTip.SetTip(_emojiRigUpright, "뒤집히면 안 되는 그림(물음표 · 느낌표 · 글자). 이모지가 거울에 비쳐도 이 리그의 그림과 키는 만든 그대로 보이고 기본 자리만 거울 쪽으로 간다. 그래서 바깥으로 흐르는 x 키는 뒤집힌 인물에게는 안쪽으로 흐른다 — 그런 움직임은 이모지 전체의 키로 잡는다. emojis.json의 upright");
+        _emojiRigUpright.IsCheckedChanged += (_, _) =>
+        {
+            if (!_refreshing && CurrentEmoji is { } emoji && SelectedEmojiRig is { } rig)
+            {
+                Guard("뒤집히지 않는 그림", () => _session.Editor.SetEmojiRigUpright(emoji.Name, rig, _emojiRigUpright.IsChecked == true));
+            }
+        };
 
         var flips = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
         flips.Children.Add(Small("넘기기"));
@@ -316,9 +351,12 @@ public partial class MainWindow
                 RefreshEmojiMarks();
             }
         });
+        _emojiFacingLeft.IsCheckedChanged += (_, _) => _viewport.EmojiFacingLeft = _emojiFacingLeft.IsChecked == true;
+        ToolTip.SetTip(_emojiFacingLeft, "켜면 왼쪽을 보는(뒤집힌) 인물에게 뜨는 모습으로 본다 — 로케이터를 뒤집고 fixedSide · upright의 부호를 런타임과 같은 계산(EmojiSide)으로 곱한다. 보기만 바뀐다(문서 · 되돌리기 없음). 켠 동안 그림을 끌어 기본 자리를 옮기지 않는다");
         Button frame = SmallButton("이모지에 맞춤", (_, _) => _viewport.FrameEmoji());
         ToolTip.SetTip(frame, "리그 그림들이 뷰포트 가운데를 채우게 보기를 옮긴다(F와 같다 — 보기만). 로케이터는 배역의 발치라 그대로는 무대 아래 작게 보인다");
         _emojiFields.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { _emojiLifeToggle, Small("머묾"), _emojiHoldCycles, Small("바퀴"), frame } });
+        _emojiFields.Children.Add(_emojiFacingLeft);
 
         panel.Children.Add(_emojiFields);
 
@@ -786,6 +824,13 @@ public partial class MainWindow
             Write(_emojiRigY, rig is null ? "" : F(rig.PlaceY));
             Write(_emojiRigScale, rig is null ? "" : F(rig.Scale));
             Write(_emojiRigRotation, rig is null ? "" : F(rig.Rotation));
+            _emojiFixedSide.IsChecked = emoji?.FixedSide == true;
+            _emojiRigUpright.IsChecked = rig?.Upright == true;
+
+            // 방향을 따르지 않는 이모지는 거울에 비치지 않는다 — upright 칸은 뜻이 없으니 흐리게 두고 한 줄로 알린다(막지는 않는다).
+            bool meaningless = emoji?.FixedSide == true;
+            _emojiRigUpright.Opacity = meaningless ? 0.5 : 1;
+            _emojiUprightNote.IsVisible = meaningless;
             Write(_emojiSpanName, span?.Name ?? "");
             Write(_emojiSpanStart, span?.Start.ToString(CultureInfo.InvariantCulture) ?? "");
             Write(_emojiSpanEnd, span?.End.ToString(CultureInfo.InvariantCulture) ?? "");
