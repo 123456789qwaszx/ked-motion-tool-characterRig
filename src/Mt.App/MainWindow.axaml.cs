@@ -3312,7 +3312,7 @@ public partial class MainWindow : Window
 
         foreach (string node in nodes)
         {
-            if (MotionRules.ForbiddenNodes.Contains(node) || node == RigAssetCodec.RootId)
+            if (MotionRules.ForbiddenNodes.Contains(node) || node == RigSchemaLoader.RootKey)
             {
                 continue;
             }
@@ -3676,9 +3676,8 @@ public partial class MainWindow : Window
         IReadOnlyList<ClipProblem> clipProblems = ClipValidator.Validate(_session.Editor.Document, _session.RigNodeIds);
         ProblemsPanel.Children.Clear();
         IReadOnlyList<EmojiProblem> emojiProblems = EmojiValidator.Validate(_session.Editor.Document, _session.RigNodeIds);
-        IReadOnlyList<SchemaViolation> definedRigs = SchemaContract.DefinedRigs(_session.Editor.Document);
         SchemaDiff schemaChange = _session.SchemaChange;
-        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count + emojiProblems.Count + definedRigs.Count > 0 || !schemaChange.IsEmpty;
+        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count + emojiProblems.Count > 0 || !schemaChange.IsEmpty;
 
         foreach (MotionProblem problem in problems)
         {
@@ -3719,18 +3718,6 @@ public partial class MainWindow : Window
             ProblemsPanel.Children.Add(EmojiProblemRow(problem));
         }
 
-        // 문서가 정의한 리그 — 스키마 계약의 알림(구조는 유니티가 정한다).
-        foreach (SchemaViolation violation in definedRigs)
-        {
-            ProblemsPanel.Children.Add(new TextBlock
-            {
-                Text = (violation.Blocking ? "⚠ " : "△ ") + violation,
-                FontSize = 11,
-                Foreground = violation.Blocking ? Brushes.OrangeRed : Brushes.Goldenrod,
-                TextWrapping = TextWrapping.Wrap,
-                MaxWidth = 700,
-            });
-        }
 
         AddSchemaChangeRows(schemaChange);
     }

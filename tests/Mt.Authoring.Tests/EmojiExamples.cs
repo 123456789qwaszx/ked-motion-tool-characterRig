@@ -10,9 +10,13 @@ namespace Mt.Authoring.Tests;
 /// </summary>
 internal static class EmojiExamples
 {
-    public const string Rig = RigTemplates.EmojiKind;
+    public const string Rig = "emoji";
     private const string Body = "Emoji_Body";
+    /// <summary>조각 — 모션이 움직인다.</summary>
     private static string Part(int i) => $"Emoji_Part{i}";
+
+    /// <summary>조각의 그림 노드 — 스킨의 그림과 놓임이 들어간다(런타임 이모지 리그: 조각 › 그림).</summary>
+    private static string Image(int i) => $"Emoji_Part{i}_Image";
 
     private static KeyAsset K(float t, float v, TangentMode tangent = TangentMode.Auto) => new() { T = t, V = v, Tangent = tangent };
 
@@ -21,7 +25,6 @@ internal static class EmojiExamples
     public static MotionEditor Build()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddRig(RigTemplates.Emoji());
         editor.SetObjectPlace(null, "s1", "center");
         editor.AddSceneObject(null, "e1", Rig);
         editor.AttachObject(null, "e1", "s1");
@@ -118,7 +121,7 @@ internal static class EmojiExamples
 
         for (int i = 0; i < parts.Length; i++)
         {
-            editor.SetSkinPartImages(name, Part(i + 1), parts[i].Select(a => $"art/{a}.png").ToArray());
+            editor.SetSkinPartImages(name, Image(i + 1), parts[i].Select(a => $"art/{a}.png").ToArray());
         }
     }
 
@@ -156,11 +159,11 @@ internal static class EmojiExamples
 
         // 그림을 넘기는 것 — 조각 하나에 장을 여럿 준다(스킨의 그림 넘기기). 모션은 한 장짜리와 같은 것을 쓴다.
         Skin(editor, "난감실타래", new[] { "tangle_1", "tangle_2" });
-        editor.SetSkinPartSetup("난감실타래", Part(1), new SkinPartSetup { Frames = { "art/tangle_2.png" }, FrameSeconds = 0.3f });
+        editor.SetSkinPartSetup("난감실타래", Image(1), new SkinPartSetup { Frames = { "art/tangle_2.png" }, FrameSeconds = 0.3f });
         Emoji(editor, "난감실타래", "emoji_pop", "emoji_bob", "emoji_lift", 1.8f, -R, Up);
 
         Skin(editor, "왁자지껄", new[] { "chatter_1", "chatter_2" });
-        editor.SetSkinPartSetup("왁자지껄", Part(1), new SkinPartSetup { Frames = { "art/chatter_2.png" }, FrameSeconds = 0.3f });
+        editor.SetSkinPartSetup("왁자지껄", Image(1), new SkinPartSetup { Frames = { "art/chatter_2.png" }, FrameSeconds = 0.3f });
         Emoji(editor, "왁자지껄", "emoji_pop", "emoji_shake", "emoji_lift", 1.8f, R, Up);
 
         Skin(editor, "삐질삐질땀방울", new[] { "sweat_1", "sweat_2", "sweat_3" }); // 장당 0.2초(기본값), 되풀이
@@ -178,10 +181,10 @@ internal static class EmojiExamples
         {
             string name = side == "r" ? "말줄임점풍선" : "말줄임점풍선_반전";
             Skin(editor, name, new[] { $"dots_{side}_1", $"dots_{side}_2", $"dots_{side}_3", $"dots_{side}_4" });
-            SkinPartSetup dots = editor.Document.FindSkin(name)!.SetupOf(Part(1)).Clone();
+            SkinPartSetup dots = editor.Document.FindSkin(name)!.SetupOf(Image(1)).Clone();
             dots.FrameSeconds = 0.35f;
             dots.Loop = false;
-            editor.SetSkinPartSetup(name, Part(1), dots);
+            editor.SetSkinPartSetup(name, Image(1), dots);
         }
 
         Emoji(editor, "말줄임점풍선", "emoji_pop", "emoji_bob", "emoji_lift", null, R, Up, flipped: "말줄임점풍선_반전");
@@ -192,9 +195,9 @@ internal static class EmojiExamples
 
         // 조각 셋이 같은 그림 — 어디에 얼마만 하게 놓이는가는 스킨의 놓임. 모션(emoji_bloom · emoji_sway)은 자리를 모른다.
         Skin(editor, "행복한벚꽃", new[] { "blossom" }, new[] { "blossom" }, new[] { "blossom" });
-        editor.SetSkinPartSetup("행복한벚꽃", Part(1), new SkinPartSetup { X = -150f, Y = 40f });
-        editor.SetSkinPartSetup("행복한벚꽃", Part(2), new SkinPartSetup { X = 150f, Y = -30f, Scale = 0.8f });
-        editor.SetSkinPartSetup("행복한벚꽃", Part(3), new SkinPartSetup { X = 120f, Y = 130f, Scale = 0.55f });
+        editor.SetSkinPartSetup("행복한벚꽃", Image(1), new SkinPartSetup { X = -150f, Y = 40f });
+        editor.SetSkinPartSetup("행복한벚꽃", Image(2), new SkinPartSetup { X = 150f, Y = -30f, Scale = 0.8f });
+        editor.SetSkinPartSetup("행복한벚꽃", Image(3), new SkinPartSetup { X = 120f, Y = 130f, Scale = 0.55f });
         Emoji(editor, "행복한벚꽃", "emoji_bloom", "emoji_sway", "emoji_lift", null, 0f, 0f);
     }
 }

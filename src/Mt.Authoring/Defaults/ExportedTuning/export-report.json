@@ -1,10 +1,12 @@
 {
-    "exportedAtUtc": "2026-08-21T14:00:19.2420712Z",
+    "exportedAtUtc": "2026-11-10T22:44:42.4058071Z",
     "unityVersion": "6000.3.16f1",
     "scenePath": "Assets/Samples/Scenes/PresentationSample.unity",
-    "warnings": [],
+    "warnings": [
+        "프리셋 'surface-layout': 에셋 참조 필드(instanceID)가 들어 있다. 그 필드는 이 덤프만으로 해석할 수 없다 — schema.md의 해당 절 참조."
+    ],
     "knownButNotExported": [
-        "Assets/Samples/Data/DialogueSpeakerPresentationPolicyDB.asset (speaker policy — 범위 밖)",
+        "Assets/Samples/Settings/DialogueSpeakerPresentationPolicyDB.asset (speaker policy — 범위 밖)",
         "Assets/Data/Generated/CharacterEmojiVisualPreset.asset (emoji preset — 범위 밖)",
         "Assets/Data/Generated/CharacterEmojiLibrary.asset (emoji library — 범위 밖)"
     ]

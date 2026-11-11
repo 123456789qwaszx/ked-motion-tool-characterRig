@@ -15,7 +15,10 @@ public class EmojiTests
     private const string Body = "Emoji_Body";
     private const string Part = "Emoji_Part1";
 
-    private static readonly RigSchemaFile RigFile = RigSchemaFile.Load(EmojiRigFixture.WriteDump(Fixtures.PathOf("rig-schemas.json")));
+    /// <summary>조각의 그림 노드 — 스킨의 그림이 들어간다.</summary>
+    private const string Image = "Emoji_Part1_Image";
+
+    private static readonly RigSchemaFile RigFile = RigSchemaFile.Load(Fixtures.PathOf("rig-schemas.json"));
 
     private static KeyAsset Linear(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
 
@@ -27,24 +30,24 @@ public class EmojiTests
     private static MotionEditor NewEditor()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddSceneObject(null, "e1", EmojiRigFixture.RigKind);
+        editor.AddSceneObject(null, "e1", "emoji");
         editor.AttachObject(null, "e1", "s1");
-        editor.AddSkin("땀", EmojiRigFixture.RigKind);
-        editor.SetSkinPart("땀", Part, "art/sweat.png");
+        editor.AddSkin("땀", "emoji");
+        editor.SetSkinPart("땀", Image, "art/sweat.png");
 
-        editor.AddMotion("pop", EmojiRigFixture.RigKind, 0.2f, MotionEnd.Commit, MotionChannelMode.Absolute);
+        editor.AddMotion("pop", "emoji", 0.2f, MotionEnd.Commit, MotionChannelMode.Absolute);
         editor.AddChannel("pop", Body, MotionChannelKind.Position);
         editor.SetKeys("pop", Body, MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.2f, 40f) });
 
-        editor.AddMotion("bob", EmojiRigFixture.RigKind, 0.4f);
+        editor.AddMotion("bob", "emoji", 0.4f);
         editor.AddChannel("bob", Body, MotionChannelKind.Position);
         editor.SetKeys("bob", Body, MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.2f, 10f), Linear(0.4f, 0f) });
 
-        editor.AddMotion("shrink", EmojiRigFixture.RigKind, 0.3f, MotionEnd.Commit, MotionChannelMode.Absolute);
+        editor.AddMotion("shrink", "emoji", 0.3f, MotionEnd.Commit, MotionChannelMode.Absolute);
         editor.AddChannel("shrink", Part, MotionChannelKind.Scale);
         editor.SetKeys("shrink", Part, MotionChannelKind.Scale, Axis.X, new[] { Linear(0f, 1f), Linear(0.3f, 0f) });
 
-        editor.AddEmoji("sweat", EmojiRigFixture.RigKind);
+        editor.AddEmoji("sweat", "emoji");
         editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "땀", Enter = "pop", Hold = "bob", Exit = "shrink", HoldSeconds = 1f, OffsetX = 120f, OffsetY = 300f, Locator = "faceAura" });
         return editor;
     }
@@ -128,8 +131,8 @@ public class EmojiTests
         MotionEditor editor = NewEditor();
         long revision = editor.Revision;
 
-        Assert.Throws<InvalidOperationException>(() => editor.AddEmoji("sweat", EmojiRigFixture.RigKind));
-        Assert.Throws<InvalidOperationException>(() => editor.AddEmoji("땀 방울", EmojiRigFixture.RigKind)); // 빈칸
+        Assert.Throws<InvalidOperationException>(() => editor.AddEmoji("sweat", "emoji"));
+        Assert.Throws<InvalidOperationException>(() => editor.AddEmoji("땀 방울", "emoji")); // 빈칸
         Assert.Throws<InvalidOperationException>(() => editor.AddEmoji("x", ""));
         Assert.Throws<InvalidOperationException>(() => editor.UpdateEmoji("sweat", new EmojiAsset { HoldSeconds = -1f }));
         Assert.Throws<KeyNotFoundException>(() => editor.RemoveEmoji("nope"));
@@ -167,7 +170,7 @@ public class EmojiTests
         Assert.Equal("emojis/1-draft", root["schema"]!.GetValue<string>());
         JsonNode sweat = Assert.Single(root["emojis"]!.AsArray())!;
         Assert.Equal(("sweat", "emoji", "pop", "bob", "shrink"), (sweat["name"]!.GetValue<string>(), sweat["rig"]!.GetValue<string>(), sweat["enter"]!.GetValue<string>(), sweat["hold"]!.GetValue<string>(), sweat["exit"]!.GetValue<string>()));
-        Assert.Equal("art/sweat.png", sweat["parts"]![Part]!.GetValue<string>()); // 스킨 이름이 아니라 조각 → 그림
+        Assert.Equal("art/sweat.png", sweat["parts"]![Image]!.GetValue<string>()); // 스킨 이름이 아니라 조각 → 그림
         Assert.Equal(1.0, sweat["holdSeconds"]!.GetValue<double>(), 3);
         Assert.Null(sweat["stay"]);
         Assert.Equal(new[] { 120.0, 300.0 }, sweat["offset"]!.AsArray().Select(v => v!.GetValue<double>()));
@@ -242,7 +245,7 @@ public class EmojiTests
         Near(50f, Before(EmojiPhase.Exit));
 
         // 이 이모지만의 모션으로 — 복제해 꽂는다, 한 칸. 다른 이모지는 원래 것을 쓴다.
-        editor.AddEmoji("other", EmojiRigFixture.RigKind);
+        editor.AddEmoji("other", "emoji");
         editor.UpdateEmoji("other", new EmojiAsset { Hold = "bob", HoldSeconds = 1f });
         Assert.Equal(2, EmojiPreview.UsesOf(editor.Document, "bob"));
         long revision = editor.Revision;

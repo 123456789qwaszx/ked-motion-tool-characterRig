@@ -1067,94 +1067,94 @@
       "name": "느낌물음표",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/exclaim_question.png"
+        "Emoji_Part1_Image": "art/exclaim_question.png"
       }
     },
     {
       "name": "반짝별",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/sparkle.png"
+        "Emoji_Part1_Image": "art/sparkle.png"
       }
     },
     {
       "name": "큰땀삐질",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/big_sweat.png"
+        "Emoji_Part1_Image": "art/big_sweat.png"
       }
     },
     {
       "name": "난감빗선",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/gloom_lines.png"
+        "Emoji_Part1_Image": "art/gloom_lines.png"
       }
     },
     {
       "name": "빠직",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/anger.png"
+        "Emoji_Part1_Image": "art/anger.png"
       }
     },
     {
       "name": "팟놀란왕관",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/shock_crown.png"
+        "Emoji_Part1_Image": "art/shock_crown.png"
       }
     },
     {
       "name": "아이디어전구",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/idea_bulb.png"
+        "Emoji_Part1_Image": "art/idea_bulb.png"
       }
     },
     {
       "name": "빠밤작대기들",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/tada_lines.png"
+        "Emoji_Part1_Image": "art/tada_lines.png"
       }
     },
     {
       "name": "빨간경고막대기",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/alert.png"
+        "Emoji_Part1_Image": "art/alert.png"
       }
     },
     {
       "name": "띠링물음표",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/question.png"
+        "Emoji_Part1_Image": "art/question.png"
       }
     },
     {
       "name": "후우하는구름",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/sigh_cloud.png"
+        "Emoji_Part1_Image": "art/sigh_cloud.png"
       }
     },
     {
       "name": "화내는부우구름",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/huff_cloud.png"
+        "Emoji_Part1_Image": "art/huff_cloud.png"
       }
     },
     {
       "name": "난감실타래",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/tangle_1.png"
+        "Emoji_Part1_Image": "art/tangle_1.png"
       },
       "setups": {
-        "Emoji_Part1": {
+        "Emoji_Part1_Image": {
           "frames": [
             "art/tangle_2.png"
           ],
@@ -1171,10 +1171,10 @@
       "name": "왁자지껄",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/chatter_1.png"
+        "Emoji_Part1_Image": "art/chatter_1.png"
       },
       "setups": {
-        "Emoji_Part1": {
+        "Emoji_Part1_Image": {
           "frames": [
             "art/chatter_2.png"
           ],
@@ -1191,10 +1191,10 @@
       "name": "삐질삐질땀방울",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/sweat_1.png"
+        "Emoji_Part1_Image": "art/sweat_1.png"
       },
       "setups": {
-        "Emoji_Part1": {
+        "Emoji_Part1_Image": {
           "frames": [
             "art/sweat_2.png",
             "art/sweat_3.png"
@@ -1212,38 +1212,38 @@
       "name": "플러팅하트",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/heart.png"
+        "Emoji_Part1_Image": "art/heart.png"
       }
     },
     {
       "name": "곰곰생각구름",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/think_cloud.png"
+        "Emoji_Part1_Image": "art/think_cloud.png"
       }
     },
     {
       "name": "ZZZ",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/zzz.png"
+        "Emoji_Part1_Image": "art/zzz.png"
       }
     },
     {
       "name": "신나는음표",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/note.png"
+        "Emoji_Part1_Image": "art/note.png"
       }
     },
     {
       "name": "말줄임점풍선",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/dots_r_1.png"
+        "Emoji_Part1_Image": "art/dots_r_1.png"
       },
       "setups": {
-        "Emoji_Part1": {
+        "Emoji_Part1_Image": {
           "frames": [
             "art/dots_r_2.png",
             "art/dots_r_3.png",
@@ -1262,10 +1262,10 @@
       "name": "말줄임점풍선_반전",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/dots_l_1.png"
+        "Emoji_Part1_Image": "art/dots_l_1.png"
       },
       "setups": {
-        "Emoji_Part1": {
+        "Emoji_Part1_Image": {
           "frames": [
             "art/dots_l_2.png",
             "art/dots_l_3.png",
@@ -1284,26 +1284,26 @@
       "name": "쑥스럼풍선",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/shy_r.png"
+        "Emoji_Part1_Image": "art/shy_r.png"
       }
     },
     {
       "name": "쑥스럼풍선_반전",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/shy_l.png"
+        "Emoji_Part1_Image": "art/shy_l.png"
       }
     },
     {
       "name": "행복한벚꽃",
       "rig": "emoji",
       "parts": {
-        "Emoji_Part1": "art/blossom.png",
-        "Emoji_Part2": "art/blossom.png",
-        "Emoji_Part3": "art/blossom.png"
+        "Emoji_Part1_Image": "art/blossom.png",
+        "Emoji_Part2_Image": "art/blossom.png",
+        "Emoji_Part3_Image": "art/blossom.png"
       },
       "setups": {
-        "Emoji_Part1": {
+        "Emoji_Part1_Image": {
           "frames": [],
           "frameSeconds": 0.2,
           "loop": true,
@@ -1312,7 +1312,7 @@
           "scale": 1,
           "rotation": 0
         },
-        "Emoji_Part2": {
+        "Emoji_Part2_Image": {
           "frames": [],
           "frameSeconds": 0.2,
           "loop": true,
@@ -1321,7 +1321,7 @@
           "scale": 0.8,
           "rotation": 0
         },
-        "Emoji_Part3": {
+        "Emoji_Part3_Image": {
           "frames": [],
           "frameSeconds": 0.2,
           "loop": true,
@@ -1612,73 +1612,6 @@
       "offsetX": 0,
       "offsetY": 0,
       "locator": "faceAura"
-    }
-  ],
-  "rigs": [
-    {
-      "kind": "emoji",
-      "nodes": [
-        {
-          "id": "Emoji_Anchor",
-          "parent": "",
-          "x": 0,
-          "y": 0,
-          "width": 0,
-          "height": 0,
-          "image": false,
-          "alpha": false
-        },
-        {
-          "id": "Emoji_Body",
-          "parent": "Emoji_Anchor",
-          "x": 0,
-          "y": 0,
-          "width": 0,
-          "height": 0,
-          "image": false,
-          "alpha": true
-        },
-        {
-          "id": "Emoji_Part1",
-          "parent": "Emoji_Body",
-          "x": 0,
-          "y": 0,
-          "width": 160,
-          "height": 160,
-          "image": true,
-          "alpha": true
-        },
-        {
-          "id": "Emoji_Part2",
-          "parent": "Emoji_Body",
-          "x": 0,
-          "y": 0,
-          "width": 160,
-          "height": 160,
-          "image": true,
-          "alpha": true
-        },
-        {
-          "id": "Emoji_Part3",
-          "parent": "Emoji_Body",
-          "x": 0,
-          "y": 0,
-          "width": 160,
-          "height": 160,
-          "image": true,
-          "alpha": true
-        },
-        {
-          "id": "Emoji_Part4",
-          "parent": "Emoji_Body",
-          "x": 0,
-          "y": 0,
-          "width": 160,
-          "height": 160,
-          "image": true,
-          "alpha": true
-        }
-      ]
     }
   ]
 }

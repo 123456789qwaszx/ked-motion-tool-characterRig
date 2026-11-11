@@ -66,7 +66,7 @@ public class SchemaDiffTests
         SchemaPrint before = SchemaDiff.PrintOf(Schema);
         SchemaPrint after = SchemaDiff.PrintOf(Schema);
         after.Rigs.RemoveAll(r => r.Kind == "screenEffect");
-        after.Rigs.Add(new SchemaPrintRig { Kind = "emoji", Nodes = { "__root", "Emoji_Anchor < __root" } });
+        after.Rigs.Add(new SchemaPrintRig { Kind = "prop", Nodes = { "__root", "Prop_Hand < __root" } });
         SchemaPrintRig character = after.Rigs.Single(r => r.Kind == "character");
         character.Nodes = character.Nodes.Select(n => n.Replace(used, used + "_Renamed", StringComparison.Ordinal)).ToList();
         document.Clips.Add(new ClipAsset { Name = "clip", Roles = { new ClipRole { Name = "fx", Rig = "screenEffect" } } });
@@ -74,7 +74,7 @@ public class SchemaDiffTests
         SchemaDiff diff = SchemaDiff.Compare(before, after);
 
         Assert.Equal(new[] { "screenEffect" }, diff.RemovedRigs);
-        Assert.Equal(new[] { "emoji" }, diff.AddedRigs);
+        Assert.Equal(new[] { "prop" }, diff.AddedRigs);
         Assert.True(diff.HasRenames);
 
         IReadOnlyList<SchemaUse> uses = diff.Users(document);

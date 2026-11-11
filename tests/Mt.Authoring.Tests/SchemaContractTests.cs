@@ -17,7 +17,6 @@ public class SchemaContractTests
     {
         MotionDocument document = Fixtures.NodBowDocument();
         Assert.All(document.Motions, m => Assert.Empty(SchemaContract.Motion(Schema.NodeIds, m)));
-        Assert.Empty(SchemaContract.DefinedRigs(document));
         Assert.True(MotionExport.TryExport(document, Schema.NodeIds, out _, out _));
     }
 
@@ -81,15 +80,5 @@ public class SchemaContractTests
 
         var document = new MotionDocument { Clips = { clip } };
         Assert.Contains(ClipValidator.Validate(document, Schema.NodeIds), p => p.Blocking && p.Message.Contains("배역 'b'", StringComparison.Ordinal) && p.Message.Contains("ghost_rig", StringComparison.Ordinal));
-    }
-
-    [Fact]
-    public void 문서가_정의한_리그는_알린다()
-    {
-        MotionDocument document = Fixtures.NodBowDocument();
-        document.Rigs.Add(new RigAsset { Kind = "ghost_rig" });
-
-        SchemaViolation violation = Assert.Single(SchemaContract.DefinedRigs(document));
-        Assert.Equal(("리그", "ghost_rig", false), (violation.Kind, violation.Subject, violation.Blocking));
     }
 }

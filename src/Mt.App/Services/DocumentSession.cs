@@ -40,7 +40,6 @@ public sealed class DocumentSession
     private static string AssetFingerprintOf(MotionDocument document)
         => "rig=" + (document.RigSchemas?.Path ?? "") + "\nbase=" + (document.BaseResolution?.Path ?? "") + "\n"
            + string.Join("\n", document.Scenes.SelectMany(scene => scene.Objects).Select(o => $"portrait {o.Id}={o.Portrait ?? ""} skin={o.Skin ?? ""}"))
-           + "\nrigs " + RigsKeyOf(document)
            + "\n" + string.Join("\n", document.Skins.Select(s => $"skin {s.Name}:{s.Rig}:" + string.Join(",", s.Parts.Keys.Select(node => node + "=" + string.Join("|", s.ImagesOf(node))))));
 
     private void OnEditorChanged(object? sender, MotionChangedEventArgs e)
@@ -104,68 +103,13 @@ public sealed class DocumentSession
     public string? DocumentPath { get; private set; }
 
     /// <summary>리그 덤프 — 파일을 싣지 않았으면 내장 기본값(<see cref="BuiltinTuning"/>). null이 아니다.</summary>
-    /// <remarks>
-    /// 덤프의 리그에 문서가 정의한 리그(<c>PLAN-parts.md</c> §9)를 더한 것이다 — 같은 이름이면 문서의 것이 이긴다.
-    /// 문서의 리그가 바뀌면 다시 합친다. 세울 수 없는 리그가 있으면 덤프만으로 물러나고 상태 줄에 남긴다.
-    /// </remarks>
     public RigSchemaFile? Rig
     {
-        get
-        {
-            if (_dumpRig is null || Editor.Document.Rigs.Count == 0)
-            {
-                return _dumpRig;
-            }
-
-            string key = RigsKeyOf(Editor.Document);
-
-            if (_composedRig is null || key != _composedKey || !ReferenceEquals(_composedFrom, _dumpRig))
-            {
-                _composedKey = key;
-                _composedFrom = _dumpRig;
-
-                try
-                {
-                    _composedRig = RigAssets.Compose(_dumpRig, Editor.Document);
-                }
-                catch (Exception exception) when (exception is InvalidOperationException or KeyNotFoundException or System.Text.Json.JsonException or ArgumentException)
-                {
-                    _composedRig = _dumpRig;
-                    Status = $"문서의 리그를 세우지 못했다 — 덤프의 리그만 쓴다: {exception.Message}";
-                }
-            }
-
-            return _composedRig;
-        }
-
-        private set
-        {
-            _dumpRig = value;
-            _composedRig = null;
-        }
+        get => _dumpRig;
+        private set => _dumpRig = value;
     }
 
     private RigSchemaFile? _dumpRig;
-    private RigSchemaFile? _composedRig;
-    private RigSchemaFile? _composedFrom;
-    private string _composedKey = "";
-
-    private static string RigsKeyOf(MotionDocument document)
-        => string.Join("|", document.Rigs.Select(r => r.Kind + ":" + string.Join(",", r.Nodes.Select(n => $"{n.Id}<{n.Parent}@{n.X},{n.Y}#{n.Width}x{n.Height}{(n.Image ? "i" : "")}{(n.Alpha ? "a" : "")}"))));
-
-    /// <summary>문서가 정의한 리그를 덤프와 같은 모양의 파일로 내보낸다 — 런타임이 그것으로 리그를 세운다.</summary>
-    public bool ExportRigs(string path)
-    {
-        if (Editor.Document.Rigs.Count == 0)
-        {
-            SetStatus("내보낼 리그가 없다 — 문서가 정의한 리그만 나간다(덤프의 리그는 런타임이 원본이다).");
-            return false;
-        }
-
-        File.WriteAllBytes(path, new System.Text.UTF8Encoding(false).GetBytes(RigAssets.WriteSchemas(Editor.Document, StageSize)));
-        SetStatus($"내보냈다: {path} — 리그 {Editor.Document.Rigs.Count}개 ({string.Join(", ", Editor.Document.Rigs.Select(r => r.Kind))})");
-        return true;
-    }
 
     /// <summary>실은 덤프 파일의 경로. null이면 내장 리그다.</summary>
     public string? RigPath { get; private set; }

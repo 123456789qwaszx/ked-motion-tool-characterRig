@@ -44,6 +44,7 @@ public static class MotionDocumentJson
 
         MotionDocument document = JsonSerializer.Deserialize<MotionDocument>(json, Options)
             ?? throw new JsonException("빈 문서다.");
+        bool definedRigs = HasDefinedRigs(json);
 
         bool legacy = string.Equals(document.Schema, AuthoringFormat.AuthoringSchemaV1, StringComparison.Ordinal);
 
@@ -67,15 +68,15 @@ public static class MotionDocumentJson
 
         document.EnsureDefaultScene();
 
-        foreach (RigAsset rig in document.Rigs)
-        {
-            rig.Nodes ??= new List<RigNodeAsset>();
-        }
-
         foreach (SkinAsset skin in document.Skins)
         {
             // 역직렬화는 기본 비교자로 사전을 만든다 — 노드 이름순(서수)으로 다시 세워 쓰는 글자를 한 가지로.
             skin.Parts = new SortedDictionary<string, string>(skin.Parts ?? new SortedDictionary<string, string>(), StringComparer.Ordinal);
+
+            if (definedRigs)
+            {
+                MoveToImageNodes(skin);
+            }
         }
 
         foreach (ClipAsset clip in document.Clips)
@@ -126,5 +127,43 @@ public static class MotionDocumentJson
 
         curve.Keys ??= new List<KeyAsset>();
         return curve.Keys.Count == 0 ? null : curve;
+    }
+
+    /// <summary>
+    /// 문서가 리그를 정의하던 때(<c>"rigs"</c>, 2026-11-11에 걷어 냈다 — <c>docs/PLAN-characterRig.md</c> R3)의 문서인가.
+    /// 그때 이모지 리그는 조각 노드가 그림을 그렸고, 런타임의 이모지 리그는 조각 밑의 그림 노드(<c>Emoji_PartN_Image</c>)가 그린다.
+    /// </summary>
+    private static bool HasDefinedRigs(string json)
+    {
+        using JsonDocument parsed = JsonDocument.Parse(json, new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true });
+        return parsed.RootElement.ValueKind == JsonValueKind.Object && parsed.RootElement.TryGetProperty("rigs", out _);
+    }
+
+    /// <summary>옛 이모지 스킨의 조각(<c>Emoji_PartN</c>)을 그림 노드(<c>Emoji_PartN_Image</c>)로 — 그림과 덧붙임째.</summary>
+    private static void MoveToImageNodes(SkinAsset skin)
+    {
+        if (!string.Equals(skin.Rig, "emoji", StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        foreach (string node in skin.Parts.Keys.Where(n => n.StartsWith("Emoji_Part", StringComparison.Ordinal) && !n.EndsWith("_Image", StringComparison.Ordinal)).ToList())
+        {
+            string image = node + "_Image";
+
+            if (skin.Parts.ContainsKey(image))
+            {
+                continue;
+            }
+
+            skin.Parts[image] = skin.Parts[node];
+            skin.Parts.Remove(node);
+
+            if (skin.Setups.TryGetValue(node, out SkinPartSetup? setup))
+            {
+                skin.Setups.Remove(node);
+                skin.Setups[image] = setup;
+            }
+        }
     }
 }

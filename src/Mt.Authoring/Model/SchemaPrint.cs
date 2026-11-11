@@ -3,7 +3,7 @@ namespace Mt.Authoring.Model;
 /// <summary>
 /// 문서를 지을 때의 스키마(<c>docs/PLAN-characterRig.md</c> §3의 2) — 덤프의 리그마다 노드와 그 부모.
 /// 해시(<see cref="RigSchemasReference.Sha256"/>)는 "달라졌다"만 말한다. 이것이 있어야 **무엇이** 달라졌는지 말할 수 있다
-/// (<c>Schema.SchemaDiff</c>). 덤프의 리그만 적는다 — 문서가 정의한 리그는 문서 안에 이미 있다.
+/// (<c>Schema.SchemaDiff</c>).
 /// </summary>
 public sealed class SchemaPrint
 {

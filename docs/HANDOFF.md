@@ -20,7 +20,7 @@
 |---|---|---|
 | 독립 Avalonia 앱, Core는 **복사 반입** | `src/Ked.Presentation.Core`는 `ked-stage-runtime`의 사본. 정본은 저쪽, 흐름은 한 방향. 이쪽 사본을 고치지 않는다 | `src/Ked.Presentation.Core/vendoring.md` |
 | 진실은 저작 원본 | `*.motion-authoring.json`(`motion-authoring/2`)이 주인, `motions.json`은 내보내기 산출물. 손으로 JSON을 고치지 않는다 | `PLAN.md` §1·§5 |
-| 리그는 만들지 않는다 — **캐릭터 리그는** | `rig-schemas.json`(유니티 덤프)에서 `RectNodeTree`를 세운다. 덤프 없이도 내장본으로 열린다. **예외(2026-11-10): 새로 만드는 붙는 리그(이모지 등)는 툴이 정의해 내보낸다** — Spine처럼 툴이 원본 | `PLAN.md` §4, `Mt.Authoring/Rig/BuiltinTuning`, `PLAN-parts.md` §9 |
+| 리그는 만들지 않는다 | `rig-schemas.json`(유니티 덤프)에서 `RectNodeTree`를 세운다 — 캐릭터 · 화면 효과 · 이모지. 덤프 없이도 내장본으로 열린다. (2026-11-10에 붙는 리그를 툴이 정의하던 예외는 2026-11-11에 걷어 냈다) | `PLAN.md` §4, `Mt.Authoring/Rig/BuiltinTuning`, `PLAN-characterRig.md` §7의 1 |
 | 보이는 것 = 재생하는 것 | 포즈는 매 프레임 코어 `MotionMath.Compose`. 재현이 아니라 같은 함수 | `PLAN.md` §1 |
 | 채널에 mode는 없다(`motions/2`) | relative/absolute는 대본의 `<<motion slot 이름 relative\|absolute>>`가 정한다. 툴의 "재생 기준"은 키 값을 읽는 렌즈일 뿐 파일에 안 나간다 | `ked-stage-runtime/docs/motion-contract.md` |
 | 컨트롤러 표 | 애니메이터가 리그 계층을 몰라도 되게 `controllers.json`(`controllers/1`)이 자리·깊이·연기 세 묶음의 손잡이를 정한다. 덤프 옆 `presets/controllers.json`이 있으면 그것이, 없으면 내장본 | `PLAN-controller.md` |

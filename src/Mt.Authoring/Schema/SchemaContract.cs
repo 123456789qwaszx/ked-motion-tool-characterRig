@@ -16,8 +16,7 @@ public sealed record SchemaViolation(string Kind, string Subject, string Message
 /// 문서(모션 · 이모지 · 클립의 배역)는 스키마에 있는 리그와 노드만 쓴다. "스키마에 없는 리그 · 노드"를 보는 곳은 여기 하나다 —
 /// 모션 · 이모지 · 클립 검증이 이것을 불러 **막는 문제**로 올린다(어긋난 문서는 내보내지 못한다).
 ///
-/// 스키마는 rigKind → 노드 id 목록으로 받는다. 툴은 덤프에 문서가 정의한 리그와 카메라의 가짜 리그를 더한 것을 넘긴다 —
-/// 문서가 정의한 리그는 <see cref="DefinedRigs"/>가 따로 알린다.
+/// 스키마는 rigKind → 노드 id 목록으로 받는다. 툴은 덤프에 카메라의 가짜 리그를 더한 것을 넘긴다.
 /// </summary>
 public static class SchemaContract
 {
@@ -83,18 +82,6 @@ public static class SchemaContract
         return clip.Roles
             .Where(r => !string.IsNullOrEmpty(r.Rig) && !schema.ContainsKey(r.Rig))
             .Select(r => new SchemaViolation("배역", r.Name, MissingRig(schema, r.Rig)))
-            .ToList();
-    }
-
-    /// <summary>
-    /// 문서가 정의한 리그 — 구조는 유니티가 정한다. 덤프에 같은 이름이 있으면 그것을 가리고(어느 쪽이 진실인지 흐려진다), 없으면 런타임에 없는 리그다.
-    /// 아직은 알림이다 — 툴이 정의하는 리그를 어떻게 할지는 R3에서 정한다(<c>docs/PLAN-characterRig.md</c> §7의 1).
-    /// </summary>
-    public static IReadOnlyList<SchemaViolation> DefinedRigs(MotionDocument document)
-    {
-        ArgumentNullException.ThrowIfNull(document);
-        return document.Rigs
-            .Select(rig => new SchemaViolation("리그", rig.Kind, "문서가 정의한 리그다 — 유니티가 덤프한 스키마의 것이 아니다(같은 이름이 덤프에 있으면 그것을 가린다)", Blocking: false))
             .ToList();
     }
 

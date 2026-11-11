@@ -32,7 +32,7 @@ public class EmojiExampleTests
     {
         MotionEditor editor = EmojiExamples.Build();
         MotionDocument document = editor.Document;
-        RigSchemaFile rig = RigAssets.Compose(Dump, document);
+        RigSchemaFile rig = Dump;
 
         Assert.True(!MotionValidator.Validate(document, rig.NodeIds).Any(), string.Join("\n", MotionValidator.Validate(document, rig.NodeIds).Select(p => $"{p.MotionName}: {p.Message}")));
         Assert.Empty(EmojiValidator.Validate(document, rig.NodeIds).Select(p => $"{p.EmojiName}: {p.Message}"));

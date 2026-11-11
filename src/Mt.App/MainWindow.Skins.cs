@@ -155,7 +155,9 @@ public partial class MainWindow
 
         DockPanel.SetDock(pick, Dock.Right);
         row.Children.Add(pick);
-        var label = new TextBlock { Text = node, FontSize = 11, Width = 96, VerticalAlignment = VerticalAlignment.Center, TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis };
+        // 그림 노드는 "조각 › 그림" 두 단이라 이름이 길다(Emoji_Part1_Image) — 조각의 이름만 보이고 전체는 풍선말에.
+        var label = new TextBlock { Text = PartLabel(node), FontSize = 11, Width = 96, VerticalAlignment = VerticalAlignment.Center, TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis };
+        ToolTip.SetTip(label, node);
         DockPanel.SetDock(label, Dock.Left);
         row.Children.Add(label);
         row.Children.Add(box);
@@ -263,5 +265,13 @@ public partial class MainWindow
         {
             _session.Editor.RemoveSkin(skin);
         }
+    }
+
+    /// <summary>조각 줄의 이름 — 그림 노드의 꼬리(<c>_Image</c>)와 리그 이름의 머리(<c>Emoji_</c>)를 뗀다: <c>Emoji_Part1_Image</c> → <c>Part1</c>.</summary>
+    internal static string PartLabel(string node)
+    {
+        string label = node.EndsWith("_Image", StringComparison.Ordinal) ? node[..^"_Image".Length] : node;
+        int underscore = label.IndexOf('_', StringComparison.Ordinal);
+        return underscore > 0 && underscore < label.Length - 1 ? label[(underscore + 1)..] : label;
     }
 }

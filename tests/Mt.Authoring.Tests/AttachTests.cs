@@ -12,13 +12,13 @@ public class AttachTests
 {
     private const string Part = "Emoji_Part1";
 
-    private static readonly RigSchemaFile RigFile = RigSchemaFile.Load(EmojiRigFixture.WriteDump(Fixtures.PathOf("rig-schemas.json")));
+    private static readonly RigSchemaFile RigFile = RigSchemaFile.Load(Fixtures.PathOf("rig-schemas.json"));
 
     /// <summary>s1 · s2(캐릭터) · e1(이모지, s1의 CharSlot_Scale에 붙음).</summary>
     private static MotionEditor NewEditor()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddSceneObject(null, "e1", EmojiRigFixture.RigKind);
+        editor.AddSceneObject(null, "e1", "emoji");
         editor.AddSceneObject(null, "s2", "character");
         editor.AttachObject(null, "e1", "s1");
         return editor;
@@ -50,7 +50,7 @@ public class AttachTests
         // 부모의 배율도 따라간다(슬롯 계층) — 조각이 두 배가 된다.
         editor.SetObjectPlacement(null, "s1", 0f, 0f, 0f, 2f, 2f);
         Quad scaled = PartQuad(Build(editor));
-        Near(EmojiRigFixture.PartSize * 2f, scaled.BottomRight.X - scaled.BottomLeft.X);
+        Near(160f * 2f, scaled.BottomRight.X - scaled.BottomLeft.X);
 
         // 제 오프셋은 붙는 자리에 대한 값이다. 배율 x = −1이 좌우 반전의 미리보기 — 사각형이 뒤집힌다.
         editor.SetObjectPlacement(null, "s1", 0f, 0f, 0f, 1f, 1f);
