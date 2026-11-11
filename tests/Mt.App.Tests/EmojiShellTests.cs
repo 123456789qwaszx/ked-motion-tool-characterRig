@@ -279,6 +279,48 @@ public class EmojiShellTests
     }
 
     [Fact]
+    public void 왼쪽을_보는_인물로_보기는_보기만_바꾸고_거울에_비추며_끌기를_막는다()
+    {
+        Run(window =>
+        {
+            MotionEditor editor = window.Session.Editor;
+            window.AddEmojiFromForm();
+            editor.SetEmojiOffset("emoji", 120f, 300f);
+            ViewportView viewport = window.Viewport;
+
+            EmojiFrameView right = viewport.EmojiNow()!;
+            string locator = right.Tree.GetParentKey("emoji/Emoji_Offset");
+            float axis = right.Tree.TransformPoint(locator, Vec3.Zero).X;
+            Vec2 before = viewport.EmojiRigCenter("body")!.Value;
+
+            long revision = editor.Revision;
+            viewport.EmojiFacingLeft = true;
+            Assert.Equal(revision, editor.Revision); // 보기의 상태 — 문서에 적지 않는다
+
+            EmojiFrameView left = viewport.EmojiNow()!;
+            Assert.Equal(-1f, left.Tree.GetState(locator).LocalScale.X, 4);
+            Assert.Contains("왼쪽을 보는 인물", left.Label);
+            Vec2 mirrored = viewport.EmojiRigCenter("body")!.Value;
+            Assert.Equal(axis - (before.X - axis), mirrored.X, 1); // 로케이터의 세로축을 두고 반대쪽
+            Assert.Equal(before.Y, mirrored.Y, 1);
+
+            // 거울 속에서는 그림을 끌어도 기본 자리가 바뀌지 않는다(고르기만 한다).
+            viewport.DragEmojiRigForTest(mirrored, mirrored + new Vec2(40f, 0f));
+            Assert.Equal(revision, editor.Revision);
+            Assert.Equal("body", viewport.SelectedEmojiRig);
+
+            // 방향을 따르지 않는 이모지는 뒤집힌 인물에게도 만든 쪽에 선다.
+            editor.SetEmojiFixedSide("emoji", true);
+            Vec2 fixedSide = viewport.EmojiRigCenter("body")!.Value;
+            Assert.Equal(before.X, fixedSide.X, 1);
+
+            viewport.EmojiFacingLeft = false;
+            editor.SetEmojiFixedSide("emoji", false);
+            Assert.Equal(before.X, viewport.EmojiRigCenter("body")!.Value.X, 1);
+        });
+    }
+
+    [Fact]
     public void 이모지의_문제는_문제_칸에_나온다()
     {
         Run(window =>

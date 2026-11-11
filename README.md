@@ -239,7 +239,7 @@ dotnet run --project src/Mt.Cli -- export   a.motion-authoring.json motions.json
 dotnet run --project src/Mt.Cli -- emojis   a.motion-authoring.json emojis.json
 dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --motion nod --time 0.3 [--object s1] [--mode relative|absolute]
 dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --clip greet --time 0.8
-dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --emoji star --time 1.2 --off 1.0   # 수명(등장 → 머묾 ⟲ → 퇴장), --view timeline이면 타임라인의 그 프레임
+dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --emoji star --time 1.2 --off 1.0   # 수명(등장 → 머묾 ⟲ → 퇴장), --view timeline이면 타임라인의 그 프레임, --facing left면 왼쪽을 보는 인물 밑
 dotnet run --project src/Mt.Cli -- bake     a.motion-authoring.json --clip greet --object s1 --name greet_s1 [--out b.motion-authoring.json]
 ```
 

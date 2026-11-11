@@ -32,7 +32,7 @@ public static class MtCli
           mt emojis   <문서> <emojis.json> [--rig <덤프>]      emojis.json(emojis/2) 내보내기 — 구간마다 따로 선 클립, 런타임 로더로 다시 읽어 본다
           mt pose     <문서> --motion <이름> --time <초> [--object <id>] [--mode relative|absolute] [--rig <덤프>]
           mt pose     <문서> --clip <이름> --time <초> [--rig <덤프>]
-          mt pose     <문서> --emoji <이름> --time <초> [--off <초>] [--view life|timeline] [--rig <덤프>]
+          mt pose     <문서> --emoji <이름> --time <초> [--off <초>] [--view life|timeline] [--facing right|left] [--rig <덤프>]
                                                                그 시각의 포즈 — 모션·클립이 건드리는 노드의 값과 오브젝트의 불투명도,
                                                                이모지는 수명(등장 → 머묾 ⟲ → --off에 내리면 퇴장) 또는 타임라인의 그 프레임
           mt bake     <문서> --clip <이름> --object <id> --name <새 모션> [--out <문서>] [--rig <덤프>]
@@ -401,7 +401,17 @@ public static class MtCli
             throw new UsageException($"--view는 life|timeline ('{view}')");
         }
 
-        EmojiPose pose = EmojiPreview.Pose(emoji, frame, clip, clipFrame);
+        // 좌우 — 왼쪽을 보는 인물 밑이면 로케이터를 뒤집고 예외의 부호를 코어 EmojiSide로 곱한다(앱의 "왼쪽을 보는 인물로 보기"와 같다).
+        string facing = options.Value("facing") ?? "right";
+
+        if (facing is not ("right" or "left"))
+        {
+            throw new UsageException($"--facing은 right|left ('{facing}')");
+        }
+
+        result["facing"] = facing;
+        EmojiDefinition? sides = EmojiPreview.Definition(emoji, frame, out _);
+        EmojiPose pose = EmojiPreview.Pose(emoji, frame, clip, clipFrame, null, sides, facing == "left");
         RectNodeState whole = pose.Tree.GetState(frame.OffsetNode);
         result["offset"] = new JsonObject
         {
@@ -413,9 +423,11 @@ public static class MtCli
         result["rigs"] = new JsonArray(pose.Rigs.Select(r =>
         {
             RectNodeState image = pose.Tree.GetState(r.ImageNode);
+            Vec2 at = pose.Tree.TransformPoint(r.ImageNode, Vec3.Zero).XY;
             return (JsonNode)new JsonObject
             {
                 ["name"] = r.Rig,
+                ["at"] = new JsonArray(Round(at.X), Round(at.Y)),
                 ["position"] = new JsonArray(Round(image.AnchoredPosition.X), Round(image.AnchoredPosition.Y)),
                 ["scale"] = new JsonArray(Round(image.LocalScale.X), Round(image.LocalScale.Y)),
                 ["rotation"] = Round(image.LocalEulerAngles.Z),

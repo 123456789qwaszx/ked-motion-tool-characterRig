@@ -28,6 +28,7 @@ public sealed partial class ViewportView
 
     private string? _emojiName;
     private bool _emojiLife;
+    private bool _emojiFacingLeft;
     private int _emojiHoldCycles = 2;
     private string? _selectedEmojiRig;
     private readonly Dictionary<string, Bitmap?> _emojiImages = new(StringComparer.Ordinal);
@@ -72,6 +73,26 @@ public sealed partial class ViewportView
             _emojiHoldCycles = Math.Clamp(value, 1, 20);
             SyncDuration();
             InvalidateVisual();
+        }
+    }
+
+    /// <summary>
+    /// 왼쪽을 보는 인물로 보기(E8) — 보기의 상태다(문서에 적지 않고 되돌리기에 들지 않는다). 켜면 미리보기의 로케이터를 뒤집고
+    /// 예외(<c>fixedSide</c> · <c>upright</c>)의 부호를 코어 <see cref="EmojiSide"/>로 곱한다 — 런타임에서 뒤집힌 인물에게 뜨는 모습.
+    /// 켠 동안 그림을 끌어 기본 자리를 옮기지 않는다(거울 속에서 끄는 값이 헷갈린다 — 끄고 옮긴다).
+    /// </summary>
+    public bool EmojiFacingLeft
+    {
+        get => _emojiFacingLeft;
+        set
+        {
+            if (_emojiFacingLeft != value)
+            {
+                _emojiFacingLeft = value;
+                _emojiDrag = null;
+                _emojiDragPlace = null;
+                InvalidateVisual();
+            }
         }
     }
 
@@ -210,16 +231,16 @@ public sealed partial class ViewportView
         {
             emoji = new EmojiAsset
             {
-                Name = emoji.Name, OffsetX = emoji.OffsetX, OffsetY = emoji.OffsetY, Timeline = emoji.Timeline, Spans = emoji.Spans,
+                Name = emoji.Name, OffsetX = emoji.OffsetX, OffsetY = emoji.OffsetY, Timeline = emoji.Timeline, Spans = emoji.Spans, FixedSide = emoji.FixedSide,
                 Rigs = emoji.Rigs.Select(r => r == dragged
-                    ? new EmojiRigAsset { Name = r.Name, Images = r.Images, PlaceX = place.X, PlaceY = place.Y, Scale = r.Scale, Rotation = r.Rotation }
+                    ? new EmojiRigAsset { Name = r.Name, Images = r.Images, PlaceX = place.X, PlaceY = place.Y, Scale = r.Scale, Rotation = r.Rotation, Upright = r.Upright }
                     : r).ToList(),
             };
         }
 
         RectNodeTree tree = _template?.Clone() ?? new RectNodeTree(new RectSpace(_stageSize, Vec2.Half));
         SceneObject? host = EmojiHost(tree);
-        EmojiPreview.Attach(tree, emoji, source.Frame, EmojiKeyPrefix, host?.KeyOf(HostNode));
+        EmojiPreview.Attach(tree, emoji, source.Frame, EmojiKeyPrefix, host?.KeyOf(HostNode), _emojiFacingLeft);
 
         EmojiClip? clip;
         float frame;
@@ -248,8 +269,9 @@ public sealed partial class ViewportView
                 : $"이모지 {emoji.Name} · 타임라인 {frame:0.#}/{emoji.LastFrame}fr";
         }
 
-        (float alpha, IReadOnlyList<EmojiRigPose> rigs) = EmojiPreview.Apply(tree, EmojiKeyPrefix, emoji, source.Frame, clip, frame);
-        return new EmojiFrameView(tree, alpha, rigs, label + (host is null ? " · 캐릭터가 없어 무대 가운데" : $" · {host.Id}의 발"), visible);
+        (float alpha, IReadOnlyList<EmojiRigPose> rigs) = EmojiPreview.Apply(tree, EmojiKeyPrefix, emoji, source.Frame, clip, frame, source.Definition, _emojiFacingLeft);
+        string side = !_emojiFacingLeft ? "" : emoji.FixedSide ? " · 왼쪽을 보는 인물(방향을 따르지 않는다)" : " · 왼쪽을 보는 인물 — 거울";
+        return new EmojiFrameView(tree, alpha, rigs, label + (host is null ? " · 캐릭터가 없어 무대 가운데" : $" · {host.Id}의 발") + side, visible);
     }
 
     private static string PhaseLabel(EmojiPhase phase) => phase switch
@@ -333,7 +355,7 @@ public sealed partial class ViewportView
 
         DrawOutside(context, stage);
         context.DrawRectangle(StagePen, stage);
-        DrawLabel(context, now.Label + (_emojiLife ? "" : " — 그림을 끌면 기본 자리(키가 아니다)"), new Point(stage.X + 8, stage.Y + 6));
+        DrawLabel(context, now.Label + (_emojiLife ? "" : _emojiFacingLeft ? " — 기본 자리는 보기를 되돌리고 끈다" : " — 그림을 끌면 기본 자리(키가 아니다)"), new Point(stage.X + 8, stage.Y + 6));
     }
 
     /// <summary>타임라인 보기에서 리그의 그림을 눌렀다 — 고르고 끌기를 시작한다. 맞은 것이 없으면 거짓.</summary>
@@ -356,6 +378,13 @@ public sealed partial class ViewportView
 
             SelectedEmojiRig = rig.Rig;
             EmojiRigPicked?.Invoke(this, EventArgs.Empty);
+
+            // 거울 속에서는 고르기만 한다 — 기본 자리는 왼쪽을 보는 인물로 보기를 끄고 옮긴다.
+            if (_emojiFacingLeft)
+            {
+                return true;
+            }
+
             _emojiDrag = (rig.Rig, root, asset.PlaceX, asset.PlaceY);
             _emojiDragPlace = (asset.PlaceX, asset.PlaceY);
             return true;
