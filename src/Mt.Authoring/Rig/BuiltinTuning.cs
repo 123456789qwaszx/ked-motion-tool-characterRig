@@ -12,7 +12,7 @@ namespace Mt.Authoring.Rig;
 public static class BuiltinTuning
 {
     /// <summary>원본 — 런타임 커밋과 익스포트 시각(export-report.json). 리그 덤프는 2026-11-11의 것(character · screenEffect · emoji), 깊이·focus는 그 전과 같다.</summary>
-    public const string Source = "ked-presentation-runtime 465f5d43 · ExportedTuning 2026-11-11";
+    public const string Source = "ked-presentation-runtime 007d4c16 · ExportedTuning 2026-11-11";
 
     private const string Prefix = "Defaults/";
 

@@ -3,7 +3,8 @@
 **캐릭터 리그와 이모지**를 다루는 저작 도구(.NET 10 + Avalonia 12). 구조는 유니티가 정한다 — 유니티가 덤프한 스키마를 단단하게 따르고, 캐릭터와 이모지를 전용 컨트롤러로 다룬다.
 
 - 먼저 읽을 것: `docs/PLAN-characterRig.md` — 방향 · 정해진 것 · 단계(R1~R6) · 먼저 정해야 하는 것. 단계가 끝날 때마다 그 문서에 결정과 상태를 적는다.
-- 그 밖의 계획서(`docs/PLAN.md` · `PLAN-controller.md` · `PLAN-clip.md` · `PLAN-parts.md` · `PLAN-scene.md` …)는 지금 있는 기능의 명세다. 인수인계는 `docs/HANDOFF.md`, 코어 사본의 동기화는 `docs/MAINTENANCE.md`와 `src/Ked.Presentation.Core/vendoring.md`.
+- 이모지는 `docs/PLAN-emoji.md`(런타임의 새 정의에 맞추는 단계 E1~E7)를 따른다.
+- 그 밖의 계획서(`docs/PLAN.md` · `PLAN-controller.md` · `PLAN-clip.md` · `PLAN-scene.md` …)는 지금 있는 기능의 명세다. 인수인계는 `docs/HANDOFF.md`, 코어 사본의 동기화는 `docs/MAINTENANCE.md`와 `src/Ked.Presentation.Core/vendoring.md`.
 - `main`은 출발점(`ked-motion-tool-extend`의 `d37c678`) 그대로다. 일은 `dev`에서 한다.
 - 형제 저장소: `ked-motion-tool-extend`(컷 — 씬 + 카메라 + 타임라인) · `ked-motion-tool-screenTransition`(화면 전환). 여기서는 그 둘의 일(세트 · 조립 · 컷 · 전환)을 하지 않는다.
 
@@ -22,16 +23,10 @@ dotnet build KedMotionTool.sln -c Release
 dotnet test KedMotionTool.sln -c Release --no-build
 ```
 
-예시 문서를 다시 쓴다(빌더 `tests/Mt.Authoring.Tests/EmojiExamples.cs`를 고친 뒤):
+화면을 그림으로 뽑는다(헤드리스가 Skia로 실제 렌더 — 고친 화면은 눈으로 확인한다). `MT_RENDER_DIR`이 있을 때만 켜지고, 장면 테스트는 `RenderShots`(`tests/Mt.App.Tests/HeadlessUi.cs`)로 그림을 낸다 — 이모지 화면의 장면은 `PLAN-emoji.md` E6에서 다시 선다:
 
 ```bash
-MT_WRITE_EXAMPLES=1 dotnet test tests/Mt.Authoring.Tests -c Release --filter EmojiExampleTests
-```
-
-화면을 그림으로 뽑는다(헤드리스가 Skia로 실제 렌더 — 고친 화면은 눈으로 확인한다):
-
-```bash
-MT_RENDER_DIR=<폴더> dotnet test tests/Mt.App.Tests -c Release --filter EmojiExampleShots
+MT_RENDER_DIR=<폴더> dotnet test tests/Mt.App.Tests -c Release --filter <장면 테스트>
 ```
 
 ## 관습

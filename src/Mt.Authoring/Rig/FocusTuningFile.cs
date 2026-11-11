@@ -5,7 +5,7 @@ namespace Mt.Authoring.Rig;
 
 /// <summary>
 /// <c>presets/focus.json</c>(ExportedTuning) — focus 오프셋 표: baseOffsets + 배역(characterKey)별 entries. 오브젝트에 배역 키(<c>SceneObject.Character</c>)가 있으면 그 배역 값까지, 없으면 base만 쓴다.
-/// 깊이·place 폴드와 이모지의 붙는 자리가 그 키로 푼다(코어 <see cref="FocusOffsetMath"/>).
+/// 깊이·place 폴드가 그 키로 푼다(코어 <see cref="FocusOffsetMath"/>).
 /// 덤프 옆 <c>presets/focus.json</c> → <c>focus.json</c> → <c>presets/focus-tuning.json</c> 순으로 찾는다.
 /// </summary>
 public sealed class FocusTuningFile

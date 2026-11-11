@@ -116,26 +116,6 @@ public class SchemaDiffTests
     }
 
     [Fact]
-    public void 스킨의_조각과_이모지의_자리_노드도_따라가고_새_이름을_이미_쓰는_조각은_덮지_않는다()
-    {
-        var document = new MotionDocument();
-        document.Skins.Add(new SkinAsset { Name = "a", Rig = "r", Parts = { ["Old"] = "a.png" }, Setups = { ["Old"] = new SkinPartSetup { X = 3f } } });
-        document.Skins.Add(new SkinAsset { Name = "b", Rig = "r", Parts = { ["Old"] = "b.png", ["New"] = "c.png" } });
-        document.Emojis.Add(new EmojiAsset { Name = "e", Rig = "r", AnchorNode = "Old" });
-        var editor = new MotionEditor(document);
-        SchemaDiff diff = SchemaDiff.Compare(Print(("r", new[] { "Root", "Old < Root" })), Print(("r", new[] { "Root", "New < Root" })));
-
-        Assert.Equal(2, editor.FollowSchemaRenames(diff));
-
-        SkinAsset a = editor.Document.FindSkin("a")!;
-        Assert.Equal("a.png", a.Parts["New"]);
-        Assert.Equal(3f, a.Setups["New"].X);
-        Assert.False(a.Parts.ContainsKey("Old"));
-        Assert.Equal("b.png", editor.Document.FindSkin("b")!.Parts["Old"]);
-        Assert.Equal("New", editor.Document.Emojis[0].AnchorNode);
-    }
-
-    [Fact]
     public void 지문은_저작본에_실리고_같은_지문을_다시_적으면_기록이_없고_없는_문서는_전과_같은_글자다()
     {
         var editor = new MotionEditor(new MotionDocument());

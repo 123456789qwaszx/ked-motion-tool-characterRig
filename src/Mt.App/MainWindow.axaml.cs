@@ -255,10 +255,6 @@ public partial class MainWindow : Window
             {
                 _blockOffset = _viewport.ClipBlockTimeOffset;
             }
-            else if (_viewport.EmojiName is not null && _graph.MotionName is not null)
-            {
-                _blockOffset = _viewport.EmojiPhaseTimeOffset; // 머묾은 바퀴가 넘어갈 때 시각 차가 바뀐다
-            }
 
             SyncTime(() =>
             {
@@ -585,7 +581,7 @@ public partial class MainWindow : Window
             _showStageSkeleton.IsChecked = _settings.ShowStageSkeleton;
             _collapsedGroups.Clear();
             _collapsedGroups.UnionWith(_settings.CollapsedChannelBoxGroups);
-            _inspectorTabs.SelectedIndex = Math.Clamp(_settings.InspectorTab, 0, 4);
+            _inspectorTabs.SelectedIndex = Math.Clamp(_settings.InspectorTab, 0, 3);
             int autoSaveIndex = Array.IndexOf(AutoSaveMinutes, _settings.AutoSaveMinutes);
             _autoSaveCombo.SelectedIndex = autoSaveIndex < 0 ? 2 : autoSaveIndex;
             _timeDisplayCombo.SelectedIndex = (int)_settings.TimeDisplay;
@@ -1612,11 +1608,6 @@ public partial class MainWindow : Window
         {
             _viewport.BindClip(_session.Editor, clip);
         }
-        else if (name is null && SelectedEmoji is { } emoji)
-        {
-            // 이모지 정의를 골랐다 — 뷰포트(와 시계)는 그 수명의 것이다.
-            _viewport.BindEmoji(_session.Editor, emoji);
-        }
         else
         {
             _viewport.Bind(_session.Editor, name);
@@ -1626,7 +1617,6 @@ public partial class MainWindow : Window
         _timeline.Bind(_session.Editor);
         _blockOffset = 0;
         SyncBlockContext(); // 클립을 보는 중이면 고른 블록의 모션을 그래프에 다시 묶는다
-        SyncEmojiContext(); // 이모지를 보는 중이면 고치는 구간의 모션을
         RefreshSelectedNode();
     }
 
@@ -1659,23 +1649,6 @@ public partial class MainWindow : Window
         _viewport.SetFocus(_session.Focus);
         _viewport.StageSize = _session.StageSize;
         _viewport.ClearPortraits();
-
-        // 스킨의 그림 — 파일이 없거나 못 읽으면 null을 넣는다(자리표시로 그려진다). 어느 스킨의 어느 장을 그릴지는 뷰포트가 그때그때 고른다.
-        foreach ((string image, string? imagePath) in _session.SkinImages())
-        {
-            Bitmap? bitmap = null;
-
-            try
-            {
-                bitmap = imagePath is null ? null : new Bitmap(imagePath);
-            }
-            catch (Exception exception)
-            {
-                _session.SetStatus($"그림 {image}를 읽지 못했다: {exception.Message}");
-            }
-
-            _viewport.SetImage(image, bitmap);
-        }
 
         foreach (SceneObject o in _viewport.SceneObjects)
         {
@@ -1826,7 +1799,6 @@ public partial class MainWindow : Window
             new TabItem { Header = "씬", Content = BuildSceneTab(), FontSize = 12 },
             new TabItem { Header = "모션", Content = BuildMotionTab(), FontSize = 12 },
             new TabItem { Header = "클립", Content = BuildClipTab(), FontSize = 12 },
-            new TabItem { Header = "이모지", Content = BuildEmojiTab(), FontSize = 12 },
         };
         _inspectorTabs.SelectionChanged += (_, _) =>
         {
@@ -1881,7 +1853,7 @@ public partial class MainWindow : Window
             Children = { Small("자리"), _objPlace, Small("focus"), _objPlaceFocus },
         });
         panel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { Small("배역"), _objCharacter } });
-        ToolTip.SetTip(_objCharacter, "배역 키(런타임 cast의 characterKey) — 기준점 표(presets/focus.json)의 그 배역 값으로 자리·깊이·이모지의 붙는 자리를 푼다. 비우면 표의 기본값");
+        ToolTip.SetTip(_objCharacter, "배역 키(런타임 cast의 characterKey) — 기준점 표(presets/focus.json)의 그 배역 값으로 자리·깊이를 푼다. 비우면 표의 기본값");
         OnCommit(_objCharacter, text =>
         {
             if (!_refreshing && _viewport.SelectedObject is { } o)
@@ -1976,7 +1948,6 @@ public partial class MainWindow : Window
         }
 
         _viewport.ObjectSelected += (_, _) => RefreshObjects();
-        panel.Children.Add(BuildSkinPanel());
         return panel;
     }
 
@@ -1999,7 +1970,7 @@ public partial class MainWindow : Window
                 _session.Editor.RenameMotion(m.Name, text);
 
                 // 클립 안에서 블록의 모션 이름을 바꾼 것이면 목록에서 고르지 않는다 — 고르면 클립이 풀린다(블록의 참조는 편집기가 따라 바꿨다).
-                if (!EditingInPlace)
+                if (SelectedClip is null)
                 {
                     _motionList.SelectedItem = text;
                 }
@@ -2173,7 +2144,6 @@ public partial class MainWindow : Window
         "  F1  이 창\n\n" +
         "뷰포트\n" +
         "  휠  커서 축으로 확대·축소      MMB 드래그  보기 이동      F  보기 맞춤\n" +
-        "  이모지 정의를 볼 때 — 조각 드래그  놓임(자리)      Shift+드래그  크기      Ctrl+드래그  회전   (스킨의 값이다 — 모션의 키가 아니다)\n" +
         "  LMB  오브젝트 고르기 · 기즈모 끌기(Auto Key면 놓는 순간 키)      Home / End  처음·끝      ← / →  한 프레임\n\n" +
         "그래프 에디터 (마야)\n" +
         "  LMB  키 선택 · 빈 자리 드래그 박스 선택(키가 들면 키만, 커브만 지나면 커브) · Ctrl+드래그 라소\n" +
@@ -2242,7 +2212,6 @@ public partial class MainWindow : Window
     {
         RefreshMotionList();
         RefreshClips();
-        RefreshEmojis();
         RefreshMotionInspector();
         RefreshKeyInspector();
         RefreshProblems();
@@ -2258,7 +2227,6 @@ public partial class MainWindow : Window
         try
         {
             RebuildHierarchy();
-            RefreshSkinPanel();
 
             SceneObject? selected = _viewport.SelectedObject;
             bool has = selected is not null;
@@ -2268,24 +2236,15 @@ public partial class MainWindow : Window
                 c.IsEnabled = has;
             }
 
-            // 붙은 오브젝트의 무대·층·자리는 부모의 것이다 — 제 칸은 뜻이 없어 잠근다. 오프셋·회전·배율은 붙는 자리에 대한 값으로 남는다.
-            SceneObject? attachedTo = selected is null ? null : _viewport.Scene?.ParentOf(selected);
-
-            foreach (Control c in new Control[] { _objLayer, _objStage, _objPlace })
-            {
-                c.IsEnabled = has && attachedTo is null;
-            }
-
-            _objPlaceFocus.IsEnabled = has && attachedTo is null && selected!.Place is not null;
+            _objPlaceFocus.IsEnabled = has && selected!.Place is not null;
 
             _objSummary.Text = selected is null
                 ? "오브젝트 없음 — 왼쪽 하이어아키에서 층(Content)을 우클릭해 만든다"
-                : attachedTo is not null ? $"{selected.Id} · {selected.Rig} · ↳ {attachedTo.Id}의 {selected.AttachNode ?? "루트"}에 붙었다"
                 : $"{selected.Id} · {selected.Rig} · {StageNodes.ContentOf(selected.Stage, selected.Layer)}"
                   + (_viewport.Motion is null || _viewport.CanWear(selected) ? "" : " · 지금 모션은 이 리그에 안 맞는다");
             _objId.Text = selected?.Id ?? "";
             _objCharacter.Text = selected?.Character ?? "";
-            _objCharacter.IsEnabled = has && attachedTo is null;
+            _objCharacter.IsEnabled = has;
             _objStage.SelectedIndex = selected is null ? -1 : StageNodes.Stages.ToList().IndexOf(selected.Stage);
 
             var places = new List<string> { NoPlaceToken };
@@ -2336,8 +2295,8 @@ public partial class MainWindow : Window
     private sealed record SkeletonNode(string NodeId);
 
     /// <summary>
-    /// 유니티 <c>PresentataionUIRoot</c> 그대로: 뼈대 노드를 덤프의 parent대로 중첩하고, 최상위 오브젝트는 그 무대·층의
-    /// <c>Stage{NN}Depth_{Layer}_Content</c> 밑에, 리그 노드는 덤프의 parent 그대로, 자식 오브젝트는 붙은 노드 밑에.
+    /// 유니티 <c>PresentataionUIRoot</c> 그대로: 뼈대 노드를 덤프의 parent대로 중첩하고, 오브젝트는 그 무대·층의
+    /// <c>Stage{NN}Depth_{Layer}_Content</c> 밑에, 리그 노드는 덤프의 parent 그대로.
     /// 압축 보기는 뼈대를 Stage › 층(Content)만 남긴다(데이터는 같다). 펼침 상태는 키로 기억한다(오브젝트는 기본 접힘).
     /// </summary>
     private void RebuildHierarchy()
@@ -2428,21 +2387,9 @@ public partial class MainWindow : Window
             }
         }
 
-        // 붙은 오브젝트는 제 층이 아니라 부모 오브젝트 밑에 보인다 — 부모를 먼저 세운다.
-        foreach (SceneObject o in scene.Objects.Where(o => scene.ParentOf(o) is null))
-        {
-            TreeViewItem under = contentItems.GetValueOrDefault((o.Stage, o.Layer)) ?? root;
-            BuildObjectItem(scene, o, under, nodeWasSelected, ref selectedItem);
-        }
-
         foreach (SceneObject o in scene.Objects)
         {
-            if (scene.ParentOf(o) is not { } parent)
-            {
-                continue;
-            }
-
-            TreeViewItem under = _hierarchyParents.Keys.FirstOrDefault(i => i.Tag is HierarchyNode { NodeId: null } node && node.ObjectId == parent.Id) ?? root;
+            TreeViewItem under = contentItems.GetValueOrDefault((o.Stage, o.Layer)) ?? root;
             BuildObjectItem(scene, o, under, nodeWasSelected, ref selectedItem);
         }
 
@@ -2678,7 +2625,6 @@ public partial class MainWindow : Window
 
             _hierarchyMenu.Items.Add(layer);
             _hierarchyMenu.Items.Add(new Separator());
-            AddAttachMenu(scene!, o);
         }
 
         string where = target switch
@@ -3013,7 +2959,6 @@ public partial class MainWindow : Window
     {
         RefreshMotionList();
         RefreshClips();
-        RefreshEmojis();
         RefreshChannels();
         RefreshMotionInspector();
         RefreshKeyInspector();
@@ -3028,7 +2973,7 @@ public partial class MainWindow : Window
         try
         {
             // 클립 안에서 블록의 모션을 고치는 중이면 그래프의 모션은 "고른 모션"이 아니다 — 목록에서 골라 주지 않는다(고르면 클립이 풀린다).
-            string? selected = SelectedMotion ?? (EditingInPlace ? null : _graph.MotionName);
+            string? selected = SelectedMotion ?? (SelectedClip is not null ? null : _graph.MotionName);
             // rigKind로 묶어 보인다(모션의 주인은 rigKind) — 같은 리그끼리 이름순.
             List<string> names = _session.Editor.Document.Motions
                 .OrderBy(m => m.Rig, StringComparer.Ordinal).ThenBy(m => m.Name, StringComparer.Ordinal)
@@ -3046,7 +2991,7 @@ public partial class MainWindow : Window
             int index = selected is null ? -1 : names.IndexOf(selected);
             _motionList.SelectedIndex = index;
 
-            if (index < 0 && _graph.MotionName is not null && !EditingInPlace)
+            if (index < 0 && _graph.MotionName is not null && SelectedClip is null)
             {
                 BindMotion(null);
             }
@@ -3070,8 +3015,7 @@ public partial class MainWindow : Window
 
         if (SelectedMotion is not null)
         {
-            DeselectClip(); // 시간의 주인은 모션 · 클립 · 이모지 중 하나다
-            DeselectEmoji();
+            DeselectClip(); // 시간의 주인은 모션 · 클립 중 하나다
         }
 
         BindMotion(SelectedMotion);
@@ -3285,7 +3229,7 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>작은 리그(이모지 등)에서만 키 없는 채널을 늘어놓는다 — 캐릭터 리그는 노드가 많아 목록이 묻힌다(그쪽은 컨트롤러 표가 그 일을 한다).</summary>
+    /// <summary>작은 리그에서만 키 없는 채널을 늘어놓는다 — 캐릭터 리그는 노드가 많아 목록이 묻힌다(그쪽은 컨트롤러 표가 그 일을 한다).</summary>
     private const int UnkeyedRowsMaxNodes = 16;
 
     /// <summary>테스트 손잡이 — 그래프 목록의 "키 없음" 줄들(노드 · 종류).</summary>
@@ -3366,7 +3310,7 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>키 없는 채널에 지금 값을 지금 시각의 키로 — 채널이 생긴다. 뷰포트의 길(클립·이모지 안이면 그 문맥의 시각과 시작값)로 놓는다.</summary>
+    /// <summary>키 없는 채널에 지금 값을 지금 시각의 키로 — 채널이 생긴다. 뷰포트의 길(클립 안이면 그 문맥의 시각과 시작값)로 놓는다.</summary>
     private void KeyUnkeyed(string node, MotionChannelKind kind)
     {
         _viewport.SelectedNode = node;
@@ -3675,9 +3619,8 @@ public partial class MainWindow : Window
         IReadOnlyList<MotionProblem> problems = _session.Problems;
         IReadOnlyList<ClipProblem> clipProblems = ClipValidator.Validate(_session.Editor.Document, _session.RigNodeIds);
         ProblemsPanel.Children.Clear();
-        IReadOnlyList<EmojiProblem> emojiProblems = EmojiValidator.Validate(_session.Editor.Document, _session.RigNodeIds);
         SchemaDiff schemaChange = _session.SchemaChange;
-        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count + emojiProblems.Count > 0 || !schemaChange.IsEmpty;
+        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count > 0 || !schemaChange.IsEmpty;
 
         foreach (MotionProblem problem in problems)
         {
@@ -3712,12 +3655,6 @@ public partial class MainWindow : Window
         {
             ProblemsPanel.Children.Add(ClipProblemRow(problem));
         }
-
-        foreach (EmojiProblem problem in emojiProblems)
-        {
-            ProblemsPanel.Children.Add(EmojiProblemRow(problem));
-        }
-
 
         AddSchemaChangeRows(schemaChange);
     }

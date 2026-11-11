@@ -46,30 +46,6 @@ public class SchemaContractTests
     }
 
     [Fact]
-    public void 이모지의_리그와_자리_노드와_스킨의_조각이_스키마에_없으면_막는다()
-    {
-        MotionDocument document = Fixtures.NodBowDocument();
-        string rig = document.Motions[0].Rig;
-        string node = Schema.NodeIds[rig].First();
-        document.Skins.Add(new SkinAsset { Name = "그림", Rig = rig, Parts = { [node] = "art/a.png", ["Gone_Part"] = "art/b.png" } });
-        var emoji = new EmojiAsset { Name = "땀", Rig = rig, Skin = "그림", AnchorNode = "Gone_Anchor" };
-        document.Emojis.Add(emoji);
-
-        IReadOnlyList<SchemaViolation> violations = SchemaContract.Emoji(Schema.NodeIds, document, emoji);
-        Assert.Equal(2, violations.Count);
-        Assert.All(violations, v => Assert.Equal(("이모지", "땀", true), (v.Kind, v.Subject, v.Blocking)));
-        Assert.Contains(violations, v => v.Message.Contains("자리 노드 'Gone_Anchor'", StringComparison.Ordinal));
-        Assert.Contains(violations, v => v.Message.Contains("스킨 '그림'의 조각 'Gone_Part'", StringComparison.Ordinal));
-
-        Assert.False(EmojisJson.TryExport(document, Schema.NodeIds, out _, out IReadOnlyList<string> problems));
-        Assert.Equal(2, problems.Count);
-
-        // 스키마에 없는 리그 — 노드는 더 묻지 않는다.
-        emoji.Rig = "ghost_rig";
-        Assert.Contains("ghost_rig", Assert.Single(SchemaContract.Emoji(Schema.NodeIds, document, emoji)).Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void 클립의_배역이_스키마에_없는_리그를_입으면_막는다()
     {
         string rig = Schema.NodeIds.Keys.First();

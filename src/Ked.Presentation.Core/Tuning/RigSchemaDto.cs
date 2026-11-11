@@ -53,7 +53,7 @@ namespace Ked.Presentation.Core
         public Float3Dto localEulerAngles;
 
         /// <summary>
-        /// ⚠ 재현 입력이 아니다. 캡처 시점의 파생 rect 크기 —
+        /// 재현 입력이 아니다. 캡처 시점의 파생 rect 크기 —
         /// 트리를 세운 뒤 GetRectSize와 대조하는 검산용이다.
         /// </summary>
         public Float2Dto measuredRectSize;
@@ -69,10 +69,11 @@ namespace Ked.Presentation.Core
         public float canvasGroupAlpha;
 
         /// <summary>
-        /// 그림을 그리는 노드인가(Image가 붙는 자리). 조각 여럿으로 된 리그(이모지)에서 "어느 노드가 그림인가"를 덤프가 말한다.
-        /// 없는 필드는 false로 읽힌다 — 예전 덤프는 그대로다.
+        /// 이모지 리그의 틀(rigKind "emoji")에서만 참. 이모지 안의 리그마다 되풀이되는 노드다 —
+        /// 덤프에는 견본으로 한 번만 실리고, 몇 번 서는가는 이모지의 구성이 정한다.
+        /// 구덤프(필드 없음)는 false로 떨어진다.
         /// </summary>
-        public bool hasImage;
+        public bool repeatsPerRig;
     }
 
     [Serializable]

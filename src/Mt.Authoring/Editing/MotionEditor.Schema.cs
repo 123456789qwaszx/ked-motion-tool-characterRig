@@ -14,8 +14,8 @@ public sealed partial class MotionEditor
     }
 
     /// <summary>
-    /// 이름이 바뀐 것으로 보이는 노드를 따라간다 — 그 리그의 모션 채널 · 이모지의 자리 노드 · 스킨의 조각이 옛 이름으로 가리키던 곳을 새 이름으로.
-    /// 한 칸이다. 바꾼 곳의 수를 돌려준다(0이면 기록도 없다). 새 이름을 이미 쓰는 스킨 조각은 두고 넘어간다 — 덮어쓰지 않는다.
+    /// 이름이 바뀐 것으로 보이는 노드를 따라간다 — 그 리그의 모션 채널이 옛 이름으로 가리키던 곳을 새 이름으로.
+    /// 한 칸이다. 바꾼 곳의 수를 돌려준다(0이면 기록도 없다).
     /// </summary>
     public int FollowSchemaRenames(SchemaDiff diff)
     {
@@ -43,26 +43,6 @@ public sealed partial class MotionEditor
         foreach (ChannelAsset channel in Document.Motions.Where(m => Same(m.Rig, rig)).SelectMany(m => m.Channels).Where(c => Same(c.Node, from)))
         {
             channel.Node = to;
-            changed++;
-        }
-
-        foreach (EmojiAsset emoji in Document.Emojis.Where(e => Same(e.Rig, rig) && Same(e.AnchorNode, from)))
-        {
-            emoji.AnchorNode = to;
-            changed++;
-        }
-
-        foreach (SkinAsset skin in Document.Skins.Where(s => Same(s.Rig, rig) && s.Parts.ContainsKey(from) && !s.Parts.ContainsKey(to)))
-        {
-            skin.Parts[to] = skin.Parts[from];
-            skin.Parts.Remove(from);
-
-            if (skin.Setups.TryGetValue(from, out SkinPartSetup? setup))
-            {
-                skin.Setups.Remove(from);
-                skin.Setups[to] = setup;
-            }
-
             changed++;
         }
 

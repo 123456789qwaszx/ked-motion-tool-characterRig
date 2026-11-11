@@ -47,7 +47,7 @@
                     },
                     "hasCanvasGroup": true,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharSlot_Track_Focus",
@@ -88,7 +88,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharSlot_DepthY",
@@ -129,7 +129,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharSlot_DepthScale",
@@ -170,7 +170,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharSlot_Track_Idle",
@@ -211,7 +211,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharSlot_Track",
@@ -252,7 +252,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharSlot_Track_X",
@@ -293,7 +293,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharSlot_Track_Y",
@@ -334,7 +334,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharSlot_Rotation",
@@ -375,7 +375,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharSlot_SwayPivot",
@@ -416,7 +416,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharSlot_Scale",
@@ -457,7 +457,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortrait_VisualOffset",
@@ -498,7 +498,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortrait_Track",
@@ -539,7 +539,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortrait_Rotation",
@@ -580,7 +580,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortrait_Track_Move",
@@ -621,7 +621,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortrait_Track_Move_X",
@@ -662,7 +662,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortrait_Track_Move_Y",
@@ -703,7 +703,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortrait_SwayPivot",
@@ -744,7 +744,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortrait_Shake",
@@ -785,7 +785,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortrait_ActingScale",
@@ -826,7 +826,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortrait_ActingScale_X",
@@ -867,7 +867,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortrait_ActingScale_Y",
@@ -908,7 +908,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortraitSprite_Root",
@@ -949,7 +949,7 @@
                     },
                     "hasCanvasGroup": true,
                     "canvasGroupAlpha": 0.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortraitSprite_Image",
@@ -990,7 +990,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": true
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortraitSpriteOverlay_Root",
@@ -1031,7 +1031,7 @@
                     },
                     "hasCanvasGroup": true,
                     "canvasGroupAlpha": 0.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "CharacterPortraitSpriteOverlay_Image",
@@ -1072,7 +1072,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": true
+                    "repeatsPerRig": false
                 }
             ]
         },
@@ -1119,7 +1119,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "ScreenOverlay_Root",
@@ -1160,7 +1160,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "Vignette_Image",
@@ -1201,7 +1201,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": true
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "Noise_Image",
@@ -1242,7 +1242,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": true
+                    "repeatsPerRig": false
                 },
                 {
                     "id": "Flash_Image",
@@ -1283,7 +1283,7 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": true
+                    "repeatsPerRig": false
                 }
             ]
         },
@@ -1300,11 +1300,11 @@
                     },
                     "anchorMin": {
                         "x": 0.5,
-                        "y": 0.5
+                        "y": 0.0
                     },
                     "anchorMax": {
                         "x": 0.5,
-                        "y": 0.5
+                        "y": 0.0
                     },
                     "pivot": {
                         "x": 0.5,
@@ -1330,10 +1330,10 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": false
                 },
                 {
-                    "id": "Emoji_Anchor",
+                    "id": "Emoji_Offset",
                     "parent": "__root",
                     "anchoredPosition": {
                         "x": 0.0,
@@ -1370,12 +1370,12 @@
                         "y": 0.0
                     },
                     "hasCanvasGroup": true,
-                    "canvasGroupAlpha": 0.0,
-                    "hasImage": false
+                    "canvasGroupAlpha": 1.0,
+                    "repeatsPerRig": false
                 },
                 {
-                    "id": "Emoji_Body",
-                    "parent": "Emoji_Anchor",
+                    "id": "EmojiRig_Place",
+                    "parent": "Emoji_Offset",
                     "anchoredPosition": {
                         "x": 0.0,
                         "y": 0.0
@@ -1412,11 +1412,11 @@
                     },
                     "hasCanvasGroup": false,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
+                    "repeatsPerRig": true
                 },
                 {
-                    "id": "Emoji_Part1",
-                    "parent": "Emoji_Body",
+                    "id": "EmojiRig_Image",
+                    "parent": "EmojiRig_Place",
                     "anchoredPosition": {
                         "x": 0.0,
                         "y": 0.0
@@ -1434,8 +1434,8 @@
                         "y": 0.5
                     },
                     "sizeDelta": {
-                        "x": 160.0,
-                        "y": 160.0
+                        "x": 100.0,
+                        "y": 100.0
                     },
                     "localScale": {
                         "x": 1.0,
@@ -1448,463 +1448,12 @@
                         "z": 0.0
                     },
                     "measuredRectSize": {
-                        "x": 160.0,
-                        "y": 160.0
+                        "x": 100.0,
+                        "y": 100.0
                     },
-                    "hasCanvasGroup": false,
+                    "hasCanvasGroup": true,
                     "canvasGroupAlpha": 1.0,
-                    "hasImage": false
-                },
-                {
-                    "id": "Emoji_Part1_Image",
-                    "parent": "Emoji_Part1",
-                    "anchoredPosition": {
-                        "x": 0.0,
-                        "y": 0.0
-                    },
-                    "anchorMin": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "anchorMax": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "pivot": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "sizeDelta": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "localScale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    },
-                    "localEulerAngles": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "measuredRectSize": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "hasCanvasGroup": false,
-                    "canvasGroupAlpha": 1.0,
-                    "hasImage": true
-                },
-                {
-                    "id": "Emoji_Part2",
-                    "parent": "Emoji_Body",
-                    "anchoredPosition": {
-                        "x": 0.0,
-                        "y": 0.0
-                    },
-                    "anchorMin": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "anchorMax": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "pivot": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "sizeDelta": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "localScale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    },
-                    "localEulerAngles": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "measuredRectSize": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "hasCanvasGroup": false,
-                    "canvasGroupAlpha": 1.0,
-                    "hasImage": false
-                },
-                {
-                    "id": "Emoji_Part2_Image",
-                    "parent": "Emoji_Part2",
-                    "anchoredPosition": {
-                        "x": 0.0,
-                        "y": 0.0
-                    },
-                    "anchorMin": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "anchorMax": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "pivot": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "sizeDelta": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "localScale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    },
-                    "localEulerAngles": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "measuredRectSize": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "hasCanvasGroup": false,
-                    "canvasGroupAlpha": 1.0,
-                    "hasImage": true
-                },
-                {
-                    "id": "Emoji_Part3",
-                    "parent": "Emoji_Body",
-                    "anchoredPosition": {
-                        "x": 0.0,
-                        "y": 0.0
-                    },
-                    "anchorMin": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "anchorMax": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "pivot": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "sizeDelta": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "localScale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    },
-                    "localEulerAngles": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "measuredRectSize": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "hasCanvasGroup": false,
-                    "canvasGroupAlpha": 1.0,
-                    "hasImage": false
-                },
-                {
-                    "id": "Emoji_Part3_Image",
-                    "parent": "Emoji_Part3",
-                    "anchoredPosition": {
-                        "x": 0.0,
-                        "y": 0.0
-                    },
-                    "anchorMin": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "anchorMax": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "pivot": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "sizeDelta": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "localScale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    },
-                    "localEulerAngles": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "measuredRectSize": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "hasCanvasGroup": false,
-                    "canvasGroupAlpha": 1.0,
-                    "hasImage": true
-                },
-                {
-                    "id": "Emoji_Part4",
-                    "parent": "Emoji_Body",
-                    "anchoredPosition": {
-                        "x": 0.0,
-                        "y": 0.0
-                    },
-                    "anchorMin": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "anchorMax": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "pivot": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "sizeDelta": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "localScale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    },
-                    "localEulerAngles": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "measuredRectSize": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "hasCanvasGroup": false,
-                    "canvasGroupAlpha": 1.0,
-                    "hasImage": false
-                },
-                {
-                    "id": "Emoji_Part4_Image",
-                    "parent": "Emoji_Part4",
-                    "anchoredPosition": {
-                        "x": 0.0,
-                        "y": 0.0
-                    },
-                    "anchorMin": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "anchorMax": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "pivot": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "sizeDelta": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "localScale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    },
-                    "localEulerAngles": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "measuredRectSize": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "hasCanvasGroup": false,
-                    "canvasGroupAlpha": 1.0,
-                    "hasImage": true
-                },
-                {
-                    "id": "Emoji_Part5",
-                    "parent": "Emoji_Body",
-                    "anchoredPosition": {
-                        "x": 0.0,
-                        "y": 0.0
-                    },
-                    "anchorMin": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "anchorMax": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "pivot": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "sizeDelta": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "localScale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    },
-                    "localEulerAngles": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "measuredRectSize": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "hasCanvasGroup": false,
-                    "canvasGroupAlpha": 1.0,
-                    "hasImage": false
-                },
-                {
-                    "id": "Emoji_Part5_Image",
-                    "parent": "Emoji_Part5",
-                    "anchoredPosition": {
-                        "x": 0.0,
-                        "y": 0.0
-                    },
-                    "anchorMin": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "anchorMax": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "pivot": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "sizeDelta": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "localScale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    },
-                    "localEulerAngles": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "measuredRectSize": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "hasCanvasGroup": false,
-                    "canvasGroupAlpha": 1.0,
-                    "hasImage": true
-                },
-                {
-                    "id": "Emoji_Part6",
-                    "parent": "Emoji_Body",
-                    "anchoredPosition": {
-                        "x": 0.0,
-                        "y": 0.0
-                    },
-                    "anchorMin": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "anchorMax": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "pivot": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "sizeDelta": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "localScale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    },
-                    "localEulerAngles": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "measuredRectSize": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "hasCanvasGroup": false,
-                    "canvasGroupAlpha": 1.0,
-                    "hasImage": false
-                },
-                {
-                    "id": "Emoji_Part6_Image",
-                    "parent": "Emoji_Part6",
-                    "anchoredPosition": {
-                        "x": 0.0,
-                        "y": 0.0
-                    },
-                    "anchorMin": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "anchorMax": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "pivot": {
-                        "x": 0.5,
-                        "y": 0.5
-                    },
-                    "sizeDelta": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "localScale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    },
-                    "localEulerAngles": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "measuredRectSize": {
-                        "x": 160.0,
-                        "y": 160.0
-                    },
-                    "hasCanvasGroup": false,
-                    "canvasGroupAlpha": 1.0,
-                    "hasImage": true
+                    "repeatsPerRig": true
                 }
             ]
         }

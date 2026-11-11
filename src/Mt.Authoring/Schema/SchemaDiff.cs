@@ -16,7 +16,7 @@ public sealed record SchemaRigDiff(string Kind, IReadOnlyList<string> Removed, I
     public bool IsEmpty => Removed.Count == 0 && Renamed.Count == 0 && Added.Count == 0 && Moved.Count == 0;
 }
 
-/// <summary>달라진 스키마를 쓰는 것 — 무엇이(모션 · 이모지 · 스킨 · 배역), 어느 것이, 어느 리그의 어느 노드를. 이름이 바뀐 것으로 보이면 새 이름.</summary>
+/// <summary>달라진 스키마를 쓰는 것 — 무엇이(모션 · 배역), 어느 것이, 어느 리그의 어느 노드를. 이름이 바뀐 것으로 보이면 새 이름.</summary>
 public sealed record SchemaUse(string Kind, string Subject, string Rig, string? Node, string? RenamedTo);
 
 /// <summary>
@@ -158,22 +158,6 @@ public sealed class SchemaDiff
             foreach (string node in motion.Channels.Select(c => c.Node).Distinct(StringComparer.Ordinal))
             {
                 Node("모션", motion.Name, motion.Rig ?? "", node);
-            }
-        }
-
-        foreach (EmojiAsset emoji in document.Emojis)
-        {
-            Rig("이모지", emoji.Name, emoji.Rig);
-            Node("이모지", emoji.Name, emoji.Rig, emoji.AnchorNode);
-        }
-
-        foreach (SkinAsset skin in document.Skins)
-        {
-            Rig("스킨", skin.Name, skin.Rig);
-
-            foreach (string node in skin.Parts.Keys)
-            {
-                Node("스킨", skin.Name, skin.Rig, node);
             }
         }
 

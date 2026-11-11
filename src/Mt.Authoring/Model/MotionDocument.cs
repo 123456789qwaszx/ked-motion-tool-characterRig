@@ -72,41 +72,6 @@ public sealed class MotionDocument
         set => Clips = value ?? new List<ClipAsset>();
     }
 
-    /// <summary>
-    /// 스킨들(<c>PLAN-parts.md</c> P1) — 리그의 조각마다 붙일 그림의 묶음. 미리보기 전용.
-    /// 저작본에는 <see cref="SkinsOrNull"/>로 실린다: 스킨이 없는 문서는 전과 같은 글자다.
-    /// </summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public List<SkinAsset> Skins { get; set; } = new();
-
-    /// <summary>저작본의 <c>skins</c> 자리 — 비면 쓰지 않는다. 코드는 <see cref="Skins"/>를 쓴다.</summary>
-    [System.Text.Json.Serialization.JsonPropertyName("skins")]
-    public List<SkinAsset>? SkinsOrNull
-    {
-        get => Skins.Count == 0 ? null : Skins;
-        set => Skins = value ?? new List<SkinAsset>();
-    }
-
-    public SkinAsset? FindSkin(string? name)
-        => name is null ? null : Skins.FirstOrDefault(s => string.Equals(s.Name, name, StringComparison.Ordinal));
-
-    /// <summary>
-    /// 이모지 정의들(<c>PLAN-parts.md</c> §8) — 붙는 리그 + 스킨 + 등장·머묾·퇴장 모션의 묶음. <c>emojis.json</c>(초안)으로 따로 나간다.
-    /// 저작본에는 <see cref="EmojisOrNull"/>로 실린다(없으면 안 적는다).
-    /// </summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public List<EmojiAsset> Emojis { get; set; } = new();
-
-    [System.Text.Json.Serialization.JsonPropertyName("emojis")]
-    public List<EmojiAsset>? EmojisOrNull
-    {
-        get => Emojis.Count == 0 ? null : Emojis;
-        set => Emojis = value ?? new List<EmojiAsset>();
-    }
-
-    public EmojiAsset? FindEmoji(string? name)
-        => name is null ? null : Emojis.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
-
     public ClipAsset? FindClip(string? name)
         => name is null ? null : Clips.FirstOrDefault(c => string.Equals(c.Name, name, StringComparison.Ordinal));
 

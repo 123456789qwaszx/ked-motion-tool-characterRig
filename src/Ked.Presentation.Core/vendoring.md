@@ -8,18 +8,24 @@
 |---|---|
 | 원본 | `ked-stage-runtime` `dev` @ `dc690c1` (배경 리그 제거 — `bg_*`는 캐스팅하지 않은 슬롯, 재선언은 새 리그. 그 전: `640ac60` motions/2) |
 | 반입일 | 2026-10-29 |
-| 범위 | `Ease/`·`Motion/`·`Primitives/`·`Reduce/`·`State/`·`Tokens/`·`Transforms/`·`Tuning/` 소스와 `Documentation~/` |
+| 범위 | `Ease/`·`Emoji/`·`Motion/`·`Primitives/`·`Reduce/`·`State/`·`Tokens/`·`Transforms/`·`Tuning/` 소스와 `Documentation~/` |
 | 제외 | `Tests/`·`*.meta`·`*.asmdef` |
 | 테스트 | 순수 테스트(유니티·런타임·DOTween 참조 없는 것)만 `tests/Ked.Presentation.Core.Tests/EditMode/`로 |
 | 이쪽 살림 | `Ked.Presentation.Core.csproj`·`vendoring.md` (동기화 때 유지) |
 
-## 선반영 — 런타임 반영 대기
+## 부분 반입 — 이모지 (2026-11-11, `docs/PLAN-emoji.md` E1)
 
-정본보다 이 사본이 앞선 것. "사본을 고치지 않는다"의 예외이고, 다음 동기화의 감사(ⓒ 이쪽에만 있는 멤버)에 걸리는 것이 정상이다.
+정본이 `ked-presentation-runtime`으로 옮겨 가는 중이라 전체 동기화 대신 **이모지에 필요한 파일만** 그쪽에서 가져왔다. 나머지는 위 표의 원본 그대로다 —
+그래서 지금 `ked-presentation-runtime`과의 `diff -r`는 0줄이 아니다(전체 동기화는 따로 한다).
 
-| 파일 | 선반영한 것 | 정본 |
-|---|---|---|
-| `Tuning/RigSchemaDto.cs` | `RigSchemaNodeDto.hasImage` — 그림 노드 표시 | **들어갔다** — `ked-presentation-runtime` `465f5d43`(2026-11-11)에 같은 이름 · 같은 뜻으로. 다음 동기화에서 사라진다 |
+| 항목 | 값 |
+|---|---|
+| 원본 | `ked-presentation-runtime` `feat/emojiRigSchema` @ `007d4c16` (리그의 기본 배율 · 회전까지) |
+| 파일 | `Emoji/EmojiClip.cs` · `Emoji/EmojiDefinition.cs` · `Emoji/EmojiPlayback.cs` · `Tuning/EmojisFileDto.cs` · `Tuning/RigSchemaDto.cs`(통째 교체 — `repeatsPerRig`가 들어오고 `hasImage`가 빠졌다) |
+| 테스트 | 런타임 `Tests/EditMode/EmojiPlaybackTests.cs`의 유니티를 쓰지 않는 절(형식의 규칙 · 그 프레임의 모습 · 재생의 단계)만 `EditMode/EmojiPlaybackTests.cs`로. 접기(`StageReducer.Emoji` — 사본에 없다)와 재생 시스템은 저쪽에 남는다 |
+| 덤프 | `Mt.Authoring/Defaults/ExportedTuning/rig-schemas.json` · `export-report.json`과 시험 픽스처 `tests/Mt.Authoring.Tests/Fixtures/rig-schemas.json`도 같은 커밋의 `ExportedTuning/`에서 |
+
+선반영은 이제 없다. `RigSchemaNodeDto.hasImage`(옛 이모지 설계의 그림 노드 표시)는 런타임 `465f5d43`에 들어갔다가 새 정의에서 `repeatsPerRig`(리그마다 되풀이되는 노드)로 바뀌었고, 이 반입으로 사본에서도 사라졌다.
 
 **걷어 낸 것(2026-11-11, `docs/PLAN-characterRig.md` R3).** 모션의 불투명도 채널(`MotionChannelKind.Alpha`)과 이벤트 키(`MotionEvent` · `MotionClip.Events`)는
 런타임이 받지 않기로 했다(런타임 `docs/PLAN_emoji.md` §8-4 · 이모지는 대본의 커맨드로 띄운다). `Motion/MotionClip.cs` · `MotionMath.cs` · `MotionRules.cs` ·

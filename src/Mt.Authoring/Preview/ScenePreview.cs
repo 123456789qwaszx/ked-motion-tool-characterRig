@@ -39,22 +39,8 @@ public static class ScenePreview
         foreach (SceneObject o in scene.DrawOrder())
         {
             string? attach = null;
-            SceneObject? parent = scene.ParentOf(o);
 
-            if (parent is not null)
-            {
-                // 붙은 오브젝트 — 부모 리그의 노드 밑에 선다(코어 AddRigTo의 attachParentKey). DrawOrder가 부모를 먼저 내므로 부모는 이미 서 있다.
-                // 부모가 덤프에 없는 리그라 못 섰으면 이것도 건너뛴다. 붙는 노드가 없으면 부모의 루트.
-                if (!state.Nodes.Contains(RootKeyOf(parent)))
-                {
-                    missing?.Add(o);
-                    continue;
-                }
-
-                string node = o.AttachNode is { } n && state.Nodes.Contains(parent.KeyOf(n)) ? parent.KeyOf(n) : RootKeyOf(parent);
-                attach = node;
-            }
-            else if (stage is not null)
+            if (stage is not null)
             {
                 // 오브젝트는 그 무대·층의 Content에 선다. 런타임 GetDepthContent(stage, layer)와 같은 자리. 모르는 라벨은 루트 직속.
                 string content = StageNodes.KeyOf(StageNodes.ContentOf(o.Stage, o.Layer));
@@ -73,13 +59,8 @@ public static class ScenePreview
 
             // 순서는 런타임 대본과 같이 slot → size(깊이) → place → 오프셋(move_by·rotate_by·scale_by).
             // place는 커맨드 순간 한 번 풀리는 것이라 그 뒤의 오프셋을 모른다 — 오프셋을 먼저 넣으면 place가 그만큼 되감아 오프셋이 안 보인다(버그였다).
-            // 붙은 것은 깊이·자리를 제 것으로 갖지 않는다 — 부모의 것을 따라간다. 오프셋·회전·배율만 붙는 자리에 대해 넣는다.
-            if (parent is null)
-            {
-                ApplyDepth(state, o, depth, focus);
-                ApplyPlace(state, o, focus);
-            }
-
+            ApplyDepth(state, o, depth, focus);
+            ApplyPlace(state, o, focus);
             ApplyPlacement(state.Nodes, o);
         }
 
@@ -118,7 +99,7 @@ public static class ScenePreview
 
     /// <summary>
     /// 깊이·자리 폴드가 설 수 있는 리그인가 — 코어의 그 폴드들은 캐릭터 리그의 축(깊이 노드와 초상까지의 사슬)을 전제하고, 없으면 던진다.
-    /// 이모지 같은 다른 리그는 깊이·자리 없이 선다(층은 그리는 순서만).
+    /// 캐릭터가 아닌 리그(screenEffect 등)는 깊이·자리 없이 선다(층은 그리는 순서만).
     /// </summary>
     private static bool IsCharacterShaped(StageState state, SceneObject o)
         => state.Nodes.Contains(o.KeyOf(DepthYNode)) && state.Nodes.Contains(o.KeyOf(DepthScaleNode)) && state.Nodes.Contains(o.KeyOf(PortraitLayout.ImageNodeId));
