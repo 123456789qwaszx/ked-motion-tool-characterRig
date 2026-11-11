@@ -586,7 +586,7 @@ public partial class MainWindow : Window
             _showStageSkeleton.IsChecked = _settings.ShowStageSkeleton;
             _collapsedGroups.Clear();
             _collapsedGroups.UnionWith(_settings.CollapsedChannelBoxGroups);
-            _inspectorTabs.SelectedIndex = Math.Clamp(_settings.InspectorTab, 0, 4);
+            ApplyWorkMode(_settings.WorkMode);
             int autoSaveIndex = Array.IndexOf(AutoSaveMinutes, _settings.AutoSaveMinutes);
             _autoSaveCombo.SelectedIndex = autoSaveIndex < 0 ? 2 : autoSaveIndex;
             _timeDisplayCombo.SelectedIndex = (int)_settings.TimeDisplay;
@@ -1729,6 +1729,7 @@ public partial class MainWindow : Window
 
     private void BuildToolbar()
     {
+        BuildWorkModeSwitch();
         Toolbar.Children.Add(ToolButton("새로", (_, _) => Guard("새 문서", _session.New)));
         Toolbar.Children.Add(ToolButton("열기…", OnOpenClick));
         Toolbar.Children.Add(_recentButton);
@@ -1736,10 +1737,11 @@ public partial class MainWindow : Window
         Toolbar.Children.Add(ToolButton("다른 이름으로…", OnSaveAsClick));
         Toolbar.Children.Add(Separator());
         Toolbar.Children.Add(ToolButton("리그 덤프…", OnLoadRigClick));
-        Toolbar.Children.Add(ToolButton("motions.json 가져오기…", OnImportClick));
-        Toolbar.Children.Add(_exportScope);
+        Toolbar.Children.Add(OnlyIn(WorkMode.Motion, ToolButton("motions.json 가져오기…", OnImportClick)));
+        Toolbar.Children.Add(OnlyIn(WorkMode.Motion, _exportScope));
         ToolTip.SetTip(_exportScope, "내보낼 범위 — 전체 / 선택 오브젝트의 rigKind 모션만 / 선택 오브젝트가 입을 수 있는 모션만. 모션의 주인은 rigKind다");
-        Toolbar.Children.Add(ToolButton("motions.json 내보내기…", OnExportClick));
+        Toolbar.Children.Add(OnlyIn(WorkMode.Motion, ToolButton("motions.json 내보내기…", OnExportClick)));
+        Toolbar.Children.Add(OnlyIn(WorkMode.Emoji, EmojiExportButton()));
         Toolbar.Children.Add(Separator());
         Toolbar.Children.Add(ToolButton("되돌리기", (_, _) => UndoCommand()));
         Toolbar.Children.Add(ToolButton("다시하기", (_, _) => RedoCommand()));
@@ -1821,7 +1823,11 @@ public partial class MainWindow : Window
         });
 
         BuildClipLeft();
+
+        // 여기까지가 캐릭터 모션 모드의 왼쪽이고, 다음부터가 이모지 모드의 왼쪽이다 — 모드가 한쪽만 보인다.
+        int emojiFrom = LeftPanel.Children.Count;
         BuildEmojiLeft();
+        GroupLeftByWorkMode(emojiFrom);
     }
 
     /// <summary>
@@ -1830,7 +1836,7 @@ public partial class MainWindow : Window
     /// </summary>
     private void BuildRight()
     {
-        _inspectorTabs.ItemsSource = new[]
+        _inspectorTabItems = new[]
         {
             new TabItem { Header = "채널 박스", Content = BuildChannelBoxTab(), FontSize = 12 },
             new TabItem { Header = "씬", Content = BuildSceneTab(), FontSize = 12 },
@@ -1838,9 +1844,11 @@ public partial class MainWindow : Window
             new TabItem { Header = "클립", Content = BuildClipTab(), FontSize = 12 },
             new TabItem { Header = "이모지", Content = BuildEmojiTab(), FontSize = 12 },
         };
+        _inspectorTabs.ItemsSource = _inspectorTabItems;
         _inspectorTabs.SelectionChanged += (_, _) =>
         {
-            if (!_refreshing && _inspectorTabs.SelectedIndex >= 0)
+            // 남기는 것은 캐릭터 모션 모드의 탭뿐이다 — 이모지 모드의 탭은 하나다.
+            if (!_refreshing && _inspectorTabs.SelectedIndex is >= 0 and < EmojiTabIndex)
             {
                 _settings.InspectorTab = _inspectorTabs.SelectedIndex;
             }
@@ -3061,6 +3069,7 @@ public partial class MainWindow : Window
         {
             DeselectClip(); // 시간의 주인은 모션 · 클립 · 이모지 중 하나다
             DeselectEmoji();
+            EnterWorkMode(WorkMode.Motion);
         }
 
         BindMotion(SelectedMotion);

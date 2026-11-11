@@ -6,6 +6,18 @@ using Mt.Authoring.Model;
 namespace Mt.Authoring.Settings;
 
 /// <summary>
+/// 작업 모드 — 화면이 그 일에 쓰는 것만 보인다(docs/PLAN-ux.md U1).
+/// </summary>
+public enum WorkMode
+{
+    /// <summary>캐릭터 모션 · 클립 · 씬.</summary>
+    Motion,
+
+    /// <summary>이모지.</summary>
+    Emoji,
+}
+
+/// <summary>
 /// 툴 설정 — 문서가 아니라 이 컴퓨터의 것(마야 preferences). JSON 한 파일, 없으면 기본값.
 /// 읽기 실패는 조용히 기본값으로 떨어지되 <see cref="LoadProblem"/>에 남긴다.
 /// </summary>
@@ -40,7 +52,10 @@ public sealed class ToolSettings
     /// <summary>하이어아키에 컨트롤러(자리·깊이·연기) 대신 덤프의 리그 노드 26단을 보인다. 리거용 — 기본은 끔.</summary>
     public bool ShowRigNodes { get; set; }
 
-    /// <summary>오른쪽 인스펙터의 마지막 탭(0 채널 박스 · 1 씬 · 2 모션).</summary>
+    /// <summary>마지막 작업 모드.</summary>
+    public WorkMode WorkMode { get; set; }
+
+    /// <summary>캐릭터 모션 모드에서 오른쪽 인스펙터의 마지막 탭(0 채널 박스 · 1 씬 · 2 모션 · 3 클립). 이모지 모드의 탭은 하나라 남기지 않는다.</summary>
     public int InspectorTab { get; set; }
 
     /// <summary>채널 박스에서 접어 둔 묶음 id(placement·depth·acting).</summary>
@@ -104,7 +119,7 @@ public sealed class ToolSettings
             ToolSettings settings = JsonSerializer.Deserialize<ToolSettings>(File.ReadAllText(path), Options) ?? new ToolSettings();
             settings.RecentFiles ??= new List<string>();
             settings.CollapsedChannelBoxGroups ??= new List<string>();
-            settings.InspectorTab = Math.Clamp(settings.InspectorTab, 0, 2);
+            settings.InspectorTab = Math.Clamp(settings.InspectorTab, 0, 3);
             settings.SnapStep = settings.SnapStep > 0 ? settings.SnapStep : TimeSnap.DefaultStep;
             settings.AutoSaveMinutes = Math.Clamp(settings.AutoSaveMinutes, 0, 120);
             settings.LeftPanelWidth = Math.Clamp(settings.LeftPanelWidth, MinPanelWidth, 800);

@@ -6,6 +6,7 @@ using Mt.App.Views;
 using Mt.Authoring.Editing;
 using Ked.Presentation.Core;
 using Mt.Authoring.Model;
+using Mt.Authoring.Settings;
 using Mt.Authoring.Preview;
 using Mt.Authoring.Validation;
 
@@ -306,6 +307,7 @@ public partial class MainWindow
         if (SelectedClip is not null)
         {
             DeselectEmoji(); // 시간의 주인은 하나
+            EnterWorkMode(WorkMode.Motion);
         }
 
         if (SelectedClip is not null && SelectedMotion is not null)

@@ -13,6 +13,7 @@ using Mt.Authoring.Graph;
 using Mt.Authoring.Model;
 using Mt.Authoring.Preview;
 using Mt.Authoring.Rig;
+using Mt.Authoring.Settings;
 using Mt.Authoring.Validation;
 
 namespace Mt.App;
@@ -189,13 +190,11 @@ public partial class MainWindow
         ToolTip.SetTip(add, "이름 emoji, emoji_2…로 만든다 — 리그 body 하나, 타임라인 24프레임. 오른쪽 '이모지' 탭에서 그림 · 구간을 준다");
         Button duplicate = SmallButton("복제", (_, _) => Guard("이모지 복제", DuplicateEmoji));
         ToolTip.SetTip(duplicate, "고른 이모지를 키까지 통째로 복제한다 — 재사용은 가져와서 고치는 것이다");
-        Button export = SmallButton("emojis.json…", OnExportEmojisClick);
-        ToolTip.SetTip(export, "emojis.json(emojis/2) 내보내기 — 구간마다 따로 선 클립. 막는 문제가 있거나 런타임 로더가 다시 읽지 못하면 쓰지 않는다");
         LeftPanel.Children.Add(new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = 4,
-            Children = { add, SmallButton("삭제", (_, _) => Guard("이모지 삭제", RemoveEmoji)), duplicate, export },
+            Children = { add, SmallButton("삭제", (_, _) => Guard("이모지 삭제", RemoveEmoji)), duplicate },
         });
     }
 
@@ -709,6 +708,8 @@ public partial class MainWindow
 
         if (SelectedEmoji is not null)
         {
+            EnterWorkMode(WorkMode.Emoji);
+
             // 시간의 주인은 하나 — 클립과 모션을 푼다. 모션 선택을 풀면 그 알림이 다시 묶는다(BindMotion → 이모지).
             DeselectClip();
 
