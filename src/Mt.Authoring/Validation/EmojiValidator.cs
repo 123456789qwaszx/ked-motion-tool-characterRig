@@ -16,7 +16,7 @@ public sealed record EmojiProblem(string EmojiName, string Message, bool Blockin
 ///
 /// 보는 것: 이름 · 리그(이름 · 그림 · 기본 배율) · 타임라인의 채널(대상이 틀의 키 받는 노드인가 · 종류와 성분이 맞는가 · 키가 타임라인 안인가 ·
 /// 그림 키가 그 리그의 그림을 가리키는가) · 구간(타임라인 안인가) · 잇기(있는 구간인가 · 등장/퇴장은 머묾이 있을 때만).
-/// 런타임이 읽을 때의 규칙(코어 <see cref="EmojiRules"/>)은 내보낼 정의에 한 번 더 건다(내보내기에서) — 이 검증은 그 앞에서 툴의 말로 알린다.
+/// 런타임이 읽을 때의 규칙(코어 <see cref="EmojiRules"/>)은 내보낼 정의에 한 번 더 건다(<see cref="EmojiExport"/>) — 이 검증은 그 앞에서 툴의 말로 알린다.
 /// </summary>
 public static class EmojiValidator
 {

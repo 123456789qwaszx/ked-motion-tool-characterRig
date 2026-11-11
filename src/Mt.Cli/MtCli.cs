@@ -26,9 +26,10 @@ public static class MtCli
     public const string Usage = """
         mt — ked-motion-tool 명령줄 (결과는 stdout의 JSON, 종료 코드 0 됨 · 1 막는 문제 · 2 쓰는 법)
 
-          mt info     <문서>                                   모션·클립·씬의 목록
-          mt validate <문서> [--rig <덤프>]                    문제 목록(모션·클립). 막는 문제가 있으면 종료 코드 1
+          mt info     <문서>                                   모션·클립·씬·이모지의 목록
+          mt validate <문서> [--rig <덤프>]                    문제 목록(모션·클립·이모지). 막는 문제가 있으면 종료 코드 1
           mt export   <문서> <motions.json> [--rig <덤프>]     motions.json 내보내기(검증을 지나야 나간다)
+          mt emojis   <문서> <emojis.json> [--rig <덤프>]      emojis.json(emojis/2) 내보내기 — 구간마다 따로 선 클립, 런타임 로더로 다시 읽어 본다
           mt pose     <문서> --motion <이름> --time <초> [--object <id>] [--mode relative|absolute] [--rig <덤프>]
           mt pose     <문서> --clip <이름> --time <초> [--rig <덤프>]
                                                                그 시각의 포즈 — 모션·클립이 건드리는 노드의 값과 오브젝트의 불투명도
@@ -65,6 +66,7 @@ public static class MtCli
                 "info" => Info(options, stdout),
                 "validate" => Validate(options, stdout),
                 "export" => Export(options, stdout),
+                "emojis" => Emojis(options, stdout),
                 "pose" => Pose(options, stdout),
                 "bake" => Bake(options, stdout),
                 _ => throw new UsageException($"모르는 명령 '{args[0]}'"),
@@ -128,6 +130,14 @@ public static class MtCli
                 ["name"] = s.Name,
                 ["objects"] = new JsonArray(s.Objects.Select(o => (JsonNode)new JsonObject { ["id"] = o.Id, ["rig"] = o.Rig }).ToArray()),
             }).ToArray()),
+            ["emojis"] = new JsonArray(document.Emojis.Select(e => (JsonNode)new JsonObject
+            {
+                ["name"] = e.Name,
+                ["rigs"] = new JsonArray(e.Rigs.Select(r => (JsonNode)r.Name).ToArray()),
+                ["frames"] = e.LastFrame + 1,
+                ["clips"] = new JsonArray(EmojiExport.ClipsOf(e).Select(c => (JsonNode)$"{c.Name} {c.Start}~{c.End}").ToArray()),
+                ["stays"] = e.Stays,
+            }).ToArray()),
         });
         return 0;
     }
@@ -162,6 +172,37 @@ public static class MtCli
             ["path"] = Path.GetFullPath(target),
             ["schema"] = AuthoringFormat.ExportSchema,
             ["motions"] = new JsonArray(MotionExport.ToClips(document).Select(c => (JsonNode)c.Name).ToArray()),
+        });
+        return 0;
+    }
+
+    private static int Emojis(Options options, TextWriter stdout)
+    {
+        string target = options.Positional(1, "내보낼 emojis.json 경로");
+        MotionDocument document = Load(options, out RigSchemaFile rig);
+
+        if (!EmojiRigFrame.TryRead(rig, out EmojiRigFrame frame, out string why))
+        {
+            throw new InvalidOperationException(why);
+        }
+
+        if (!EmojiExport.TryExport(document, frame, out string json, out IReadOnlyList<EmojiProblem> problems))
+        {
+            Write(stdout, new JsonObject
+            {
+                ["ok"] = false,
+                ["problems"] = new JsonArray(problems.Select(p => (JsonNode)new JsonObject { ["emoji"] = p.EmojiName, ["message"] = p.Message, ["blocking"] = p.Blocking }).ToArray()),
+            });
+            return 1;
+        }
+
+        File.WriteAllBytes(target, System.Text.Encoding.UTF8.GetBytes(json));
+        Write(stdout, new JsonObject
+        {
+            ["ok"] = true,
+            ["path"] = Path.GetFullPath(target),
+            ["schema"] = EmojiDefinitionLoader.Schema,
+            ["emojis"] = new JsonArray(document.Emojis.Select(e => (JsonNode)e.Name).ToArray()),
         });
         return 0;
     }
@@ -297,6 +338,12 @@ public static class MtCli
             blocking |= p.Blocking;
         }
 
+        foreach (EmojiProblem p in EmojiValidator.Validate(document, rig))
+        {
+            problems.Add(new JsonObject { ["kind"] = "emoji", ["name"] = p.EmojiName, ["message"] = p.Message, ["blocking"] = p.Blocking });
+            blocking |= p.Blocking;
+        }
+
         // 문서를 지을 때와 스키마가 달라진 것 — 알림(무엇이 달라졌고 무엇이 그것을 쓰는가).
         if (document.BuiltOn is { } builtOn)
         {
@@ -361,7 +408,7 @@ public static class MtCli
 
         // 손으로(또는 AI가) 쓴 문서는 탄젠트 값을 모른다 — 키의 탄젠트 종류(auto·flat·linear…)대로 값을 세운다. 앱이 편집할 때마다 하는 그 계산이고,
         // 앱이 저장한 문서에는 아무것도 안 바꾼다(이미 그 값이다). free는 적힌 값 그대로 둔다.
-        foreach (ComponentCurve curve in document.Motions.SelectMany(m => m.Channels).SelectMany(c => new[] { c.X, c.Y, c.Z }).OfType<ComponentCurve>())
+        foreach (ComponentCurve curve in document.AllMotions.SelectMany(m => m.Channels).SelectMany(c => new[] { c.X, c.Y, c.Z }).OfType<ComponentCurve>())
         {
             Mt.Authoring.Graph.TangentMath.Recompute(curve.Keys);
         }

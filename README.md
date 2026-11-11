@@ -230,6 +230,7 @@ tests: Ked.Presentation.Core.Tests(NUnit, 원본 그대로) · Mt.Authoring.Test
 dotnet run --project src/Mt.Cli -- info     a.motion-authoring.json
 dotnet run --project src/Mt.Cli -- validate a.motion-authoring.json [--rig rig-schemas.json]
 dotnet run --project src/Mt.Cli -- export   a.motion-authoring.json motions.json
+dotnet run --project src/Mt.Cli -- emojis   a.motion-authoring.json emojis.json
 dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --motion nod --time 0.3 [--object s1] [--mode relative|absolute]
 dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --clip greet --time 0.8
 dotnet run --project src/Mt.Cli -- bake     a.motion-authoring.json --clip greet --object s1 --name greet_s1 [--out b.motion-authoring.json]
