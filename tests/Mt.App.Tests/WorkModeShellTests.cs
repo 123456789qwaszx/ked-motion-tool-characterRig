@@ -164,6 +164,95 @@ public class WorkModeShellTests
         }, "{ \"workMode\": \"emoji\" }");
     }
 
+    // ── 고른 것이 오른쪽을 정한다 (PLAN-ux.md U2) ───────────────────
+
+    [Fact]
+    public void 이모지를_고르면_이모지의_값을_리그를_고르면_리그의_값을_보인다()
+    {
+        Run(window =>
+        {
+            window.AddEmojiFromForm();
+
+            // 이모지를 골랐다 — 리그는 저절로 골라지지 않는다.
+            var state = window.EmojiInspectorState;
+            Assert.True(state.EmojiFields);
+            Assert.False(state.RigFields);
+            Assert.False(state.Back);
+            Assert.StartsWith("emoji — 리그 1", state.Title);
+            Assert.Null(window.Viewport.SelectedEmojiRig);
+            Assert.Equal("이모지 전체", window.EmojiKeyTargetChoice);
+
+            window.SelectEmojiRigFromForm("body");
+
+            state = window.EmojiInspectorState;
+            Assert.False(state.EmojiFields);
+            Assert.True(state.RigFields);
+            Assert.True(state.Back);
+            Assert.Equal("리그 body — emoji의 그림", state.Title);
+            Assert.Equal("body", window.Viewport.SelectedEmojiRig);
+            Assert.Equal("body", window.EmojiKeyTargetChoice); // 키를 놓을 대상이 고른 리그를 따라온다
+
+            // 리그 선택을 풀면 이모지의 값으로 돌아온다.
+            window.SelectEmojiRigFromForm(null);
+            Assert.True(window.EmojiInspectorState.EmojiFields);
+            Assert.Equal("이모지 전체", window.EmojiKeyTargetChoice);
+        });
+    }
+
+    [Fact]
+    public void 다른_이모지로_옮기면_리그_선택을_이어받지_않는다()
+    {
+        Run(window =>
+        {
+            window.AddEmojiFromForm();   // emoji — 리그 body
+            window.AddEmojiFromForm();   // emoji_2 — 리그 body(이름이 같다)
+            window.SelectEmojiRigFromForm("body");
+            Assert.True(window.EmojiInspectorState.RigFields);
+
+            window.SelectEmoji("emoji");
+
+            Assert.True(window.EmojiInspectorState.EmojiFields);
+            Assert.Null(window.Viewport.SelectedEmojiRig);
+        });
+    }
+
+    [Fact]
+    public void 리그를_고친_뒤에도_리그의_값을_보이고_리그를_지우면_이모지로_돌아온다()
+    {
+        Run(window =>
+        {
+            window.AddEmojiFromForm();
+            window.SelectEmojiRigFromForm("body");
+
+            window.CommitEmojiField("rigScale", "0.5");
+            Assert.True(window.EmojiInspectorState.RigFields);
+
+            window.CommitEmojiField("rigName", "mark");
+            Assert.Equal("리그 mark — emoji의 그림", window.EmojiInspectorState.Title);
+
+            window.Session.Editor.RemoveEmojiRig("emoji", "mark");
+            Assert.True(window.EmojiInspectorState.EmojiFields);
+        });
+    }
+
+    [Fact]
+    public void 왼쪽의_리그_묶음은_이모지를_골랐을_때만_보이고_줄마다_둘째_줄이_있다()
+    {
+        Run(window =>
+        {
+            window.SwitchWorkModeFromForm(WorkMode.Emoji);
+            Assert.False(window.EmojiRigSectionVisible);
+
+            window.Session.Open(Path.Combine(RepoRoot(), "examples", "emoji", "emoji-examples.motion-authoring.json"));
+            window.SelectEmoji("star");
+
+            Assert.True(window.EmojiRigSectionVisible);
+            Assert.Equal("머무는 이모지", window.EmojiRowNote("star"));
+            Assert.Equal("한 번 재생하고 사라진다", window.EmojiRowNote("question"));
+            Assert.Equal("star.png", window.EmojiRigRowNote("body"));
+        });
+    }
+
     [Fact]
     public void 예시_문서를_두_모드로_본다()
     {
@@ -177,6 +266,9 @@ public class WorkModeShellTests
             window.SelectEmoji("star");
             window.Viewport.ScrubTo(Mt.Authoring.Model.EmojiAsset.SecondsOf(9));
             Shot(window, "mode-emoji");
+
+            window.SelectEmojiRigFromForm("body");
+            Shot(window, "mode-emoji-rig");
         });
     }
 

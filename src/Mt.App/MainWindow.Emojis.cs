@@ -1,6 +1,7 @@
 using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -36,16 +37,25 @@ public partial class MainWindow
         new SolidColorBrush(Color.FromRgb(0xC0, 0x6C, 0xE0)),
     };
 
-    private readonly ListBox _emojiList = new() { MinHeight = 50, MaxHeight = 140, FontSize = 11 };
+    private readonly ListBox _emojiList = new() { MinHeight = 50, MaxHeight = 260, FontSize = 11 };
     private readonly StackPanel _emojiFields = new() { Spacing = 4 };
+    private readonly StackPanel _emojiOwnFields = new() { Spacing = 4 };
+    private readonly StackPanel _emojiRigSection = new() { Spacing = 6 };
     private readonly TextBlock _emojiTitle = new() { FontSize = 11, Opacity = 0.8, TextWrapping = TextWrapping.Wrap };
+    private readonly Button _emojiBack = new() { FontSize = 10, Padding = new Avalonia.Thickness(6, 2), IsVisible = false };
     private readonly TextBox _emojiName = new() { FontSize = 11 };
     private readonly TextBox _emojiOffsetX = new() { FontSize = 11 };
     private readonly TextBox _emojiOffsetY = new() { FontSize = 11 };
     private readonly TextBox _emojiFrames = new() { FontSize = 11 };
     private readonly CheckBox _emojiFixedSide = new() { Content = "방향을 따르지 않는다 (fixedSide)", FontSize = 11 };
 
-    private readonly ListBox _emojiRigList = new() { MinHeight = 40, MaxHeight = 110, FontSize = 11 };
+    private readonly ListBox _emojiRigList = new() { MinHeight = 40, MaxHeight = 220, FontSize = 11 };
+
+    /// <summary>리그 선택의 주인 — 다른 이모지로 옮기면 리그 선택을 이어받지 않는다(이름이 같은 리그가 있어도).</summary>
+    private string? _emojiRigOwner;
+
+    /// <summary>리그 목록에 실어 둔 줄들(이름과 그림) — 달라졌을 때만 목록을 다시 싣는다.</summary>
+    private string? _emojiRigRows;
     private readonly StackPanel _emojiRigFields = new() { Spacing = 4 };
     private readonly TextBox _emojiRigName = new() { FontSize = 11 };
     private readonly TextBox _emojiRigImages = new() { FontSize = 11, AcceptsReturn = true, MinHeight = 38, TextWrapping = TextWrapping.NoWrap };
@@ -172,6 +182,21 @@ public partial class MainWindow
     internal (bool FixedSide, bool Upright, bool UprightDimmed, bool UprightNote, bool FacingLeft) EmojiSideFormState
         => (_emojiFixedSide.IsChecked == true, _emojiRigUpright.IsChecked == true, _emojiRigUpright.Opacity < 1, _emojiUprightNote.IsVisible, _emojiFacingLeft.IsChecked == true);
 
+    /// <summary>테스트 손잡이 — 오른쪽이 보이는 것(고른 것의 값만): 이모지의 칸 · 리그의 칸 · 머리글 · 돌아가기 단추.</summary>
+    internal (bool EmojiFields, bool RigFields, string Title, bool Back) EmojiInspectorState
+        => (_emojiOwnFields.IsVisible, _emojiRigFields.IsVisible, _emojiTitle.Text ?? "", _emojiBack.IsVisible);
+
+    /// <summary>테스트 손잡이 — 왼쪽 목록의 줄에 적힌 둘째 줄(이모지의 종류 · 리그의 첫 그림).</summary>
+    internal string EmojiRowNote(string emoji) => EmojiNoteOf(emoji);
+
+    internal string EmojiRigRowNote(string rig) => EmojiRigNoteOf(rig);
+
+    /// <summary>테스트 손잡이 — "지금 키"의 대상 칸(이모지 전체 또는 리그 이름).</summary>
+    internal string? EmojiKeyTargetChoice => _emojiKeyTarget.SelectedItem as string;
+
+    /// <summary>테스트 손잡이 — 왼쪽의 리그 묶음이 보이는가(이모지를 골랐을 때만).</summary>
+    internal bool EmojiRigSectionVisible => _emojiRigSection.IsVisible;
+
     /// <summary>테스트 손잡이 — 타임 슬라이더의 이름 붙은 띠.</summary>
     internal IReadOnlyList<SliderMark> TimeSliderMarks => _timeSlider.Marks;
 
@@ -196,43 +221,28 @@ public partial class MainWindow
             Spacing = 4,
             Children = { add, SmallButton("삭제", (_, _) => Guard("이모지 삭제", RemoveEmoji)), duplicate },
         });
-    }
 
-    private Control BuildEmojiTab()
-    {
-        var panel = new StackPanel { Spacing = 4, Margin = new Avalonia.Thickness(0, 6, 0, 0) };
-        panel.Children.Add(_emojiTitle);
+        // 줄마다 이름 + 둘째 줄(종류). 목록의 값은 이름 그대로다 — 고르기와 손잡이는 이름으로 한다.
+        _emojiList.ItemTemplate = new FuncDataTemplate<string>((name, _) => TwoLineRow(name, EmojiNoteOf(name)));
 
-        _emojiFields.Children.Add(Labeled("이름", _emojiName));
-        _emojiFields.Children.Add(Labeled("오프셋 X", _emojiOffsetX));
-        _emojiFields.Children.Add(Labeled("오프셋 Y", _emojiOffsetY));
-        _emojiFields.Children.Add(Labeled("길이(프레임)", _emojiFrames));
-        ToolTip.SetTip(_emojiName, "대본이 부르는 이름(<<emoji 누구 이름>>) — 영문 소문자 · 숫자 · _. 한 번 내보낸 이름은 바꾸지 않는다(대본이 가리킨다)");
-        ToolTip.SetTip(_emojiOffsetX, "이모지별 오프셋(Emoji_Offset) — 로케이터(캐릭터 + 바리에이션의 자리) 기준 px. 이모지 전체를 움직이는 키는 이 값에 더해진다");
-        ToolTip.SetTip(_emojiFrames, "타임라인의 마지막 프레임(24fps) — 프레임 0 … 이것까지. 키는 옮기지 않는다");
-        _emojiFields.Children.Add(_emojiFixedSide);
-        ToolTip.SetTip(_emojiFixedSide, "이모지는 오른쪽을 보는 인물을 기준으로 만들고, 인물이 뒤집히면 런타임이 통째로 거울에 비춘다. 켜면 인물의 방향을 따르지 않고 만든 쪽 그대로 선다(로케이터의 자리만 인물을 따라간다) — 머리 위 한가운데에 뜨는 것, 화면 기준으로 흐르는 것. emojis.json의 fixedSide");
-        _emojiFixedSide.IsCheckedChanged += (_, _) =>
-        {
-            if (!_refreshing && CurrentEmoji is { } emoji)
-            {
-                Guard("방향", () => _session.Editor.SetEmojiFixedSide(emoji.Name, _emojiFixedSide.IsChecked == true));
-            }
-        };
+        // 이미 고른 이모지를 다시 누르면 리그 선택이 풀려 오른쪽이 이모지의 값으로 돌아온다.
+        _emojiList.Tapped += (_, _) => _emojiRigList.SelectedItem = null;
 
-        // 리그
-        _emojiFields.Children.Add(Header("리그 — 그림 하나에 리그 하나"));
+        // 그 이모지의 리그 — 고른 것이 오른쪽을 정한다(리그를 고르면 리그의 값, 아니면 이모지의 값).
+        _emojiRigSection.Children.Add(Header("리그 — 그림 하나에 리그 하나"));
+        _emojiRigList.ItemTemplate = new FuncDataTemplate<string>((name, _) => TwoLineRow(name, EmojiRigNoteOf(name)));
         _emojiRigList.SelectionChanged += (_, _) =>
         {
             if (!_refreshing)
             {
                 _viewport.SelectedEmojiRig = SelectedEmojiRig;
+                _emojiKeyTarget.SelectedItem = SelectedEmojiRig ?? WholeEmojiChoice;
                 RefreshEmojiInspector();
             }
         };
-        ToolTip.SetTip(_emojiRigList, "리그 — 순서가 그려지는 순서다(아래가 위). 뷰포트에서 그림을 눌러도 고른다");
-        _emojiFields.Children.Add(_emojiRigList);
-        _emojiFields.Children.Add(new StackPanel
+        ToolTip.SetTip(_emojiRigList, "리그 — 순서가 그려지는 순서다(아래가 위). 고르면 오른쪽이 그 리그의 값을 보인다. 뷰포트에서 그림을 눌러도 고른다");
+        _emojiRigSection.Children.Add(_emojiRigList);
+        _emojiRigSection.Children.Add(new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = 4,
@@ -244,7 +254,70 @@ public partial class MainWindow
                 SmallButton("▼", (_, _) => Guard("리그 순서", () => MoveEmojiRig(+1))),
             },
         });
+        LeftPanel.Children.Add(_emojiRigSection);
+    }
 
+    private static Control TwoLineRow(string? name, string note) => new StackPanel
+    {
+        Spacing = 1,
+        Children =
+        {
+            new TextBlock { Text = name ?? "", FontSize = 12 },
+            new TextBlock { Text = note, FontSize = 10, Opacity = 0.65, IsVisible = note.Length > 0, TextTrimming = TextTrimming.CharacterEllipsis },
+        },
+    };
+
+    /// <summary>이모지 목록의 둘째 줄 — 종류.</summary>
+    private string EmojiNoteOf(string? name)
+        => _session.Editor.Document.FindEmoji(name ?? "") is { } emoji
+            ? emoji.Stays ? "머무는 이모지" : "한 번 재생하고 사라진다"
+            : "";
+
+    /// <summary>리그 목록의 둘째 줄 — 첫 그림(여러 장이면 장수).</summary>
+    private string EmojiRigNoteOf(string? name)
+    {
+        if (CurrentEmoji?.FindRig(name) is not { } rig)
+        {
+            return "";
+        }
+
+        if (rig.Images.Count == 0)
+        {
+            return "그림 없음";
+        }
+
+        string first = Path.GetFileName(rig.Images[0]);
+        return rig.Images.Count == 1 ? first : $"{first} 외 {rig.Images.Count - 1}장";
+    }
+
+    private Control BuildEmojiTab()
+    {
+        var panel = new StackPanel { Spacing = 4, Margin = new Avalonia.Thickness(0, 6, 0, 0) };
+        // 머리글 — 지금 오른쪽이 무엇의 값인가. 리그를 보는 중이면 이모지로 돌아가는 단추가 선다.
+        _emojiBack.Click += (_, _) => _emojiRigList.SelectedItem = null;
+        ToolTip.SetTip(_emojiBack, "리그 선택을 풀고 이모지의 값(이름 · 오프셋 · 길이 · 구간과 잇기)으로 돌아간다 — 왼쪽 목록에서 이모지를 다시 눌러도 된다");
+        panel.Children.Add(_emojiBack);
+        panel.Children.Add(_emojiTitle);
+
+        // 이모지의 값 — 리그를 고르지 않았을 때만 보인다.
+        _emojiOwnFields.Children.Add(Labeled("이름", _emojiName));
+        _emojiOwnFields.Children.Add(Labeled("오프셋 X", _emojiOffsetX));
+        _emojiOwnFields.Children.Add(Labeled("오프셋 Y", _emojiOffsetY));
+        _emojiOwnFields.Children.Add(Labeled("길이(프레임)", _emojiFrames));
+        ToolTip.SetTip(_emojiName, "대본이 부르는 이름(<<emoji 누구 이름>>) — 영문 소문자 · 숫자 · _. 한 번 내보낸 이름은 바꾸지 않는다(대본이 가리킨다)");
+        ToolTip.SetTip(_emojiOffsetX, "이모지별 오프셋(Emoji_Offset) — 로케이터(캐릭터 + 바리에이션의 자리) 기준 px. 이모지 전체를 움직이는 키는 이 값에 더해진다");
+        ToolTip.SetTip(_emojiFrames, "타임라인의 마지막 프레임(24fps) — 프레임 0 … 이것까지. 키는 옮기지 않는다");
+        _emojiOwnFields.Children.Add(_emojiFixedSide);
+        ToolTip.SetTip(_emojiFixedSide, "이모지는 오른쪽을 보는 인물을 기준으로 만들고, 인물이 뒤집히면 런타임이 통째로 거울에 비춘다. 켜면 인물의 방향을 따르지 않고 만든 쪽 그대로 선다(로케이터의 자리만 인물을 따라간다) — 머리 위 한가운데에 뜨는 것, 화면 기준으로 흐르는 것. emojis.json의 fixedSide");
+        _emojiFixedSide.IsCheckedChanged += (_, _) =>
+        {
+            if (!_refreshing && CurrentEmoji is { } emoji)
+            {
+                Guard("방향", () => _session.Editor.SetEmojiFixedSide(emoji.Name, _emojiFixedSide.IsChecked == true));
+            }
+        };
+
+        // 리그의 값 — 왼쪽에서 리그를 골랐을 때만 보인다.
         _emojiRigFields.Children.Add(Labeled("리그 이름", _emojiRigName));
         _emojiRigFields.Children.Add(Labeled("그림", _emojiRigImages));
         Button pick = SmallButton("그림 더하기…", OnPickEmojiImageClick);
@@ -269,7 +342,8 @@ public partial class MainWindow
             }
         };
 
-        var flips = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+        // 패널이 좁으면 다음 줄로 넘긴다 — 한 줄로 두면 오른쪽 끝(깔기)이 잘렸다.
+        var flips = new WrapPanel { ItemSpacing = 4, LineSpacing = 4 };
         flips.Children.Add(Small("넘기기"));
         flips.Children.Add(_flipStart);
         flips.Children.Add(Small("fr부터"));
@@ -281,20 +355,9 @@ public partial class MainWindow
         ToolTip.SetTip(lay, "그림 바꾸기 키를 한 번에 깐다 — 그 프레임부터 몇 프레임마다 다음 장(끝나면 처음으로). 그 범위의 그림 키는 바뀐다. 되돌리기 한 번");
         flips.Children.Add(lay);
         _emojiRigFields.Children.Add(flips);
-        _emojiFields.Children.Add(_emojiRigFields);
-
-        // 키
-        _emojiFields.Children.Add(Header("키 — 지금 시각에"));
-        _emojiKeyKind.ItemsSource = EmojiKinds.Select(ChannelKindLabel.Of).ToList();
-        _emojiKeyKind.SelectedIndex = 0;
-        Button keyNow = SmallButton("지금 키", (_, _) => Guard("지금 키", KeyEmojiNow));
-        ToolTip.SetTip(keyNow, "고른 대상(이모지 전체 · 리그)의 그 채널을 지금 시각의 값으로 키한다 — 채널이 없으면 생긴다. 그다음은 그래프 · 도프 시트에서 고친다. 회전은 z 하나, 그림은 리그에만");
-        Button step = SmallButton("계단", (_, _) => _graph.SetTangentMode(TangentMode.Step));
-        ToolTip.SetTip(step, "그래프에서 고른 키를 계단으로 — 다음 키까지 그 값으로 멈춘다(emojis/2의 step). 그림 채널의 키는 언제나 계단이다");
-        _emojiFields.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { _emojiKeyTarget, _emojiKeyKind, keyNow, step } });
 
         // 구간과 잇기
-        _emojiFields.Children.Add(Header("구간과 잇기"));
+        _emojiOwnFields.Children.Add(Header("구간과 잇기"));
         _emojiSpanList.SelectionChanged += (_, _) =>
         {
             if (!_refreshing)
@@ -303,10 +366,10 @@ public partial class MainWindow
             }
         };
         ToolTip.SetTip(_emojiSpanList, "이름 붙은 구간(프레임, 끝 포함) — 겹쳐도 된다. 내보낼 때 구간마다 따로 선 클립이 된다(구간의 첫 프레임이 클립의 프레임 0)");
-        _emojiFields.Children.Add(_emojiSpanList);
+        _emojiOwnFields.Children.Add(_emojiSpanList);
         Button addSpan = SmallButton("구간 추가", (_, _) => AddEmojiSpanFromForm());
         ToolTip.SetTip(addSpan, "지금 프레임부터 6프레임(타임라인 안으로)의 구간을 더한다 — 이름 span, span_2…");
-        _emojiFields.Children.Add(new StackPanel
+        _emojiOwnFields.Children.Add(new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = 4,
@@ -315,11 +378,11 @@ public partial class MainWindow
         _emojiSpanFields.Children.Add(Labeled("구간 이름", _emojiSpanName));
         _emojiSpanFields.Children.Add(Labeled("시작(fr)", _emojiSpanStart));
         _emojiSpanFields.Children.Add(Labeled("끝(fr)", _emojiSpanEnd));
-        _emojiFields.Children.Add(_emojiSpanFields);
-        _emojiFields.Children.Add(Labeled("등장", _emojiIn));
-        _emojiFields.Children.Add(Labeled("머묾(되풀이)", _emojiHold));
-        _emojiFields.Children.Add(Labeled("퇴장", _emojiOut));
-        _emojiFields.Children.Add(_emojiKindNote);
+        _emojiOwnFields.Children.Add(_emojiSpanFields);
+        _emojiOwnFields.Children.Add(Labeled("등장", _emojiIn));
+        _emojiOwnFields.Children.Add(Labeled("머묾(되풀이)", _emojiHold));
+        _emojiOwnFields.Children.Add(Labeled("퇴장", _emojiOut));
+        _emojiOwnFields.Children.Add(_emojiKindNote);
         ToolTip.SetTip(_emojiHold, "머묾을 이으면 머무는 이모지(등장 한 번 → 머묾 되풀이 → emoji_off에 퇴장), 잇지 않으면 타임라인 전체(main)를 한 번 재생하고 사라진다");
 
         foreach (ComboBox combo in new[] { _emojiIn, _emojiHold, _emojiOut })
@@ -332,6 +395,20 @@ public partial class MainWindow
                 }
             };
         }
+
+
+        _emojiFields.Children.Add(_emojiOwnFields);
+        _emojiFields.Children.Add(_emojiRigFields);
+
+        // 키
+        _emojiFields.Children.Add(Header("키 — 지금 시각에"));
+        _emojiKeyKind.ItemsSource = EmojiKinds.Select(ChannelKindLabel.Of).ToList();
+        _emojiKeyKind.SelectedIndex = 0;
+        Button keyNow = SmallButton("지금 키", (_, _) => Guard("지금 키", KeyEmojiNow));
+        ToolTip.SetTip(keyNow, "고른 대상(이모지 전체 · 리그)의 그 채널을 지금 시각의 값으로 키한다 — 채널이 없으면 생긴다. 그다음은 그래프 · 도프 시트에서 고친다. 회전은 z 하나, 그림은 리그에만");
+        Button step = SmallButton("계단", (_, _) => _graph.SetTangentMode(TangentMode.Step));
+        ToolTip.SetTip(step, "그래프에서 고른 키를 계단으로 — 다음 키까지 그 값으로 멈춘다(emojis/2의 step). 그림 채널의 키는 언제나 계단이다");
+        _emojiFields.Children.Add(new WrapPanel { ItemSpacing = 4, LineSpacing = 4, Children = { _emojiKeyTarget, _emojiKeyKind, keyNow, step } });
 
         // 보기
         _emojiFields.Children.Add(Header("보기"));
@@ -786,15 +863,24 @@ public partial class MainWindow
         {
             EmojiAsset? emoji = CurrentEmoji;
             _emojiFields.IsEnabled = emoji is not null;
-            _emojiTitle.Text = emoji is null
-                ? "왼쪽 '이모지'에서 고르거나 더한다."
-                : $"{emoji.Name} — 리그 {emoji.Rigs.Count} · {emoji.LastFrame + 1}프레임 · {(emoji.Stays ? "머무는 이모지(in · hold · out)" : "한 번 재생하고 사라지는 이모지(main)")}";
+            _emojiRigSection.IsVisible = emoji is not null;
 
-            string? rigBefore = SelectedEmojiRig ?? _viewport.SelectedEmojiRig;
+            // 리그 선택은 그 이모지의 것이다 — 다른 이모지로 옮기면 풀린다. 고르지 않은 채면 오른쪽은 이모지의 값이다.
+            string? rigBefore = emoji is not null && _emojiRigOwner == emoji.Name ? SelectedEmojiRig ?? _viewport.SelectedEmojiRig : null;
+            _emojiRigOwner = emoji?.Name;
             string? spanBefore = selectSpan ?? SelectedEmojiSpan;
             List<string> rigs = emoji?.Rigs.Select(r => r.Name).ToList() ?? new List<string>();
-            _emojiRigList.ItemsSource = rigs;
-            _emojiRigList.SelectedIndex = rigBefore is not null && rigs.Contains(rigBefore) ? rigs.IndexOf(rigBefore) : rigs.Count > 0 ? 0 : -1;
+
+            // 목록은 줄(이름 · 둘째 줄)이 달라졌을 때만 다시 싣는다 — 고르는 도중(목록의 SelectionChanged 안)에 다시 실으면 목록이 거부한다.
+            string rigRows = string.Join("\n", emoji?.Rigs.Select(r => $"{r.Name}\t{string.Join("|", r.Images)}") ?? Enumerable.Empty<string>());
+
+            if (rigRows != _emojiRigRows || _emojiRigList.ItemsSource is null)
+            {
+                _emojiRigRows = rigRows;
+                _emojiRigList.ItemsSource = rigs;
+            }
+
+            _emojiRigList.SelectedIndex = rigBefore is not null ? rigs.IndexOf(rigBefore) : -1;
             _viewport.SelectedEmojiRig = SelectedEmojiRig;
 
             List<string> spans = emoji?.Spans.Select(s => $"{s.Name} {s.Start}~{s.End}").ToList() ?? new List<string>();
@@ -804,7 +890,15 @@ public partial class MainWindow
 
             EmojiRigAsset? rig = emoji?.FindRig(SelectedEmojiRig);
             EmojiSpan? span = emoji?.FindSpan(SelectedEmojiSpan);
-            _emojiRigFields.IsEnabled = rig is not null;
+            _emojiOwnFields.IsVisible = rig is null;
+            _emojiRigFields.IsVisible = rig is not null;
+            _emojiBack.IsVisible = rig is not null;
+            _emojiBack.Content = emoji is null ? "" : $"← {emoji.Name}";
+            _emojiTitle.Text = emoji is null
+                ? "왼쪽 '이모지'에서 고르거나 더한다."
+                : rig is not null
+                    ? $"리그 {rig.Name} — {emoji.Name}의 그림"
+                    : $"{emoji.Name} — 리그 {emoji.Rigs.Count} · {emoji.LastFrame + 1}프레임 · {(emoji.Stays ? "머무는 이모지(in · hold · out)" : "한 번 재생하고 사라지는 이모지(main)")}";
             _emojiSpanFields.IsEnabled = span is not null;
 
             void Write(TextBox box, string text)
