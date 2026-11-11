@@ -28,6 +28,9 @@ public enum InfinityMode
 /// </summary>
 public static class CurveSampler
 {
+    /// <summary>계단의 모서리 — 다음 키보다 이만큼(초) 앞에 점을 둔다. 그리는 자리에서 세로선으로 보일 만큼 작게.</summary>
+    private const double StepEdge = 1e-4;
+
     /// <summary>[t0, t1]을 count 구간으로 — 키 시각은 반드시 샘플에 포함시켜 모서리가 뭉개지지 않게 한다.</summary>
     public static List<GraphPoint> Sample(IReadOnlyList<KeyAsset> keys, double t0, double t1, int count)
     {
@@ -48,11 +51,24 @@ public static class CurveSampler
             times.Add(t0 + (t1 - t0) * i / count);
         }
 
-        foreach (KeyAsset key in keys)
+        for (int k = 0; k < keys.Count; k++)
         {
+            KeyAsset key = keys[k];
+
             if (key.T >= t0 && key.T <= t1)
             {
                 times.Add(key.T);
+            }
+
+            // 계단은 다음 키 바로 앞까지 이 값이다 — 그 자리에 점을 둬 계단이 비스듬히 그려지지 않게 한다.
+            if (key.Tangent == TangentMode.Step && k + 1 < keys.Count)
+            {
+                double edge = keys[k + 1].T - StepEdge;
+
+                if (edge > key.T && edge >= t0 && edge <= t1)
+                {
+                    times.Add(edge);
+                }
             }
         }
 

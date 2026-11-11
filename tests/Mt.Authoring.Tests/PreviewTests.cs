@@ -35,8 +35,8 @@ public class MotionPreviewTests
         // 마지막 키가 중립값이 아닌 restore — 끝 프레임의 채널 박스가 키 값(320)을 보여야 한다. 되돌리기는 길이를 지난 뒤.
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("step", "character", 0.5f, MotionEnd.Restore, MotionChannelMode.Absolute);
-        editor.AddChannel("step", "CharSlot_Track", MotionChannelKind.Position);
-        editor.SetKeys("step", "CharSlot_Track", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, 320f) });
+        editor.AddChannel("step", "CharSlot_Track", ChannelKind.Position);
+        editor.SetKeys("step", "CharSlot_Track", ChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, 320f) });
         RectNodeTree template = RigFile.BuildTree("character");
         MotionAsset step = editor.Document.Find("step")!;
 
@@ -60,7 +60,7 @@ public class MotionPreviewTests
     {
         MotionAsset nod = Fixtures.NodBowDocument().Find("nod")!;
         RectNodeTree template = RigFile.BuildTree("character");
-        var y = new CurveRef(MoveY, MotionChannelKind.Position, Axis.Y);
+        var y = new CurveRef(MoveY, ChannelKind.Position, Axis.Y);
 
         Assert.Equal(-18f, MotionPreview.Pose(template, nod, 0.3, c => c != y).GetState(MoveY).AnchoredPosition.Y, 4);
         Assert.Equal(0f, MotionPreview.Pose(template, nod, 0.3, c => c == y).GetState(MoveY).AnchoredPosition.Y, 4);
@@ -71,12 +71,12 @@ public class MotionPreviewTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("a", "character", 1f, MotionEnd.Commit, MotionChannelMode.Relative);
-        editor.AddChannel("a", "CharSlot_Scale", MotionChannelKind.Scale);
-        editor.SetKeys("a", "CharSlot_Scale", MotionChannelKind.Scale, Axis.X, new[] { Fixtures.Key(0f, 1f), Fixtures.Key(1f, 2f) });
-        editor.AddChannel("a", "CharSlot_Track_X", MotionChannelKind.Position);
-        editor.SetKeys("a", "CharSlot_Track_X", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 100f), Fixtures.Key(1f, 300f) });
-        editor.AddChannel("a", "NoSuchNode", MotionChannelKind.Position);
-        editor.SetKeys("a", "NoSuchNode", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 1f), Fixtures.Key(1f, 2f) });
+        editor.AddChannel("a", "CharSlot_Scale", ChannelKind.Scale);
+        editor.SetKeys("a", "CharSlot_Scale", ChannelKind.Scale, Axis.X, new[] { Fixtures.Key(0f, 1f), Fixtures.Key(1f, 2f) });
+        editor.AddChannel("a", "CharSlot_Track_X", ChannelKind.Position);
+        editor.SetKeys("a", "CharSlot_Track_X", ChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 100f), Fixtures.Key(1f, 300f) });
+        editor.AddChannel("a", "NoSuchNode", ChannelKind.Position);
+        editor.SetKeys("a", "NoSuchNode", ChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 1f), Fixtures.Key(1f, 2f) });
 
         RectNodeTree template = RigFile.BuildTree("character");
         float trackStart = template.GetState("CharSlot_Track_X").AnchoredPosition.X;
@@ -369,7 +369,7 @@ public class KeyTimesTests
     public void 선택_키_시각()
     {
         MotionAsset nod = Fixtures.NodBowDocument().Find("nod")!;
-        var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+        var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
 
         List<float> selected = KeyTimes.OfSelection(nod, new[] { new KeyRef(y, 2), new KeyRef(y, 1), new KeyRef(y, 9) });
         Assert.Equal(new[] { 0.3f, 0.6f }, selected);

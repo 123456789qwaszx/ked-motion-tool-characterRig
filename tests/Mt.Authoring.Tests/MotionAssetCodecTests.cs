@@ -11,13 +11,13 @@ public class MotionAssetCodecTests
         // motions/2는 mode를 모른다 — 상수 1이 "무변"(relative)인지 "1로"(absolute)인지 낼 때 정할 수 없으니 그대로 싣는다.
         var scale = new ChannelAsset
         {
-            Node = "N", Kind = MotionChannelKind.Scale,
+            Node = "N", Kind = ChannelKind.Scale,
             X = Curve(Fixtures.Key(0f, 1f), Fixtures.Key(1f, 1f)),
             Y = Curve(Fixtures.Key(0f, 1f), Fixtures.Key(1f, 1.2f)),
         };
         var euler = new ChannelAsset
         {
-            Node = "N", Kind = MotionChannelKind.Euler,
+            Node = "N", Kind = ChannelKind.Euler,
             X = Curve(Fixtures.Key(0f, 0f), Fixtures.Key(1f, 0f)),
         };
         var asset = new MotionAsset { Name = "a", Rig = "character", Duration = 1f, End = MotionEnd.Commit };

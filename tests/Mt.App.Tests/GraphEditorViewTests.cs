@@ -12,7 +12,7 @@ namespace Mt.App.Tests;
 
 public class GraphEditorViewTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
 
     private static (Window Window, GraphEditorView View, MotionEditor Editor) Show()
     {

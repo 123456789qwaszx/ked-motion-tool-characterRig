@@ -38,8 +38,8 @@ public class MotionPresetsTests
         // 끄덕은 몸(Track_Move) Y와 숙임(SwayPivot) Z. 돌아서기는 방향(ActingScale_X) X가 1 → -1(commit).
         MotionAsset nod = editor.Document.Find("nod")!;
         Assert.Equal(new[] { "CharacterPortrait_Track_Move", "CharacterPortrait_SwayPivot" }, nod.Channels.Select(c => c.Node));
-        Assert.Equal(-18f, nod.FindChannel("CharacterPortrait_Track_Move", MotionChannelKind.Position)!.Y!.Keys[1].V);
-        Assert.Equal(-1f, editor.Document.Find("turn")!.FindChannel("CharacterPortrait_ActingScale_X", MotionChannelKind.Scale)!.X!.Keys[^1].V);
+        Assert.Equal(-18f, nod.FindChannel("CharacterPortrait_Track_Move", ChannelKind.Position)!.Y!.Keys[1].V);
+        Assert.Equal(-1f, editor.Document.Find("turn")!.FindChannel("CharacterPortrait_ActingScale_X", ChannelKind.Scale)!.X!.Keys[^1].V);
 
         // 같은 프리셋을 또 더하면 nod_2. 되돌리기 한 번이면 통째로 없어진다.
         Assert.Equal("nod_2", MotionPresets.Add(editor, MotionPresets.Find("nod")!, "character", rig));

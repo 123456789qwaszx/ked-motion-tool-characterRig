@@ -105,7 +105,7 @@ public sealed class ViewportView : Control
 
     // 키로 아직 안 들어간 포즈(마야: 키 없이 바꾼 값). 시각이 바뀌면 버린다.
     private readonly Dictionary<string, RectNodeState> _overrides = new();
-    private readonly Dictionary<(string Node, MotionChannelKind Kind), HashSet<Axis>> _pending = new();
+    private readonly Dictionary<(string Node, ChannelKind Kind), HashSet<Axis>> _pending = new();
 
     // 들고 있는 포즈(마야 MMB 스크럽). 시각이 바뀌어도 이것을 보여 주고, S가 이것을 키한다.
     private RectNodeTree? _held;
@@ -554,7 +554,7 @@ public sealed class ViewportView : Control
 
     private sealed record PendingSnapshot(
         IReadOnlyDictionary<string, RectNodeState> Overrides,
-        IReadOnlyDictionary<(string Node, MotionChannelKind Kind), IReadOnlyList<Axis>> Pending,
+        IReadOnlyDictionary<(string Node, ChannelKind Kind), IReadOnlyList<Axis>> Pending,
         RectNodeTree? Held,
         bool HoldScrub);
 
@@ -576,7 +576,7 @@ public sealed class ViewportView : Control
 
         _pending.Clear();
 
-        foreach (((string Node, MotionChannelKind Kind) key, IReadOnlyList<Axis> axes) in snapshot.Pending)
+        foreach (((string Node, ChannelKind Kind) key, IReadOnlyList<Axis> axes) in snapshot.Pending)
         {
             _pending[key] = new HashSet<Axis>(axes);
         }
@@ -602,7 +602,7 @@ public sealed class ViewportView : Control
             }
         }
 
-        foreach (((string Node, MotionChannelKind Kind) key, IReadOnlyList<Axis> axes) in a.Pending)
+        foreach (((string Node, ChannelKind Kind) key, IReadOnlyList<Axis> axes) in a.Pending)
         {
             if (!b.Pending.TryGetValue(key, out IReadOnlyList<Axis>? others) || !new HashSet<Axis>(axes).SetEquals(others))
             {
@@ -677,7 +677,7 @@ public sealed class ViewportView : Control
 
         if (_pending.Count > 0)
         {
-            foreach (((string node, MotionChannelKind kind), HashSet<Axis> axes) in _pending.ToList())
+            foreach (((string node, ChannelKind kind), HashSet<Axis> axes) in _pending.ToList())
             {
                 KeyNow(node, kind, axes.ToList());
             }
@@ -721,7 +721,7 @@ public sealed class ViewportView : Control
             return;
         }
 
-        var items = new List<(string, MotionChannelKind, IReadOnlyList<(Axis, float)>)>();
+        var items = new List<(string, ChannelKind, IReadOnlyList<(Axis, float)>)>();
 
         foreach (ChannelAsset channel in motion.Channels)
         {
@@ -788,7 +788,7 @@ public sealed class ViewportView : Control
     public void EndHoldScrub() => _holdScrub = false;
 
     /// <summary>지금 포즈의 값으로 키를 놓는다 — 시작값은 덤프(템플릿), 키 값은 모션의 재생 기준(relative/absolute)를 따른다.</summary>
-    private void KeyNow(string node, MotionChannelKind kind, IReadOnlyList<Axis> axes)
+    private void KeyNow(string node, ChannelKind kind, IReadOnlyList<Axis> axes)
     {
         MotionAsset? motion = EditMotion;
         RectNodeTree? pose = CurrentPose();
@@ -1025,7 +1025,7 @@ public sealed class ViewportView : Control
             CameraSettings before = ClipCameraAt(clip, _clock.Time, context.Block);
             float from = node == CameraRig.ZoomNode ? before.Zoom : axis == Axis.X ? before.PanX : before.PanY;
             float at = (float)Math.Max(0, SnapTime(_clock.Time - ClipBlockTimeOffset));
-            _editor.KeyComponents(context.Motion.Name, node, MotionChannelKind.Position, at, new[] { (axis, CameraRig.KeyValueFor(context.Block.Mode, from, value)) }, DefaultTangent);
+            _editor.KeyComponents(context.Motion.Name, node, ChannelKind.Position, at, new[] { (axis, CameraRig.KeyValueFor(context.Block.Mode, from, value)) }, DefaultTangent);
             return;
         }
 
@@ -1036,7 +1036,7 @@ public sealed class ViewportView : Control
 
         float start = node == CameraRig.ZoomNode ? scene.Camera.Zoom : axis == Axis.X ? scene.Camera.PanX : scene.Camera.PanY;
         float time = (float)Math.Max(0, SnapTime(_clock.Time));
-        _editor.KeyComponents(motion.Name, node, MotionChannelKind.Position, time, new[] { (axis, CameraRig.KeyValueFor(motion.PreviewMode, start, value)) }, DefaultTangent);
+        _editor.KeyComponents(motion.Name, node, ChannelKind.Position, time, new[] { (axis, CameraRig.KeyValueFor(motion.PreviewMode, start, value)) }, DefaultTangent);
     }
 
     /// <summary>씬으로 세운 시작 상태의 트리(읽기 전용으로 쓴다) — 굽기가 표본을 뜨는 바탕.</summary>
@@ -1945,7 +1945,7 @@ public sealed class ViewportView : Control
             return;
         }
 
-        (MotionChannelKind kind, List<Axis> axes) = ChangedAxes(_dragStartState, posed);
+        (ChannelKind kind, List<Axis> axes) = ChangedAxes(_dragStartState, posed);
 
         if (axes.Count == 0)
         {
@@ -1958,7 +1958,7 @@ public sealed class ViewportView : Control
     }
 
     /// <summary>바뀐 포즈의 처리: Auto Key거나 그 시각에 이미 키가 있으면 키로, 아니면 키 없는 포즈로 남긴다.</summary>
-    private void CommitPose(MotionAsset motion, string node, MotionChannelKind kind, IReadOnlyList<Axis> axes)
+    private void CommitPose(MotionAsset motion, string node, ChannelKind kind, IReadOnlyList<Axis> axes)
     {
         ChannelAsset? channel = motion.FindChannel(node, kind);
         float time = (float)SnapTime(EditTime);
@@ -1984,7 +1984,7 @@ public sealed class ViewportView : Control
     // ── 채널 박스(마야) ───────────────────────────────────────────────
 
     /// <summary>선택 오브젝트의 노드 성분의 지금 포즈 값(키 없는 포즈 포함). 노드·리그가 없으면 null.</summary>
-    public float? ComponentValue(string node, MotionChannelKind kind, Axis axis)
+    public float? ComponentValue(string node, ChannelKind kind, Axis axis)
     {
         RectNodeTree? pose = CurrentPose();
         string key = Prefix + node;
@@ -1998,18 +1998,18 @@ public sealed class ViewportView : Control
     }
 
     /// <summary>이 성분이 키 없는 포즈로 남아 있는가(채널 박스가 주황으로 보인다).</summary>
-    public bool IsPending(string node, MotionChannelKind kind, Axis axis)
+    public bool IsPending(string node, ChannelKind kind, Axis axis)
         => _pending.TryGetValue((node, kind), out HashSet<Axis>? axes) && axes.Contains(axis);
 
     /// <summary>
     /// 채널 박스 입력 — 노드 성분 하나를 이 값으로. 매니퓰레이터를 놓은 것과 같다:
     /// Auto Key거나 그 시각에 키가 있으면 키로, 아니면 키 없는 포즈(S로 키·Esc로 버림). 값이 같으면 아무것도 안 한다.
     /// </summary>
-    public void SetComponent(string node, MotionChannelKind kind, Axis axis, float value)
+    public void SetComponent(string node, ChannelKind kind, Axis axis, float value)
         => SetComponents(node, kind, new[] { (axis, value) });
 
     /// <summary>여러 성분을 한 번에(깊이 컨트롤러의 X·Y 배율처럼). 바뀐 성분만 키·키 없는 포즈가 된다.</summary>
-    public void SetComponents(string node, MotionChannelKind kind, IReadOnlyList<(Axis Axis, float Value)> values)
+    public void SetComponents(string node, ChannelKind kind, IReadOnlyList<(Axis Axis, float Value)> values)
     {
         ArgumentNullException.ThrowIfNull(values);
         MotionAsset? motion = EditMotion;
@@ -2049,9 +2049,9 @@ public sealed class ViewportView : Control
     }
 
     /// <summary>채널 박스의 ● — 성분 하나를 지금 포즈 값으로 지금 키(마야 Key Selected). 없는 채널·성분은 생긴다.</summary>
-    public void KeyComponent(string node, MotionChannelKind kind, Axis axis) => KeyComponents(node, kind, new[] { axis });
+    public void KeyComponent(string node, ChannelKind kind, Axis axis) => KeyComponents(node, kind, new[] { axis });
 
-    public void KeyComponents(string node, MotionChannelKind kind, IReadOnlyList<Axis> axes)
+    public void KeyComponents(string node, ChannelKind kind, IReadOnlyList<Axis> axes)
     {
         if (MotionRules.ForbiddenNodes.Contains(node) || axes.Count == 0)
         {
@@ -2062,7 +2062,7 @@ public sealed class ViewportView : Control
     }
 
     /// <summary>드래그 종류의 채널 종류와, 실제로 값이 바뀐 성분만(마야 Auto Key의 "바뀐 속성만").</summary>
-    private (MotionChannelKind Kind, List<Axis> Axes) ChangedAxes(in RectNodeState start, in RectNodeState posed)
+    private (ChannelKind Kind, List<Axis> Axes) ChangedAxes(in RectNodeState start, in RectNodeState posed)
     {
         const float epsilon = 1e-4f;
         var axes = new List<Axis>();
@@ -2074,14 +2074,14 @@ public sealed class ViewportView : Control
             case Drag.MoveY:
                 if (Math.Abs(posed.AnchoredPosition.X - start.AnchoredPosition.X) > epsilon) axes.Add(Axis.X);
                 if (Math.Abs(posed.AnchoredPosition.Y - start.AnchoredPosition.Y) > epsilon) axes.Add(Axis.Y);
-                return (MotionChannelKind.Position, axes);
+                return (ChannelKind.Position, axes);
             case Drag.Rotate:
                 if (Math.Abs(posed.LocalEulerAngles.Z - start.LocalEulerAngles.Z) > epsilon) axes.Add(Axis.Z);
-                return (MotionChannelKind.Euler, axes);
+                return (ChannelKind.Euler, axes);
             default:
                 if (Math.Abs(posed.LocalScale.X - start.LocalScale.X) > epsilon) axes.Add(Axis.X);
                 if (Math.Abs(posed.LocalScale.Y - start.LocalScale.Y) > epsilon) axes.Add(Axis.Y);
-                return (MotionChannelKind.Scale, axes);
+                return (ChannelKind.Scale, axes);
         }
     }
 

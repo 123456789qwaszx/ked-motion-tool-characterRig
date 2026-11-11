@@ -66,10 +66,10 @@ public class MainWindowTests
                 Assert.Equal("nod", window.SelectedMotion);
                 Assert.Equal("nod", window.Graph.MotionName);
 
-                window.AddChannelFromForm("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position);
+                window.AddChannelFromForm("CharacterPortrait_Track_Move_Y", ChannelKind.Position);
                 Assert.Empty(window.Graph.Curves); // 성분은 키가 생기면 생긴다
 
-                var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+                var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
                 window.Graph.CurrentTime = 0;
                 window.EnsureComponent(y.Node, y.Kind, y.Axis);
                 Assert.Single(window.Graph.Curves);
@@ -148,7 +148,7 @@ public class MainWindowTests
             {
                 window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
-                var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+                var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
                 window.AddChannelFromForm(y.Node, y.Kind);
                 window.EnsureComponent(y.Node, y.Kind, y.Axis);
 
@@ -210,7 +210,7 @@ public class MainWindowTests
                 window.MouseMove(target, RawInputModifiers.LeftMouseButton);
                 window.MouseUp(target, MouseButton.Left);
 
-                ChannelAsset channel = window.Session.Editor.Document.Find("wave")!.FindChannel("CharacterPortrait_Track_Move_X", MotionChannelKind.Position)!;
+                ChannelAsset channel = window.Session.Editor.Document.Find("wave")!.FindChannel("CharacterPortrait_Track_Move_X", ChannelKind.Position)!;
                 Assert.Single(channel.X!.Keys);
                 Assert.True(channel.X.Keys[0].V > 0);
                 Assert.Equal(3, window.Dope.Rows.Count);
@@ -245,8 +245,8 @@ public class MainWindowTests
                 window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 Assert.NotNull(window.Session.Editor.Document.BuiltOn);
                 window.AddMotionFromForm("nod", "character", "0.5", MotionEnd.Restore);
-                window.AddChannelFromForm(Node, MotionChannelKind.Position);
-                window.Session.Editor.SetKeys("nod", Node, MotionChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.25f, -18f), TestDocuments.Key(0.5f, 0f) });
+                window.AddChannelFromForm(Node, ChannelKind.Position);
+                window.Session.Editor.SetKeys("nod", Node, ChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.25f, -18f), TestDocuments.Key(0.5f, 0f) });
                 Assert.True(window.Session.SchemaChange.IsEmpty);
                 Assert.Equal(0, window.ProblemRowsShown);
 
@@ -323,7 +323,7 @@ public class MainWindowTests
             {
                 window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("nod", "character", "0.5", MotionEnd.Restore);
-                var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+                var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
                 window.AddChannelFromForm(y.Node, y.Kind);
                 window.Session.Editor.SetKeys("nod", y.Node, y.Kind, y.Axis, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
 
@@ -371,7 +371,7 @@ public class MainWindowTests
                 Assert.NotNull(window.Session.Depth); // 덤프 옆 presets/depth.json
                 window.Session.ImportMotions(TestDocuments.FixturePath("motions.nod-bow.json"));
                 window.Session.Editor.AddMotion("robot_wave", "robot", 1f);
-                window.Session.Editor.AddChannel("robot_wave", "Robot_Arm", MotionChannelKind.Position);
+                window.Session.Editor.AddChannel("robot_wave", "Robot_Arm", ChannelKind.Position);
 
                 string export = Path.Combine(directory, "motions.json");
                 window.ExportScopeIndex = 0;
@@ -427,23 +427,23 @@ public class MainWindowTests
                 window.SetControllerValue("depth", Axis.X, "20");
                 MotionAsset step = window.Session.Editor.Document.Find("step")!;
                 Assert.Equal(MotionChannelMode.Absolute, step.PreviewMode);
-                ChannelAsset depth = step.FindChannel("CharSlot_DepthScale", MotionChannelKind.Scale)!;
+                ChannelAsset depth = step.FindChannel("CharSlot_DepthScale", ChannelKind.Scale)!;
                 Assert.Equal(2.2, depth.X!.Keys.Single().V, 3);
                 Assert.Equal(2.2, depth.Y!.Keys.Single().V, 3);
                 Assert.Equal("20", window.ControllerValueText("depth", Axis.X));
                 // 같은 손잡이가 DepthY도 굽는다 — 얼굴(bust 820) 제자리: −820 × (2.2 − 1) = −984. 되돌리기 하나.
-                Assert.Equal(-984.0, step.FindChannel("CharSlot_DepthY", MotionChannelKind.Position)!.Y!.Keys.Single().V, 2);
+                Assert.Equal(-984.0, step.FindChannel("CharSlot_DepthY", ChannelKind.Position)!.Y!.Keys.Single().V, 2);
                 window.Session.Editor.Undo();
-                Assert.Null(window.Session.Editor.Document.Find("step")!.FindChannel("CharSlot_DepthY", MotionChannelKind.Position));
-                Assert.Null(window.Session.Editor.Document.Find("step")!.FindChannel("CharSlot_DepthScale", MotionChannelKind.Scale));
+                Assert.Null(window.Session.Editor.Document.Find("step")!.FindChannel("CharSlot_DepthY", ChannelKind.Position));
+                Assert.Null(window.Session.Editor.Document.Find("step")!.FindChannel("CharSlot_DepthScale", ChannelKind.Scale));
                 window.Session.Editor.Redo();
                 step = window.Session.Editor.Document.Find("step")!;
-                Assert.Equal(-984.0, step.FindChannel("CharSlot_DepthY", MotionChannelKind.Position)!.Y!.Keys.Single().V, 2);
+                Assert.Equal(-984.0, step.FindChannel("CharSlot_DepthY", ChannelKind.Position)!.Y!.Keys.Single().V, 2);
 
                 // 숙임 15 → CharacterPortrait_SwayPivot euler Z 키(absolute 미리보기라 값 그대로).
                 window.SetControllerValue("bow", Axis.Z, "15");
                 step = window.Session.Editor.Document.Find("step")!;
-                Assert.Equal(15.0, step.FindChannel("CharacterPortrait_SwayPivot", MotionChannelKind.Euler)!.Z!.Keys.Single().V, 3);
+                Assert.Equal(15.0, step.FindChannel("CharacterPortrait_SwayPivot", ChannelKind.Euler)!.Z!.Keys.Single().V, 3);
                 Assert.Equal("15", window.ControllerValueText("bow", Axis.Z));
                 Assert.DoesNotContain(window.ProblemsShown, p => !p.Blocking); // absolute 미리보기 — 경고 없음
 
@@ -454,10 +454,10 @@ public class MainWindowTests
                 Assert.True(window.ApplyFix("step", Mt.Authoring.Validation.MotionFix.SplitByGroup));
                 MotionAsset place = window.Session.Editor.Document.Find("step_place")!;
                 Assert.Equal(MotionChannelMode.Absolute, place.PreviewMode);
-                Assert.NotNull(place.FindChannel("CharSlot_DepthScale", MotionChannelKind.Scale));
-                Assert.NotNull(place.FindChannel("CharSlot_DepthY", MotionChannelKind.Position)); // 깊이 Y도 깊이 묶음
-                Assert.Null(window.Session.Editor.Document.Find("step")!.FindChannel("CharSlot_DepthScale", MotionChannelKind.Scale));
-                Assert.NotNull(window.Session.Editor.Document.Find("step")!.FindChannel("CharacterPortrait_SwayPivot", MotionChannelKind.Euler));
+                Assert.NotNull(place.FindChannel("CharSlot_DepthScale", ChannelKind.Scale));
+                Assert.NotNull(place.FindChannel("CharSlot_DepthY", ChannelKind.Position)); // 깊이 Y도 깊이 묶음
+                Assert.Null(window.Session.Editor.Document.Find("step")!.FindChannel("CharSlot_DepthScale", ChannelKind.Scale));
+                Assert.NotNull(window.Session.Editor.Document.Find("step")!.FindChannel("CharacterPortrait_SwayPivot", ChannelKind.Euler));
                 Assert.DoesNotContain(window.ProblemsShown, p => !p.Blocking);
 
                 // 옛 모션(nod는 Track_Move_Y)은 "몸 Y"로 보이고, 그 성분에 값을 넣으면 있는 채널(별칭 노드)에 키가 간다.
@@ -468,14 +468,14 @@ public class MainWindowTests
                 Assert.Equal("-18", window.ControllerValueText("body", Axis.Y));
                 window.SetControllerValue("body", Axis.Y, "-20");
                 MotionAsset nod = window.Session.Editor.Document.Find("nod")!;
-                Assert.Null(nod.FindChannel("CharacterPortrait_Track_Move", MotionChannelKind.Position));
-                Assert.Equal(-20.0, nod.FindChannel("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position)!.Y!.Keys.Single(k => Math.Abs(k.T - 0.3f) < 1e-4).V, 3);
+                Assert.Null(nod.FindChannel("CharacterPortrait_Track_Move", ChannelKind.Position));
+                Assert.Equal(-20.0, nod.FindChannel("CharacterPortrait_Track_Move_Y", ChannelKind.Position)!.Y!.Keys.Single(k => Math.Abs(k.T - 0.3f) < 1e-4).V, 3);
 
                 // ● 는 지금 값으로 지금 시각에 키 — 채널이 없는 성분은 주 노드에 생긴다.
                 window.Viewport.ScrubTo(0.1);
                 window.KeyControllerFromBox("shake", Axis.X);
                 nod = window.Session.Editor.Document.Find("nod")!;
-                Assert.Equal(0.0, nod.FindChannel("CharacterPortrait_Shake", MotionChannelKind.Position)!.X!.Keys.Single().V, 3);
+                Assert.Equal(0.0, nod.FindChannel("CharacterPortrait_Shake", ChannelKind.Position)!.X!.Keys.Single().V, 3);
             }
             finally
             {
@@ -562,7 +562,7 @@ public class MainWindowTests
             {
                 window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
-                var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+                var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
                 var x = y with { Axis = Axis.X };
                 window.AddChannelFromForm(y.Node, y.Kind);
                 window.Session.Editor.SetKeys("nod", y.Node, y.Kind, y.Axis, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
@@ -616,7 +616,7 @@ public class MainWindowTests
                 // S = 고른 컨트롤러(숙임)의 지금 값을 현재 시각에 키 — 키 없는 포즈가 없어도.
                 window.Viewport.ScrubTo(0.25);
                 window.SetKeyFromShell();
-                KeyAsset bowKey = window.Session.Editor.Document.Find("nod")!.FindChannel("CharacterPortrait_SwayPivot", MotionChannelKind.Euler)!.Z!.Keys.Single();
+                KeyAsset bowKey = window.Session.Editor.Document.Find("nod")!.FindChannel("CharacterPortrait_SwayPivot", ChannelKind.Euler)!.Z!.Keys.Single();
                 Assert.Equal(0.25f, bowKey.T, 3);
                 Assert.Equal(0f, bowKey.V, 3);
                 Assert.Equal(tableOrder, window.OutlinerOrder);
@@ -628,8 +628,8 @@ public class MainWindowTests
                 window.KeyPressQwerty(PhysicalKey.S, RawInputModifiers.None);
                 Assert.Equal(revision + 1, window.Session.Editor.Revision);
                 MotionAsset nod = window.Session.Editor.Document.Find("nod")!;
-                Assert.Equal(1.708, nod.FindChannel("CharSlot_DepthScale", MotionChannelKind.Scale)!.X!.Keys.Single().V, 2);
-                Assert.Equal(-580.56, nod.FindChannel("CharSlot_DepthY", MotionChannelKind.Position)!.Y!.Keys.Single().V, 1);
+                Assert.Equal(1.708, nod.FindChannel("CharSlot_DepthScale", ChannelKind.Scale)!.X!.Keys.Single().V, 2);
+                Assert.Equal(-580.56, nod.FindChannel("CharSlot_DepthY", ChannelKind.Position)!.Y!.Keys.Single().V, 1);
                 Assert.Equal(tableOrder, window.OutlinerOrder);
 
                 // 시간 표시는 프레임이 기본: 0.5초 = 12프레임.
@@ -655,7 +655,7 @@ public class MainWindowTests
             {
                 window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
-                var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+                var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
                 window.AddChannelFromForm(y.Node, y.Kind);
                 window.Session.Editor.SetKeys("nod", y.Node, y.Kind, y.Axis, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
                 MotionAsset Nod() => window.Session.Editor.Document.Find("nod")!;
@@ -818,7 +818,7 @@ public class MainWindowTests
                 Assert.Equal("nod", window.SelectedMotion);
                 MotionAsset nod = window.Session.Editor.Document.Find("nod")!;
                 Assert.Equal("character", nod.Rig);
-                Assert.NotNull(nod.FindChannel("CharacterPortrait_Track_Move", MotionChannelKind.Position)!.Y);
+                Assert.NotNull(nod.FindChannel("CharacterPortrait_Track_Move", ChannelKind.Position)!.Y);
                 Assert.Empty(window.ProblemsShown);
                 Assert.Equal("nod_2", window.AddPresetFromForm("nod"));
                 window.Session.Editor.Undo();
@@ -880,7 +880,7 @@ public class MainWindowTests
                 Assert.Contains("placement", window.Settings.CollapsedChannelBoxGroups);
                 window.AutoKeyChecked = true;
                 window.SetControllerValue("place", Axis.X, "40");
-                Assert.Equal(40.0, window.Session.Editor.Document.Find("step")!.FindChannel("CharSlot_Track", MotionChannelKind.Position)!.X!.Keys.Single().V, 3);
+                Assert.Equal(40.0, window.Session.Editor.Document.Find("step")!.FindChannel("CharSlot_Track", ChannelKind.Position)!.X!.Keys.Single().V, 3);
                 window.ToggleChannelBoxGroup("placement");
                 Assert.DoesNotContain("placement", window.Settings.CollapsedChannelBoxGroups);
 
@@ -1043,7 +1043,7 @@ public class MainWindowTests
             {
                 window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
                 var editor = window.Session.Editor;
-                var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+                var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
                 editor.AddChannel("nod", y.Node, y.Kind);
                 editor.SetKeys("nod", y.Node, y.Kind, y.Axis, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
                 float ValueAt1() => y.Resolve(editor.Document.Find("nod")!)!.Keys[1].V;
@@ -1116,38 +1116,38 @@ public class MainWindowTests
                 // (첫 키라 재생 기준이 absolute로 — 채널이 없는 모션에서만 자동으로 바뀐다.)
                 window.SetControllerValue("depth", Axis.X, "20");
                 Assert.Equal(MotionChannelMode.Absolute, Step().PreviewMode);
-                Assert.Null(Step().FindChannel("CharSlot_DepthScale", MotionChannelKind.Scale));
+                Assert.Null(Step().FindChannel("CharSlot_DepthScale", ChannelKind.Scale));
                 long before = editor.Revision;
                 window.SetKeyFromShell();
                 Assert.Equal(before + 1, editor.Revision);
-                Assert.Equal(2.2, Step().FindChannel("CharSlot_DepthScale", MotionChannelKind.Scale)!.X!.Keys.Single().V, 3);
-                Assert.Equal(2.2, Step().FindChannel("CharSlot_DepthScale", MotionChannelKind.Scale)!.Y!.Keys.Single().V, 3);
-                Assert.Equal(-984.0, Step().FindChannel("CharSlot_DepthY", MotionChannelKind.Position)!.Y!.Keys.Single().V, 2);
+                Assert.Equal(2.2, Step().FindChannel("CharSlot_DepthScale", ChannelKind.Scale)!.X!.Keys.Single().V, 3);
+                Assert.Equal(2.2, Step().FindChannel("CharSlot_DepthScale", ChannelKind.Scale)!.Y!.Keys.Single().V, 3);
+                Assert.Equal(-984.0, Step().FindChannel("CharSlot_DepthY", ChannelKind.Position)!.Y!.Keys.Single().V, 2);
                 editor.Undo();
-                Assert.Null(Step().FindChannel("CharSlot_DepthScale", MotionChannelKind.Scale));
-                Assert.Null(Step().FindChannel("CharSlot_DepthY", MotionChannelKind.Position));
+                Assert.Null(Step().FindChannel("CharSlot_DepthScale", ChannelKind.Scale));
+                Assert.Null(Step().FindChannel("CharSlot_DepthY", ChannelKind.Position));
                 Assert.True(window.Viewport.HasPending); // 키 확정 직전의 키 없는 포즈로
                 editor.Redo();
                 Assert.False(window.Viewport.HasPending);
-                Assert.Equal(-984.0, Step().FindChannel("CharSlot_DepthY", MotionChannelKind.Position)!.Y!.Keys.Single().V, 2);
+                Assert.Equal(-984.0, Step().FindChannel("CharSlot_DepthY", ChannelKind.Position)!.Y!.Keys.Single().V, 2);
 
                 // 좌우·상하 두 성분을 키 없는 포즈로 두고 S — 키 확정은 한 칸(연기 축은 휴지가 항등이라 absolute 값 = 넣은 값).
                 window.SetControllerValue("body", Axis.X, "10");
                 window.SetControllerValue("body", Axis.Y, "-5");
                 Assert.True(window.Viewport.HasPending);
-                Assert.Null(Step().FindChannel("CharacterPortrait_Track_Move", MotionChannelKind.Position));
+                Assert.Null(Step().FindChannel("CharacterPortrait_Track_Move", ChannelKind.Position));
                 before = editor.Revision;
                 window.SetKeyFromShell();
-                ChannelAsset body = Step().FindChannel("CharacterPortrait_Track_Move", MotionChannelKind.Position)!;
+                ChannelAsset body = Step().FindChannel("CharacterPortrait_Track_Move", ChannelKind.Position)!;
                 Assert.Equal(10f, body.X!.Keys.Single().V, 3);
                 Assert.Equal(-5f, body.Y!.Keys.Single().V, 3);
                 Assert.Equal(before + 1, editor.Revision);
                 editor.Undo();
-                Assert.Null(Step().FindChannel("CharacterPortrait_Track_Move", MotionChannelKind.Position)); // 둘 다 한 번에
+                Assert.Null(Step().FindChannel("CharacterPortrait_Track_Move", ChannelKind.Position)); // 둘 다 한 번에
                 Assert.True(window.Viewport.HasPending);
                 editor.Redo();
                 Assert.False(window.Viewport.HasPending);
-                body = Step().FindChannel("CharacterPortrait_Track_Move", MotionChannelKind.Position)!;
+                body = Step().FindChannel("CharacterPortrait_Track_Move", ChannelKind.Position)!;
                 Assert.Equal(10f, body.X!.Keys.Single().V, 3);
                 Assert.Equal(-5f, body.Y!.Keys.Single().V, 3);
 
@@ -1159,10 +1159,10 @@ public class MainWindowTests
                 window.SetControllerValue("place", Axis.X, "100");
                 Assert.Equal(before + 1, editor.Revision);
                 Assert.Equal(MotionChannelMode.Absolute, editor.Document.Find("walk")!.PreviewMode);
-                Assert.NotNull(editor.Document.Find("walk")!.FindChannel("CharSlot_Track", MotionChannelKind.Position));
+                Assert.NotNull(editor.Document.Find("walk")!.FindChannel("CharSlot_Track", ChannelKind.Position));
                 editor.Undo();
                 Assert.Equal(MotionChannelMode.Relative, editor.Document.Find("walk")!.PreviewMode);
-                Assert.Null(editor.Document.Find("walk")!.FindChannel("CharSlot_Track", MotionChannelKind.Position));
+                Assert.Null(editor.Document.Find("walk")!.FindChannel("CharSlot_Track", ChannelKind.Position));
             }
             finally
             {

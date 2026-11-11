@@ -565,7 +565,7 @@ public sealed partial class MotionEditor
 
     // ── 채널 ──────────────────────────────────────────────────────────
 
-    public ChannelAsset AddChannel(string name, string node, MotionChannelKind kind)
+    public ChannelAsset AddChannel(string name, string node, ChannelKind kind)
     {
         ArgumentNullException.ThrowIfNull(node);
         MotionAsset motion = Require(name);
@@ -623,7 +623,7 @@ public sealed partial class MotionEditor
         return created;
     }
 
-    public void RemoveChannel(string name, string node, MotionChannelKind kind)
+    public void RemoveChannel(string name, string node, ChannelKind kind)
     {
         MotionAsset motion = Require(name);
         ChannelAsset channel = RequireChannel(motion, node, kind);
@@ -633,7 +633,7 @@ public sealed partial class MotionEditor
     // ── 키 ────────────────────────────────────────────────────────────
 
     /// <summary>성분의 키 목록을 통째로 바꾼다. 빈 목록은 "성분 없음". 시각 오름차순으로 정렬해 둔다.</summary>
-    public void SetKeys(string name, string node, MotionChannelKind kind, Axis axis, IEnumerable<KeyAsset> keys)
+    public void SetKeys(string name, string node, ChannelKind kind, Axis axis, IEnumerable<KeyAsset> keys)
     {
         ArgumentNullException.ThrowIfNull(keys);
         MotionAsset motion = Require(name);
@@ -748,7 +748,7 @@ public sealed partial class MotionEditor
     /// 전부 **한 번의 조작**이다. 돌려주는 것은 생긴 키들이다.
     /// </summary>
     public List<KeyRef> KeyComponents(
-        string name, string node, MotionChannelKind kind, float time, IReadOnlyList<(Axis Axis, float Value)> values, TangentMode tangent)
+        string name, string node, ChannelKind kind, float time, IReadOnlyList<(Axis Axis, float Value)> values, TangentMode tangent)
     {
         ArgumentNullException.ThrowIfNull(node);
         ArgumentNullException.ThrowIfNull(values);
@@ -790,7 +790,7 @@ public sealed partial class MotionEditor
     /// 포즈 하나를 여러 채널에 한 번의 조작으로 키 — 마야 "포즈 들고 스크럽 뒤 S". 없는 채널·성분은 만든다.
     /// </summary>
     public List<KeyRef> KeyPose(
-        string name, float time, IEnumerable<(string Node, MotionChannelKind Kind, IReadOnlyList<(Axis Axis, float Value)> Values)> items, TangentMode tangent)
+        string name, float time, IEnumerable<(string Node, ChannelKind Kind, IReadOnlyList<(Axis Axis, float Value)> Values)> items, TangentMode tangent)
     {
         ArgumentNullException.ThrowIfNull(items);
         MotionAsset motion = Require(name);
@@ -804,7 +804,7 @@ public sealed partial class MotionEditor
 
         Mutate(MotionChangeKind.Keys, () =>
         {
-            foreach ((string node, MotionChannelKind kind, IReadOnlyList<(Axis Axis, float Value)> values) in list)
+            foreach ((string node, ChannelKind kind, IReadOnlyList<(Axis Axis, float Value)> values) in list)
             {
                 ChannelAsset? channel = motion.FindChannel(node, kind);
 
@@ -1041,7 +1041,7 @@ public sealed partial class MotionEditor
     }
 
     /// <summary>키를 더한다. 같은 시각(허용 오차 안)에 키가 있으면 그 키를 대신한다 — 한 시각에 키는 하나다.</summary>
-    public KeyAsset AddKey(string name, string node, MotionChannelKind kind, Axis axis, KeyAsset key)
+    public KeyAsset AddKey(string name, string node, ChannelKind kind, Axis axis, KeyAsset key)
     {
         ArgumentNullException.ThrowIfNull(key);
         MotionAsset motion = Require(name);
@@ -1061,7 +1061,7 @@ public sealed partial class MotionEditor
         return copy;
     }
 
-    public void RemoveKey(string name, string node, MotionChannelKind kind, Axis axis, int index)
+    public void RemoveKey(string name, string node, ChannelKind kind, Axis axis, int index)
     {
         MotionAsset motion = Require(name);
         ChannelAsset channel = RequireChannel(motion, node, kind);
@@ -1083,7 +1083,7 @@ public sealed partial class MotionEditor
     }
 
     /// <summary>키 하나의 값을 바꾼다. 시각이 바뀌면 다시 정렬하므로 index는 호출 뒤 유효하지 않을 수 있다.</summary>
-    public void UpdateKey(string name, string node, MotionChannelKind kind, Axis axis, int index, KeyAsset value)
+    public void UpdateKey(string name, string node, ChannelKind kind, Axis axis, int index, KeyAsset value)
     {
         ArgumentNullException.ThrowIfNull(value);
         MotionAsset motion = Require(name);
@@ -1295,6 +1295,7 @@ public sealed partial class MotionEditor
         if (_batchDepth > 0)
         {
             change(); // 묶음이 기록·알림을 맡는다
+            StepAlwaysSteppedChannels();
             return;
         }
 
@@ -1303,6 +1304,7 @@ public sealed partial class MotionEditor
         try
         {
             change();
+            StepAlwaysSteppedChannels();
         }
         catch
         {
@@ -1311,6 +1313,34 @@ public sealed partial class MotionEditor
         }
 
         Commit(kind, before, null, null);
+    }
+
+    /// <summary>
+    /// 그림 채널(<see cref="ChannelKinds.IsAlwaysStepped"/>)의 키는 언제나 계단이다 — 어느 길로 키를 넣었든 조작 안에서 바로잡는다(같은 칸).
+    /// 키를 넣는 길마다 따로 지키지 않고 여기 한 곳에서 본다.
+    /// </summary>
+    private void StepAlwaysSteppedChannels()
+    {
+        foreach (MotionAsset motion in Document.Motions)
+        {
+            foreach (ChannelAsset channel in motion.Channels.Where(c => ChannelKinds.IsAlwaysStepped(c.Kind)))
+            {
+                foreach (Axis axis in new[] { Axis.X, Axis.Y, Axis.Z })
+                {
+                    if (channel.Get(axis) is not { } curve || curve.Keys.All(k => k.Tangent == TangentMode.Step))
+                    {
+                        continue;
+                    }
+
+                    foreach (KeyAsset key in curve.Keys)
+                    {
+                        key.Tangent = TangentMode.Step;
+                    }
+
+                    TangentMath.Recompute(curve.Keys);
+                }
+            }
+        }
     }
 
     /// <summary>조작이 끝난 자리 — 문서가 실제로 바뀌었거나 손이 있을 때만 기록하고 다시하기를 지운다. 같은 값만 넣은 조작은 흔적이 없다.</summary>
@@ -1372,7 +1402,7 @@ public sealed partial class MotionEditor
         return Document.Find(name) ?? throw new KeyNotFoundException($"모션 '{name}'이 없다.");
     }
 
-    private static ChannelAsset RequireChannel(MotionAsset motion, string node, MotionChannelKind kind)
+    private static ChannelAsset RequireChannel(MotionAsset motion, string node, ChannelKind kind)
     {
         ArgumentNullException.ThrowIfNull(node);
         return motion.FindChannel(node, kind) ?? throw new KeyNotFoundException($"모션 '{motion.Name}'에 채널 {node}/{kind}가 없다.");

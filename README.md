@@ -62,7 +62,7 @@ tests: Ked.Presentation.Core.Tests(NUnit, 원본 그대로) · Mt.Authoring.Test
 | **리전 툴**(툴바 "리전" 토글) | 상자로 고르면 상자가 남는다. 상자 안 드래그 = 이동, 왼/오른 모서리 = 반대쪽 끝 기준 시간 스케일, 위/아래 모서리 = 값 스케일. 다시 누르면 선택 툴(Q)로 |
 | 위 눈금자 클릭·드래그 | 스크럽 |
 | **I** · **A** · **F** · 툴바 재생 범위 | 현재 시각에 키(값은 곡선 위) · 전체 맞춤 · 선택 맞춤 · 재생 범위 맞춤(마야 Frame All / Frame Selected / Frame Playback Range). 툴바에는 재생 범위만 — 선택(Q)·이동(W)·스케일(R)·끼우기·전체·선택·현재 시각 가운데 버튼은 뺐다(소유자) |
-| 툴바 auto · spline · linear · flat · plateau · 끊기 · 붙이기 · **Ctrl+1 … Ctrl+6**(4 = free, 버튼 없음) | 선택 키 탄젠트. **탄젠트 핸들**(선택 키 양쪽의 흰 선, 네모 끝 — 마야의 tangent handle) 끝을 LMB로 끌거나, 박스로 골라 MMB로 끌면 기울기(끊긴 키는 한쪽만). 새 키의 탄젠트는 "보기 › 새 키 탄젠트" (가중·계단 탄젠트는 규약이 거부한다) |
+| 툴바 auto · spline · linear · flat · plateau · 끊기 · 붙이기 · **Ctrl+1 … Ctrl+6**(4 = free, 버튼 없음) | 선택 키 탄젠트. **탄젠트 핸들**(선택 키 양쪽의 흰 선, 네모 끝 — 마야의 tangent handle) 끝을 LMB로 끌거나, 박스로 골라 MMB로 끌면 기울기(끊긴 키는 한쪽만). 새 키의 탄젠트는 "보기 › 새 키 탄젠트" (가중 탄젠트는 없다. 계단(`step`)은 이모지의 타임라인에만 쓰고 캐릭터 모션에 있으면 검증이 막는다 — 단추는 이모지 탭과 함께 선다) |
 | 툴바 버퍼 찍기/바꾸기(한 버튼) · 버퍼 지우기 · **Ctrl+B** · **Ctrl+Shift+B** | 버퍼가 없으면 보이는 커브를 흐린 점선으로 찍어 두고, 있으면 찍어 둔 것과 지금을 바꾼다(마야 Buffer Curve). 새로 찍으려면 지운 뒤 |
 | 툴바 무한(앞 · 뒤): 상수 / 사이클 / 사이클+오프셋 / 왕복 / 직선 | 마야 Pre/Post Infinity — 첫/마지막 키 밖을 흐린 점선으로 이어 보인다(보기만 — 산출물의 끝은 restore/commit) |
 | 툴바 값 칸 `+=3` `-=1` `*=2` `/=2` | 선택 키 전부에 상대 적용(마야 채널 박스). 숫자는 절대값. 시각·기울기 칸은 없다 — 시각은 끌거나 도프 시트로, 기울기는 탄젠트 핸들로 |
@@ -199,7 +199,7 @@ tests: Ked.Presentation.Core.Tests(NUnit, 원본 그대로) · Mt.Authoring.Test
 - **모션의 주인은 rigKind**다. 고른 오브젝트의 리그가 모션의 리그와 같거나 채널의 노드를 전부 가지면(공통 스키마) 그 오브젝트에 입혀 보인다. 아니면 "이 리그에 안 맞는다"로 표시된다.
 - **깊이 컨트롤러**(채널 박스의 슬라이더 0..40, close = 20, 그 너머는 `depth.json` 커브의 할선 연장 — 런타임과 같은 규칙): 놓으면 level의 배율을 `CharSlot_DepthScale` X·Y에, `−bust높이(820) × (배율 − 1)`을 `CharSlot_DepthY` Y에 굽는다(되돌리기 하나) — 런타임 `size`의 focus 보존이 정지 자세에서 남기는 값과 같아 얼굴은 제자리, 발은 멀수록 위로 간다(mid 14 = 1.708 · −580.56). 리거는 `controllers.json`의 `bakeY`를 빼서 끌 수 있다.
 - **깊이**: 덤프 옆 `presets/depth.json`(ExportedTuning)이 있으면 레이어(far·back·mid·front·close)가 깊이(DepthY·DepthScale)가 된다. 런타임 size 폴드와 같은 코어 함수(`SetDepthStageReduction`, focus 보존 bust)를 지나므로 보이는 깊이 = 정지 프레임의 깊이다. 없으면 레이어는 그리는 순서만 정한다. **그리는 순서**는 유니티 하이어아키 그대로 무대 Stage00 → Stage01 → Stage02(뒤 무대가 앞에), 무대 안에서는 far → close, 같은 층은 만든 순이다.
-- 채널 종류는 화면에서 `position · scale · rotate`로 부른다(파일 규약은 `euler` 그대로). **채널에 mode는 없다**(`motions/2`): relative/absolute는 대본의 `<<motion slot 이름 relative|absolute>>`(생략 = relative)가 정한다. 모션 탭의 **재생 기준**(상대값 relative / 절대값 absolute)은 툴이 키 값을 읽는 기준일 뿐이고 파일에 안 나간다 — 상대값이면 시작값 + 키(배율은 ×), 절대값이면 키 그대로. 매니퓰레이터·채널 박스가 포즈를 키 값으로 바꿀 때도 이 렌즈를 쓴다. 옛 `motions/1`·`motion-authoring/1`은 읽히고(채널 `mode` 무시, `defaultMode` → 재생 기준) 키 값은 그대로다.
+- 채널 종류는 화면에서 `position · scale · rotate`로 부른다(파일 규약은 `euler` 그대로). 툴에는 이모지의 타임라인만 쓰는 둘 — `alpha`(불투명도)와 `image`(그림 바꾸기, 키는 언제나 계단) — 이 더 있고, 캐릭터 모션에 있으면 검증이 막는다(`motions/2`에 없다). **채널에 mode는 없다**(`motions/2`): relative/absolute는 대본의 `<<motion slot 이름 relative|absolute>>`(생략 = relative)가 정한다. 모션 탭의 **재생 기준**(상대값 relative / 절대값 absolute)은 툴이 키 값을 읽는 기준일 뿐이고 파일에 안 나간다 — 상대값이면 시작값 + 키(배율은 ×), 절대값이면 키 그대로. 매니퓰레이터·채널 박스가 포즈를 키 값으로 바꿀 때도 이 렌즈를 쓴다. 옛 `motions/1`·`motion-authoring/1`은 읽히고(채널 `mode` 무시, `defaultMode` → 재생 기준) 키 값은 그대로다.
 - 씬은 하나만 쓴다(저작본 `scenes[]`와 편집기 명령은 여럿을 담을 수 있지만 UI는 활성 씬 하나만 보인다 — 모션 추출용이라 전환 UI는 뺐다).
 - **배역은 없다.** 오브젝트는 리그만 가진다(저작본에 `character`가 없다). 덤프 옆 `presets/focus.json`(또는 `focus-tuning.json`)이 있으면 깊이·place 폴드의 focus 보존은 base 오프셋 + bust만 쓴다(배역 키는 빈 문자열) — 런타임에서 cast 없이 세운 것과 같다. 표가 없으면 base 오프셋 없이(0).
 - **카메라(샷)**: 씬 탭의 접힘 zoom · pan X/Y. 런타임과 같은 자리에 들어간다 — `StageZoom_Root.localScale = 1 + 0.05·zoom`, `StagePan_Root.anchoredPosition = pan`(`PresentationCameraRootApplier`). 깊이 층마다 패럴랙스(`PresentationResponseProfile`: Far는 pan×−0.04·scale^−0.15 … Close는 pan×0.2·scale^0.16, Mid는 0)가 `FramingTransform`·`FramingScale`에 붙는다(`StageShotResponse`). 격자·축은 `StageShot_Root` 공간이라 움직이지 않는다. 카메라 키는 규약에 없고 씬에만 남는다. 샷은 오브젝트가 다 선 뒤(자리·깊이·오프셋 뒤)에 들어간다 — 런타임에서 place는 커맨드 순간 한 번 풀리고 그 뒤 shot이 무대째 움직이므로, 자리 있는 오브젝트도 pan·zoom을 따라간다.
@@ -237,7 +237,7 @@ dotnet run --project src/Mt.Cli -- bake     a.motion-authoring.json --clip greet
 
 - `pose`는 모션·클립이 건드리는 노드의 값(위치·배율·회전)과 카메라, 클립이면 오브젝트의 불투명도를 낸다 — AI가 "이 시각에 정말 이렇게 되나"를 읽는 자리다.
 - 리그 덤프는 `--rig`, 없으면 문서가 적어 둔 경로, 그것도 없으면 내장본.
-- **손으로(또는 AI가) 쓴 문서**는 키에 값과 탄젠트 **종류**(`auto`·`flat`·`linear`·`spline`·`plateau`)만 적으면 된다 — `mt`가 읽을 때 탄젠트 값을 세운다
+- **손으로(또는 AI가) 쓴 문서**는 키에 값과 탄젠트 **종류**(`auto`·`flat`·`linear`·`spline`·`plateau`·`step`)만 적으면 된다 — `mt`가 읽을 때 탄젠트 값을 세운다
   (앱이 편집할 때마다 하는 그 계산. `free`는 적힌 값 그대로). 앱이 저장한 문서에는 아무것도 안 바뀐다.
 
 ## 설정 · 저장

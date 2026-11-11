@@ -34,8 +34,8 @@ public class MotionDocumentJsonTests
         var document = new MotionDocument();
         var editor = new MotionEditor(document);
         editor.AddMotion("a", "character", 1f, MotionEnd.Commit, MotionChannelMode.Absolute);
-        editor.AddChannel("a", "N", MotionChannelKind.Euler);
-        editor.SetKeys("a", "N", MotionChannelKind.Euler, Axis.Z, new[]
+        editor.AddChannel("a", "N", ChannelKind.Euler);
+        editor.SetKeys("a", "N", ChannelKind.Euler, Axis.Z, new[]
         {
             new KeyAsset { T = 0f, V = 0f, Tangent = TangentMode.Auto },
             new KeyAsset { T = 1f, V = 10f, InTangent = 3f, OutTangent = -3f, Tangent = TangentMode.Free, Broken = true },
@@ -65,8 +65,8 @@ public class MotionDocumentJsonTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("a", "character", 1f);
-        editor.AddChannel("a", "N", MotionChannelKind.Position);
-        editor.SetKeys("a", "N", MotionChannelKind.Position, Axis.X, new[]
+        editor.AddChannel("a", "N", ChannelKind.Position);
+        editor.SetKeys("a", "N", ChannelKind.Position, Axis.X, new[]
         {
             new KeyAsset { T = 0f, V = 0f, Tangent = TangentMode.Spline },
             new KeyAsset { T = 1f, V = 1f, Tangent = TangentMode.Plateau },

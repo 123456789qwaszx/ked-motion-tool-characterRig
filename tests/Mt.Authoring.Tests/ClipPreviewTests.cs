@@ -27,20 +27,20 @@ public class ClipPreviewTests
         editor.AddSceneObject(null, "s2", "character");
 
         editor.AddMotion("nod", "character", 0.6f);
-        editor.AddChannel("nod", MoveY, MotionChannelKind.Position);
-        editor.SetKeys("nod", MoveY, MotionChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.3f, -18f), Fixtures.Key(0.6f, 0f) });
+        editor.AddChannel("nod", MoveY, ChannelKind.Position);
+        editor.SetKeys("nod", MoveY, ChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.3f, -18f), Fixtures.Key(0.6f, 0f) });
 
         editor.AddMotion("bow", "character", 0.4f, MotionEnd.Commit, MotionChannelMode.Absolute);
-        editor.AddChannel("bow", Sway, MotionChannelKind.Euler);
-        editor.SetKeys("bow", Sway, MotionChannelKind.Euler, Axis.Z, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.4f, 8f) });
+        editor.AddChannel("bow", Sway, ChannelKind.Euler);
+        editor.SetKeys("bow", Sway, ChannelKind.Euler, Axis.Z, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.4f, 8f) });
 
         editor.AddMotion("lean", "character", 0.5f, MotionEnd.Commit);
-        editor.AddChannel("lean", Sway, MotionChannelKind.Euler);
-        editor.SetKeys("lean", Sway, MotionChannelKind.Euler, Axis.Z, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, 5f) });
+        editor.AddChannel("lean", Sway, ChannelKind.Euler);
+        editor.SetKeys("lean", Sway, ChannelKind.Euler, Axis.Z, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, 5f) });
 
         editor.AddMotion("step", "character", 0.4f, MotionEnd.Commit);
-        editor.AddChannel("step", TrackX, MotionChannelKind.Position);
-        editor.SetKeys("step", TrackX, MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 10f), Fixtures.Key(0.4f, 80f) });
+        editor.AddChannel("step", TrackX, ChannelKind.Position);
+        editor.SetKeys("step", TrackX, ChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 10f), Fixtures.Key(0.4f, 80f) });
 
         editor.AddClip("greet");
         editor.AddClipRole("greet", "a", "character", "s1");

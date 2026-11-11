@@ -15,7 +15,7 @@ namespace Mt.App.Tests;
 public class TimeSliderViewTests
 {
     private const string Node = "CharacterPortrait_Track_Move_Y";
-    private static readonly CurveRef Y = new(Node, MotionChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new(Node, ChannelKind.Position, Axis.Y);
     private const double Frame = 1.0 / 24.0;
 
     private static (Window Window, TimeSliderView Slider, ViewportView Viewport, MotionEditor Editor) Show()
@@ -133,8 +133,8 @@ public class TimeSliderViewTests
         {
             viewport.ScrubTo(0.3);
             string key = "s1/" + Node; // 씬 트리의 노드 키는 오브젝트 접두사를 갖는다
-            float heldY = PoseEdit.Component(MotionChannelKind.Position, viewport.PoseAt(0.3)!.GetState(key), Axis.Y);
-            float restY = PoseEdit.Component(MotionChannelKind.Position, viewport.PoseAt(0.45)!.GetState(key), Axis.Y);
+            float heldY = PoseEdit.Component(ChannelKind.Position, viewport.PoseAt(0.3)!.GetState(key), Axis.Y);
+            float restY = PoseEdit.Component(ChannelKind.Position, viewport.PoseAt(0.45)!.GetState(key), Axis.Y);
             Assert.NotEqual(heldY, restY);
 
             Point from = At(window, slider, 0.3);
@@ -146,7 +146,7 @@ public class TimeSliderViewTests
             Assert.Equal(0.45, viewport.Time, 3);
             Assert.True(viewport.IsHoldingPose);
             Assert.True(viewport.HasPending);
-            Assert.Equal(heldY, PoseEdit.Component(MotionChannelKind.Position, viewport.CurrentPose()!.GetState(key), Axis.Y), 3);
+            Assert.Equal(heldY, PoseEdit.Component(ChannelKind.Position, viewport.CurrentPose()!.GetState(key), Axis.Y), 3);
 
             long before = editor.Revision;
             viewport.SetKey();

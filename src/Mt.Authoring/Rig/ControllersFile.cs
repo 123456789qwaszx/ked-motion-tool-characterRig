@@ -28,7 +28,7 @@ public sealed record ControllerAlias(string Node, Axis Axis);
 public sealed class Controller
 {
     public Controller(
-        string id, ControllerGroup group, string label, string node, MotionChannelKind kind, IReadOnlyList<Axis> axes,
+        string id, ControllerGroup group, string label, string node, ChannelKind kind, IReadOnlyList<Axis> axes,
         string unit, IReadOnlyList<ControllerAlias> aliases, ControllerBake bake, bool manipulator, string? note, string? depthYNode = null,
         IReadOnlyDictionary<Axis, string>? axisLabels = null)
     {
@@ -59,7 +59,7 @@ public sealed class Controller
     /// <summary>키가 들어가는 노드(스키마 id).</summary>
     public string Node { get; }
 
-    public MotionChannelKind Kind { get; }
+    public ChannelKind Kind { get; }
 
     public IReadOnlyList<Axis> Axes { get; }
 
@@ -80,7 +80,7 @@ public sealed class Controller
     public string? DepthYNode { get; }
 
     /// <summary>깊이 Y 커브(위치 Y) — <see cref="DepthYNode"/>가 있을 때만.</summary>
-    public CurveRef? DepthYCurve => DepthYNode is null ? null : new CurveRef(DepthYNode, MotionChannelKind.Position, Axis.Y);
+    public CurveRef? DepthYCurve => DepthYNode is null ? null : new CurveRef(DepthYNode, ChannelKind.Position, Axis.Y);
 
     public string? Note { get; }
 
@@ -110,7 +110,7 @@ public sealed class Controller
 /// <summary>리그 하나의 컨트롤러 표.</summary>
 public sealed class ControllerRig
 {
-    private readonly Dictionary<(string Node, MotionChannelKind Kind, Axis Axis), (Controller Controller, Axis Axis)> _byCurve = new();
+    private readonly Dictionary<(string Node, ChannelKind Kind, Axis Axis), (Controller Controller, Axis Axis)> _byCurve = new();
 
     public ControllerRig(string rigKind, IReadOnlyList<ControllerGroup> groups, IReadOnlyList<Controller> controllers)
     {
@@ -177,7 +177,7 @@ public sealed class ControllerRig
             ?? Controllers.FirstOrDefault(c => c.DepthYNode == node);
 
     /// <summary>W/E/R의 기본 손잡이 — manipulator 표시가 있는 그 종류의 컨트롤러. 없으면 그 종류의 첫 컨트롤러.</summary>
-    public Controller? DefaultFor(MotionChannelKind kind)
+    public Controller? DefaultFor(ChannelKind kind)
         => Controllers.FirstOrDefault(c => c.Manipulator && c.Kind == kind) ?? Controllers.FirstOrDefault(c => c.Kind == kind);
 
     /// <summary>표가 가리키는 노드가 리그에 없으면 사유를 낸다 — 덤프가 바뀌었는데 표가 옛것일 때.</summary>
@@ -330,7 +330,7 @@ public sealed class ControllersFile
                     throw new JsonException($"컨트롤러 '{c.Id}': 노드가 비어 있다.");
                 }
 
-                if (!TryParseKind(c.Kind, out MotionChannelKind kind))
+                if (!TryParseKind(c.Kind, out ChannelKind kind))
                 {
                     throw new JsonException($"컨트롤러 '{c.Id}': kind는 position|scale|euler 여야 한다 ('{c.Kind}').");
                 }
@@ -344,7 +344,7 @@ public sealed class ControllersFile
                         throw new JsonException($"컨트롤러 '{c.Id}': 성분은 x|y|z 여야 한다 ('{token}').");
                     }
 
-                    if (axis == Axis.Z && kind != MotionChannelKind.Euler)
+                    if (axis == Axis.Z && kind != ChannelKind.Euler)
                     {
                         throw new JsonException($"컨트롤러 '{c.Id}': {kind}에는 Z 성분이 없다(코어 규칙).");
                     }
@@ -376,7 +376,7 @@ public sealed class ControllersFile
                     _ => throw new JsonException($"컨트롤러 '{c.Id}': 모르는 bake '{c.Bake}'."),
                 };
 
-                if (bake == ControllerBake.DepthLevel && kind != MotionChannelKind.Scale)
+                if (bake == ControllerBake.DepthLevel && kind != ChannelKind.Scale)
                 {
                     throw new JsonException($"컨트롤러 '{c.Id}': depthLevel은 scale 노드에만 굽는다.");
                 }
@@ -411,13 +411,13 @@ public sealed class ControllersFile
         return new ControllersFile(rigs, file.Source);
     }
 
-    private static bool TryParseKind(string? token, out MotionChannelKind kind)
+    private static bool TryParseKind(string? token, out ChannelKind kind)
     {
         switch ((token ?? "").Trim().ToLowerInvariant())
         {
-            case "position": kind = MotionChannelKind.Position; return true;
-            case "scale": kind = MotionChannelKind.Scale; return true;
-            case "euler": case "rotate": kind = MotionChannelKind.Euler; return true;
+            case "position": kind = ChannelKind.Position; return true;
+            case "scale": kind = ChannelKind.Scale; return true;
+            case "euler": case "rotate": kind = ChannelKind.Euler; return true;
             default: kind = default; return false;
         }
     }

@@ -22,8 +22,8 @@ public class MotionValidatorTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("a", "character", 1f);
-        editor.AddChannel("a", "CharSlot_Track_Focus", MotionChannelKind.Position);
-        editor.SetKeys("a", "CharSlot_Track_Focus", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(1f, 0f) });
+        editor.AddChannel("a", "CharSlot_Track_Focus", ChannelKind.Position);
+        editor.SetKeys("a", "CharSlot_Track_Focus", ChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(1f, 0f) });
 
         MotionProblem problem = Assert.Single(MotionValidator.Validate(editor.Document, RigFile.NodeIds));
         Assert.Equal("a", problem.MotionName);
@@ -35,9 +35,9 @@ public class MotionValidatorTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("a", "character", 1f);
-        editor.AddChannel("a", "NoSuchNode", MotionChannelKind.Position);
+        editor.AddChannel("a", "NoSuchNode", ChannelKind.Position);
         // relative 전 구간 중립값이면 성분이 내보내기에서 빠지므로 가운데 키를 둔다 — 보려는 것은 노드 검사뿐이다.
-        editor.SetKeys("a", "NoSuchNode", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, 5f), Fixtures.Key(1f, 0f) });
+        editor.SetKeys("a", "NoSuchNode", ChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, 5f), Fixtures.Key(1f, 0f) });
 
         Assert.Contains("노드 'NoSuchNode'가 리그 'character'의 스키마에 없다", Assert.Single(MotionValidator.Validate(editor.Document, RigFile.NodeIds)).Message, StringComparison.Ordinal);
         Assert.Empty(MotionValidator.Validate(editor.Document));
@@ -68,9 +68,9 @@ public class MotionValidatorTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("a", "character", 1f, MotionEnd.Restore);
-        editor.AddChannel("a", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position);
+        editor.AddChannel("a", "CharacterPortrait_Track_Move_Y", ChannelKind.Position);
         // 마지막 키가 길이(1)에 있지 않다 — 편집 중엔 자연스러운 상태.
-        editor.SetKeys("a", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.25f, -10f), Fixtures.Key(0.5f, 0f) });
+        editor.SetKeys("a", "CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.25f, -10f), Fixtures.Key(0.5f, 0f) });
 
         Assert.False(MotionExport.TryExport(editor.Document, RigFile.NodeIds, out string json, out IReadOnlyList<MotionProblem> problems));
         Assert.Equal("", json);
@@ -86,7 +86,7 @@ public class MotionValidatorTests
 
 public class MotionFixesTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
 
     [Fact]
     public void 문구에서_돕는_손을_고른다()

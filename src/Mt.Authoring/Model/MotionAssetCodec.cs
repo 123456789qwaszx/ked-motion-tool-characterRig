@@ -7,27 +7,34 @@ namespace Mt.Authoring.Model;
 ///
 /// 키가 있는 성분은 전부 나간다 — 파일(motions/2)은 mode를 모르므로 "전 구간 중립값인 성분은 무변"이라는 판단을
 /// 낼 때 할 수 없다(absolute로 쓰면 그 값으로 가는 뜻이 있다). Unity 내보내기도 같은 규칙이다.
+///
+/// 이모지의 타임라인에만 쓰는 종류(불투명도 · 그림 — <see cref="ChannelKinds.IsEmojiOnly"/>)는 코어 클립에 자리가 없다.
+/// 내보내기는 검증이 먼저 막고, 미리보기는 <c>skipEmojiOnly</c>로 빼고 얹는다.
 /// </summary>
 public static class MotionAssetCodec
 {
-    public static MotionClip ToClip(MotionAsset asset)
+    /// <param name="skipEmojiOnly">참이면 불투명도 · 그림 채널을 빼고 바꾼다. 거짓이면 그런 채널이 있을 때 던진다.</param>
+    public static MotionClip ToClip(MotionAsset asset, bool skipEmojiOnly = false)
     {
         ArgumentNullException.ThrowIfNull(asset);
 
-        var channels = new MotionChannel[asset.Channels.Count];
+        var channels = new List<MotionChannel>(asset.Channels.Count);
 
-        for (int i = 0; i < channels.Length; i++)
+        foreach (ChannelAsset c in asset.Channels)
         {
-            ChannelAsset c = asset.Channels[i];
+            if (skipEmojiOnly && ChannelKinds.IsEmojiOnly(c.Kind))
+            {
+                continue;
+            }
 
-            channels[i] = new MotionChannel
+            channels.Add(new MotionChannel
             {
                 Node = c.Node,
-                Kind = c.Kind,
+                Kind = ChannelKinds.ToCore(c.Kind),
                 X = ToKeys(c.X),
                 Y = ToKeys(c.Y),
                 Z = ToKeys(c.Z),
-            };
+            });
         }
 
         return new MotionClip
@@ -36,7 +43,7 @@ public static class MotionAssetCodec
             Rig = asset.Rig,
             Duration = asset.Duration,
             End = asset.End,
-            Channels = channels,
+            Channels = channels.ToArray(),
         };
     }
 
@@ -61,7 +68,7 @@ public static class MotionAssetCodec
                 asset.Channels.Add(new ChannelAsset
                 {
                     Node = ch.Node ?? "",
-                    Kind = ch.Kind,
+                    Kind = ChannelKinds.FromCore(ch.Kind),
                     X = FromKeys(ch.X),
                     Y = FromKeys(ch.Y),
                     Z = FromKeys(ch.Z),

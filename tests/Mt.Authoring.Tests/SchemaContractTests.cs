@@ -27,7 +27,7 @@ public class SchemaContractTests
         MotionAsset nod = document.Motions[0];
 
         // 스키마에 없는 노드 — 유니티 쪽에서 이름이 바뀌었거나 사라진 노드를 모션이 아직 쓰고 있다.
-        nod.Channels.Add(new ChannelAsset { Node = "Renamed_In_Unity", Kind = MotionChannelKind.Position });
+        nod.Channels.Add(new ChannelAsset { Node = "Renamed_In_Unity", Kind = ChannelKind.Position });
         SchemaViolation missingNode = Assert.Single(SchemaContract.Motion(Schema.NodeIds, nod));
         Assert.Equal(("모션", nod.Name, true), (missingNode.Kind, missingNode.Subject, missingNode.Blocking));
         Assert.Contains("Renamed_In_Unity", missingNode.Message, StringComparison.Ordinal);

@@ -154,7 +154,7 @@ public class SceneTests
         MotionDocument document = Fixtures.NodBowDocument();
         var editor = new MotionEditor(document);
         editor.AddMotion("robot_wave", "robot", 1f);
-        editor.AddChannel("robot_wave", "Robot_Arm", MotionChannelKind.Position);
+        editor.AddChannel("robot_wave", "Robot_Arm", ChannelKind.Position);
 
         Assert.False(MotionExport.TryExport(document, RigFile.NodeIds, out _, out IReadOnlyList<MotionProblem> all));
         Assert.Contains(all, p => p.MotionName == "robot_wave");

@@ -156,7 +156,7 @@ public static class MotionFixes
 
                 foreach (ChannelAsset channel in motion.Channels)
                 {
-                    float neutral = MotionMath.Neutral(channel.Kind);
+                    float neutral = ChannelKinds.Neutral(channel.Kind);
 
                     foreach (Axis axis in new[] { Axis.X, Axis.Y, Axis.Z })
                     {

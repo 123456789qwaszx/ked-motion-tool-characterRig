@@ -8,7 +8,7 @@ namespace Mt.Authoring.Tests;
 
 public class KeySelectionTests
 {
-    private static readonly CurveRef Y = new("N", MotionChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new("N", ChannelKind.Position, Axis.Y);
 
     [Fact]
     public void 바뀔_때만_한_번_알린다()
@@ -37,7 +37,7 @@ public class KeySelectionTests
     public void 문서가_바뀌면_없는_키를_턴다()
     {
         MotionDocument document = Fixtures.NodBowDocument();
-        var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+        var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
         var selection = new KeySelection();
         selection.Set(new[] { new KeyRef(y, 2), new KeyRef(y, 9) });
 
@@ -50,7 +50,7 @@ public class KeySelectionTests
 
 public class KeyOpsTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
 
     private static MotionAsset Nod() => Fixtures.NodBowDocument().Find("nod")!;
 
@@ -169,9 +169,9 @@ public class DopeSheetRowsTests
 
         DopeRow only = Assert.Single(rows);
         Assert.Equal(DopeRowLevel.Node, only.Level);
-        var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+        var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
         Assert.True(only.Covers(new KeyRef(y, 1)));
-        Assert.False(only.Covers(new KeyRef(new CurveRef("Other", MotionChannelKind.Position, Axis.Y), 1)));
+        Assert.False(only.Covers(new KeyRef(new CurveRef("Other", ChannelKind.Position, Axis.Y), 1)));
 
         List<DopeRow> open = DopeSheetRows.Build(document.Find("nod")!);
         Assert.Equal(3, open.Count);
@@ -225,7 +225,7 @@ public class RelativeInputTests
 
 public class KeyValueOpsTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
 
     [Fact]
     public void 값만_바꾸고_시각은_그대로라_선택이_유효하다()
@@ -255,8 +255,8 @@ public class KeyValueOpsTests
 
 public class KeyClipboardTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
-    private static readonly CurveRef Z = new("CharacterPortrait_SwayPivot", MotionChannelKind.Euler, Axis.Z);
+    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Z = new("CharacterPortrait_SwayPivot", ChannelKind.Euler, Axis.Z);
 
     [Fact]
     public void 복사는_사본이고_기준은_가장_이른_키다()

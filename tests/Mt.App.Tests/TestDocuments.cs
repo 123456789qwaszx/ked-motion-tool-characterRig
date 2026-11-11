@@ -13,8 +13,8 @@ internal static class TestDocuments
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("nod", "character", 0.6f, MotionEnd.Restore, MotionChannelMode.Relative);
-        editor.AddChannel("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position);
-        editor.SetKeys("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y, new[]
+        editor.AddChannel("nod", "CharacterPortrait_Track_Move_Y", ChannelKind.Position);
+        editor.SetKeys("nod", "CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y, new[]
         {
             Key(0f, 0f), Key(0.3f, -18f), Key(0.6f, 0f),
         });

@@ -32,12 +32,12 @@ public class ClipShellTests
         editor.AddSceneObject(null, "s2", "character");
 
         editor.AddMotion("nod", "character", 0.6f);
-        editor.AddChannel("nod", MoveY, MotionChannelKind.Position);
-        editor.SetKeys("nod", MoveY, MotionChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
+        editor.AddChannel("nod", MoveY, ChannelKind.Position);
+        editor.SetKeys("nod", MoveY, ChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
 
         editor.AddMotion("bow", "character", 0.4f, MotionEnd.Commit, MotionChannelMode.Absolute);
-        editor.AddChannel("bow", Sway, MotionChannelKind.Euler);
-        editor.SetKeys("bow", Sway, MotionChannelKind.Euler, Axis.Z, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.4f, 8f) });
+        editor.AddChannel("bow", Sway, ChannelKind.Euler);
+        editor.SetKeys("bow", Sway, ChannelKind.Euler, Axis.Z, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.4f, 8f) });
     }
 
     private static float MoveYOf(MainWindow window, string slot) => window.Viewport.CurrentPose()!.GetState($"{slot}/{MoveY}").AnchoredPosition.Y;
@@ -195,7 +195,7 @@ public class ClipShellTests
                 long revision = window.Session.Editor.Revision;
 
                 Assert.False(window.Viewport.HasPending);
-                window.Viewport.SetComponent(MoveY, MotionChannelKind.Position, Axis.Y, 40f); // 채널 박스 값 입력과 같은 길
+                window.Viewport.SetComponent(MoveY, ChannelKind.Position, Axis.Y, 40f); // 채널 박스 값 입력과 같은 길
                 window.Viewport.SetKey();                                                     // S
                 Assert.False(window.Viewport.HasPending);
                 Assert.Equal(revision, window.Session.Editor.Revision);
@@ -704,13 +704,13 @@ public class ClipShellTests
                 zoom.Text = "4";
                 window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
                 Assert.Equal(revision + 1, editor.Revision);
-                List<KeyAsset> keys = editor.Document.Find("camera")!.FindChannel(CameraRig.ZoomNode, MotionChannelKind.Position)!.X!.Keys;
+                List<KeyAsset> keys = editor.Document.Find("camera")!.FindChannel(CameraRig.ZoomNode, ChannelKind.Position)!.X!.Keys;
                 Assert.Equal(new[] { (0f, 0f), (1f, 4f) }, keys.Select(k => (k.T, k.V)));
 
                 // 가운데(0.5초)에 pan x 60 — 새 키가 끼어든다.
                 window.Viewport.ScrubTo(0.5);
                 window.Viewport.SetCameraValue(CameraRig.PanNode, Axis.X, 60f);
-                Assert.Equal(3, editor.Document.Find("camera")!.FindChannel(CameraRig.PanNode, MotionChannelKind.Position)!.X!.Keys.Count);
+                Assert.Equal(3, editor.Document.Find("camera")!.FindChannel(CameraRig.PanNode, ChannelKind.Position)!.X!.Keys.Count);
 
                 // 뷰포트: 무대의 카메라 노드가 커브대로 간다. 값 칸도 시각을 따라온다.
                 Assert.Equal(60f, PanXOf(window), 2);
@@ -724,7 +724,7 @@ public class ClipShellTests
 
                 // 캐릭터의 포즈는 카메라 모션에 키되지 않는다.
                 revision = editor.Revision;
-                window.Viewport.SetComponent(MoveY, MotionChannelKind.Position, Axis.Y, 40f);
+                window.Viewport.SetComponent(MoveY, ChannelKind.Position, Axis.Y, 40f);
                 window.Viewport.SetKey();
                 Assert.Equal(revision, editor.Revision);
                 Assert.False(window.Viewport.HasPending);
@@ -735,7 +735,7 @@ public class ClipShellTests
                 editor.SetPreviewMode("camera", MotionChannelMode.Relative);
                 window.Viewport.ScrubTo(1.0);
                 window.Viewport.SetCameraValue(CameraRig.ZoomNode, Axis.X, 5f);
-                Assert.Equal(3f, editor.Document.Find("camera")!.FindChannel(CameraRig.ZoomNode, MotionChannelKind.Position)!.X!.Keys[^1].V);
+                Assert.Equal(3f, editor.Document.Find("camera")!.FindChannel(CameraRig.ZoomNode, ChannelKind.Position)!.X!.Keys[^1].V);
                 Assert.Equal(5f, window.Viewport.CameraValue()!.Zoom, 3);
 
                 // 다른 모션을 고르면 카메라 칸은 숨는다.
@@ -875,7 +875,7 @@ public class ClipShellTests
                 // 키 값을 고치면 뷰포트의 클립 포즈가 바로 따라온다 — 다른 출연자는 제 블록대로 서 있다.
                 window.Viewport.ScrubTo(0.8);
                 Assert.Equal(-18f, MoveYOf(window, "s2"), 2);
-                editor.SetKeys("nod", MoveY, MotionChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -40f), TestDocuments.Key(0.6f, 0f) });
+                editor.SetKeys("nod", MoveY, ChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -40f), TestDocuments.Key(0.6f, 0f) });
                 Assert.Equal(-40f, MoveYOf(window, "s2"), 2);
                 Assert.Equal(8f, SwayZOf(window, "s1"), 2);
                 Assert.Equal(0.8, window.Viewport.Time, 4);
@@ -945,7 +945,7 @@ public class ClipShellTests
                 Assert.Equal("clip", window.SelectedClip);
 
                 // 이제 이 블록만 다르게 고쳐진다.
-                editor.SetKeys("nod_clip", MoveY, MotionChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -40f), TestDocuments.Key(0.6f, 0f) });
+                editor.SetKeys("nod_clip", MoveY, ChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -40f), TestDocuments.Key(0.6f, 0f) });
                 window.Viewport.ScrubTo(0.8);
                 Assert.Equal(-40f, MoveYOf(window, "s2"), 2);
                 window.Viewport.ScrubTo(0.3);
@@ -981,8 +981,8 @@ public class ClipShellTests
 
                 // lean: Sway z 0 → 5 (0.5초, commit). s1에 bow(절대값 8) 뒤에 lean(상대값)을 잇는다. s2에는 nod.
                 editor.AddMotion("lean", "character", 0.5f, MotionEnd.Commit);
-                editor.AddChannel("lean", Sway, MotionChannelKind.Euler);
-                editor.SetKeys("lean", Sway, MotionChannelKind.Euler, Axis.Z, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.5f, 5f) });
+                editor.AddChannel("lean", Sway, ChannelKind.Euler);
+                editor.SetKeys("lean", Sway, ChannelKind.Euler, Axis.Z, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.5f, 5f) });
                 timeline.PlaceMotion(0, "bow", 0);
                 timeline.PlaceMotion(1, "nod", 0.5);
                 timeline.PlaceMotion(0, "lean", 1.0);
@@ -999,7 +999,7 @@ public class ClipShellTests
                 window.Viewport.ScrubTo(0.2);
                 Assert.Null(window.Viewport.EditMotion);
                 long revision = editor.Revision;
-                window.Viewport.SetComponent(MoveY, MotionChannelKind.Position, Axis.Y, -30f);
+                window.Viewport.SetComponent(MoveY, ChannelKind.Position, Axis.Y, -30f);
                 window.Viewport.SetKey();
                 Assert.Equal(revision, editor.Revision);
                 Assert.False(window.Viewport.HasPending);
@@ -1007,7 +1007,7 @@ public class ClipShellTests
                 // 블록 안(클립 0.8초 = nod의 0.3초): 그 시각에 키가 있으니 값 입력이 곧 키다 — nod의 0.3초 키가 바뀐다.
                 window.Viewport.ScrubTo(0.8);
                 Assert.Equal("nod", window.Viewport.EditMotion?.Name);
-                window.Viewport.SetComponent(MoveY, MotionChannelKind.Position, Axis.Y, -30f);
+                window.Viewport.SetComponent(MoveY, ChannelKind.Position, Axis.Y, -30f);
                 Assert.Equal(revision + 1, editor.Revision);
                 Assert.Equal(new[] { (0f, 0f), (0.3f, -30f), (0.6f, 0f) }, editor.Document.Find("nod")!.Channels[0].Y!.Keys.Select(k => (k.T, k.V)));
                 Assert.Equal(-30f, MoveYOf(window, "s2"), 2);
@@ -1017,7 +1017,7 @@ public class ClipShellTests
 
                 // 키가 없는 시각(클립 0.75초 = 0.25초): 키 없는 포즈로 남고, S가 모션 기준 시각에 키한다 — 한 칸.
                 window.Viewport.ScrubTo(0.75);
-                window.Viewport.SetComponent(MoveY, MotionChannelKind.Position, Axis.Y, -10f);
+                window.Viewport.SetComponent(MoveY, ChannelKind.Position, Axis.Y, -10f);
                 Assert.True(window.Viewport.HasPending);
                 Assert.Equal(3, editor.Document.Find("nod")!.Channels[0].Y!.Keys.Count);
                 window.KeyPressQwerty(PhysicalKey.S, RawInputModifiers.None);
@@ -1033,13 +1033,13 @@ public class ClipShellTests
                 Assert.Equal("s1", window.Viewport.SelectedObjectId);
                 window.Viewport.ScrubTo(1.5);
                 Assert.Equal(13f, SwayZOf(window, "s1"), 2);
-                window.Viewport.SetComponent(Sway, MotionChannelKind.Euler, Axis.Z, 20f);
+                window.Viewport.SetComponent(Sway, ChannelKind.Euler, Axis.Z, 20f);
                 Assert.Equal(12f, editor.Document.Find("lean")!.Channels[0].Z!.Keys[^1].V, 3);
                 Assert.Equal(20f, SwayZOf(window, "s1"), 2);
 
                 // 재생 기준은 블록의 것이다: 절대값 블록이면 키가 곧 그 값(모션의 렌즈는 그대로 상대값).
                 timeline.SetSelectedMode(MotionChannelMode.Absolute);
-                window.Viewport.SetComponent(Sway, MotionChannelKind.Euler, Axis.Z, 30f);
+                window.Viewport.SetComponent(Sway, ChannelKind.Euler, Axis.Z, 30f);
                 Assert.Equal(30f, editor.Document.Find("lean")!.Channels[0].Z!.Keys[^1].V, 3);
                 Assert.Equal(MotionChannelMode.Relative, editor.Document.Find("lean")!.PreviewMode);
                 Assert.Equal(30f, SwayZOf(window, "s1"), 2);
@@ -1047,7 +1047,7 @@ public class ClipShellTests
                 // 없던 채널도 클립 안에서 생긴다(Auto Key) — 모션으로 건너갈 일이 없다.
                 window.Viewport.AutoKey = true;
                 window.Viewport.ScrubTo(1.25);
-                window.Viewport.SetComponent(MoveY, MotionChannelKind.Position, Axis.Y, 15f);
+                window.Viewport.SetComponent(MoveY, ChannelKind.Position, Axis.Y, 15f);
                 ChannelAsset added = Assert.Single(editor.Document.Find("lean")!.Channels, c => c.Node == MoveY);
                 Assert.Equal((0.25f, 15f), (added.Y!.Keys[0].T, added.Y.Keys[0].V));
                 Assert.Equal("clip", window.SelectedClip);
@@ -1189,7 +1189,7 @@ public class ClipShellTests
                 pan.Text = "100";
                 window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
                 Assert.Equal(revision + 1, editor.Revision);
-                List<KeyAsset> keys = editor.Document.Find("camera")!.FindChannel(CameraRig.PanNode, MotionChannelKind.Position)!.X!.Keys;
+                List<KeyAsset> keys = editor.Document.Find("camera")!.FindChannel(CameraRig.PanNode, ChannelKind.Position)!.X!.Keys;
                 Assert.Equal(new[] { (0f, 0f), (1f, 60f) }, keys.Select(k => (k.T, k.V)));
                 Assert.Equal(100f, PanXOf(window), 2);
                 Assert.Equal("clip", window.SelectedClip); // 클립을 떠나지 않는다
@@ -1199,14 +1199,14 @@ public class ClipShellTests
                 // 가운데(클립 1.0초 = 0.5초)에 zoom 2 — 새 키가 모션 기준 시각에 끼어든다.
                 window.Viewport.ScrubTo(1.0);
                 window.Viewport.SetCameraValue(CameraRig.ZoomNode, Axis.X, 2f);
-                Assert.Contains(editor.Document.Find("camera")!.FindChannel(CameraRig.ZoomNode, MotionChannelKind.Position)!.X!.Keys, k => Math.Abs(k.T - 0.5f) < 1e-4f && Math.Abs(k.V - 2f) < 1e-3f);
+                Assert.Contains(editor.Document.Find("camera")!.FindChannel(CameraRig.ZoomNode, ChannelKind.Position)!.X!.Keys, k => Math.Abs(k.T - 0.5f) < 1e-4f && Math.Abs(k.V - 2f) < 1e-3f);
                 Assert.Equal(ShotIntentMath.EvaluateCameraScale(2f), ZoomScaleOf(window), 3);
 
                 // 절대값 블록이면 키가 곧 그 값이다.
                 timeline.SetSelectedMode(MotionChannelMode.Absolute);
                 window.Viewport.ScrubTo(1.5);
                 window.Viewport.SetCameraValue(CameraRig.PanNode, Axis.X, 70f);
-                Assert.Equal(70f, editor.Document.Find("camera")!.FindChannel(CameraRig.PanNode, MotionChannelKind.Position)!.X!.Keys[^1].V, 3);
+                Assert.Equal(70f, editor.Document.Find("camera")!.FindChannel(CameraRig.PanNode, ChannelKind.Position)!.X!.Keys[^1].V, 3);
                 Assert.Equal(70f, PanXOf(window), 2);
 
                 // 캐릭터 블록을 고르면 카메라 칸은 숨는다. 캐릭터의 포즈는 카메라 블록에서 잡히지 않는다.
@@ -1263,7 +1263,7 @@ public class ClipShellTests
 
                 // 둘째 바퀴에서 잡은 포즈도 그 모션의 키가 된다 — 모든 바퀴가 같이 바뀐다(모션은 하나다).
                 window.Viewport.ScrubTo(1.4);
-                window.Viewport.SetComponent(MoveY, MotionChannelKind.Position, Axis.Y, -30f);
+                window.Viewport.SetComponent(MoveY, ChannelKind.Position, Axis.Y, -30f);
                 Assert.Contains(editor.Document.Find("nod")!.Channels[0].Y!.Keys, k => Math.Abs(k.T - 0.3f) < 1e-4f && Math.Abs(k.V + 30f) < 1e-3f);
                 window.Viewport.ScrubTo(0.8);
                 Assert.Equal(-30f, MoveYOf(window, "s2"), 2);

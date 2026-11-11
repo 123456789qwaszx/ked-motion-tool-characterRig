@@ -195,7 +195,7 @@ public class ViewportViewTests
 
             Assert.Equal(before + 1, editor.Revision);
             Assert.False(view.HasPending);
-            ChannelAsset channel = editor.Document.Find("nod")!.FindChannel(node, MotionChannelKind.Position)!;
+            ChannelAsset channel = editor.Document.Find("nod")!.FindChannel(node, ChannelKind.Position)!;
             Assert.Null(channel.X); // 세로로만 끌었으니 x는 건드리지 않는다
             KeyAsset key = channel.Y!.Keys.Single(k => Math.Abs(k.T - 0.3f) < 1e-4);
             Assert.Equal(-18.0 - 20.0 / scale, key.V, 1);
@@ -231,12 +231,12 @@ public class ViewportViewTests
             Assert.Equal(before, editor.Revision);
             Assert.True(view.HasPending);
             Assert.True(pendingChanges > 0);
-            Assert.Equal(3, editor.Document.Find("nod")!.FindChannel(node, MotionChannelKind.Position)!.Y!.Keys.Count);
+            Assert.Equal(3, editor.Document.Find("nod")!.FindChannel(node, ChannelKind.Position)!.Y!.Keys.Count);
 
             view.SetKey();
             Assert.False(view.HasPending);
             Assert.Equal(before + 1, editor.Revision);
-            List<KeyAsset> keys = editor.Document.Find("nod")!.FindChannel(node, MotionChannelKind.Position)!.Y!.Keys;
+            List<KeyAsset> keys = editor.Document.Find("nod")!.FindChannel(node, ChannelKind.Position)!.Y!.Keys;
             Assert.Equal(4, keys.Count);
             Assert.Contains(keys, k => Math.Abs(k.T - 0.15f) < 1e-4 && k.V > -9f);
 
@@ -286,7 +286,7 @@ public class ViewportViewTests
             window.MouseMove(halfway, RawInputModifiers.LeftMouseButton);
             window.MouseUp(halfway, MouseButton.Left);
 
-            ChannelAsset channel = editor.Document.Find("nod")!.FindChannel(node, MotionChannelKind.Scale)!;
+            ChannelAsset channel = editor.Document.Find("nod")!.FindChannel(node, ChannelKind.Scale)!;
             Assert.Null(channel.Y); // x 팔만 끌었다
             Assert.Equal(0.5f, channel.X!.Keys.Single(k => Math.Abs(k.T - 0.3f) < 1e-4).V, 2);
 
@@ -360,7 +360,7 @@ public class ViewportViewTests
             window.MouseUp(rotated, MouseButton.Left);
 
             Assert.Equal(before + 1, editor.Revision);
-            ChannelAsset channel = editor.Document.Find("nod")!.FindChannel(node, MotionChannelKind.Euler)!;
+            ChannelAsset channel = editor.Document.Find("nod")!.FindChannel(node, ChannelKind.Euler)!;
             Assert.Null(channel.X);
             Assert.Null(channel.Y);
             Assert.Equal(90f, channel.Z!.Keys[0].V, 1);
@@ -378,7 +378,7 @@ public class ViewportViewTests
 
         try
         {
-            var y = new Mt.Authoring.Graph.CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Mt.Authoring.Model.Axis.Y);
+            var y = new Mt.Authoring.Graph.CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Mt.Authoring.Model.Axis.Y);
             view.ScrubTo(0.3);
             Assert.Equal(-18f, view.CurrentPortraitQuad()!.Value.Center.Y, 2);
 
@@ -564,7 +564,7 @@ public class ViewportViewTests
             view.Manipulator = ManipulatorMode.Move;
             view.AutoKey = false;
             view.ScrubTo(0.15); // 키가 없는 시각
-            float start = view.ComponentValue(node, MotionChannelKind.Position, Axis.Y)!.Value;
+            float start = view.ComponentValue(node, ChannelKind.Position, Axis.Y)!.Value;
             long revision = editor.Revision;
 
             void Drag()
@@ -578,35 +578,35 @@ public class ViewportViewTests
             // 드래그 한 번 = 포즈 칸 하나(문서는 그대로).
             Drag();
             Assert.True(view.HasPending);
-            float posed = view.ComponentValue(node, MotionChannelKind.Position, Axis.Y)!.Value;
+            float posed = view.ComponentValue(node, ChannelKind.Position, Axis.Y)!.Value;
             Assert.NotEqual(start, posed);
             Assert.Equal(revision, editor.Revision);
 
             editor.Undo();
             Assert.False(view.HasPending);
-            Assert.Equal(start, view.ComponentValue(node, MotionChannelKind.Position, Axis.Y)!.Value, 3);
+            Assert.Equal(start, view.ComponentValue(node, ChannelKind.Position, Axis.Y)!.Value, 3);
             editor.Redo();
             Assert.True(view.HasPending);
-            Assert.Equal(posed, view.ComponentValue(node, MotionChannelKind.Position, Axis.Y)!.Value, 3);
+            Assert.Equal(posed, view.ComponentValue(node, ChannelKind.Position, Axis.Y)!.Value, 3);
 
             // S = 키 확정 한 칸. 되돌리면 키 확정 직전의 포즈로, 한 번 더 되돌리면 그 전으로. 다시하기는 같은 순서.
             view.SetKey();
             Assert.False(view.HasPending);
             Assert.Equal(revision + 1, editor.Revision);
-            Assert.Equal(4, editor.Document.Find("nod")!.FindChannel(node, MotionChannelKind.Position)!.Y!.Keys.Count);
+            Assert.Equal(4, editor.Document.Find("nod")!.FindChannel(node, ChannelKind.Position)!.Y!.Keys.Count);
 
             editor.Undo();
-            Assert.Equal(3, editor.Document.Find("nod")!.FindChannel(node, MotionChannelKind.Position)!.Y!.Keys.Count);
+            Assert.Equal(3, editor.Document.Find("nod")!.FindChannel(node, ChannelKind.Position)!.Y!.Keys.Count);
             Assert.True(view.HasPending);
-            Assert.Equal(posed, view.ComponentValue(node, MotionChannelKind.Position, Axis.Y)!.Value, 3);
+            Assert.Equal(posed, view.ComponentValue(node, ChannelKind.Position, Axis.Y)!.Value, 3);
             editor.Undo();
             Assert.False(view.HasPending);
-            Assert.Equal(start, view.ComponentValue(node, MotionChannelKind.Position, Axis.Y)!.Value, 3);
+            Assert.Equal(start, view.ComponentValue(node, ChannelKind.Position, Axis.Y)!.Value, 3);
             editor.Redo();
             Assert.True(view.HasPending);
             editor.Redo();
             Assert.False(view.HasPending);
-            Assert.Equal(4, editor.Document.Find("nod")!.FindChannel(node, MotionChannelKind.Position)!.Y!.Keys.Count);
+            Assert.Equal(4, editor.Document.Find("nod")!.FindChannel(node, ChannelKind.Position)!.Y!.Keys.Count);
 
             // Esc로 버린 포즈도, 스크럽으로 사라진 포즈도 되돌리기로 돌아온다.
             view.ScrubTo(0.2);

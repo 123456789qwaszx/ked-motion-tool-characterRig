@@ -26,8 +26,8 @@ public class ClipStageTests
         var editor = new MotionEditor(new MotionDocument());
         editor.AddSceneObject(null, "s2", "character");
         editor.AddMotion("nod", "character", 0.6f);
-        editor.AddChannel("nod", MoveY, MotionChannelKind.Position);
-        editor.SetKeys("nod", MoveY, MotionChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.3f, -18f), Fixtures.Key(0.6f, 0f) });
+        editor.AddChannel("nod", MoveY, ChannelKind.Position);
+        editor.SetKeys("nod", MoveY, ChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.3f, -18f), Fixtures.Key(0.6f, 0f) });
 
         editor.AddClip("clip");
         editor.AddClipRole("clip", "a", "character", "s1");

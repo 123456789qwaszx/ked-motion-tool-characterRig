@@ -125,7 +125,7 @@ public sealed class MotionAsset
 
     public List<ChannelAsset> Channels { get; set; } = new();
 
-    public ChannelAsset? FindChannel(string node, MotionChannelKind kind)
+    public ChannelAsset? FindChannel(string node, ChannelKind kind)
         => Channels.FirstOrDefault(c => string.Equals(c.Node, node, StringComparison.Ordinal) && c.Kind == kind);
 }
 
@@ -133,7 +133,7 @@ public sealed class MotionAsset
 public sealed class ChannelAsset
 {
     public string Node { get; set; } = "";
-    public MotionChannelKind Kind { get; set; }
+    public ChannelKind Kind { get; set; }
 
     public ComponentCurve? X { get; set; }
     public ComponentCurve? Y { get; set; }
@@ -175,6 +175,8 @@ public sealed class ComponentCurve
 /// <summary>
 /// 키 하나. 수치 넷은 코어 <see cref="CurveKey"/>와 1:1이고, <see cref="Tangent"/>·<see cref="Broken"/>은
 /// 그래프 편집기의 손잡이 상태다 — 산출물에는 탄젠트 **값**만 나간다.
+/// 계단 키(<see cref="TangentMode.Step"/>)는 저장된 나가는 기울기가 0이고, 코어로 건널 때 무한이 된다(<see cref="ToCurveKey"/>) —
+/// 저작본 JSON에 무한을 싣지 않는다.
 /// </summary>
 public sealed class KeyAsset
 {
@@ -191,21 +193,26 @@ public sealed class KeyAsset
     /// <summary>in·out 탄젠트가 따로 노는가(마야의 break tangents).</summary>
     public bool Broken { get; set; }
 
-    public CurveKey ToCurveKey() => new(T, V, InTangent, OutTangent);
+    /// <summary>코어 키로. 계단 키는 나가는 기울기가 무한이다 — 다음 키까지 이 값으로 멈춘다(코어 <c>CurveFunctions</c>의 규칙).</summary>
+    public CurveKey ToCurveKey() => new(T, V, InTangent, Tangent == TangentMode.Step ? float.PositiveInfinity : OutTangent);
 
-    public static KeyAsset FromCurveKey(in CurveKey key) => new()
-    {
-        T = key.Time,
-        V = key.Value,
-        InTangent = key.InTangent,
-        OutTangent = key.OutTangent,
-        Tangent = TangentMode.Free,
-        Broken = key.InTangent != key.OutTangent,
-    };
+    /// <summary>코어 키에서. 나가는 기울기가 무한이면 계단 키, 아니면 <see cref="TangentMode.Free"/>다 — 값을 그대로 지킨다.</summary>
+    public static KeyAsset FromCurveKey(in CurveKey key) => float.IsInfinity(key.OutTangent)
+        ? new KeyAsset { T = key.Time, V = key.Value, InTangent = 0f, OutTangent = 0f, Tangent = TangentMode.Step }
+        : new KeyAsset
+        {
+            T = key.Time,
+            V = key.Value,
+            InTangent = key.InTangent,
+            OutTangent = key.OutTangent,
+            Tangent = TangentMode.Free,
+            Broken = key.InTangent != key.OutTangent,
+        };
 }
 
 /// <summary>
-/// 마야의 탄젠트 종류 중 규약 안에서 가능한 것(가중·계단은 규약이 거부한다). 산수는 <c>TangentMath</c>.
+/// 마야의 탄젠트 종류 중 툴이 쓰는 것(가중은 없다). 산수는 <c>TangentMath</c>.
+/// 계단(<see cref="Step"/>)은 이모지의 타임라인에만 쓴다 — <c>motions/2</c>는 받지 않아 검증이 막는다.
 /// 이름이 곧 저작 원본의 글자(소문자)다 — 바꾸면 옛 파일을 못 읽는다.
 /// </summary>
 public enum TangentMode
@@ -226,4 +233,10 @@ public enum TangentMode
 
     /// <summary>auto보다 더 눌러 이웃 값을 넘지 않게. 이웃과 같은 값이면 평평 — 마야 plateau.</summary>
     Plateau,
+
+    /// <summary>
+    /// 계단 — 다음 키까지 이 값으로 멈춘다(마야 stepped, <c>emojis/2</c>의 <c>step</c>). 들어오는 기울기는 평평(0)이다.
+    /// 그림 채널의 키는 언제나 이것이다(<see cref="ChannelKinds.IsAlwaysStepped"/>).
+    /// </summary>
+    Step,
 }

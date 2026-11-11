@@ -4,7 +4,7 @@ using Mt.Authoring.Model;
 namespace Mt.Authoring.Graph;
 
 /// <summary>모션 안의 성분 커브 하나를 가리킨다 — 노드 × 종류 × 축. 그래프·도프시트·인스펙터가 같은 손잡이를 쓴다.</summary>
-public readonly record struct CurveRef(string Node, MotionChannelKind Kind, Axis Axis)
+public readonly record struct CurveRef(string Node, ChannelKind Kind, Axis Axis)
 {
     public override string ToString() => $"{Node}/{Kind}.{Axis}";
 

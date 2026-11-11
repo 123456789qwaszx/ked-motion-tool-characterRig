@@ -62,5 +62,5 @@ public static class CameraRig
 
     /// <summary>지금 카메라 값이 되게 하려면 그 성분의 키 값이 얼마여야 하나 — 재생 기준(relative면 시작값과의 차).</summary>
     public static float KeyValueFor(MotionChannelMode mode, float start, float wanted)
-        => PoseEdit.KeyValueFor(MotionChannelKind.Position, mode, start, wanted);
+        => PoseEdit.KeyValueFor(ChannelKind.Position, mode, start, wanted);
 }

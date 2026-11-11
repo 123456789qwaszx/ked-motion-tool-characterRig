@@ -45,7 +45,7 @@ public static class ClipBake
             ?? throw new KeyNotFoundException($"클립 '{clipName}'의 씬에 오브젝트 '{objectId}'가 없다.");
 
         // 이 출연자의 노드를 건드리는 채널들 — 표본을 뜰 자리.
-        var targets = new List<(string Node, MotionChannelKind Kind)>();
+        var targets = new List<(string Node, ChannelKind Kind)>();
         var keyTimes = new List<float>(); // 얹힌 블록의 키 시각(클립 시각) — 프레임 사이의 정점을 놓치지 않게 표본에 더한다
 
         foreach (ClipTrack track in clip.Tracks)
@@ -67,7 +67,8 @@ public static class ClipBake
 
                 foreach (ChannelAsset channel in motion.Channels)
                 {
-                    if (!template.Contains(actor.KeyOf(channel.Node)))
+                    // 불투명도 · 그림은 리그 트리에 자리가 없다 — 미리보기(MotionPreview)도 얹지 않는다.
+                    if (ChannelKinds.IsEmojiOnly(channel.Kind) || !template.Contains(actor.KeyOf(channel.Node)))
                     {
                         continue;
                     }
@@ -77,7 +78,7 @@ public static class ClipBake
                         targets.Add((channel.Node, channel.Kind));
                     }
 
-                    foreach (Axis axis in AxesOf(channel.Kind))
+                    foreach (Axis axis in ChannelKinds.Axes(channel.Kind))
                     {
                         for (int cycle = 0; cycle < block.Cycles; cycle++)
                         {
@@ -143,7 +144,7 @@ public static class ClipBake
                 Vec3 start = ValueOf(targets[c].Kind, template.GetState(key));
                 Vec3 now = ValueOf(targets[c].Kind, pose.GetState(key));
 
-                foreach (Axis axis in AxesOf(targets[c].Kind))
+                foreach (Axis axis in ChannelKinds.Axes(targets[c].Kind))
                 {
                     if (!samples.TryGetValue((c, axis), out float[]? values))
                     {
@@ -162,10 +163,10 @@ public static class ClipBake
 
         for (int c = 0; c < targets.Count; c++)
         {
-            float neutral = MotionMath.Neutral(targets[c].Kind);
+            float neutral = ChannelKinds.Neutral(targets[c].Kind);
             string key = actor.KeyOf(targets[c].Node);
 
-            foreach (Axis axis in AxesOf(targets[c].Kind))
+            foreach (Axis axis in ChannelKinds.Axes(targets[c].Kind))
             {
                 float[] values = samples[(c, axis)];
 
@@ -197,7 +198,7 @@ public static class ClipBake
 
             foreach ((int target, Axis axis, float[] values) in kept)
             {
-                (string node, MotionChannelKind kind) = targets[target];
+                (string node, ChannelKind kind) = targets[target];
 
                 if (baked.FindChannel(node, kind) is null)
                 {
@@ -249,14 +250,12 @@ public static class ClipBake
         return keep.ToList();
     }
 
-    private static Axis[] AxesOf(MotionChannelKind kind)
-        => kind == MotionChannelKind.Euler ? new[] { Axis.X, Axis.Y, Axis.Z } : new[] { Axis.X, Axis.Y };
-
-    private static Vec3 ValueOf(MotionChannelKind kind, in RectNodeState state) => kind switch
+    private static Vec3 ValueOf(ChannelKind kind, in RectNodeState state) => kind switch
     {
-        MotionChannelKind.Position => new Vec3(state.AnchoredPosition.X, state.AnchoredPosition.Y, 0f),
-        MotionChannelKind.Scale => state.LocalScale,
-        _ => state.LocalEulerAngles,
+        ChannelKind.Position => new Vec3(state.AnchoredPosition.X, state.AnchoredPosition.Y, 0f),
+        ChannelKind.Scale => state.LocalScale,
+        ChannelKind.Euler => state.LocalEulerAngles,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "리그 트리에 없는 채널 종류"),
     };
 
     private static float Component(Vec3 value, Axis axis) => axis switch
@@ -267,6 +266,6 @@ public static class ClipBake
     };
 
     /// <summary>relative의 뜻대로 — 위치·회전은 차, 배율은 비(시작 배율이 0이면 비를 못 낸다: 1로 둔다).</summary>
-    private static float Delta(MotionChannelKind kind, float start, float now)
-        => kind == MotionChannelKind.Scale ? (Math.Abs(start) < 1e-9f ? 1f : now / start) : now - start;
+    private static float Delta(ChannelKind kind, float start, float now)
+        => kind == ChannelKind.Scale ? (Math.Abs(start) < 1e-9f ? 1f : now / start) : now - start;
 }

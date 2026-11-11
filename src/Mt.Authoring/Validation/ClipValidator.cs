@@ -132,7 +132,7 @@ public static class ClipValidator
         float? duration = clip.Duration;
         var checkedMotions = new HashSet<string>(StringComparer.Ordinal);
         // 배역 → 그 배역이 쓰는 (노드, 종류)의 구간들. 겹침을 본다.
-        var claims = new Dictionary<(string Role, string Node, MotionChannelKind Kind), List<(float Start, float End, PlacedBlock Block)>>();
+        var claims = new Dictionary<(string Role, string Node, ChannelKind Kind), List<(float Start, float End, PlacedBlock Block)>>();
         var stateClaims = new Dictionary<(string Role, ClipBlockKind Kind), List<(float Start, float End, PlacedBlock Block)>>();
 
         foreach (PlacedBlock placed in ordered)
@@ -340,7 +340,7 @@ public static class ClipValidator
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(clip);
         var overlapping = new HashSet<(int, int)>();
-        var claims = new Dictionary<(string Role, string Node, MotionChannelKind Kind), List<(float Start, float End, PlacedBlock Block)>>();
+        var claims = new Dictionary<(string Role, string Node, ChannelKind Kind), List<(float Start, float End, PlacedBlock Block)>>();
 
         foreach (PlacedBlock placed in ClipPreview.Ordered(clip))
         {

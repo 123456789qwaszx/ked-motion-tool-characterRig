@@ -27,9 +27,9 @@ public class StageParityTests
     private const string Slot = "c1";
     private const float Eps = 1e-3f;
 
-    private sealed record Sample(string Motion, MotionChannelMode Mode, float T, string Node, MotionChannelKind Kind, Vec3 Value);
+    private sealed record Sample(string Motion, MotionChannelMode Mode, float T, string Node, ChannelKind Kind, Vec3 Value);
 
-    private sealed record Start(string Node, MotionChannelKind Kind, Vec3 Value);
+    private sealed record Start(string Node, ChannelKind Kind, Vec3 Value);
 
     [Fact]
     public void 편집기로_지어_내보내면_견본_motions_json과_바이트까지_같다()
@@ -120,26 +120,26 @@ public class StageParityTests
         var editor = new MotionEditor(new MotionDocument());
 
         editor.AddMotion("sway", "character", 0.5f, MotionEnd.Restore);
-        editor.AddChannel("sway", "CharacterPortrait_SwayPivot", MotionChannelKind.Euler);
-        editor.SetKeys("sway", "CharacterPortrait_SwayPivot", MotionChannelKind.Euler, Axis.Z, new[]
+        editor.AddChannel("sway", "CharacterPortrait_SwayPivot", ChannelKind.Euler);
+        editor.SetKeys("sway", "CharacterPortrait_SwayPivot", ChannelKind.Euler, Axis.Z, new[]
         {
             Free(0f, 0f, 0f, 40f), Free(0.25f, 6f, 0f, 0f), Free(0.5f, 0f, -40f, 0f),
         });
 
         editor.AddMotion("step", "character", 0.4f, MotionEnd.Commit);
-        editor.AddChannel("step", "CharSlot_Track_X", MotionChannelKind.Position);
-        editor.SetKeys("step", "CharSlot_Track_X", MotionChannelKind.Position, Axis.X, new[]
+        editor.AddChannel("step", "CharSlot_Track_X", ChannelKind.Position);
+        editor.SetKeys("step", "CharSlot_Track_X", ChannelKind.Position, Axis.X, new[]
         {
             Free(0f, 10f, 0f, 150f), Free(0.4f, 80f, 50f, 0f),
         });
 
         editor.AddMotion("grow", "character", 0.5f, MotionEnd.Commit);
-        editor.AddChannel("grow", "CharSlot_Scale", MotionChannelKind.Scale);
-        editor.SetKeys("grow", "CharSlot_Scale", MotionChannelKind.Scale, Axis.X, new[]
+        editor.AddChannel("grow", "CharSlot_Scale", ChannelKind.Scale);
+        editor.SetKeys("grow", "CharSlot_Scale", ChannelKind.Scale, Axis.X, new[]
         {
             Fixtures.Key(0f, 1f), Fixtures.Key(0.5f, 1.5f),
         });
-        editor.SetKeys("grow", "CharSlot_Scale", MotionChannelKind.Scale, Axis.Y, new[]
+        editor.SetKeys("grow", "CharSlot_Scale", ChannelKind.Scale, Axis.Y, new[]
         {
             Fixtures.Key(0f, 1f), Fixtures.Key(0.25f, 0.9f), Fixtures.Key(0.5f, 1.2f),
         });
@@ -159,10 +159,10 @@ public class StageParityTests
 
     private static StageCommand Cmd(string name, params string[] args) => new(name, args, "stage-parity:1");
 
-    private static Vec3 ValueOf(MotionChannelKind kind, in RectNodeState state) => kind switch
+    private static Vec3 ValueOf(ChannelKind kind, in RectNodeState state) => kind switch
     {
-        MotionChannelKind.Position => new Vec3(state.AnchoredPosition, 0f),
-        MotionChannelKind.Scale => state.LocalScale,
+        ChannelKind.Position => new Vec3(state.AnchoredPosition, 0f),
+        ChannelKind.Scale => state.LocalScale,
         _ => state.LocalEulerAngles,
     };
 
@@ -202,11 +202,11 @@ public class StageParityTests
     private static Vec3 VecOf(JsonElement e)
         => new(e.GetProperty("x").GetSingle(), e.GetProperty("y").GetSingle(), e.GetProperty("z").GetSingle());
 
-    private static MotionChannelKind KindOf(string token) => token switch
+    private static ChannelKind KindOf(string token) => token switch
     {
-        "position" => MotionChannelKind.Position,
-        "scale" => MotionChannelKind.Scale,
-        "euler" => MotionChannelKind.Euler,
+        "position" => ChannelKind.Position,
+        "scale" => ChannelKind.Scale,
+        "euler" => ChannelKind.Euler,
         _ => throw new InvalidDataException($"poses.json: 모르는 kind '{token}'"),
     };
 }

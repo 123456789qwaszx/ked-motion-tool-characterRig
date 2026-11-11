@@ -16,9 +16,9 @@ public class MotionEditorTests
         editor.Changed += (_, e) => kinds.Add(e.Kind);
 
         editor.AddMotion("a", "character", 1f);
-        editor.AddChannel("a", "N", MotionChannelKind.Position);
-        editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(0f, 0f));
-        editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(1f, 5f));
+        editor.AddChannel("a", "N", ChannelKind.Position);
+        editor.AddKey("a", "N", ChannelKind.Position, Axis.X, Fixtures.Key(0f, 0f));
+        editor.AddKey("a", "N", ChannelKind.Position, Axis.X, Fixtures.Key(1f, 5f));
 
         Assert.Equal(4, editor.Revision);
         Assert.Equal(new[] { MotionChangeKind.Structure, MotionChangeKind.Structure, MotionChangeKind.Keys, MotionChangeKind.Keys }, kinds);
@@ -61,20 +61,20 @@ public class MotionEditorTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("a", "character", 1f);
-        editor.AddChannel("a", "N", MotionChannelKind.Position);
-        editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(1f, 1f));
-        editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(0f, 0f));
-        editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(1f, 9f));
+        editor.AddChannel("a", "N", ChannelKind.Position);
+        editor.AddKey("a", "N", ChannelKind.Position, Axis.X, Fixtures.Key(1f, 1f));
+        editor.AddKey("a", "N", ChannelKind.Position, Axis.X, Fixtures.Key(0f, 0f));
+        editor.AddKey("a", "N", ChannelKind.Position, Axis.X, Fixtures.Key(1f, 9f));
 
         List<KeyAsset> keys = editor.Document.Find("a")!.Channels[0].X!.Keys;
         Assert.Equal(new[] { 0f, 1f }, keys.Select(k => k.T));
         Assert.Equal(9f, keys[1].V);
 
-        editor.UpdateKey("a", "N", MotionChannelKind.Position, Axis.X, 1, Fixtures.Key(-0.5f, 9f));
+        editor.UpdateKey("a", "N", ChannelKind.Position, Axis.X, 1, Fixtures.Key(-0.5f, 9f));
         Assert.Equal(new[] { -0.5f, 0f }, editor.Document.Find("a")!.Channels[0].X!.Keys.Select(k => k.T));
 
-        editor.RemoveKey("a", "N", MotionChannelKind.Position, Axis.X, 0);
-        editor.RemoveKey("a", "N", MotionChannelKind.Position, Axis.X, 0);
+        editor.RemoveKey("a", "N", ChannelKind.Position, Axis.X, 0);
+        editor.RemoveKey("a", "N", ChannelKind.Position, Axis.X, 0);
         Assert.Null(editor.Document.Find("a")!.Channels[0].X);
     }
 
@@ -83,9 +83,9 @@ public class MotionEditorTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("a", "character", 1f);
-        editor.AddChannel("a", "N", MotionChannelKind.Position);
+        editor.AddChannel("a", "N", ChannelKind.Position);
         KeyAsset mine = Fixtures.Key(0f, 0f);
-        KeyAsset stored = editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, mine);
+        KeyAsset stored = editor.AddKey("a", "N", ChannelKind.Position, Axis.X, mine);
 
         mine.V = 99f;
 
@@ -98,12 +98,12 @@ public class MotionEditorTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("a", "character", 1f);
-        editor.AddChannel("a", "N", MotionChannelKind.Position);
+        editor.AddChannel("a", "N", ChannelKind.Position);
 
         Assert.Throws<InvalidOperationException>(() => editor.AddMotion("a", "character", 2f));
-        Assert.Throws<InvalidOperationException>(() => editor.AddChannel("a", "N", MotionChannelKind.Position));
+        Assert.Throws<InvalidOperationException>(() => editor.AddChannel("a", "N", ChannelKind.Position));
         Assert.Throws<KeyNotFoundException>(() => editor.SetDuration("zzz", 1f));
-        Assert.Throws<KeyNotFoundException>(() => editor.RemoveChannel("a", "M", MotionChannelKind.Position));
+        Assert.Throws<KeyNotFoundException>(() => editor.RemoveChannel("a", "M", ChannelKind.Position));
 
         editor.AddMotion("b", "character", 1f);
         Assert.Throws<InvalidOperationException>(() => editor.RenameMotion("b", "a"));
@@ -116,7 +116,7 @@ public class MotionEditorTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("a", "character", 1f, MotionEnd.Commit, MotionChannelMode.Absolute);
-        editor.AddChannel("a", "N", MotionChannelKind.Position);
+        editor.AddChannel("a", "N", ChannelKind.Position);
 
         Assert.Equal(MotionChannelMode.Absolute, editor.Document.Find("a")!.PreviewMode);
         Assert.Equal(MotionChannelMode.Relative, editor.AddMotion("b", "character", 1f).PreviewMode);
@@ -161,8 +161,8 @@ public class MotionEditorTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("nod", "character", 1f);
-        editor.AddChannel("nod", "A", MotionChannelKind.Position);
-        editor.SetKeys("nod", "A", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 140f), Fixtures.Key(1f, 360f) });
+        editor.AddChannel("nod", "A", ChannelKind.Position);
+        editor.SetKeys("nod", "A", ChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 140f), Fixtures.Key(1f, 360f) });
         long revision = editor.Revision;
 
         editor.SetPreviewMode("nod", MotionChannelMode.Absolute);
@@ -178,7 +178,7 @@ public class MotionEditorTests
         Assert.Equal(MotionChannelMode.Relative, editor.Document.Find("nod")!.PreviewMode);
     }
 
-    private static readonly CurveRef NodY = new("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+    private static readonly CurveRef NodY = new("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
 
     [Fact]
     public void 바뀐_것이_없는_명령은_기록도_다시하기_삭제도_Revision도_없다()

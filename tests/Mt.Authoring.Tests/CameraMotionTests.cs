@@ -25,18 +25,18 @@ public class CameraMotionTests
         var editor = new MotionEditor(new MotionDocument());
 
         editor.AddMotion("push", CameraRig.RigKind, 1f, MotionEnd.Commit, MotionChannelMode.Absolute);
-        editor.AddChannel("push", CameraRig.ZoomNode, MotionChannelKind.Position);
-        editor.SetKeys("push", CameraRig.ZoomNode, MotionChannelKind.Position, Axis.X, new[] { Linear(0f, 0f), Linear(1f, 4f) });
-        editor.AddChannel("push", CameraRig.PanNode, MotionChannelKind.Position);
-        editor.SetKeys("push", CameraRig.PanNode, MotionChannelKind.Position, Axis.X, new[] { Linear(0f, 0f), Linear(1f, 100f) });
+        editor.AddChannel("push", CameraRig.ZoomNode, ChannelKind.Position);
+        editor.SetKeys("push", CameraRig.ZoomNode, ChannelKind.Position, Axis.X, new[] { Linear(0f, 0f), Linear(1f, 4f) });
+        editor.AddChannel("push", CameraRig.PanNode, ChannelKind.Position);
+        editor.SetKeys("push", CameraRig.PanNode, ChannelKind.Position, Axis.X, new[] { Linear(0f, 0f), Linear(1f, 100f) });
 
         editor.AddMotion("shake", CameraRig.RigKind, 0.5f);
-        editor.AddChannel("shake", CameraRig.PanNode, MotionChannelKind.Position);
-        editor.SetKeys("shake", CameraRig.PanNode, MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.25f, 20f), Linear(0.5f, 0f) });
+        editor.AddChannel("shake", CameraRig.PanNode, ChannelKind.Position);
+        editor.SetKeys("shake", CameraRig.PanNode, ChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.25f, 20f), Linear(0.5f, 0f) });
 
         editor.AddMotion("nod", "character", 0.6f);
-        editor.AddChannel("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position);
-        editor.SetKeys("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.3f, -18f), Fixtures.Key(0.6f, 0f) });
+        editor.AddChannel("nod", "CharacterPortrait_Track_Move_Y", ChannelKind.Position);
+        editor.SetKeys("nod", "CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.3f, -18f), Fixtures.Key(0.6f, 0f) });
 
         editor.AddClip("clip");
         editor.AddClipRole("clip", "a", "character", "s1");

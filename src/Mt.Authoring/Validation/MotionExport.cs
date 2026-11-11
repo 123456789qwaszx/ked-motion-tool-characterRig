@@ -32,7 +32,7 @@ public static class MotionExport
             return false;
         }
 
-        json = MotionsJson.Write(selected.Select(MotionAssetCodec.ToClip).ToList());
+        json = MotionsJson.Write(selected.Select(m => MotionAssetCodec.ToClip(m)).ToList());
         return true;
     }
 
@@ -40,6 +40,6 @@ public static class MotionExport
     public static List<MotionClip> ToClips(MotionDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
-        return document.Motions.Where(m => !Preview.CameraRig.IsCamera(m)).Select(MotionAssetCodec.ToClip).ToList();
+        return document.Motions.Where(m => !Preview.CameraRig.IsCamera(m)).Select(m => MotionAssetCodec.ToClip(m, skipEmojiOnly: true)).ToList();
     }
 }

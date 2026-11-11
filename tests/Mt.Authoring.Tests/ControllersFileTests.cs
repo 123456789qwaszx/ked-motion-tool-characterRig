@@ -32,21 +32,21 @@ public class ControllersFileTests
         ControllerRig rig = BuiltinTuning.Controllers.Rig("character")!;
 
         // 견본 nod는 Track_Move_Y에 있다 — 별칭으로 몸 Y, 표의 axisLabels로 "상하".
-        Assert.True(rig.TryResolve(new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y), out Controller body, out Axis axis));
+        Assert.True(rig.TryResolve(new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y), out Controller body, out Axis axis));
         Assert.Equal("body", body.Id);
         Assert.Equal(Axis.Y, axis);
-        Assert.Equal("연기 · 상하", rig.LabelOf(new CurveRef("CharacterPortrait_Track_Move", MotionChannelKind.Position, Axis.Y)));
-        Assert.Equal("연기 · 발 기준 회전", rig.LabelOf(new CurveRef("CharacterPortrait_SwayPivot", MotionChannelKind.Euler, Axis.Z)));
-        Assert.Equal("자리 · 자리 X", rig.LabelOf(new CurveRef("CharSlot_Track", MotionChannelKind.Position, Axis.X)));
+        Assert.Equal("연기 · 상하", rig.LabelOf(new CurveRef("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y)));
+        Assert.Equal("연기 · 발 기준 회전", rig.LabelOf(new CurveRef("CharacterPortrait_SwayPivot", ChannelKind.Euler, Axis.Z)));
+        Assert.Equal("자리 · 자리 X", rig.LabelOf(new CurveRef("CharSlot_Track", ChannelKind.Position, Axis.X)));
 
         // ActingScale_X의 scale X는 facing의 주 노드다 — squash의 별칭이 아니다.
-        Assert.True(rig.TryResolve(new CurveRef("CharacterPortrait_ActingScale_X", MotionChannelKind.Scale, Axis.X), out Controller facing, out _));
+        Assert.True(rig.TryResolve(new CurveRef("CharacterPortrait_ActingScale_X", ChannelKind.Scale, Axis.X), out Controller facing, out _));
         Assert.Equal("facing", facing.Id);
-        Assert.True(rig.TryResolve(new CurveRef("CharacterPortrait_ActingScale_Y", MotionChannelKind.Scale, Axis.Y), out Controller squash, out _));
+        Assert.True(rig.TryResolve(new CurveRef("CharacterPortrait_ActingScale_Y", ChannelKind.Scale, Axis.Y), out Controller squash, out _));
         Assert.Equal("squash", squash.Id);
 
         // 표에 없는 커브는 null — 노드 이름으로 보인다.
-        Assert.Null(rig.LabelOf(new CurveRef("CharSlot_Track_X", MotionChannelKind.Position, Axis.X)));
+        Assert.Null(rig.LabelOf(new CurveRef("CharSlot_Track_X", ChannelKind.Position, Axis.X)));
         Assert.Equal(new[] { "CharacterPortrait_Track_Move", "CharacterPortrait_Track_Move_Y" }, body.CurvesOf(Axis.Y).Select(c => c.Node));
     }
 
@@ -55,14 +55,14 @@ public class ControllersFileTests
     {
         ControllerRig rig = BuiltinTuning.Controllers.Rig("character")!;
 
-        Assert.Equal("body", rig.DefaultFor(MotionChannelKind.Position)!.Id);
-        Assert.Equal("bow", rig.DefaultFor(MotionChannelKind.Euler)!.Id);
-        Assert.Equal("squash", rig.DefaultFor(MotionChannelKind.Scale)!.Id);
+        Assert.Equal("body", rig.DefaultFor(ChannelKind.Position)!.Id);
+        Assert.Equal("bow", rig.DefaultFor(ChannelKind.Euler)!.Id);
+        Assert.Equal("squash", rig.DefaultFor(ChannelKind.Scale)!.Id);
         Assert.Equal(ControllerBake.DepthLevel, rig.Find("depth")!.Bake);
 
         // 깊이 손잡이는 DepthY도 맡는다 — 커브·노드·라벨이 깊이로 풀린다.
         Assert.Equal("CharSlot_DepthY", rig.Find("depth")!.DepthYNode);
-        Assert.True(rig.TryResolve(new CurveRef("CharSlot_DepthY", MotionChannelKind.Position, Axis.Y), out Controller depth, out Axis depthAxis));
+        Assert.True(rig.TryResolve(new CurveRef("CharSlot_DepthY", ChannelKind.Position, Axis.Y), out Controller depth, out Axis depthAxis));
         Assert.Equal("depth", depth.Id);
         Assert.Equal(Axis.Y, depthAxis);
         Assert.Equal("depth", rig.OfNode("CharSlot_DepthY")!.Id);
@@ -132,10 +132,10 @@ public class ControllersFileTests
         ControllersFile controllers = BuiltinTuning.Controllers;
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("step", "character", 0.5f, MotionEnd.Commit);
-        editor.AddChannel("step", "CharSlot_Track", MotionChannelKind.Position);
-        editor.SetKeys("step", "CharSlot_Track", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, -200f), Fixtures.Key(0.5f, 400f) });
-        editor.AddChannel("step", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position);
-        editor.SetKeys("step", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, -18f) });
+        editor.AddChannel("step", "CharSlot_Track", ChannelKind.Position);
+        editor.SetKeys("step", "CharSlot_Track", ChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, -200f), Fixtures.Key(0.5f, 400f) });
+        editor.AddChannel("step", "CharacterPortrait_Track_Move_Y", ChannelKind.Position);
+        editor.SetKeys("step", "CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, -18f) });
 
         // 컨트롤러 표 없이는 경고가 없다. 표를 주면 relative 미리보기 + 자리 컨트롤러 = 경고(막지 않는다).
         Assert.Empty(MotionValidator.Validate(editor.Document));
@@ -167,7 +167,7 @@ public class ControllersFileTests
         Assert.Equal(2, editor.Document.Find("step")!.Channels.Count);
 
         // 전부 자리거나 전부 연기면 나눌 것이 없다.
-        editor.RemoveChannel("step", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position);
+        editor.RemoveChannel("step", "CharacterPortrait_Track_Move_Y", ChannelKind.Position);
         Assert.False(MotionFixes.Apply(editor, "step", MotionFix.SplitByGroup, controllers));
     }
 }

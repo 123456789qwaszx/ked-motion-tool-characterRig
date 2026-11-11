@@ -82,14 +82,14 @@ public static class PoseEdit
     }
 
     /// <summary>포즈 값 → 채널 키 값.</summary>
-    public static float KeyValueFor(MotionChannelKind kind, MotionChannelMode mode, float start, float posed)
+    public static float KeyValueFor(ChannelKind kind, MotionChannelMode mode, float start, float posed)
     {
         if (mode == MotionChannelMode.Absolute)
         {
             return posed;
         }
 
-        if (kind == MotionChannelKind.Scale)
+        if (kind == ChannelKind.Scale)
         {
             return Math.Abs(start) < 1e-6f ? posed : posed / start;
         }
@@ -98,31 +98,31 @@ public static class PoseEdit
     }
 
     /// <summary>채널 종류의 노드 상태 성분 — 시작값·포즈값을 같은 자리에서 읽는다.</summary>
-    public static float Component(MotionChannelKind kind, in RectNodeState state, Axis axis)
+    public static float Component(ChannelKind kind, in RectNodeState state, Axis axis)
     {
         return kind switch
         {
-            MotionChannelKind.Position => axis == Axis.X ? state.AnchoredPosition.X : state.AnchoredPosition.Y,
-            MotionChannelKind.Scale => axis switch { Axis.X => state.LocalScale.X, Axis.Y => state.LocalScale.Y, _ => state.LocalScale.Z },
-            MotionChannelKind.Euler => axis switch { Axis.X => state.LocalEulerAngles.X, Axis.Y => state.LocalEulerAngles.Y, _ => state.LocalEulerAngles.Z },
+            ChannelKind.Position => axis == Axis.X ? state.AnchoredPosition.X : state.AnchoredPosition.Y,
+            ChannelKind.Scale => axis switch { Axis.X => state.LocalScale.X, Axis.Y => state.LocalScale.Y, _ => state.LocalScale.Z },
+            ChannelKind.Euler => axis switch { Axis.X => state.LocalEulerAngles.X, Axis.Y => state.LocalEulerAngles.Y, _ => state.LocalEulerAngles.Z },
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "모르는 채널 종류"),
         };
     }
 
     /// <summary>노드 상태의 성분 하나를 바꾼 상태(채널 박스 입력). <see cref="Component"/>의 반대.</summary>
-    public static RectNodeState WithComponent(MotionChannelKind kind, in RectNodeState state, Axis axis, float value)
+    public static RectNodeState WithComponent(ChannelKind kind, in RectNodeState state, Axis axis, float value)
     {
         switch (kind)
         {
-            case MotionChannelKind.Position:
+            case ChannelKind.Position:
                 return state.WithAnchoredPosition(axis == Axis.X ? new Vec2(value, state.AnchoredPosition.Y) : new Vec2(state.AnchoredPosition.X, value));
-            case MotionChannelKind.Scale:
+            case ChannelKind.Scale:
             {
                 Vec3 s = state.LocalScale;
                 return state.WithLocalScale(axis switch { Axis.X => new Vec3(value, s.Y, s.Z), Axis.Y => new Vec3(s.X, value, s.Z), _ => new Vec3(s.X, s.Y, value) });
             }
 
-            case MotionChannelKind.Euler:
+            case ChannelKind.Euler:
             {
                 Vec3 e = state.LocalEulerAngles;
                 return state.WithLocalEuler(axis switch { Axis.X => new Vec3(value, e.Y, e.Z), Axis.Y => new Vec3(e.X, value, e.Z), _ => new Vec3(e.X, e.Y, value) });

@@ -20,7 +20,8 @@ public sealed record MotionProblem(string MotionName, string Message, bool Block
 /// 편집 중 계속 돌리는 검증. 규칙은 코어 <see cref="MotionRules"/> 한 벌뿐이다 — 런타임 로더와 Unity 내보내기가
 /// 같은 규칙을 쓰므로 "툴에서는 되는데 재생에서 사라지는" 모션이 안 생긴다. 문구도 코어의 것을 그대로 보인다.
 ///
-/// 스키마에 없는 리그 · 노드는 스키마 계약(<see cref="SchemaContract"/>)이 센다. 여기서 더 보는 것은 문서 수준(같은 이름 둘)과 **경고** 하나다:
+/// 스키마에 없는 리그 · 노드는 스키마 계약(<see cref="SchemaContract"/>)이 센다. 툴에만 있는 것(불투명도 · 그림 채널 · 계단 키 — <see cref="EmojiOnlyIn"/>)은
+/// 여기서 막는다. 그 밖에 더 보는 것은 문서 수준(같은 이름 둘)과 **경고** 하나다:
 /// restore인데 마지막 키가 중립값이 아니면 재생이 끝에서 시작값을 되써 튄다 — 규칙(motions/2)은 막지 않으므로
 /// 경고로만 보이고 내보내기는 된다. 첫 키가 중립값이 아닌 것은 알리지 않는다 — "지금 값 +140에서 시작"은 뜻이다.
 /// </summary>
@@ -69,7 +70,10 @@ public static class MotionValidator
             problems.AddRange(SchemaContract.Motion(rigNodeIds, motion).Select(v => new MotionProblem(motion.Name, v.Message, v.Blocking)));
         }
 
-        MotionClip clip = MotionAssetCodec.ToClip(motion);
+        // 불투명도 · 그림 채널과 계단 키는 툴의 것이다(이모지의 타임라인 — PLAN-emoji.md §3). motions/2에는 자리가 없다.
+        problems.AddRange(EmojiOnlyIn(motion).Select(message => new MotionProblem(motion.Name, message)));
+
+        MotionClip clip = MotionAssetCodec.ToClip(motion, skipEmojiOnly: true);
 
         if (!MotionRules.TryValidate(clip, null, out string reason))
         {
@@ -83,7 +87,7 @@ public static class MotionValidator
             for (int i = 0; i < motion.Channels.Count; i++)
             {
                 ChannelAsset channel = motion.Channels[i];
-                float neutral = MotionMath.Neutral(channel.Kind);
+                float neutral = ChannelKinds.Neutral(channel.Kind);
 
                 foreach (Axis axis in new[] { Axis.X, Axis.Y, Axis.Z })
                 {
@@ -113,6 +117,32 @@ public static class MotionValidator
         }
 
         return problems;
+    }
+
+    /// <summary>
+    /// 캐릭터 모션(<c>motions/2</c>)이 받지 않는 것 — 이모지의 타임라인에만 쓰는 종류(불투명도 · 그림)와 계단 키.
+    /// 채널마다 한 줄. 코어 규칙(<see cref="MotionRules"/>)은 이것을 모르므로 여기서 센다.
+    /// </summary>
+    public static IEnumerable<string> EmojiOnlyIn(MotionAsset motion)
+    {
+        ArgumentNullException.ThrowIfNull(motion);
+
+        for (int i = 0; i < motion.Channels.Count; i++)
+        {
+            ChannelAsset channel = motion.Channels[i];
+            string where = $"채널 {i}({channel.Node} {ChannelKindLabel.Of(channel.Kind)})";
+
+            if (ChannelKinds.IsEmojiOnly(channel.Kind))
+            {
+                yield return $"{where}: {ChannelKindLabel.Of(channel.Kind)}은 이모지의 타임라인에만 쓴다 — motions/2는 받지 않는다";
+                continue;
+            }
+
+            if (new[] { Axis.X, Axis.Y, Axis.Z }.Any(axis => channel.Get(axis)?.Keys.Any(k => k.Tangent == TangentMode.Step) == true))
+            {
+                yield return $"{where}: 계단 키는 이모지의 타임라인에만 쓴다 — motions/2는 받지 않는다";
+            }
+        }
     }
 
     /// <summary>모션의 채널 중 absolute 묶음(자리·깊이)의 컨트롤러로 풀리는 것들.</summary>

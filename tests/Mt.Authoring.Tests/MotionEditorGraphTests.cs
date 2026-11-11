@@ -7,19 +7,19 @@ namespace Mt.Authoring.Tests;
 
 public class MotionEditorGraphTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
 
     [Fact]
     public void 여러_성분을_한_번에_바꾸면_되돌리기도_한_번이다()
     {
         var editor = new MotionEditor(Fixtures.NodBowDocument());
-        var z = new CurveRef("CharacterPortrait_SwayPivot", MotionChannelKind.Euler, Axis.Z);
+        var z = new CurveRef("CharacterPortrait_SwayPivot", ChannelKind.Euler, Axis.Z);
         long before = editor.Revision;
 
         editor.SetKeysMany("bow", new[]
         {
             (z, (IEnumerable<KeyAsset>)new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.4f, 20f) }),
-            (new CurveRef("CharacterPortrait_SwayPivot", MotionChannelKind.Euler, Axis.X), Array.Empty<KeyAsset>()),
+            (new CurveRef("CharacterPortrait_SwayPivot", ChannelKind.Euler, Axis.X), Array.Empty<KeyAsset>()),
         });
 
         Assert.Equal(before + 1, editor.Revision);
@@ -96,7 +96,7 @@ public class MotionEditorGraphTests
 
 public class TimeSliderOpsTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
     private const float Frame = 1f / 24f;
 
     [Fact]

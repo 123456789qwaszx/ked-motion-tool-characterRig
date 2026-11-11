@@ -320,7 +320,7 @@ public class CurveFlagsTests
     public void 잠금_뮤트는_바뀔_때만_알린다()
     {
         var flags = new CurveFlags();
-        var y = new CurveRef("N", MotionChannelKind.Position, Axis.Y);
+        var y = new CurveRef("N", ChannelKind.Position, Axis.Y);
         int changes = 0;
         flags.Changed += (_, _) => changes++;
 

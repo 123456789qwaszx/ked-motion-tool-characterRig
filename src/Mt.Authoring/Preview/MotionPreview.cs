@@ -33,7 +33,7 @@ public static class MotionPreview
         keyPrefix ??= "";
 
         RectNodeTree tree = template.Clone();
-        MotionClip clip = MotionAssetCodec.ToClip(motion);
+        MotionClip clip = MotionAssetCodec.ToClip(motion, skipEmojiOnly: true); // 불투명도 · 그림은 리그 트리에 얹을 자리가 없다(이모지의 미리보기는 따로다)
 
         MotionChannel[] channels = clip.Channels ?? Array.Empty<MotionChannel>();
 
@@ -43,17 +43,17 @@ public static class MotionPreview
             {
                 MotionChannel ch = channels[i];
 
-                if (isMuted(new Graph.CurveRef(ch.Node, ch.Kind, Axis.X)))
+                if (isMuted(new Graph.CurveRef(ch.Node, ChannelKinds.FromCore(ch.Kind), Axis.X)))
                 {
                     ch.X = null;
                 }
 
-                if (isMuted(new Graph.CurveRef(ch.Node, ch.Kind, Axis.Y)))
+                if (isMuted(new Graph.CurveRef(ch.Node, ChannelKinds.FromCore(ch.Kind), Axis.Y)))
                 {
                     ch.Y = null;
                 }
 
-                if (isMuted(new Graph.CurveRef(ch.Node, ch.Kind, Axis.Z)))
+                if (isMuted(new Graph.CurveRef(ch.Node, ChannelKinds.FromCore(ch.Kind), Axis.Z)))
                 {
                     ch.Z = null;
                 }
@@ -90,18 +90,18 @@ public static class MotionPreview
             RectNodeState state = tree.GetState(key);
             Vec3 start = MotionMath.StartOf(channel, state);
             Vec3 value = ended ? MotionMath.EndValue(channel, mode, start) : MotionMath.Compose(channel, mode, start, t);
-            tree.SetState(key, Apply(channel.Kind, state, value));
+            tree.SetState(key, Apply(ChannelKinds.FromCore(channel.Kind), state, value));
         }
 
         return tree;
     }
 
     /// <summary>채널 종류가 노드 상태의 어느 자리를 쓰는가 — 코어 <c>StageNodeClaim</c>과 같은 대응.</summary>
-    public static RectNodeState Apply(MotionChannelKind kind, in RectNodeState state, Vec3 value) => kind switch
+    public static RectNodeState Apply(ChannelKind kind, in RectNodeState state, Vec3 value) => kind switch
     {
-        MotionChannelKind.Position => state.WithAnchoredPosition(value.XY),
-        MotionChannelKind.Scale => state.WithLocalScale(new Vec3(value.X, value.Y, state.LocalScale.Z)),
-        MotionChannelKind.Euler => state.WithLocalEuler(value),
+        ChannelKind.Position => state.WithAnchoredPosition(value.XY),
+        ChannelKind.Scale => state.WithLocalScale(new Vec3(value.X, value.Y, state.LocalScale.Z)),
+        ChannelKind.Euler => state.WithLocalEuler(value),
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "모르는 채널 종류"),
     };
 }

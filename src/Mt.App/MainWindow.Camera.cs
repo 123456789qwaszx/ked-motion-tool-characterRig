@@ -98,11 +98,11 @@ public partial class MainWindow
         editor.Batch(MotionChangeKind.Structure, () =>
         {
             editor.AddMotion(name, CameraRig.RigKind, duration, MotionEnd.Commit, MotionChannelMode.Absolute);
-            editor.AddChannel(name, CameraRig.ZoomNode, MotionChannelKind.Position);
-            editor.SetKeys(name, CameraRig.ZoomNode, MotionChannelKind.Position, Axis.X, Flat(camera.Zoom));
-            editor.AddChannel(name, CameraRig.PanNode, MotionChannelKind.Position);
-            editor.SetKeys(name, CameraRig.PanNode, MotionChannelKind.Position, Axis.X, Flat(camera.PanX));
-            editor.SetKeys(name, CameraRig.PanNode, MotionChannelKind.Position, Axis.Y, Flat(camera.PanY));
+            editor.AddChannel(name, CameraRig.ZoomNode, ChannelKind.Position);
+            editor.SetKeys(name, CameraRig.ZoomNode, ChannelKind.Position, Axis.X, Flat(camera.Zoom));
+            editor.AddChannel(name, CameraRig.PanNode, ChannelKind.Position);
+            editor.SetKeys(name, CameraRig.PanNode, ChannelKind.Position, Axis.X, Flat(camera.PanX));
+            editor.SetKeys(name, CameraRig.PanNode, ChannelKind.Position, Axis.Y, Flat(camera.PanY));
         });
 
         _motionList.SelectedItem = name;

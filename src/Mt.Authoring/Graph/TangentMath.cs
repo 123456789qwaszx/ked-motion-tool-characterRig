@@ -8,6 +8,7 @@ namespace Mt.Authoring.Graph;
 /// 편집기가 키를 바꾸는 길마다 부르므로 "auto인데 안 따라오는" 키가 없다.
 ///
 /// - flat: 0
+/// - step: 들어오는 기울기 0 · 나가는 쪽은 계단(코어로 건널 때 무한 — <see cref="KeyAsset.ToCurveKey"/>)
 /// - linear: in은 앞 키와의 할선, out은 뒤 키와의 할선
 /// - auto: 마야의 auto와 같은 뜻 — 이웃 둘을 잇는 할선 기울기, 극값(양 이웃이 같은 쪽)이면 0, 끝 키는 0.
 ///   할선은 이웃 구간 어느 쪽도 넘지 않게 죈다(오버슈트 억제).
@@ -25,6 +26,7 @@ public static class TangentMath
             switch (key.Tangent)
             {
                 case TangentMode.Flat:
+                case TangentMode.Step:
                     key.InTangent = 0f;
                     key.OutTangent = 0f;
                     key.Broken = false;

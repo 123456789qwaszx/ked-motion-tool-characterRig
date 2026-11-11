@@ -82,18 +82,18 @@ public partial class MainWindow : Window
     // 채널 박스(마야) — 선택 노드의 Translate/Rotate/Scale. 칸에 값을 넣으면 매니퓰레이터를 놓은 것과 같다.
     private readonly TextBlock _channelBoxTitle = new() { FontSize = 11, FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new Avalonia.Thickness(0, 2) };
     private readonly StackPanel _channelBoxPanel = new() { Spacing = 1 };
-    private readonly Dictionary<(MotionChannelKind Kind, Axis Axis), (Border Row, TextBox Box)> _channelBoxRows = new();
+    private readonly Dictionary<(ChannelKind Kind, Axis Axis), (Border Row, TextBox Box)> _channelBoxRows = new();
     private readonly Dictionary<(string Id, Axis Axis), (Border Row, TextBox Box, Slider? Slider)> _controllerRows = new();
     private string? _channelBoxLayout;
-    private static readonly (MotionChannelKind Kind, Axis Axis, string Label)[] ChannelBoxComponents =
+    private static readonly (ChannelKind Kind, Axis Axis, string Label)[] ChannelBoxComponents =
     {
-        (MotionChannelKind.Position, Axis.X, "Translate X"),
-        (MotionChannelKind.Position, Axis.Y, "Translate Y"),
-        (MotionChannelKind.Euler, Axis.X, "Rotate X"),
-        (MotionChannelKind.Euler, Axis.Y, "Rotate Y"),
-        (MotionChannelKind.Euler, Axis.Z, "Rotate Z"),
-        (MotionChannelKind.Scale, Axis.X, "Scale X"),
-        (MotionChannelKind.Scale, Axis.Y, "Scale Y"),
+        (ChannelKind.Position, Axis.X, "Translate X"),
+        (ChannelKind.Position, Axis.Y, "Translate Y"),
+        (ChannelKind.Euler, Axis.X, "Rotate X"),
+        (ChannelKind.Euler, Axis.Y, "Rotate Y"),
+        (ChannelKind.Euler, Axis.Z, "Rotate Z"),
+        (ChannelKind.Scale, Axis.X, "Scale X"),
+        (ChannelKind.Scale, Axis.Y, "Scale Y"),
     };
     private static readonly IBrush ChannelBoxKeyedHere = new SolidColorBrush(Color.FromArgb(150, 0xC8, 0x3C, 0x3C)); // 이 시각에 키(마야 빨강)
     private static readonly IBrush ChannelBoxKeyed = new SolidColorBrush(Color.FromArgb(110, 0xB4, 0x5A, 0x5A)); // 어딘가에 키(마야 연한 빨강)
@@ -423,11 +423,11 @@ public partial class MainWindow : Window
             return;
         }
 
-        MotionChannelKind kind = mode switch
+        ChannelKind kind = mode switch
         {
-            ManipulatorMode.Rotate => MotionChannelKind.Euler,
-            ManipulatorMode.Scale => MotionChannelKind.Scale,
-            _ => MotionChannelKind.Position,
+            ManipulatorMode.Rotate => ChannelKind.Euler,
+            ManipulatorMode.Scale => ChannelKind.Scale,
+            _ => ChannelKind.Position,
         };
         Controller? current = _viewport.SelectedNode is { } node ? table.OfNode(node) : null;
 
@@ -714,20 +714,20 @@ public partial class MainWindow : Window
     }
 
     /// <summary>테스트 손잡이 — 채널을 바로 더한다(UI에는 "채널 추가"가 없다: 채널 박스·매니퓰레이터가 첫 키에서 만든다).</summary>
-    internal void AddChannelFromForm(string node, MotionChannelKind kind)
+    internal void AddChannelFromForm(string node, ChannelKind kind)
     {
         MotionAsset motion = _graph.Motion ?? throw new InvalidOperationException("먼저 모션을 고른다.");
         _session.Editor.AddChannel(motion.Name, node, kind);
     }
 
     /// <summary>테스트 손잡이 — 채널 박스 칸에 값을 넣고 Enter.</summary>
-    internal void SetChannelBoxValue(MotionChannelKind kind, Axis axis, string text) => CommitChannelBox(kind, axis, text);
+    internal void SetChannelBoxValue(ChannelKind kind, Axis axis, string text) => CommitChannelBox(kind, axis, text);
 
     /// <summary>테스트 손잡이 — 채널 박스 칸의 글자.</summary>
-    internal string ChannelBoxValue(MotionChannelKind kind, Axis axis) => _channelBoxRows[(kind, axis)].Box.Text ?? "";
+    internal string ChannelBoxValue(ChannelKind kind, Axis axis) => _channelBoxRows[(kind, axis)].Box.Text ?? "";
 
     /// <summary>테스트 손잡이 — 채널 박스 ●(이 성분을 지금 키).</summary>
-    internal void KeyChannelBoxComponent(MotionChannelKind kind, Axis axis) => KeyChannelBox(kind, axis);
+    internal void KeyChannelBoxComponent(ChannelKind kind, Axis axis) => KeyChannelBox(kind, axis);
 
     /// <summary>채널 박스가 보여 주는 노드.</summary>
     internal string? ChannelBoxNode => _viewport.SelectedNode;
@@ -752,7 +752,7 @@ public partial class MainWindow : Window
         => _session.ControllersOf(_viewport.SelectedObject?.Rig)?.Find(id) ?? throw new InvalidOperationException($"컨트롤러 '{id}'가 없다 — 오브젝트를 고르고 리그에 표가 있어야 한다.");
 
     /// <summary>채널 행의 성분 토글과 같은 길 — 없는 성분을 현재 시각의 중립값 키 하나로 만든다.</summary>
-    internal void EnsureComponent(string node, MotionChannelKind kind, Axis axis)
+    internal void EnsureComponent(string node, ChannelKind kind, Axis axis)
     {
         MotionAsset motion = _graph.Motion ?? throw new InvalidOperationException("먼저 모션을 고른다.");
 
@@ -764,7 +764,7 @@ public partial class MainWindow : Window
         _session.Editor.AddKey(motion.Name, node, kind, axis, new KeyAsset
         {
             T = (float)_graph.CurrentTime,
-            V = MotionMath.Neutral(kind),
+            V = ChannelKinds.Neutral(kind),
             Tangent = DefaultTangent,
         });
     }
@@ -1167,7 +1167,7 @@ public partial class MainWindow : Window
                 ? "(하이어아키에서 리그 노드를 고른다)"
                 : motion is null ? $"{o!.Id} · {node} — 모션을 고르면 키를 놓을 수 있다" : $"{o!.Id} · {node}";
 
-            foreach (((MotionChannelKind kind, Axis axis), (Border row, TextBox box)) in _channelBoxRows)
+            foreach (((ChannelKind kind, Axis axis), (Border row, TextBox box)) in _channelBoxRows)
             {
                 float? value = hasNode ? _viewport.ComponentValue(node!, kind, axis) : null;
                 box.IsEnabled = value is not null && motion is not null;
@@ -1209,7 +1209,7 @@ public partial class MainWindow : Window
 
         if (table is null)
         {
-            foreach ((MotionChannelKind kind, Axis axis, string label) in ChannelBoxComponents)
+            foreach ((ChannelKind kind, Axis axis, string label) in ChannelBoxComponents)
             {
                 (Border row, TextBox box) = ChannelBoxRow(label, null, null,
                     text => CommitChannelBox(kind, axis, text),
@@ -1404,7 +1404,7 @@ public partial class MainWindow : Window
                 continue;
             }
 
-            value = c.Kind == MotionChannelKind.Scale ? value * aliasValue : value + aliasValue;
+            value = c.Kind == ChannelKind.Scale ? value * aliasValue : value + aliasValue;
         }
 
         return value;
@@ -1485,7 +1485,7 @@ public partial class MainWindow : Window
             }
 
             // 합(곱)으로 보인 값의 차이를 그 노드 하나에 싣는다.
-            float next = c.Kind == MotionChannelKind.Scale
+            float next = c.Kind == ChannelKind.Scale
                 ? (Math.Abs(current.Value) < 1e-6f ? target : nodeValue * (target / current.Value))
                 : nodeValue + (target - current.Value);
             _session.Editor.Batch(MotionChangeKind.Keys, () =>
@@ -1525,7 +1525,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>노드 칸 입력(컨트롤러 표가 없는 리그): 숫자는 절대값, <c>+=</c>·<c>-=</c>·<c>*=</c>·<c>/=</c>는 지금 값에 상대.</summary>
-    private void CommitChannelBox(MotionChannelKind kind, Axis axis, string text)
+    private void CommitChannelBox(ChannelKind kind, Axis axis, string text)
     {
         if (_refreshing || _viewport.SelectedNode is not { } node || _graph.Motion is null || !RelativeInput.TryParse(text, out Func<float, float> apply))
         {
@@ -1545,7 +1545,7 @@ public partial class MainWindow : Window
         RefreshChannelBox();
     }
 
-    private void KeyChannelBox(MotionChannelKind kind, Axis axis)
+    private void KeyChannelBox(ChannelKind kind, Axis axis)
     {
         if (_viewport.SelectedNode is { } node && _graph.Motion is not null)
         {
@@ -2746,8 +2746,8 @@ public partial class MainWindow : Window
         {
             _viewport.Manipulator = c.Kind switch
             {
-                MotionChannelKind.Euler => ManipulatorMode.Rotate,
-                MotionChannelKind.Scale => ManipulatorMode.Scale,
+                ChannelKind.Euler => ManipulatorMode.Rotate,
+                ChannelKind.Scale => ManipulatorMode.Scale,
                 _ => ManipulatorMode.Move,
             };
         }
@@ -3161,7 +3161,7 @@ public partial class MainWindow : Window
         foreach (ChannelAsset channel in motion.Channels)
         {
             string node = channel.Node;
-            MotionChannelKind kind = channel.Kind;
+            ChannelKind kind = channel.Kind;
             string nodeLabel = DopeSheetRows.NodeLabel(node, labels);
 
             if (query.Length > 0 && !node.Contains(query, StringComparison.OrdinalIgnoreCase) && !nodeLabel.Contains(query, StringComparison.OrdinalIgnoreCase) && !ChannelKindLabel.Of(kind).Contains(query, StringComparison.OrdinalIgnoreCase))
@@ -3169,7 +3169,7 @@ public partial class MainWindow : Window
                 continue;
             }
 
-            Axis[] possibleAxes = kind == MotionChannelKind.Euler ? new[] { Axis.X, Axis.Y, Axis.Z } : new[] { Axis.X, Axis.Y };
+            IReadOnlyList<Axis> possibleAxes = ChannelKinds.Axes(kind);
             CurveRef[] axesOfChannel = possibleAxes.Select(a => new CurveRef(node, kind, a)).ToArray();
             CurveRef[] existing = axesOfChannel.Where(cr => cr.Resolve(motion) is not null).ToArray();
             bool anyLocked = existing.Any(_flags.IsLocked);
@@ -3233,11 +3233,11 @@ public partial class MainWindow : Window
     private const int UnkeyedRowsMaxNodes = 16;
 
     /// <summary>테스트 손잡이 — 그래프 목록의 "키 없음" 줄들(노드 · 종류).</summary>
-    internal IReadOnlyList<(string Node, MotionChannelKind Kind)> UnkeyedRows => _unkeyedRows;
+    internal IReadOnlyList<(string Node, ChannelKind Kind)> UnkeyedRows => _unkeyedRows;
 
-    internal void KeyUnkeyedRow(string node, MotionChannelKind kind) => KeyUnkeyed(node, kind);
+    internal void KeyUnkeyedRow(string node, ChannelKind kind) => KeyUnkeyed(node, kind);
 
-    private readonly List<(string Node, MotionChannelKind Kind)> _unkeyedRows = new();
+    private readonly List<(string Node, ChannelKind Kind)> _unkeyedRows = new();
 
     /// <summary>
     /// 아직 키가 없는 채널들을 흐리게 — 이 모션이 안 건드리는 노드·종류(위치·배율·회전)도 보이고, 눌러서 그 노드를 고르거나 ＋로 지금 값에 키를 놓는다.
@@ -3263,7 +3263,7 @@ public partial class MainWindow : Window
 
             string nodeLabel = DopeSheetRows.NodeLabel(node, labels);
 
-            foreach (MotionChannelKind kind in new[] { MotionChannelKind.Position, MotionChannelKind.Scale, MotionChannelKind.Euler })
+            foreach (ChannelKind kind in new[] { ChannelKind.Position, ChannelKind.Scale, ChannelKind.Euler })
             {
                 if (motion.FindChannel(node, kind) is not null)
                 {
@@ -3283,7 +3283,7 @@ public partial class MainWindow : Window
 
                 _unkeyedRows.Add((node, kind));
                 string capturedNode = node;
-                MotionChannelKind capturedKind = kind;
+                ChannelKind capturedKind = kind;
                 var row = new DockPanel { Margin = new Avalonia.Thickness(2, 1, 2, 0), Opacity = 0.5 };
                 Button add = SmallButton("＋", (_, _) => Guard("키 놓기", () => KeyUnkeyed(capturedNode, capturedKind)));
                 ToolTip.SetTip(add, "지금 값을 현재 시각에 키 — 채널이 생긴다. 그 뒤 그래프·뷰포트에서 고친다");
@@ -3311,10 +3311,10 @@ public partial class MainWindow : Window
     }
 
     /// <summary>키 없는 채널에 지금 값을 지금 시각의 키로 — 채널이 생긴다. 뷰포트의 길(클립 안이면 그 문맥의 시각과 시작값)로 놓는다.</summary>
-    private void KeyUnkeyed(string node, MotionChannelKind kind)
+    private void KeyUnkeyed(string node, ChannelKind kind)
     {
         _viewport.SelectedNode = node;
-        _viewport.KeyComponents(node, kind, kind == MotionChannelKind.Euler ? new[] { Axis.Z } : new[] { Axis.X, Axis.Y });
+        _viewport.KeyComponents(node, kind, kind == ChannelKind.Euler ? new[] { Axis.Z } : new[] { Axis.X, Axis.Y });
     }
 
     /// <summary>성분 행: 색 네모 + 이름 + (있으면) ×. 보이는 행은 파랗게(마야 선택). 없는 성분은 흐리고, 클릭해도 만들지 않는다 — <paramref name="onMissingClick"/>만.</summary>

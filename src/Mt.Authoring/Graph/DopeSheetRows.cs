@@ -23,7 +23,7 @@ public sealed record DopeBlock(float Time, IReadOnlyList<KeyRef> Keys);
 public sealed record DopeRow(
     DopeRowLevel Level,
     string Node,
-    MotionChannelKind? Kind,
+    ChannelKind? Kind,
     Axis? Axis,
     string Label,
     IReadOnlyList<DopeBlock> Blocks,

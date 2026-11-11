@@ -328,13 +328,13 @@ public static class MtCli
 
         switch (channel.Kind)
         {
-            case MotionChannelKind.Position:
+            case ChannelKind.Position:
                 entry["position"] = new JsonArray(Round(state.AnchoredPosition.X), Round(state.AnchoredPosition.Y));
                 break;
-            case MotionChannelKind.Scale:
+            case ChannelKind.Scale:
                 entry["scale"] = new JsonArray(Round(state.LocalScale.X), Round(state.LocalScale.Y));
                 break;
-            case MotionChannelKind.Euler:
+            case ChannelKind.Euler:
                 entry["euler"] = new JsonArray(Round(state.LocalEulerAngles.X), Round(state.LocalEulerAngles.Y), Round(state.LocalEulerAngles.Z));
                 break;
         }
