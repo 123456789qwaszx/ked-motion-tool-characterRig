@@ -1,0 +1,907 @@
+{
+  "schema": "motion-authoring/2",
+  "motions": [],
+  "scenes": [
+    {
+      "name": "scene",
+      "camera": {
+        "zoom": 0,
+        "panX": 0,
+        "panY": 0
+      },
+      "objects": [
+        {
+          "id": "s1",
+          "rig": "character",
+          "stage": "stage00",
+          "layer": "mid",
+          "positionX": 0,
+          "positionY": 0,
+          "rotationZ": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "visible": true
+        }
+      ]
+    }
+  ],
+  "activeScene": "scene",
+  "emojis": [
+    {
+      "name": "star",
+      "offsetX": 170,
+      "offsetY": 60,
+      "rigs": [
+        {
+          "name": "body",
+          "images": [
+            "art/star.png"
+          ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.45,
+          "rotation": 0
+        }
+      ],
+      "timeline": {
+        "name": "emoji:star",
+        "rig": "emoji",
+        "duration": 1.0833334,
+        "end": "restore",
+        "previewMode": "relative",
+        "channels": [
+          {
+            "node": "body/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0.45,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.125,
+                  "v": 1.27,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.16666667,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.20833333,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.375,
+                  "v": 1.08,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.5416667,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.8333333,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.875,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 1.0833334,
+                  "v": 0.67,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            },
+            "y": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0.45,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.125,
+                  "v": 1.27,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.16666667,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.20833333,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.375,
+                  "v": 1.08,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.5416667,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.8333333,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.875,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 1.0833334,
+                  "v": 0.67,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            }
+          },
+          {
+            "node": "body/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.083333336,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                {
+                  "t": 0.875,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 1.0833334,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "spans": [
+        {
+          "name": "in",
+          "start": 0,
+          "end": 4
+        },
+        {
+          "name": "hold",
+          "start": 5,
+          "end": 20
+        },
+        {
+          "name": "out",
+          "start": 21,
+          "end": 26
+        }
+      ],
+      "in": "in",
+      "hold": "hold",
+      "out": "out"
+    },
+    {
+      "name": "question",
+      "offsetX": -170,
+      "offsetY": 40,
+      "rigs": [
+        {
+          "name": "mark",
+          "images": [
+            "art/question.png"
+          ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.45,
+          "rotation": 0
+        }
+      ],
+      "timeline": {
+        "name": "emoji:question",
+        "rig": "emoji",
+        "duration": 0.875,
+        "end": "restore",
+        "previewMode": "relative",
+        "channels": [
+          {
+            "node": "mark/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0.45,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.125,
+                  "v": 1.12,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.20833333,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.875,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            },
+            "y": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0.45,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.125,
+                  "v": 1.12,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.20833333,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.875,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            }
+          },
+          {
+            "node": "mark/EmojiRig_Image",
+            "kind": "euler",
+            "z": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": -20,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.16666667,
+                  "v": 8,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.33333334,
+                  "v": -4,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.5,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            }
+          },
+          {
+            "node": "mark/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.083333336,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.7083333,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.875,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "y": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.875,
+                  "v": 20,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "spans": []
+    },
+    {
+      "name": "twinkle",
+      "offsetX": 0,
+      "offsetY": 150,
+      "rigs": [
+        {
+          "name": "left",
+          "images": [
+            "art/star.png"
+          ],
+          "placeX": -150,
+          "placeY": -30,
+          "scale": 0.3,
+          "rotation": 0
+        },
+        {
+          "name": "center",
+          "images": [
+            "art/star.png"
+          ],
+          "placeX": 0,
+          "placeY": 40,
+          "scale": 0.3,
+          "rotation": 0
+        },
+        {
+          "name": "right",
+          "images": [
+            "art/star.png"
+          ],
+          "placeX": 150,
+          "placeY": -30,
+          "scale": 0.3,
+          "rotation": 15
+        }
+      ],
+      "timeline": {
+        "name": "emoji:twinkle",
+        "rig": "emoji",
+        "duration": 0.9583333,
+        "end": "restore",
+        "previewMode": "relative",
+        "channels": [
+          {
+            "node": "left/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0.35,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.125,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.9583333,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            },
+            "y": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0.35,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.125,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.9583333,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            }
+          },
+          {
+            "node": "left/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.125,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.5416667,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.75,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            }
+          },
+          {
+            "node": "center/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0.35,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.125,
+                  "v": 0.35,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.25,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.9583333,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            },
+            "y": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0.35,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.125,
+                  "v": 0.35,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.25,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.9583333,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            }
+          },
+          {
+            "node": "center/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.125,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.25,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.6666667,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.875,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            }
+          },
+          {
+            "node": "right/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0.35,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.25,
+                  "v": 0.35,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.375,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.9583333,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            },
+            "y": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0.35,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.25,
+                  "v": 0.35,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.375,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.9583333,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            }
+          },
+          {
+            "node": "right/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.25,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.375,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.7916667,
+                  "v": 1,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.9583333,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "y": {
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                },
+                {
+                  "t": 0.9583333,
+                  "v": 30,
+                  "inTangent": 0,
+                  "outTangent": 0,
+                  "tangent": "flat",
+                  "broken": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "spans": []
+    }
+  ]
+}

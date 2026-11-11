@@ -23,6 +23,12 @@ dotnet build KedMotionTool.sln -c Release
 dotnet test KedMotionTool.sln -c Release --no-build
 ```
 
+예시 문서(`examples/emoji` — 런타임의 견본 셋을 편집 명령으로 지은 것)를 다시 쓴다(빌더 `tests/Mt.Authoring.Tests/EmojiExamples.cs`를 고친 뒤):
+
+```bash
+MT_WRITE_EXAMPLES=1 dotnet test tests/Mt.Authoring.Tests -c Release --filter EmojiExampleTests
+```
+
 화면을 그림으로 뽑는다(헤드리스가 Skia로 실제 렌더 — 고친 화면은 눈으로 확인한다). `MT_RENDER_DIR`이 있을 때만 켜지고, 장면 테스트는 `RenderShots`(`tests/Mt.App.Tests/HeadlessUi.cs`)로 그림을 낸다 — 이모지 화면은 `EmojiShots`:
 
 ```bash

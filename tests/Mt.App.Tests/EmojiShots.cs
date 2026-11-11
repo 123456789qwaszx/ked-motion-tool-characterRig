@@ -1,17 +1,18 @@
 using Avalonia.Headless;
 using Avalonia.Media.Imaging;
-using Mt.Authoring.Editing;
+using Ked.Presentation.Core;
+using Mt.Authoring.Model;
 
 namespace Mt.App.Tests;
 
 /// <summary>
 /// 이모지 화면의 장면(PLAN-emoji.md E6) — <c>MT_RENDER_DIR</c>이 있으면 그림 파일로 뽑는다(눈으로 보는 확인).
-/// 없으면 장면을 세우고 뷰포트가 이모지를 보는지만 본다. 그림은 <c>examples/emoji/art</c>의 것.
+/// 없으면 장면을 세우고 뷰포트가 이모지를 보는지만 본다. 장면은 예시 문서(<c>examples/emoji</c>)다.
 /// </summary>
 public class EmojiShots
 {
     [Fact]
-    public void 이모지_탭의_타임라인과_수명_보기()
+    public void 예시_문서의_이모지를_타임라인과_수명으로_본다()
     {
         HeadlessUi.Run(() =>
         {
@@ -24,24 +25,23 @@ public class EmojiShots
             try
             {
                 window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
-                MotionEditor editor = window.Session.Editor;
-                string star = Path.Combine(RepoRoot(), "examples", "emoji", "art", "star.png");
+                window.Session.Open(Path.Combine(RepoRoot(), "examples", "emoji", "emoji-examples.motion-authoring.json"));
+                window.SelectEmoji("twinkle");
 
-                window.AddEmojiFromForm();
-                editor.SetEmojiRigImages("emoji", "body", new[] { star });
-                editor.AddEmojiSpan("emoji", "in", 0, 7);
-                editor.AddEmojiSpan("emoji", "hold", 8, 23);
-                window.LinkEmojiFromForm("in", "hold", null);
-                window.KeyEmojiNowFromForm("body", Mt.Authoring.Model.ChannelKind.Alpha);
-                window.Viewport.FrameEmoji();
-
-                Assert.NotNull(window.Viewport.EmojiNow());
+                // 예시(E7)의 그림이 읽혔고, 고르면 보기가 그림에 맞는다.
+                Assert.Equal("twinkle", window.Viewport.EmojiName);
                 Assert.NotNull(window.Viewport.EmojiControlBox());
+                window.Viewport.ScrubTo(EmojiAsset.SecondsOf(10));
+                Shot(window, "emoji-twinkle");
 
-                Shot(window, "emoji-timeline");
+                window.SelectEmoji("star");
+                window.SelectEmojiRigFromForm("body");
+                window.Viewport.ScrubTo(EmojiAsset.SecondsOf(9));
+                Shot(window, "emoji-star-timeline");
                 window.SetEmojiLifeFromForm(true);
-                window.Viewport.ScrubTo(0.5);
-                Shot(window, "emoji-life");
+                window.Viewport.ScrubTo(1.4);
+                Assert.Equal(EmojiPhase.Hold, window.Viewport.EmojiCurrentMoment()!.Value.Phase);
+                Shot(window, "emoji-star-life");
             }
             finally
             {

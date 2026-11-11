@@ -24,6 +24,7 @@
 | 파일 | `Emoji/EmojiClip.cs` · `Emoji/EmojiDefinition.cs` · `Emoji/EmojiPlayback.cs` · `Tuning/EmojisFileDto.cs` · `Tuning/RigSchemaDto.cs`(통째 교체 — `repeatsPerRig`가 들어오고 `hasImage`가 빠졌다) |
 | 테스트 | 런타임 `Tests/EditMode/EmojiPlaybackTests.cs`의 유니티를 쓰지 않는 절(형식의 규칙 · 그 프레임의 모습 · 재생의 단계)만 `EditMode/EmojiPlaybackTests.cs`로. 접기(`StageReducer.Emoji` — 사본에 없다)와 재생 시스템은 저쪽에 남는다 |
 | 덤프 | `Mt.Authoring/Defaults/ExportedTuning/rig-schemas.json` · `export-report.json`과 시험 픽스처 `tests/Mt.Authoring.Tests/Fixtures/rig-schemas.json`도 같은 커밋의 `ExportedTuning/`에서 |
+| 견본 | 시험 픽스처 `tests/Mt.Authoring.Tests/Fixtures/runtime-emojis.json`은 같은 커밋의 `Assets/Dialogue/emojis.json`(이모지 견본 셋) 그대로 — 툴의 예시(`examples/emoji`)가 이것과 프레임마다 같은지 잰다 |
 
 선반영은 이제 없다. `RigSchemaNodeDto.hasImage`(옛 이모지 설계의 그림 노드 표시)는 런타임 `465f5d43`에 들어갔다가 새 정의에서 `repeatsPerRig`(리그마다 되풀이되는 노드)로 바뀌었고, 이 반입으로 사본에서도 사라졌다.
 
