@@ -103,7 +103,75 @@ public static class EmojiValidator
         ValidateRigs(emoji, Block);
         ValidateTimeline(emoji, frame, Block);
         ValidateSpans(emoji, Block);
+
+        // 막는 문제가 없을 때만 — 구간이 어긋난 채로는 견줄 처음과 끝이 없다.
+        if (problems.Count == 0)
+        {
+            problems.AddRange(HoldSeams(emoji).Select(message => new EmojiProblem(emoji.Name, message, Blocking: false)));
+        }
+
         return problems;
+    }
+
+    /// <summary>
+    /// 머묾의 이음매 — 머묾은 끝 프레임 다음에 처음 프레임으로 돌아간다. 그 한 걸음이 구간 안의 어느 걸음보다도
+    /// 훨씬 크면 돌 때마다 튄다. (처음과 끝이 꼭 같아야 하는 것은 아니다 — 고르게 흐르는 움직임은 끝이 처음의 한 걸음 앞이다.)
+    /// 막지 않는다 — 뜻한 것일 수 있다. 그림 바꾸기는 본래 장이 넘어가는 것이라 보지 않고, 회전은 한 바퀴(360°)를 같은 모습으로 친다.
+    /// </summary>
+    private static IEnumerable<string> HoldSeams(EmojiAsset emoji)
+    {
+        if (emoji.FindSpan(emoji.Hold) is not { } hold || hold.End <= hold.Start)
+        {
+            yield break;
+        }
+
+        foreach (ChannelAsset channel in emoji.Timeline.Channels.Where(c => c.Kind != ChannelKind.Image))
+        {
+            foreach (Axis axis in ChannelKinds.Axes(channel.Kind))
+            {
+                if (channel.Get(axis) is not { Keys.Count: > 0 } curve)
+                {
+                    continue;
+                }
+
+                // 프레임마다의 값 — 구간의 처음부터 끝까지.
+                List<Graph.GraphPoint> sampled = Graph.CurveSampler.Sample(curve.Keys, EmojiAsset.SecondsOf(hold.Start), EmojiAsset.SecondsOf(hold.End), hold.End - hold.Start);
+                double At(int frame)
+                {
+                    double t = EmojiAsset.SecondsOf(frame);
+                    return sampled.MinBy(p => Math.Abs(p.T - t)).V;
+                }
+
+                double Step(double from, double to)
+                {
+                    double d = Math.Abs(to - from);
+
+                    if (channel.Kind == ChannelKind.Euler)
+                    {
+                        d %= 360;
+                        d = Math.Min(d, 360 - d);
+                    }
+
+                    return d;
+                }
+
+                double widest = 0;
+
+                for (int f = hold.Start; f < hold.End; f++)
+                {
+                    widest = Math.Max(widest, Step(At(f), At(f + 1)));
+                }
+
+                double seam = Step(At(hold.End), At(hold.Start));
+
+                if (seam > Math.Max(1e-3, widest * 2))
+                {
+                    yield return $"머묾 '{hold.Name}'이 되풀이할 때 튄다 — {EmojiWords.Target(channel.Node)}의 {EmojiWords.Component(channel.Kind, axis)}이 끝({hold.End}프레임) {Round(At(hold.End))}에서 처음({hold.Start}프레임) {Round(At(hold.Start))}으로 한 걸음에 넘어간다(구간 안의 가장 큰 걸음은 {Round(widest)})";
+                }
+            }
+        }
+
+        static string Round(double v) => Math.Round(v, 3).ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
     private static void ValidateRigs(EmojiAsset emoji, Action<string> block)

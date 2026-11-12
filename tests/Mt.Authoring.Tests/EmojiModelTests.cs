@@ -174,9 +174,10 @@ public sealed class EmojiModelTests
     }
 
     [Fact]
-    public void 맞는_이모지는_문제가_없다()
+    public void 맞는_이모지는_막는_문제가_없다()
     {
-        Assert.Empty(EmojiValidator.Validate(StarEditor().Document));
+        // 이 견본의 머묾은 끝에서 처음으로 튄다(검증이 알림으로 말한다 — ShapeProblemsTests) — 막는 문제만 본다.
+        Assert.DoesNotContain(EmojiValidator.Validate(StarEditor().Document), p => p.Blocking);
     }
 
     [Fact]

@@ -79,4 +79,26 @@ public class ShapeProblemsTests
         Assert.Empty(MotionDocumentJson.UnknownKeys(MotionDocumentJson.Write(MotionDocumentJson.Read(json))));
         Assert.Empty(MotionDocumentJson.UnknownKeys("{ broken"));
     }
+
+    [Fact]
+    public void 머묾이_되풀이할_때_튀면_알린다_막지는_않는다()
+    {
+        const string emoji = """
+            { "schema": "motion-authoring/2", "motions": [], "emojis": [ { "name": "e",
+              "rigs": [ { "name": "a", "images": [ "x.png", "y.png" ] } ],
+              "timeline": { "duration": 1, "channels": [
+                { "node": "Emoji_Offset", "kind": "scale",
+                  "x": { "keys": [ { "t": 0.25, "v": 1, "tangent": "flat" }, { "t": 0.75, "v": SCALE_END, "tangent": "flat" } ] } },
+                { "node": "a/EmojiRig_Image", "kind": "image",
+                  "x": { "keys": [ { "t": 0.25, "v": 0, "tangent": "step" }, { "t": 0.5, "v": 1, "tangent": "step" } ] } } ] },
+              "spans": [ { "name": "hold", "start": 6, "end": 18 } ], "hold": "hold" } ] }
+            """;
+
+        IReadOnlyList<EmojiProblem> popping = EmojiValidator.Validate(MotionDocumentJson.Read(emoji.Replace("SCALE_END", "2", StringComparison.Ordinal)));
+        EmojiProblem seam = Assert.Single(popping); // 그림 바꾸기는 보지 않는다
+        Assert.False(seam.Blocking);
+        Assert.Contains("이모지 전체의 크기 X이 끝(18프레임) 2에서 처음(6프레임) 1으로", seam.Message, StringComparison.Ordinal);
+
+        Assert.Empty(EmojiValidator.Validate(MotionDocumentJson.Read(emoji.Replace("SCALE_END", "1", StringComparison.Ordinal))));
+    }
 }
