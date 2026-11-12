@@ -2220,7 +2220,7 @@ public partial class MainWindow : Window
         "  줄 머리 🔊  그 배역 끄기/켜기(미리보기에서만 빠진다)      M  고른 블록 하나만 끄기/켜기(파일에 남는다)\n" +
         "  블록을 고르고 그 블록 안의 시각이면 뷰포트 끌기·채널 박스·S가 그 블록의 모션에 키를 놓는다      아래 경계를 끌면 타임라인 높이\n\n" +
         "이모지 (툴바의 '이모지' 모드 — 그래프 · 도프 시트 · 뷰포트가 그 타임라인을 본다)\n" +
-        "  Q / W / E / R  선택 · 이동 · 회전 · 크기(뷰포트 오른쪽 위의 띠와 같다)      그림 누르기  고르기 — 빈 곳은 맞지 않는다 · 겹친 곳을 다시 누르면 밑의 것 · 빈 데를 누르면 이모지 전체\n" +
+        "  Q / W / E / R  선택 · 이동 · 회전 · 크기(뷰포트 오른쪽 위의 띠와 같다)      그림 누르기  고르기 — 빈 곳은 맞지 않는다 · 겹친 곳을 다시 누르면 밑의 것 · 빈 데를 누르면 전부 풀린다(이모지 전체는 왼쪽 목록에서 이모지를 누른다)\n" +
         "  Shift/Ctrl+누르기  더하기 · 빼기      빈 데서 끌기  상자로 고르기      여럿을 고르면 함께 끌리고 S가 전부를 키한다(한 칸)\n" +
         "  매니퓰레이터 끌기  Auto Key 꺼짐 = 기본값(그림의 자리 · 크기 · 회전, 이모지의 머리에서의 자리 — 키가 아니다) · 켜짐 = 지금 프레임에 키      S  지금 값을 키(도구의 종류만, 선택 도구면 셋 다)\n" +
         "  F  이모지에 맞춤      도구 띠 '인물' · '◀ 왼쪽 보기'(뒤집힌 인물에게 뜨는 모습 — 보기만, 켠 동안 끌기 없음) · '인물과 함께'\n" +
@@ -3233,9 +3233,17 @@ public partial class MainWindow : Window
         // 이모지의 타임라인은 만드는 사람의 말로 적는다(EmojiWords) — 노드 이름은 툴팁에 남는다.
         bool emoji = EmojiAsset.IsTimelineName(motion.Name, out _);
 
+        // 이모지에서 그림을 골랐으면 그 그림의 것만 적는다(고르지 않았으면 전부).
+        HashSet<string>? scope = emoji ? EmojiGraphNodes() : null;
+
         foreach (ChannelAsset channel in motion.Channels)
         {
             string node = channel.Node;
+
+            if (scope is not null && !scope.Contains(node))
+            {
+                continue;
+            }
             ChannelKind kind = channel.Kind;
             string nodeLabel = emoji ? EmojiWords.Target(node) : DopeSheetRows.NodeLabel(node, labels);
             string kindLabel = emoji ? EmojiWords.Kind(kind) : ChannelKindLabel.Of(kind);
@@ -3297,7 +3305,7 @@ public partial class MainWindow : Window
             }
         }
 
-        AddUnkeyedRows(motion, query, labels);
+        AddUnkeyedRows(motion, query, labels, scope);
 
         if (motion.Channels.Count == 0)
         {
@@ -3357,7 +3365,7 @@ public partial class MainWindow : Window
     /// 아직 키가 없는 채널들을 흐리게 — 이 모션이 안 건드리는 노드·종류(위치·배율·회전)도 보이고, 눌러서 그 노드를 고르거나 ＋로 지금 값에 키를 놓는다.
     /// "배율만 있는 모션에 살짝 위치도" 같은 손을 목록에서 바로 간다. 이모지의 타임라인이면 키를 받는 노드와 이모지의 종류만.
     /// </summary>
-    private void AddUnkeyedRows(MotionAsset motion, string query, ControllerRig? labels)
+    private void AddUnkeyedRows(MotionAsset motion, string query, ControllerRig? labels, HashSet<string>? scope = null)
     {
         _unkeyedRows.Clear();
         IReadOnlyList<UnkeyedTarget>? targets = EmojiAsset.IsTimelineName(motion.Name, out string emojiName)
@@ -3373,7 +3381,7 @@ public partial class MainWindow : Window
 
         foreach (UnkeyedTarget target in targets)
         {
-            if (motion.FindChannel(target.Node, target.Kind) is not null)
+            if (motion.FindChannel(target.Node, target.Kind) is not null || (scope is not null && !scope.Contains(target.Node)))
             {
                 continue;
             }

@@ -185,6 +185,76 @@ public class EmojiLifeStripShellTests
     }
 
     [Fact]
+    public void 그림을_고르면_그래프는_그_그림의_것만_보이고_풀면_전부다()
+    {
+        Run(window =>
+        {
+            window.SelectEmoji("twinkle"); // 그림 셋(left · center · right) + 이모지 전체의 자리
+            Assert.Contains("left · 크기", window.ChannelRowTexts);
+            Assert.Contains("right · 크기", window.ChannelRowTexts);
+            Assert.Contains("이모지 전체 · 자리", window.ChannelRowTexts);
+
+            window.SelectEmojiRigFromForm("center");
+            IReadOnlyList<string> one = window.ChannelRowTexts;
+            Assert.Contains("center · 크기", one);
+            Assert.Contains("center · 자리", one); // "키 없음" 줄도 그 그림의 것만
+            Assert.DoesNotContain(one, t => t.StartsWith("left", StringComparison.Ordinal) || t.StartsWith("right", StringComparison.Ordinal) || t.StartsWith("이모지 전체", StringComparison.Ordinal));
+            Assert.All(window.VisibleGraphNodes, n => Assert.StartsWith("center/", n)); // 곡선도 그 그림의 것만
+            Assert.NotEmpty(window.VisibleGraphNodes);
+
+            window.SelectEmojiRigsFromForm("left", "right");
+            Assert.Contains("left · 크기", window.ChannelRowTexts);
+            Assert.Contains("right · 크기", window.ChannelRowTexts);
+            Assert.DoesNotContain(window.ChannelRowTexts, t => t.StartsWith("center", StringComparison.Ordinal));
+
+            // 고른 것을 풀면(이모지를 고른 것) 전부로 돌아온다.
+            window.SelectEmojiRigFromForm(null);
+            Assert.Contains("center · 크기", window.ChannelRowTexts);
+            Assert.Contains("이모지 전체 · 자리", window.ChannelRowTexts);
+            Assert.Contains(window.VisibleGraphNodes, n => n.StartsWith("left/", StringComparison.Ordinal));
+        });
+    }
+
+    [Fact]
+    public void 뷰포트의_빈_곳을_누르면_전부_풀리고_이모지를_누르면_이모지_전체가_대상이다()
+    {
+        Run(window =>
+        {
+            window.SelectEmoji("star");
+            ViewportView viewport = window.Viewport;
+            MotionEditor editor = window.Session.Editor;
+
+            // 이모지를 고른 것 — 대상은 이모지 전체다(매니퓰레이터가 선다 · 끌면 머리에서의 자리).
+            Assert.True(viewport.EmojiWholeSelected);
+            Assert.NotNull(viewport.EmojiGizmoForTest());
+            Assert.Contains("이모지 전체", viewport.EmojiEditNoteForTest());
+
+            // 빈 곳을 누른다 — 고른 것이 없다. 매니퓰레이터도 없고 S도 아무것도 하지 않는다.
+            long before = editor.Revision;
+            Assert.True(viewport.DragEmojiForTest(new Point(4, viewport.Bounds.Height - 40), new Point(4, viewport.Bounds.Height - 40)));
+            Assert.False(viewport.EmojiWholeSelected);
+            Assert.Empty(viewport.SelectedEmojiRigs);
+            Assert.Null(viewport.EmojiGizmoForTest());
+            Assert.StartsWith("고른 것 없음", viewport.EmojiEditNoteForTest());
+            window.SetKeyFromShell();
+            Assert.Equal(before, editor.Revision);
+
+            // 그림을 고르면 그 그림, 다시 빈 곳을 누르면 그림도 풀린다 — 이모지 전체로 넘어가지 않는다.
+            window.SelectEmojiRigFromForm("body");
+            Assert.NotNull(viewport.EmojiGizmoForTest());
+            viewport.DragEmojiForTest(new Point(4, viewport.Bounds.Height - 40), new Point(4, viewport.Bounds.Height - 40));
+            Assert.Empty(viewport.SelectedEmojiRigs);
+            Assert.False(viewport.EmojiWholeSelected);
+            Assert.Null(viewport.EmojiGizmoForTest());
+
+            // 왼쪽 목록에서 이모지를 누르면 다시 이모지 전체다.
+            window.TapEmojiFromForm();
+            Assert.True(viewport.EmojiWholeSelected);
+            Assert.NotNull(viewport.EmojiGizmoForTest());
+        });
+    }
+
+    [Fact]
     public void 띠와_인물을_그림으로_본다()
     {
         Run(window =>
@@ -198,6 +268,9 @@ public class EmojiLifeStripShellTests
             window.SetEmojiFacingLeftFromForm(false);
 
             window.SelectEmoji("twinkle");
+            window.SelectEmojiRigFromForm("center");
+            Shot(window, "life-twinkle-one-picture");
+            window.SelectEmojiRigFromForm(null);
             Shot(window, "life-twinkle-empty");
             window.AddLifeSpanFromForm(EmojiLifeRole.Hold);
             window.AddLifeSpanFromForm(EmojiLifeRole.In);

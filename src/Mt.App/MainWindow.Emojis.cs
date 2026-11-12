@@ -245,7 +245,7 @@ public partial class MainWindow
         _emojiList.ItemTemplate = new FuncDataTemplate<string>((name, _) => TwoLineRow(name, EmojiNoteOf(name), EmojiThumbOf(name)));
 
         // 이미 고른 이모지를 다시 누르면 리그 선택이 풀려 오른쪽이 이모지의 값으로 돌아온다.
-        _emojiList.Tapped += (_, _) => SelectEmojiRigsInList(Array.Empty<string>());
+        _emojiList.Tapped += (_, _) => SelectWholeEmoji();
 
         // 그 이모지의 리그 — 고른 것이 오른쪽을 정한다(리그를 고르면 리그의 값, 아니면 이모지의 값).
         _emojiRigSection.Children.Add(Header("그림 — 이 이모지를 이루는 조각"));
@@ -349,7 +349,7 @@ public partial class MainWindow
     {
         var panel = new StackPanel { Spacing = 4 };
         // 머리글 — 지금 오른쪽이 무엇의 값인가. 리그를 보는 중이면 이모지로 돌아가는 단추가 선다.
-        _emojiBack.Click += (_, _) => SelectEmojiRigsInList(Array.Empty<string>());
+        _emojiBack.Click += (_, _) => SelectWholeEmoji();
         ToolTip.SetTip(_emojiBack, "그림 선택을 풀고 이모지의 값(이름 · 머리에서의 자리 · 길이 · 구간과 잇기)으로 돌아간다 — 왼쪽 목록에서 이모지를 다시 눌러도 된다");
         panel.Children.Add(_emojiBack);
         panel.Children.Add(_emojiTitle);
@@ -645,6 +645,19 @@ public partial class MainWindow
             }
         });
     }
+
+    /// <summary>
+    /// 이모지를 눌렀다 — 그림의 선택을 풀고 대상을 "이모지 전체"로 한다(뷰포트의 매니퓰레이터가 이모지 전체에 선다 — 머리에서의 자리를 끈다).
+    /// 뷰포트의 빈 곳을 누르면 이것도 풀린다.
+    /// </summary>
+    private void SelectWholeEmoji()
+    {
+        SelectEmojiRigsInList(Array.Empty<string>());
+        _viewport.EmojiWholeSelected = true;
+    }
+
+    /// <summary>테스트 손잡이 — 왼쪽 목록에서 이모지를 누른다.</summary>
+    internal void TapEmojiFromForm() => SelectWholeEmoji();
 
     /// <summary>목록의 선택을 그 그림들로 맞춘다 — 같으면 건드리지 않는다. 알림(SelectionChanged)은 한 번만 간다.</summary>
     private void SelectEmojiRigsInList(IReadOnlyList<string> rigs)
@@ -1057,6 +1070,46 @@ public partial class MainWindow
 
         RefreshEmojiMarks();
         RefreshLifeStrip();
+        SyncEmojiGraphScope();
+    }
+
+    // ── 그래프의 범위 ─────────────────────────────────────────────────
+    //
+    // 그림을 골랐으면 그래프의 왼쪽 목록과 곡선은 그 그림(들)의 것만 보인다. 고르지 않았으면(이모지를 고른 것) 전부 — 이모지 전체와 모든 그림.
+
+    private string _emojiGraphScope = "";
+
+    /// <summary>테스트 손잡이 — 그래프에 보이는 곡선들의 노드.</summary>
+    internal IReadOnlyList<string> VisibleGraphNodes => _graph.Curves.Where(c => c.Visible).Select(c => c.Curve.Node).Distinct(StringComparer.Ordinal).ToList();
+
+    /// <summary>그래프가 보일 노드들 — 고른 그림들의 키를 받는 노드. 그림을 고르지 않았거나 이모지의 타임라인이 아니면 null(전부).</summary>
+    private HashSet<string>? EmojiGraphNodes()
+    {
+        if (_graph.MotionName is not { } bound || !EmojiAsset.IsTimelineName(bound, out string name)
+            || CurrentEmoji is not { } emoji || emoji.Name != name || _session.EmojiFrame is not { } frame)
+        {
+            return null;
+        }
+
+        IReadOnlyList<string> picked = SelectedEmojiRigs;
+        return picked.Count == 0 ? null : picked.Select(frame.TargetNode).ToHashSet(StringComparer.Ordinal);
+    }
+
+    /// <summary>고른 것이 달라졌으면 그래프의 목록을 다시 짓고 곡선도 그 범위만 보인다. 같으면 건드리지 않는다(곡선을 따로 골라 본 것을 지킨다).</summary>
+    private void SyncEmojiGraphScope()
+    {
+        HashSet<string>? nodes = EmojiGraphNodes();
+        string scope = nodes is null ? "" : string.Join("\n", nodes.OrderBy(n => n, StringComparer.Ordinal));
+
+        if (scope == _emojiGraphScope)
+        {
+            return;
+        }
+
+        _emojiGraphScope = scope;
+        RefreshChannels();
+        _graph.SetVisibleAll(c => nodes is null || nodes.Contains(c.Node));
+        _graph.FitAll(); // 보이는 곡선에 눈금을 맞춘다 — 값이 작은 곡선이 바닥에 깔려 보이지 않게
     }
 
     /// <summary>

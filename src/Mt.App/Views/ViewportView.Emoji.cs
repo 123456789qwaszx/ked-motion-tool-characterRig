@@ -36,6 +36,7 @@ public sealed partial class ViewportView
     private bool _emojiFacingLeft;
     private int _emojiHoldCycles = 2;
     private readonly List<string> _selectedEmojiRigs = new();
+    private bool _emojiWholeSelected;
     private readonly Dictionary<string, Bitmap?> _emojiImages = new(StringComparer.Ordinal);
     private EmojiLocatorFile _emojiLocators = EmojiLocatorFile.Empty;
     private bool _emojiShowHost = true;
@@ -200,17 +201,54 @@ public sealed partial class ViewportView
     /// <summary>고른 그림들 — 고른 순서. 함께 끌고 함께 키한다.</summary>
     public IReadOnlyList<string> SelectedEmojiRigs => _selectedEmojiRigs;
 
+    /// <summary>
+    /// "이모지 전체"를 골랐는가 — 왼쪽 목록에서 이모지를 누르면 골라진다(이모지를 처음 고를 때도). 매니퓰레이터가 이모지 전체에 서고
+    /// 끌면 그림 전부가 함께 간다(머리에서의 자리 · 이모지 전체의 키). 그림을 고르면 풀리고, 뷰포트의 빈 곳을 누르면 풀린다 —
+    /// 그때는 아무것도 고르지 않은 것이라 끌 것도 매니퓰레이터도 없다.
+    /// </summary>
+    public bool EmojiWholeSelected
+    {
+        get => _emojiWholeSelected;
+        set
+        {
+            if (_emojiWholeSelected == value)
+            {
+                return;
+            }
+
+            _emojiWholeSelected = value;
+            CancelEmojiPress();
+
+            if (value)
+            {
+                _selectedEmojiRigs.Clear();
+            }
+
+            InvalidateVisual();
+        }
+    }
+
+    /// <summary>지금 대상들 — 고른 그림들, "이모지 전체"를 골랐으면 그것(빈 이름), 아무것도 고르지 않았으면 없다.</summary>
+    private IReadOnlyList<string> EmojiTargets()
+        => _selectedEmojiRigs.Count > 0 ? _selectedEmojiRigs.ToList() : _emojiWholeSelected ? new[] { "" } : Array.Empty<string>();
+
     /// <summary>고른 그림들을 바꾼다 — 마지막 것이 매니퓰레이터의 자리다.</summary>
     public void SetSelectedEmojiRigs(IEnumerable<string> rigs)
     {
         List<string> next = rigs.Distinct(StringComparer.Ordinal).ToList();
 
+        if (next.Count > 0)
+        {
+            _emojiWholeSelected = false; // 그림을 고르면 "이모지 전체"는 풀린다
+        }
+
         if (!next.SequenceEqual(_selectedEmojiRigs))
         {
             _selectedEmojiRigs.Clear();
             _selectedEmojiRigs.AddRange(next);
-            InvalidateVisual();
         }
+
+        InvalidateVisual();
     }
 
     /// <summary>뷰포트에서 고른 그림들이 바뀌었다(누르기 · 상자 · 빈 곳).</summary>
@@ -231,6 +269,7 @@ public sealed partial class ViewportView
         // 다른 이모지로 오면 그 그림과 인물의 머리에 맞춘다(보기만). 이모지를 놓을 때 무대로 돌아오는 것은 Bind가 한다.
         if (emojiName is not null && emojiName != before)
         {
+            _emojiWholeSelected = true; // 이모지를 고른 것 — 대상은 이모지 전체다
             FrameEmoji(withHost: true);
         }
 
@@ -582,6 +621,11 @@ public sealed partial class ViewportView
             return "거울 속에서는 고르기만 한다(보기를 되돌리고 끈다)";
         }
 
+        if (EmojiTargets().Count == 0)
+        {
+            return "고른 것 없음 — 그림을 누르거나 끌어서 고른다. 이모지 전체는 왼쪽 목록에서 이모지를 누른다";
+        }
+
         string target = _selectedEmojiRigs.Count switch
         {
             0 => EmojiWords.WholeEmoji,
@@ -619,7 +663,7 @@ public sealed partial class ViewportView
     /// <summary>지금 대상을 지금 도구로 끌 수 있는가 — 수명 보기 · 거울 보기 · 선택 도구가 아니고, 기본값에 없는 것(이모지 전체의 회전 · 크기)이 아니다.</summary>
     private bool EmojiCanManipulate()
         => !_emojiLife && !_emojiFacingLeft && Manipulator != ManipulatorMode.Select && ShownEmoji is not null
-           && (AutoKey || _selectedEmojiRigs.Count > 0 || Manipulator == ManipulatorMode.Move);
+           && (_selectedEmojiRigs.Count > 0 || (_emojiWholeSelected && (AutoKey || Manipulator == ManipulatorMode.Move)));
 
     /// <summary>대상이 보이는 노드(트리의 키) — 그림이면 그 그림 노드, 이모지 전체면 오프셋 노드. 매니퓰레이터가 여기에 선다.</summary>
     private string? EmojiTargetNode(EmojiFrameView now, string rig)
@@ -691,9 +735,9 @@ public sealed partial class ViewportView
 
     /// <summary>
     /// 타임라인 보기에서 눌렀다.
-    ///   매니퓰레이터의 손잡이 — 고른 것 전부(없으면 이모지 전체)를 끌기 시작한다.
+    ///   매니퓰레이터의 손잡이 — 고른 것 전부(이모지 전체를 골랐으면 그것)를 끌기 시작한다.
     ///   그림 — 고른다. Shift · Ctrl이면 더하거나 뺀다. 이동 도구면 고르면서 바로 끈다(고른 것 전부).
-    ///   빈 곳 — 상자를 끌어 고른다. 끌지 않고 놓으면 선택이 풀린다(대상이 이모지 전체가 된다).
+    ///   빈 곳 — 상자를 끌어 고른다. 끌지 않고 놓으면 선택이 전부 풀린다(이모지 전체까지 — 끌 것이 없어진다).
     /// </summary>
     private bool TryStartEmojiDrag(Point position, bool additive = false)
     {
@@ -959,7 +1003,15 @@ public sealed partial class ViewportView
             }
             else if (!box.Additive)
             {
+                // 빈 곳을 눌렀다 — 전부 푼다("이모지 전체"까지). 고른 것이 없으면 매니퓰레이터도 없다.
+                bool wasWhole = _emojiWholeSelected;
+                _emojiWholeSelected = false;
                 PickEmojiRigs(Array.Empty<string>());
+
+                if (wasWhole)
+                {
+                    EmojiRigPicked?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
         else if (click is { WasSelected: true })
@@ -1062,7 +1114,7 @@ public sealed partial class ViewportView
     }
 
     /// <summary>
-    /// S — 고른 그림들(없으면 이모지 전체)의 지금 값을 지금 프레임에 키한다. 도구의 종류만(이동 = 자리 · 회전 · 크기), 선택 도구면 셋 다. 한 칸.
+    /// S — 고른 그림들(이모지 전체를 골랐으면 그것)의 지금 값을 지금 프레임에 키한다. 도구의 종류만(이동 = 자리 · 회전 · 크기), 선택 도구면 셋 다. 한 칸.
     /// </summary>
     private void KeyEmojiTarget()
     {
@@ -1071,7 +1123,12 @@ public sealed partial class ViewportView
             return;
         }
 
-        IReadOnlyList<string> targets = _selectedEmojiRigs.Count > 0 ? _selectedEmojiRigs.ToList() : new[] { "" };
+        IReadOnlyList<string> targets = EmojiTargets();
+
+        if (targets.Count == 0)
+        {
+            return;
+        }
 
         _editor.Batch(MotionChangeKind.Structure, () =>
         {
