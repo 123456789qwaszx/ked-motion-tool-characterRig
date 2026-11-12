@@ -1818,7 +1818,7 @@ public sealed partial class ViewportView : Control
         // 이모지를 보는 중 — 그림을 고르고 매니퓰레이터로 끈다(타임라인 보기, ViewportView.Emoji). 캐릭터의 포즈는 잡지 않는다.
         if (ShownEmoji is not null)
         {
-            if (TryStartEmojiDrag(position))
+            if (TryStartEmojiDrag(position, e.KeyModifiers.HasFlag(KeyModifiers.Shift) || e.KeyModifiers.HasFlag(KeyModifiers.Control)))
             {
                 Pause();
                 e.Pointer.Capture(this);

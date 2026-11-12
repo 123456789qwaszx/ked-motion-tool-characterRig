@@ -28,36 +28,57 @@ public sealed partial class ViewportView
 
     private static readonly IPen EmojiRigPen = new Pen(new SolidColorBrush(Color.FromArgb(150, 0xF0, 0xC0, 0x40)), 1, DashStyle.Dash);
     private static readonly IPen SelectedEmojiRigPen = new Pen(new SolidColorBrush(Color.FromRgb(0xF0, 0xC0, 0x40)), 2);
+    private static readonly IBrush BoxFill = new SolidColorBrush(Color.FromArgb(28, 0xF0, 0xC0, 0x40));
     private static readonly IPen LocatorPen = new Pen(new SolidColorBrush(Color.FromArgb(200, 0x40, 0xC0, 0xF0)), 1);
 
     private string? _emojiName;
     private bool _emojiLife;
     private bool _emojiFacingLeft;
     private int _emojiHoldCycles = 2;
-    private string? _selectedEmojiRig;
+    private readonly List<string> _selectedEmojiRigs = new();
     private readonly Dictionary<string, Bitmap?> _emojiImages = new(StringComparer.Ordinal);
     private (long Revision, string Name, EmojiRigFrame Frame, EmojiDefinition? Definition, EmojiClip? Timeline, string? Why)? _emojiCache;
 
-    /// <summary>끄는 중인 조작 하나 — 대상 · 기본값인가 키인가 · 시작 값과 지금 값. 끄는 동안은 문서를 바꾸지 않고 보이기만 한다.</summary>
-    private sealed class EmojiManip
+    /// <summary>끄는 조작에 든 대상 하나 — 그림(빈 이름은 이모지 전체)과 값이 들어가는 노드, 시작 값과 지금 값.</summary>
+    private sealed class EmojiManipItem
     {
-        /// <summary>대상 그림(리그)의 이름. 빈 이름은 이모지 전체.</summary>
         public string Rig = "";
-
-        /// <summary>참이면 지금 프레임의 키, 거짓이면 기본값.</summary>
-        public bool Key;
-
-        public Drag Drag;
 
         /// <summary>값이 들어가는 노드(트리의 키) — 끈 거리를 이 노드의 부모 공간으로 되돌린다.</summary>
         public string Node = "";
 
+        public float X, Y, Sx = 1f, Sy = 1f, Rotation;
+        public float NowX, NowY, NowSx = 1f, NowSy = 1f, NowRotation;
+    }
+
+    /// <summary>
+    /// 끄는 중인 조작 하나 — 고른 그림 전부(없으면 이모지 전체)를 함께 끈다. 기본값인가 키인가, 어느 손잡이인가.
+    /// 끄는 동안은 문서를 바꾸지 않고 보이기만 한다. 이동은 화면의 같은 거리만큼, 회전 · 크기는 그림마다 제 가운데에서.
+    /// </summary>
+    private sealed class EmojiManip
+    {
+        /// <summary>참이면 지금 프레임의 키, 거짓이면 기본값.</summary>
+        public bool Key;
+
+        public Drag Drag;
+        public List<EmojiManipItem> Items = new();
         public Vec2 StartRoot;
         public Point StartControl;
         public Vec2 PivotRoot;
         public Vec2 ScaleDirection;
-        public float X, Y, Sx = 1f, Sy = 1f, Rotation;
-        public float NowX, NowY, NowSx = 1f, NowSy = 1f, NowRotation;
+
+        /// <summary>축 화살표를 끌 때 그 축의 방향(루트 공간, 길이 1) — 끈 거리를 이 방향으로만 남긴다.</summary>
+        public Vec2? AxisRoot;
+
+        public bool Moved;
+    }
+
+    /// <summary>빈 곳에서 끌기 시작한 상자 — 놓으면 상자에 닿은 그림들이 골라진다.</summary>
+    private sealed class EmojiBox
+    {
+        public Point Start;
+        public Point Now;
+        public bool Additive;
         public bool Moved;
     }
 
@@ -66,6 +87,7 @@ public sealed partial class ViewportView
 
     private EmojiManip? _emojiManip;
     private EmojiClick? _emojiClick;
+    private EmojiBox? _emojiBox;
     private bool _emojiPress;
 
     /// <summary>그림의 불투명도(알파) — 그림의 빈 곳은 눌러도 맞지 않는다. 못 읽은 그림은 없다(사각형 전체가 맞는다).</summary>
@@ -134,21 +156,32 @@ public sealed partial class ViewportView
         }
     }
 
-    /// <summary>고른 리그 — 끌기의 대상이고 테두리가 진하다.</summary>
+    /// <summary>
+    /// 고른 그림(리그) — 여럿이면 마지막에 고른 것(매니퓰레이터가 서는 자리). 넣으면 그것 하나만 고른다(null이면 푼다).
+    /// </summary>
     public string? SelectedEmojiRig
     {
-        get => _selectedEmojiRig;
-        set
+        get => _selectedEmojiRigs.Count > 0 ? _selectedEmojiRigs[^1] : null;
+        set => SetSelectedEmojiRigs(value is null ? Array.Empty<string>() : new[] { value });
+    }
+
+    /// <summary>고른 그림들 — 고른 순서. 함께 끌고 함께 키한다.</summary>
+    public IReadOnlyList<string> SelectedEmojiRigs => _selectedEmojiRigs;
+
+    /// <summary>고른 그림들을 바꾼다 — 마지막 것이 매니퓰레이터의 자리다.</summary>
+    public void SetSelectedEmojiRigs(IEnumerable<string> rigs)
+    {
+        List<string> next = rigs.Distinct(StringComparer.Ordinal).ToList();
+
+        if (!next.SequenceEqual(_selectedEmojiRigs))
         {
-            if (_selectedEmojiRig != value)
-            {
-                _selectedEmojiRig = value;
-                InvalidateVisual();
-            }
+            _selectedEmojiRigs.Clear();
+            _selectedEmojiRigs.AddRange(next);
+            InvalidateVisual();
         }
     }
 
-    /// <summary>뷰포트에서 리그를 눌러 골랐다.</summary>
+    /// <summary>뷰포트에서 고른 그림들이 바뀌었다(누르기 · 상자 · 빈 곳).</summary>
     public event EventHandler? EmojiRigPicked;
 
     /// <summary>
@@ -322,15 +355,15 @@ public sealed partial class ViewportView
         // 기본값을 끄는 중이면 그 값만 바꾼 사본으로 세운다(문서는 놓을 때 바뀐다).
         if (_emojiManip is { Key: false, Moved: true } basing)
         {
-            EmojiRigAsset? dragged = emoji.FindRig(basing.Rig);
+            EmojiManipItem? whole = basing.Items.FirstOrDefault(i => i.Rig.Length == 0);
             emoji = new EmojiAsset
             {
                 Name = emoji.Name,
-                OffsetX = basing.Rig.Length == 0 ? basing.NowX : emoji.OffsetX,
-                OffsetY = basing.Rig.Length == 0 ? basing.NowY : emoji.OffsetY,
+                OffsetX = whole?.NowX ?? emoji.OffsetX,
+                OffsetY = whole?.NowY ?? emoji.OffsetY,
                 Timeline = emoji.Timeline, Spans = emoji.Spans, FixedSide = emoji.FixedSide,
-                Rigs = emoji.Rigs.Select(r => r == dragged
-                    ? new EmojiRigAsset { Name = r.Name, Images = r.Images, PlaceX = basing.NowX, PlaceY = basing.NowY, Scale = basing.NowSx, Rotation = basing.NowRotation, Upright = r.Upright }
+                Rigs = emoji.Rigs.Select(r => basing.Items.FirstOrDefault(i => i.Rig == r.Name) is { } item
+                    ? new EmojiRigAsset { Name = r.Name, Images = r.Images, PlaceX = item.NowX, PlaceY = item.NowY, Scale = item.NowSx, Rotation = item.NowRotation, Upright = r.Upright }
                     : r).ToList(),
             };
         }
@@ -368,16 +401,25 @@ public sealed partial class ViewportView
 
         (float alpha, IReadOnlyList<EmojiRigPose> rigs) = EmojiPreview.Apply(tree, EmojiKeyPrefix, emoji, source.Frame, clip, frame, source.Definition, _emojiFacingLeft);
 
-        // 키를 끄는 중이면 그 노드의 지금 값만 덮는다(키는 놓을 때 들어간다). 이모지 전체의 자리는 머리에서의 자리에 더한 것이다.
-        if (_emojiManip is { Key: true, Moved: true } keying && tree.Contains(keying.Node))
+        // 키를 끄는 중이면 그 노드들의 지금 값만 덮는다(키는 놓을 때 들어간다). 이모지 전체의 자리는 머리에서의 자리에 더한 것이다.
+        if (_emojiManip is { Key: true, Moved: true } keying)
         {
-            bool whole = keying.Rig.Length == 0;
-            RectNodeState state = tree.GetState(keying.Node)
-                .WithAnchoredPosition(new Vec2((whole ? emoji.OffsetX : 0f) + keying.NowX, (whole ? emoji.OffsetY : 0f) + keying.NowY))
-                .WithLocalScale(new Vec3(keying.NowSx, keying.NowSy, 1f))
-                .WithLocalEuler(new Vec3(0f, 0f, keying.NowRotation));
-            tree.SetState(keying.Node, state);
+            foreach (EmojiManipItem item in keying.Items)
+            {
+                if (!tree.Contains(item.Node))
+                {
+                    continue;
+                }
+
+                bool whole = item.Rig.Length == 0;
+                RectNodeState state = tree.GetState(item.Node)
+                    .WithAnchoredPosition(new Vec2((whole ? emoji.OffsetX : 0f) + item.NowX, (whole ? emoji.OffsetY : 0f) + item.NowY))
+                    .WithLocalScale(new Vec3(item.NowSx, item.NowSy, 1f))
+                    .WithLocalEuler(new Vec3(0f, 0f, item.NowRotation));
+                tree.SetState(item.Node, state);
+            }
         }
+
         string side = !_emojiFacingLeft ? "" : emoji.FixedSide ? " · 왼쪽을 보는 인물(방향을 따르지 않는다)" : " · 왼쪽을 보는 인물 — 거울";
         return new EmojiFrameView(tree, alpha, rigs, label + (host is null ? " · 캐릭터가 없어 무대 가운데" : $" · {host.Id}의 발") + side, visible);
     }
@@ -455,7 +497,7 @@ public sealed partial class ViewportView
 
                 if (!_emojiLife)
                 {
-                    context.DrawGeometry(null, rig.Rig == _selectedEmojiRig ? SelectedEmojiRigPen : EmojiRigPen, outline);
+                    context.DrawGeometry(null, _selectedEmojiRigs.Contains(rig.Rig) ? SelectedEmojiRigPen : EmojiRigPen, outline);
                     DrawLabel(context, rig.Rig + (rig.Sprite is null ? "" : $" · {rig.Sprite}"), new Point(Math.Min(topLeft.X, bottomLeft.X) + 2, Math.Max(bottomLeft.Y, bottomRight.Y) + 2));
                 }
             }
@@ -464,6 +506,12 @@ public sealed partial class ViewportView
         DrawOutside(context, stage);
         context.DrawRectangle(StagePen, stage);
         DrawEmojiGizmo(context, now);
+
+        // 고르는 상자.
+        if (_emojiBox is { Moved: true } box)
+        {
+            context.DrawRectangle(BoxFill, EmojiRigPen, new Rect(box.Start, box.Now).Normalize());
+        }
         DrawLabel(context, now.Label, new Point(stage.X + 8, stage.Y + 6));
 
         // 지금 도구로 무엇을 끌면 무엇이 바뀌는가 — 보기를 이모지에 맞추면 무대의 글은 화면 밖이라, 뷰포트의 왼쪽 아래에 붙박아 적는다.
@@ -486,7 +534,12 @@ public sealed partial class ViewportView
             return "거울 속에서는 고르기만 한다(보기를 되돌리고 끈다)";
         }
 
-        string target = _selectedEmojiRig ?? EmojiWords.WholeEmoji;
+        string target = _selectedEmojiRigs.Count switch
+        {
+            0 => EmojiWords.WholeEmoji,
+            1 => _selectedEmojiRigs[0],
+            _ => $"그림 {_selectedEmojiRigs.Count}개",
+        };
         string tool = Manipulator switch
         {
             ManipulatorMode.Move => "이동(W)",
@@ -500,7 +553,7 @@ public sealed partial class ViewportView
             return $"{tool} · {target}";
         }
 
-        if (!AutoKey && _selectedEmojiRig is null && Manipulator != ManipulatorMode.Move)
+        if (!AutoKey && _selectedEmojiRigs.Count == 0 && Manipulator != ManipulatorMode.Move)
         {
             return $"{tool} · {target}: 회전 · 크기는 키로만 잡는다(Auto Key를 켠다)";
         }
@@ -518,7 +571,7 @@ public sealed partial class ViewportView
     /// <summary>지금 대상을 지금 도구로 끌 수 있는가 — 수명 보기 · 거울 보기 · 선택 도구가 아니고, 기본값에 없는 것(이모지 전체의 회전 · 크기)이 아니다.</summary>
     private bool EmojiCanManipulate()
         => !_emojiLife && !_emojiFacingLeft && Manipulator != ManipulatorMode.Select && ShownEmoji is not null
-           && (AutoKey || _selectedEmojiRig is not null || Manipulator == ManipulatorMode.Move);
+           && (AutoKey || _selectedEmojiRigs.Count > 0 || Manipulator == ManipulatorMode.Move);
 
     /// <summary>대상이 보이는 노드(트리의 키) — 그림이면 그 그림 노드, 이모지 전체면 오프셋 노드. 매니퓰레이터가 여기에 선다.</summary>
     private string? EmojiTargetNode(EmojiFrameView now, string rig)
@@ -535,7 +588,7 @@ public sealed partial class ViewportView
     /// <summary>매니퓰레이터의 중심과 x · y 팔 끝(컨트롤 좌표, 팔 길이는 화면 고정). 끌 수 없으면 null.</summary>
     private (Point Center, Point XEnd, Point YEnd)? EmojiGizmoPoints(EmojiFrameView now)
     {
-        if (!EmojiCanManipulate() || EmojiTargetNode(now, _selectedEmojiRig ?? "") is not { } key)
+        if (!EmojiCanManipulate() || EmojiTargetNode(now, SelectedEmojiRig ?? "") is not { } key)
         {
             return null;
         }
@@ -589,60 +642,80 @@ public sealed partial class ViewportView
         => EmojiClipMath.SampleNode(EmojiSource()?.Timeline, rig, (float)(EmojiKeyTime() * EmojiAsset.Fps));
 
     /// <summary>
-    /// 타임라인 보기에서 눌렀다. 매니퓰레이터의 손잡이면 지금 대상을 끌기 시작하고, 그림이면 고른다(이동 도구면 고르면서 바로 끈다).
-    /// 빈 곳이면 그림 선택을 푼다(대상이 이모지 전체가 된다). 무엇인가 잡았으면 참.
+    /// 타임라인 보기에서 눌렀다.
+    ///   매니퓰레이터의 손잡이 — 고른 것 전부(없으면 이모지 전체)를 끌기 시작한다.
+    ///   그림 — 고른다. Shift · Ctrl이면 더하거나 뺀다. 이동 도구면 고르면서 바로 끈다(고른 것 전부).
+    ///   빈 곳 — 상자를 끌어 고른다. 끌지 않고 놓으면 선택이 풀린다(대상이 이모지 전체가 된다).
     /// </summary>
-    private bool TryStartEmojiDrag(Point position)
+    private bool TryStartEmojiDrag(Point position, bool additive = false)
     {
         if (_emojiLife || ShownEmoji is not { } emoji || EmojiNow() is not { Visible: true } now)
         {
             return false;
         }
 
-        _emojiManip = null;
-        _emojiClick = null;
+        CancelEmojiPress();
 
-        // 1. 매니퓰레이터의 손잡이 — 고른 것을 끈다. 그 밑에 다른 그림이 있어도 고르기가 넘어가지 않는다.
+        // 1. 매니퓰레이터의 손잡이 — 그 밑에 다른 그림이 있어도 고르기가 넘어가지 않는다.
         //    대상이 이모지 전체일 때 가운데 손잡이는 그림 위에 놓이기 쉽다 — 그 자리에 그림이 있으면 그림 고르기가 이긴다(팔은 늘 잡힌다).
-        if (EmojiGizmoPoints(now) is { } gizmo && GizmoDragAt(position, gizmo) is var handle && handle != Drag.None
-            && !(_selectedEmojiRig is null && handle is Drag.MoveFree or Drag.ScaleFree && EmojiRigsAt(now, ToRoot(position)).Count > 0))
+        if (!additive && EmojiGizmoPoints(now) is { } gizmo && GizmoDragAt(position, gizmo) is var handle && handle != Drag.None
+            && !(_selectedEmojiRigs.Count == 0 && handle is Drag.MoveFree or Drag.ScaleFree && EmojiRigsAt(now, ToRoot(position)).Count > 0))
         {
-            _emojiPress = BeginEmojiManip(emoji, now, _selectedEmojiRig ?? "", handle, position, gizmo);
+            _emojiPress = BeginEmojiManip(emoji, now, handle, position, gizmo);
             return _emojiPress;
         }
 
-        // 2. 그림 — 맞은 것들 가운데 이미 고른 것이 있으면 그것을 지킨다(겹친 그림을 끌 수 있게).
         IReadOnlyList<string> hits = EmojiRigsAt(now, ToRoot(position));
+        _emojiPress = true;
 
+        // 2. 빈 곳 — 상자.
         if (hits.Count == 0)
         {
-            if (_selectedEmojiRig is not null)
+            _emojiBox = new EmojiBox { Start = position, Now = position, Additive = additive };
+            return true;
+        }
+
+        // 3. Shift · Ctrl — 위에 그려진 것을 더하거나 뺀다. 끌지 않는다.
+        if (additive)
+        {
+            List<string> next = _selectedEmojiRigs.ToList();
+
+            if (!next.Remove(hits[0]))
             {
-                SelectedEmojiRig = null;
-                EmojiRigPicked?.Invoke(this, EventArgs.Empty);
+                next.Add(hits[0]);
             }
 
-            return false;
+            PickEmojiRigs(next);
+            return true;
         }
 
-        string? before = _selectedEmojiRig;
-        string chosen = before is not null && hits.Contains(before) ? before : hits[0];
-        _emojiClick = new EmojiClick(hits, chosen, chosen == before, position);
+        // 4. 그림 — 맞은 것들 가운데 이미 고른 것이 있으면 그것을 지킨다(겹친 그림 · 여럿을 끌 수 있게).
+        string? kept = hits.FirstOrDefault(h => _selectedEmojiRigs.Contains(h));
+        string chosen = kept ?? hits[0];
+        _emojiClick = new EmojiClick(hits, chosen, kept is not null, position);
 
-        if (chosen != before)
-        {
-            SelectedEmojiRig = chosen;
-            EmojiRigPicked?.Invoke(this, EventArgs.Empty);
-        }
+        // 고른 것이 매니퓰레이터의 자리가 된다 — 여럿을 골랐으면 그 가운데 누른 것이 마지막으로 온다.
+        PickEmojiRigs(kept is null ? new[] { chosen } : _selectedEmojiRigs.Where(r => r != chosen).Append(chosen));
 
         // 이동 도구면 고르면서 바로 끈다(손잡이를 따로 잡지 않아도 된다).
         if (Manipulator == ManipulatorMode.Move && EmojiCanManipulate() && EmojiGizmoPoints(EmojiNow() ?? now) is { } picked)
         {
-            BeginEmojiManip(emoji, now, chosen, Drag.MoveFree, position, picked);
+            BeginEmojiManip(emoji, now, Drag.MoveFree, position, picked);
         }
 
-        _emojiPress = true;
         return true;
+    }
+
+    /// <summary>고른 그림들을 바꾸고 알린다(왼쪽 목록과 오른쪽이 따라온다). 같으면 알리지 않는다.</summary>
+    private void PickEmojiRigs(IEnumerable<string> rigs)
+    {
+        List<string> next = rigs.ToList();
+
+        if (!next.SequenceEqual(_selectedEmojiRigs))
+        {
+            SetSelectedEmojiRigs(next);
+            EmojiRigPicked?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     /// <summary>매니퓰레이터의 어느 손잡이를 눌렀는가.</summary>
@@ -663,50 +736,82 @@ public sealed partial class ViewportView
         };
     }
 
-    /// <summary>끌기를 시작한다 — 대상의 시작 값을 읽는다(Auto Key면 지금 프레임의 키 값, 아니면 기본값).</summary>
-    private bool BeginEmojiManip(EmojiAsset emoji, EmojiFrameView now, string rig, Drag drag, Point position, (Point Center, Point XEnd, Point YEnd) gizmo)
+    /// <summary>끌기를 시작한다 — 고른 그림 전부(없으면 이모지 전체)의 시작 값을 읽는다(Auto Key면 지금 프레임의 키 값, 아니면 기본값).</summary>
+    private bool BeginEmojiManip(EmojiAsset emoji, EmojiFrameView now, Drag drag, Point position, (Point Center, Point XEnd, Point YEnd) gizmo)
     {
         if (EmojiSource() is not { } source)
         {
             return false;
         }
 
-        var manip = new EmojiManip { Rig = rig, Key = AutoKey, Drag = drag, StartRoot = ToRoot(position), StartControl = position };
+        var manip = new EmojiManip { Key = AutoKey, Drag = drag, StartRoot = ToRoot(position), StartControl = position, PivotRoot = ToRoot(gizmo.Center) };
+        IEnumerable<string> targets = _selectedEmojiRigs.Count > 0 ? _selectedEmojiRigs : new[] { "" };
 
-        if (manip.Key)
+        foreach (string rig in targets)
         {
-            EmojiNodePose pose = EmojiKeyPose(rig);
-            (manip.X, manip.Y, manip.Sx, manip.Sy, manip.Rotation) = (pose.Position.X, pose.Position.Y, pose.Scale.X, pose.Scale.Y, pose.Rotation);
-            manip.Node = EmojiKeyPrefix + source.Frame.TargetNode(rig);
-        }
-        else if (emoji.FindRig(rig) is { } asset)
-        {
-            (manip.X, manip.Y, manip.Sx, manip.Sy, manip.Rotation) = (asset.PlaceX, asset.PlaceY, asset.Scale, asset.Scale, asset.Rotation);
-            manip.Node = EmojiKeyPrefix + source.Frame.PlaceNodeOf(rig);
-        }
-        else
-        {
-            (manip.X, manip.Y) = (emoji.OffsetX, emoji.OffsetY);
-            manip.Node = EmojiKeyPrefix + source.Frame.OffsetNode;
+            var item = new EmojiManipItem { Rig = rig };
+
+            if (manip.Key)
+            {
+                EmojiNodePose pose = EmojiKeyPose(rig);
+                (item.X, item.Y, item.Sx, item.Sy, item.Rotation) = (pose.Position.X, pose.Position.Y, pose.Scale.X, pose.Scale.Y, pose.Rotation);
+                item.Node = EmojiKeyPrefix + source.Frame.TargetNode(rig);
+            }
+            else if (emoji.FindRig(rig) is { } asset)
+            {
+                (item.X, item.Y, item.Sx, item.Sy, item.Rotation) = (asset.PlaceX, asset.PlaceY, asset.Scale, asset.Scale, asset.Rotation);
+                item.Node = EmojiKeyPrefix + source.Frame.PlaceNodeOf(rig);
+            }
+            else
+            {
+                (item.X, item.Y) = (emoji.OffsetX, emoji.OffsetY);
+                item.Node = EmojiKeyPrefix + source.Frame.OffsetNode;
+            }
+
+            if (!now.Tree.Contains(item.Node))
+            {
+                continue;
+            }
+
+            (item.NowX, item.NowY, item.NowSx, item.NowSy, item.NowRotation) = (item.X, item.Y, item.Sx, item.Sy, item.Rotation);
+            manip.Items.Add(item);
         }
 
-        if (!now.Tree.Contains(manip.Node))
+        if (manip.Items.Count == 0)
         {
             return false;
         }
 
-        (manip.NowX, manip.NowY, manip.NowSx, manip.NowSy, manip.NowRotation) = (manip.X, manip.Y, manip.Sx, manip.Sy, manip.Rotation);
-        manip.PivotRoot = ToRoot(gizmo.Center);
         Point arm = drag == Drag.ScaleY ? gizmo.YEnd : gizmo.XEnd;
         manip.ScaleDirection = new Vec2((float)(arm.X - gizmo.Center.X), (float)(arm.Y - gizmo.Center.Y));
+
+        // 축 화살표 — 그 화살표가 가리키는 방향(매니퓰레이터가 선 그림의 축)으로만 움직인다. 여럿이면 다 같은 방향으로 간다.
+        if (drag is Drag.MoveX or Drag.MoveY)
+        {
+            Vec2 axis = ToRoot(drag == Drag.MoveX ? gizmo.XEnd : gizmo.YEnd) - manip.PivotRoot;
+            float length = (float)Math.Sqrt(axis.X * axis.X + axis.Y * axis.Y);
+            manip.AxisRoot = length < 1e-6f ? null : new Vec2(axis.X / length, axis.Y / length);
+        }
+
         _emojiManip = manip;
         return true;
     }
 
-    /// <summary>끄는 중 — 끈 만큼 지금 값을 바꾼다(보이기만). 이동은 그 노드의 부모 공간으로 되돌린 거리, 회전은 중심을 도는 각, 크기는 팔 방향으로 잰 배.</summary>
+    /// <summary>
+    /// 끄는 중 — 끈 만큼 지금 값을 바꾼다(보이기만). 이동은 화면의 같은 거리를 그림마다 제 부모 공간으로 되돌리고,
+    /// 회전은 매니퓰레이터의 가운데를 도는 각을 그림마다 더하고, 크기는 팔 방향으로 잰 배를 그림마다 곱한다. 상자를 끄는 중이면 상자를 넓힌다.
+    /// </summary>
     private void DragEmojiPlace(Point position)
     {
-        if (_emojiManip is not { } manip || EmojiNow() is not { } now || !now.Tree.Contains(manip.Node))
+        if (_emojiBox is { } box)
+        {
+            box.Now = position;
+            box.Moved |= Distance(position, box.Start) >= EmojiClickSlop;
+            InvalidateVisual();
+            return;
+        }
+
+        if (_emojiManip is not { } manip || EmojiNow() is not { } now)
         {
             return;
         }
@@ -725,15 +830,35 @@ public sealed partial class ViewportView
             case Drag.MoveX:
             case Drag.MoveY:
             {
-                Vec2 delta = PoseEdit.RootDeltaToLocal(now.Tree, manip.Node, manip.StartRoot, root);
-                manip.NowX = (float)Math.Round(manip.X + (manip.Drag == Drag.MoveY ? 0f : delta.X), 1);
-                manip.NowY = (float)Math.Round(manip.Y + (manip.Drag == Drag.MoveX ? 0f : delta.Y), 1);
+                Vec2 moved = root - manip.StartRoot;
+
+                if (manip.AxisRoot is { } axis)
+                {
+                    float along = moved.X * axis.X + moved.Y * axis.Y;
+                    moved = new Vec2(axis.X * along, axis.Y * along);
+                }
+
+                foreach (EmojiManipItem item in manip.Items.Where(i => now.Tree.Contains(i.Node)))
+                {
+                    Vec2 delta = PoseEdit.RootDeltaToLocal(now.Tree, item.Node, manip.StartRoot, manip.StartRoot + moved);
+                    item.NowX = (float)Math.Round(item.X + delta.X, 1);
+                    item.NowY = (float)Math.Round(item.Y + delta.Y, 1);
+                }
+
                 break;
             }
 
             case Drag.Rotate:
-                manip.NowRotation = (float)Math.Round(manip.Rotation + PoseEdit.AngleDelta(manip.PivotRoot, manip.StartRoot, root), 1);
+            {
+                float angle = PoseEdit.AngleDelta(manip.PivotRoot, manip.StartRoot, root);
+
+                foreach (EmojiManipItem item in manip.Items)
+                {
+                    item.NowRotation = (float)Math.Round(item.Rotation + angle, 1);
+                }
+
                 break;
+            }
 
             case Drag.ScaleFree:
             case Drag.ScaleX:
@@ -745,8 +870,13 @@ public sealed partial class ViewportView
 
                 // 그림의 기본 크기는 값 하나다(가로 세로가 같이 간다). 키는 축마다 따로.
                 bool both = !manip.Key || manip.Drag == Drag.ScaleFree;
-                manip.NowSx = both || manip.Drag == Drag.ScaleX ? (float)Math.Round(manip.Sx * factor, 3) : manip.Sx;
-                manip.NowSy = both || manip.Drag == Drag.ScaleY ? (float)Math.Round(manip.Sy * factor, 3) : manip.Sy;
+
+                foreach (EmojiManipItem item in manip.Items)
+                {
+                    item.NowSx = both || manip.Drag == Drag.ScaleX ? (float)Math.Round(item.Sx * factor, 3) : item.Sx;
+                    item.NowSy = both || manip.Drag == Drag.ScaleY ? (float)Math.Round(item.Sy * factor, 3) : item.Sy;
+                }
+
                 break;
             }
         }
@@ -755,24 +885,46 @@ public sealed partial class ViewportView
     }
 
     /// <summary>
-    /// 놓았다. 끌었으면 문서에 적는다(한 칸 — 기본값이면 그 값, 키면 지금 프레임의 키).
-    /// 끌지 않았으면 누르기다 — 이미 고른 그림을 다시 눌렀고 그 자리에 다른 그림이 겹쳐 있으면 그 밑의 것으로 넘긴다.
+    /// 놓았다.
+    ///   끌었으면 문서에 적는다 — 고른 것이 여럿이어도 한 칸(기본값이면 그 값들, 키면 지금 프레임의 키들).
+    ///   상자를 끌었으면 상자에 닿은 그림들을 고른다(Shift · Ctrl이면 더한다). 빈 곳을 그냥 눌렀으면 선택을 푼다.
+    ///   그림을 끌지 않고 눌렀으면 — 여럿을 고른 채였으면 그것 하나만 남기고, 하나였고 그 자리에 다른 그림이 겹쳐 있으면 그 밑의 것으로 넘긴다.
     /// </summary>
     private void EndEmojiDrag()
     {
         EmojiManip? manip = _emojiManip;
         EmojiClick? click = _emojiClick;
+        EmojiBox? box = _emojiBox;
+        int selectedBefore = _selectedEmojiRigs.Count;
         CancelEmojiPress();
 
         if (manip is { Moved: true } && _editor is not null && ShownEmoji is { } emoji)
         {
             CommitEmojiManip(emoji, manip);
         }
-        else if (click is { WasSelected: true, Candidates.Count: > 1 })
+        else if (box is not null)
         {
-            int next = (click.Candidates.ToList().IndexOf(click.Chosen) + 1) % click.Candidates.Count;
-            SelectedEmojiRig = click.Candidates[next];
-            EmojiRigPicked?.Invoke(this, EventArgs.Empty);
+            if (box.Moved)
+            {
+                IEnumerable<string> touched = EmojiRigsIn(new Rect(box.Start, box.Now).Normalize());
+                PickEmojiRigs(box.Additive ? _selectedEmojiRigs.Concat(touched).Distinct(StringComparer.Ordinal) : touched);
+            }
+            else if (!box.Additive)
+            {
+                PickEmojiRigs(Array.Empty<string>());
+            }
+        }
+        else if (click is { WasSelected: true })
+        {
+            if (selectedBefore > 1)
+            {
+                PickEmojiRigs(new[] { click.Chosen });
+            }
+            else if (click.Candidates.Count > 1)
+            {
+                int next = (click.Candidates.ToList().IndexOf(click.Chosen) + 1) % click.Candidates.Count;
+                PickEmojiRigs(new[] { click.Candidates[next] });
+            }
         }
 
         InvalidateVisual();
@@ -782,33 +934,73 @@ public sealed partial class ViewportView
     {
         _emojiManip = null;
         _emojiClick = null;
+        _emojiBox = null;
         _emojiPress = false;
     }
 
+    /// <summary>상자(컨트롤 좌표)에 닿은 그림들 — 그려지는 순서. 지금 프레임에 거의 안 보이는 그림은 빼고, 다 안 보이면 다 넣는다.</summary>
+    private IReadOnlyList<string> EmojiRigsIn(Rect box)
+    {
+        if (EmojiNow() is not { } now)
+        {
+            return Array.Empty<string>();
+        }
+
+        var seen = new List<string>();
+        var faint = new List<string>();
+
+        foreach (EmojiRigPose rig in now.Rigs)
+        {
+            Quad quad = EmojiQuad(now.Tree, rig);
+            (Point min, Point max) = ControlBox(new[] { quad.BottomLeft, quad.BottomRight, quad.TopRight, quad.TopLeft });
+
+            if (box.Intersects(new Rect(min, max)))
+            {
+                (now.Alpha * rig.Alpha >= 0.05f ? seen : faint).Add(rig.Rig);
+            }
+        }
+
+        return seen.Count > 0 ? seen : faint;
+    }
+
+    /// <summary>끈 것을 문서에 적는다 — 한 칸.</summary>
     private void CommitEmojiManip(EmojiAsset emoji, EmojiManip manip)
     {
         if (!manip.Key)
         {
-            if (emoji.FindRig(manip.Rig) is { } rig)
+            _editor!.Batch(MotionChangeKind.Emoji, () =>
             {
-                _editor!.SetEmojiRigPlace(emoji.Name, rig.Name, manip.NowX, manip.NowY, manip.NowSx, manip.NowRotation);
-            }
-            else
-            {
-                _editor!.SetEmojiOffset(emoji.Name, manip.NowX, manip.NowY);
-            }
-
+                foreach (EmojiManipItem item in manip.Items)
+                {
+                    if (emoji.FindRig(item.Rig) is { } rig)
+                    {
+                        _editor.SetEmojiRigPlace(emoji.Name, rig.Name, item.NowX, item.NowY, item.NowSx, item.NowRotation);
+                    }
+                    else
+                    {
+                        _editor.SetEmojiOffset(emoji.Name, item.NowX, item.NowY);
+                    }
+                }
+            });
             return;
         }
 
-        (ChannelKind kind, (Axis, float)[] values) = manip.Drag switch
+        // 첫 키면 채널이 생긴다 — 목록을 다시 만들게 구조의 변화로 알린다.
+        _editor!.Batch(MotionChangeKind.Structure, () =>
         {
-            Drag.Rotate => (ChannelKind.Euler, new[] { (Axis.Z, manip.NowRotation) }),
-            Drag.ScaleFree or Drag.ScaleX or Drag.ScaleY => (ChannelKind.Scale, new[] { (Axis.X, manip.NowSx), (Axis.Y, manip.NowSy) }),
-            _ => (ChannelKind.Position, new[] { (Axis.X, manip.NowX), (Axis.Y, manip.NowY) }),
-        };
+            foreach (EmojiManipItem item in manip.Items)
+            {
+                (ChannelKind kind, (Axis, float)[] values) = manip.Drag switch
+                {
+                    Drag.Rotate => (ChannelKind.Euler, new[] { (Axis.Z, item.NowRotation) }),
+                    Drag.ScaleFree or Drag.ScaleX or Drag.ScaleY => (ChannelKind.Scale, new[] { (Axis.X, item.NowSx), (Axis.Y, item.NowSy) }),
+                    _ => (ChannelKind.Position, new[] { (Axis.X, item.NowX), (Axis.Y, item.NowY) }),
+                };
 
-        KeyEmoji(emoji, manip.Rig, kind, values);
+                KeyEmoji(emoji, item.Rig, kind, values);
+            }
+        });
+        PoseKeyed?.Invoke(this, EventArgs.Empty);
     }
 
     private void KeyEmoji(EmojiAsset emoji, string rig, ChannelKind kind, IReadOnlyList<(Axis, float)> values)
@@ -819,11 +1011,10 @@ public sealed partial class ViewportView
         }
 
         _editor.KeyComponents(emoji.Timeline.Name, source.Frame.TargetNode(rig), kind, (float)EmojiKeyTime(), values, DefaultTangent);
-        PoseKeyed?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
-    /// S — 지금 대상(고른 그림, 없으면 이모지 전체)의 지금 값을 지금 프레임에 키한다. 도구의 종류만(이동 = 자리 · 회전 · 크기), 선택 도구면 셋 다. 한 칸.
+    /// S — 고른 그림들(없으면 이모지 전체)의 지금 값을 지금 프레임에 키한다. 도구의 종류만(이동 = 자리 · 회전 · 크기), 선택 도구면 셋 다. 한 칸.
     /// </summary>
     private void KeyEmojiTarget()
     {
@@ -832,32 +1023,31 @@ public sealed partial class ViewportView
             return;
         }
 
-        string rig = _selectedEmojiRig ?? "";
-        EmojiNodePose pose = EmojiKeyPose(rig);
-        var kinds = new List<(ChannelKind, (Axis, float)[])>();
+        IReadOnlyList<string> targets = _selectedEmojiRigs.Count > 0 ? _selectedEmojiRigs.ToList() : new[] { "" };
 
-        if (Manipulator is ManipulatorMode.Move or ManipulatorMode.Select)
+        _editor.Batch(MotionChangeKind.Structure, () =>
         {
-            kinds.Add((ChannelKind.Position, new[] { (Axis.X, pose.Position.X), (Axis.Y, pose.Position.Y) }));
-        }
-
-        if (Manipulator is ManipulatorMode.Rotate or ManipulatorMode.Select)
-        {
-            kinds.Add((ChannelKind.Euler, new[] { (Axis.Z, pose.Rotation) }));
-        }
-
-        if (Manipulator is ManipulatorMode.Scale or ManipulatorMode.Select)
-        {
-            kinds.Add((ChannelKind.Scale, new[] { (Axis.X, pose.Scale.X), (Axis.Y, pose.Scale.Y) }));
-        }
-
-        _editor.Batch(MotionChangeKind.Keys, () =>
-        {
-            foreach ((ChannelKind kind, (Axis, float)[] values) in kinds)
+            foreach (string rig in targets)
             {
-                KeyEmoji(emoji, rig, kind, values);
+                EmojiNodePose pose = EmojiKeyPose(rig);
+
+                if (Manipulator is ManipulatorMode.Move or ManipulatorMode.Select)
+                {
+                    KeyEmoji(emoji, rig, ChannelKind.Position, new[] { (Axis.X, pose.Position.X), (Axis.Y, pose.Position.Y) });
+                }
+
+                if (Manipulator is ManipulatorMode.Rotate or ManipulatorMode.Select)
+                {
+                    KeyEmoji(emoji, rig, ChannelKind.Euler, new[] { (Axis.Z, pose.Rotation) });
+                }
+
+                if (Manipulator is ManipulatorMode.Scale or ManipulatorMode.Select)
+                {
+                    KeyEmoji(emoji, rig, ChannelKind.Scale, new[] { (Axis.X, pose.Scale.X), (Axis.Y, pose.Scale.Y) });
+                }
             }
         });
+        PoseKeyed?.Invoke(this, EventArgs.Empty);
     }
 
     // ── 고르기 ───────────────────────────────────────────────────────
@@ -1027,9 +1217,9 @@ public sealed partial class ViewportView
     }
 
     /// <summary>테스트 손잡이 — 컨트롤 좌표에서 누르고 끌고 놓는다(매니퓰레이터의 손잡이를 잡을 때). 잡은 것이 없으면 거짓.</summary>
-    internal bool DragEmojiForTest(Point from, Point to)
+    internal bool DragEmojiForTest(Point from, Point to, bool additive = false)
     {
-        if (!TryStartEmojiDrag(from))
+        if (!TryStartEmojiDrag(from, additive))
         {
             return false;
         }

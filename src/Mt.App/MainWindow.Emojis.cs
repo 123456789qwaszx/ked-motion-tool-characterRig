@@ -50,7 +50,7 @@ public partial class MainWindow
     private readonly TextBox _emojiFrames = new() { FontSize = 11 };
     private readonly CheckBox _emojiFixedSide = new() { Content = "인물의 방향을 따르지 않기", FontSize = 11 };
 
-    private readonly ListBox _emojiRigList = new() { MinHeight = 40, MaxHeight = 220, FontSize = 11 };
+    private readonly ListBox _emojiRigList = new() { MinHeight = 40, MaxHeight = 220, FontSize = 11, SelectionMode = SelectionMode.Multiple };
 
     /// <summary>리그 선택의 주인 — 다른 이모지로 옮기면 리그 선택을 이어받지 않는다(이름이 같은 리그가 있어도).</summary>
     private string? _emojiRigOwner;
@@ -91,7 +91,11 @@ public partial class MainWindow
 
     private EmojiAsset? CurrentEmoji => SelectedEmoji is { } name ? _session.Editor.Document.FindEmoji(name) : null;
 
-    private string? SelectedEmojiRig => _emojiRigList.SelectedItem as string;
+    /// <summary>고른 그림들(목록의 순서). 여럿이면 뷰포트에서 함께 끌고 함께 키한다.</summary>
+    private IReadOnlyList<string> SelectedEmojiRigs => _emojiRigList.SelectedItems?.Cast<string>().ToList() ?? new List<string>();
+
+    /// <summary>값을 고칠 그림 — 하나만 골랐을 때의 그것. 여럿이면 null(오른쪽은 값의 칸을 내지 않는다).</summary>
+    private string? SelectedEmojiRig => SelectedEmojiRigs is { Count: 1 } one ? one[0] : null;
 
     private string? SelectedEmojiSpan => _emojiSpanList.SelectedItem is string row ? row.Split(' ')[0] : null;
 
@@ -104,7 +108,12 @@ public partial class MainWindow
     internal string AddEmojiFromForm() => AddEmoji();
 
     /// <summary>테스트 손잡이 — 리그를 고른다.</summary>
-    internal void SelectEmojiRigFromForm(string? rig) => _emojiRigList.SelectedItem = rig;
+    internal void SelectEmojiRigFromForm(string? rig) => SelectEmojiRigsInList(rig is null ? Array.Empty<string>() : new[] { rig });
+
+    /// <summary>테스트 손잡이 — 왼쪽 목록에서 그림 여럿을 고른다 / 고른 것들.</summary>
+    internal void SelectEmojiRigsFromForm(params string[] rigs) => SelectEmojiRigsInList(rigs);
+
+    internal IReadOnlyList<string> SelectedEmojiRigsInList => SelectedEmojiRigs;
 
     /// <summary>테스트 손잡이 — 칸 하나에 글을 넣고 확정한다(Enter와 같은 길).</summary>
     internal void CommitEmojiField(string field, string text)
@@ -227,7 +236,7 @@ public partial class MainWindow
         _emojiList.ItemTemplate = new FuncDataTemplate<string>((name, _) => TwoLineRow(name, EmojiNoteOf(name)));
 
         // 이미 고른 이모지를 다시 누르면 리그 선택이 풀려 오른쪽이 이모지의 값으로 돌아온다.
-        _emojiList.Tapped += (_, _) => _emojiRigList.SelectedItem = null;
+        _emojiList.Tapped += (_, _) => SelectEmojiRigsInList(Array.Empty<string>());
 
         // 그 이모지의 리그 — 고른 것이 오른쪽을 정한다(리그를 고르면 리그의 값, 아니면 이모지의 값).
         _emojiRigSection.Children.Add(Header("그림 — 이 이모지를 이루는 조각"));
@@ -236,12 +245,19 @@ public partial class MainWindow
         {
             if (!_refreshing)
             {
-                _viewport.SelectedEmojiRig = SelectedEmojiRig;
+                // 목록에서 고른 것을 뷰포트로 — 뷰포트가 이미 같은 것들을 골랐으면(뷰포트에서 고른 것이 여기로 온 것) 순서를 지킨다.
+                IReadOnlyList<string> picked = SelectedEmojiRigs;
+
+                if (!picked.OrderBy(r => r, StringComparer.Ordinal).SequenceEqual(_viewport.SelectedEmojiRigs.OrderBy(r => r, StringComparer.Ordinal)))
+                {
+                    _viewport.SetSelectedEmojiRigs(picked);
+                }
+
                 _emojiKeyTarget.SelectedItem = SelectedEmojiRig ?? WholeEmojiChoice;
                 RefreshEmojiInspector();
             }
         };
-        ToolTip.SetTip(_emojiRigList, "이 이모지를 이루는 그림들(런타임의 말로는 리그 — 그림 하나에 리그 하나). 순서가 그려지는 순서다(아래가 위). 고르면 오른쪽이 그 그림의 값을 보인다. 뷰포트에서 그림을 눌러도 고른다");
+        ToolTip.SetTip(_emojiRigList, "이 이모지를 이루는 그림들(런타임의 말로는 리그 — 그림 하나에 리그 하나). 순서가 그려지는 순서다(아래가 위). 고르면 오른쪽이 그 그림의 값을 보인다. Shift · Ctrl로 여럿을 고르면 뷰포트에서 함께 끌고 함께 키한다. 뷰포트에서 그림을 눌러도(Shift · Ctrl로 더하고, 빈 데서 상자를 끌어도) 고른다");
         _emojiRigSection.Children.Add(_emojiRigList);
         _emojiRigSection.Children.Add(new StackPanel
         {
@@ -295,7 +311,7 @@ public partial class MainWindow
     {
         var panel = new StackPanel { Spacing = 4 };
         // 머리글 — 지금 오른쪽이 무엇의 값인가. 리그를 보는 중이면 이모지로 돌아가는 단추가 선다.
-        _emojiBack.Click += (_, _) => _emojiRigList.SelectedItem = null;
+        _emojiBack.Click += (_, _) => SelectEmojiRigsInList(Array.Empty<string>());
         ToolTip.SetTip(_emojiBack, "그림 선택을 풀고 이모지의 값(이름 · 머리에서의 자리 · 길이 · 구간과 잇기)으로 돌아간다 — 왼쪽 목록에서 이모지를 다시 눌러도 된다");
         panel.Children.Add(_emojiBack);
         panel.Children.Add(_emojiTitle);
@@ -444,7 +460,7 @@ public partial class MainWindow
         }
 
         // 뷰포트에서 그림을 골랐거나 빈 곳을 눌러 풀었다 — 왼쪽 목록과 오른쪽이 따라온다.
-        _viewport.EmojiRigPicked += (_, _) => _emojiRigList.SelectedItem = _viewport.SelectedEmojiRig;
+        _viewport.EmojiRigPicked += (_, _) => SelectEmojiRigsInList(_viewport.SelectedEmojiRigs);
 
         return panel;
     }
@@ -581,11 +597,48 @@ public partial class MainWindow
         _emojiRigList.SelectedItem = name;
     }
 
+    /// <summary>고른 그림들을 지운다 — 여럿이어도 한 칸.</summary>
     private void RemoveEmojiRig()
     {
-        if (CurrentEmoji is { } emoji && SelectedEmojiRig is { } rig)
+        if (CurrentEmoji is not { } emoji || SelectedEmojiRigs is not { Count: > 0 } rigs)
         {
-            _session.Editor.RemoveEmojiRig(emoji.Name, rig);
+            return;
+        }
+
+        _session.Editor.Batch(MotionChangeKind.Emoji, () =>
+        {
+            foreach (string rig in rigs)
+            {
+                _session.Editor.RemoveEmojiRig(emoji.Name, rig);
+            }
+        });
+    }
+
+    /// <summary>목록의 선택을 그 그림들로 맞춘다 — 같으면 건드리지 않는다. 알림(SelectionChanged)은 한 번만 간다.</summary>
+    private void SelectEmojiRigsInList(IReadOnlyList<string> rigs)
+    {
+        List<string> rows = _emojiRigList.ItemsSource?.Cast<string>().ToList() ?? new List<string>();
+        List<int> want = rigs.Select(r => rows.IndexOf(r)).Where(i => i >= 0).OrderBy(i => i).ToList();
+
+        if (want.SequenceEqual(_emojiRigList.Selection.SelectedIndexes.OrderBy(i => i)))
+        {
+            return;
+        }
+
+        _emojiRigList.Selection.BeginBatchUpdate();
+
+        try
+        {
+            _emojiRigList.Selection.Clear();
+
+            foreach (int index in want)
+            {
+                _emojiRigList.Selection.Select(index);
+            }
+        }
+        finally
+        {
+            _emojiRigList.Selection.EndBatchUpdate();
         }
     }
 
@@ -862,7 +915,9 @@ public partial class MainWindow
             _emojiRigSection.IsVisible = emoji is not null;
 
             // 리그 선택은 그 이모지의 것이다 — 다른 이모지로 옮기면 풀린다. 고르지 않은 채면 오른쪽은 이모지의 값이다.
-            string? rigBefore = emoji is not null && _emojiRigOwner == emoji.Name ? SelectedEmojiRig ?? _viewport.SelectedEmojiRig : null;
+            IReadOnlyList<string> rigsBefore = emoji is not null && _emojiRigOwner == emoji.Name
+                ? (SelectedEmojiRigs.Count > 0 ? SelectedEmojiRigs : _viewport.SelectedEmojiRigs.ToList())
+                : new List<string>();
             _emojiRigOwner = emoji?.Name;
             string? spanBefore = selectSpan ?? SelectedEmojiSpan;
             List<string> rigs = emoji?.Rigs.Select(r => r.Name).ToList() ?? new List<string>();
@@ -876,8 +931,11 @@ public partial class MainWindow
                 _emojiRigList.ItemsSource = rigs;
             }
 
-            _emojiRigList.SelectedIndex = rigBefore is not null ? rigs.IndexOf(rigBefore) : -1;
-            _viewport.SelectedEmojiRig = SelectedEmojiRig;
+            SelectEmojiRigsInList(rigsBefore);
+
+            // 사라진 그림은 뷰포트의 선택에서도 뺀다(순서는 뷰포트의 것을 지킨다 — 마지막이 매니퓰레이터의 자리다).
+            IReadOnlyList<string> selectedNow = SelectedEmojiRigs;
+            _viewport.SetSelectedEmojiRigs(_viewport.SelectedEmojiRigs.Where(selectedNow.Contains).Concat(selectedNow).Distinct(StringComparer.Ordinal));
 
             List<string> spans = emoji?.Spans.Select(s => $"{s.Name} {s.Start}~{s.End}").ToList() ?? new List<string>();
             _emojiSpanList.ItemsSource = spans;
@@ -886,12 +944,16 @@ public partial class MainWindow
 
             EmojiRigAsset? rig = emoji?.FindRig(SelectedEmojiRig);
             EmojiSpan? span = emoji?.FindSpan(SelectedEmojiSpan);
-            _emojiOwnFields.IsVisible = rig is null;
+            // 여럿을 골랐으면 값의 칸을 내지 않는다 — 뷰포트에서 함께 끌고 함께 키한다. 값은 하나만 골라 고친다.
+            int picked = SelectedEmojiRigs.Count;
+            _emojiOwnFields.IsVisible = picked == 0;
             _emojiRigFields.IsVisible = rig is not null;
-            _emojiBack.IsVisible = rig is not null;
+            _emojiBack.IsVisible = picked > 0;
             _emojiBack.Content = emoji is null ? "" : $"← {emoji.Name}";
             _emojiTitle.Text = emoji is null
                 ? "왼쪽 '이모지'에서 고르거나 더한다."
+                : picked > 1
+                    ? $"그림 {picked}개 — {emoji.Name}. 뷰포트에서 함께 끌고(W · E · R) 함께 키한다(S). 값은 하나만 골라 고친다."
                 : rig is not null
                     ? $"그림 {rig.Name} — {emoji.Name}"
                     : $"{emoji.Name} — 그림 {emoji.Rigs.Count}장 · {emoji.LastFrame + 1}프레임 · {(emoji.Stays ? "머무는 이모지" : "한 번 재생하고 사라진다")}";

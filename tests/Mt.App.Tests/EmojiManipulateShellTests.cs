@@ -98,6 +98,10 @@ public class EmojiManipulateShellTests
             Assert.True(window.Viewport.DragEmojiForTest(Gizmo(window).Center, Gizmo(window).Center + new Vector(40, 0)));
             Assert.Equal(before + 1, editor.Revision);
 
+            // 키를 놓은 뒤에도 그 프레임을 보고 있다(처음 프레임으로 돌아가지 않는다) — 뷰포트도 그래프도.
+            Assert.Equal(EmojiAsset.SecondsOf(6), window.Viewport.Clock.Time, 4);
+            Assert.Equal(EmojiAsset.SecondsOf(6), window.Graph.CurrentTime, 4);
+
             // 기본값은 그대로이고, 그림 노드의 자리에 6프레임의 키가 놓였다.
             Assert.Equal(0f, Body(window).PlaceX, 3);
             MotionAsset timeline = editor.Document.Find(EmojiAsset.TimelineNameOf("emoji"))!;
@@ -242,9 +246,157 @@ public class EmojiManipulateShellTests
             Assert.Equal("top", window.Viewport.SelectedEmojiRig);
 
             // 빈 곳 — 그림 선택이 풀린다(대상이 이모지 전체가 된다). 왼쪽 목록과 오른쪽도 따라온다.
-            Assert.False(window.Viewport.DragEmojiForTest(outside, outside));
+            Assert.True(window.Viewport.DragEmojiForTest(outside, outside));
             Assert.Null(window.Viewport.SelectedEmojiRig);
             Assert.True(window.EmojiInspectorState.EmojiFields);
+        });
+    }
+
+    // ── 여럿을 고른다 ────────────────────────────────────────────
+
+    /// <summary>그림 셋이 옆으로 늘어선 이모지 — a(왼쪽) · b(가운데) · c(오른쪽).</summary>
+    private static void ThreeInARow(MainWindow window)
+    {
+        MotionEditor editor = window.Session.Editor;
+        window.AddEmojiFromForm();
+        editor.RenameEmojiRig("emoji", "body", "a");
+        editor.AddEmojiRig("emoji", "b");
+        editor.AddEmojiRig("emoji", "c");
+        editor.SetEmojiRigPlace("emoji", "a", -150f, 0f, 1f, 0f);
+        editor.SetEmojiRigPlace("emoji", "c", 150f, 0f, 1f, 0f);
+        window.Viewport.FrameEmoji();
+    }
+
+    private static Point CenterOf(MainWindow window, string rig) => window.Viewport.ToScreen(window.Viewport.EmojiRigCenter(rig)!.Value);
+
+    private static EmojiRigAsset Rig(MainWindow window, string rig) => window.Session.Editor.Document.FindEmoji("emoji")!.FindRig(rig)!;
+
+    [Fact]
+    public void Shift로_더하고_빼고_상자로_고르고_왼쪽_목록이_따라온다()
+    {
+        Run(window =>
+        {
+            ThreeInARow(window);
+            window.PickToolFromStrip(ManipulatorMode.Select);
+
+            window.Viewport.DragEmojiForTest(CenterOf(window, "a"), CenterOf(window, "a"));
+            window.Viewport.DragEmojiForTest(CenterOf(window, "c"), CenterOf(window, "c"), additive: true);
+            Assert.Equal(new[] { "a", "c" }, window.Viewport.SelectedEmojiRigs);
+            Assert.Equal(new[] { "a", "c" }, window.SelectedEmojiRigsInList);
+
+            // 여럿을 골랐으면 오른쪽은 값의 칸을 내지 않는다.
+            var state = window.EmojiInspectorState;
+            Assert.False(state.EmojiFields);
+            Assert.False(state.RigFields);
+            Assert.True(state.Back);
+            Assert.StartsWith("그림 2개", state.Title);
+
+            // Shift로 다시 누르면 빠진다.
+            window.Viewport.DragEmojiForTest(CenterOf(window, "a"), CenterOf(window, "a"), additive: true);
+            Assert.Equal(new[] { "c" }, window.Viewport.SelectedEmojiRigs);
+            Assert.True(window.EmojiInspectorState.RigFields);
+
+            // 빈 데서 상자를 끌면 닿은 그림들이 골라진다 — a와 b를 감싼다.
+            Rect box = window.Viewport.EmojiControlBox()!.Value;
+            Point from = new(box.X - 10, box.Y - 10);
+            Point to = new(CenterOf(window, "b").X + 5, box.Bottom + 10);
+            Assert.True(window.Viewport.DragEmojiForTest(from, to));
+            Assert.Equal(new[] { "a", "b" }, window.Viewport.SelectedEmojiRigs.OrderBy(r => r));
+            Assert.Equal(new[] { "a", "b" }, window.SelectedEmojiRigsInList);
+
+            // 왼쪽 목록에서 여럿을 골라도 뷰포트가 따라온다.
+            window.SelectEmojiRigsFromForm("b", "c");
+            Assert.Equal(new[] { "b", "c" }, window.Viewport.SelectedEmojiRigs.OrderBy(r => r));
+        });
+    }
+
+    [Fact]
+    public void 여럿을_함께_끌면_함께_움직이고_한_칸이다()
+    {
+        Run(window =>
+        {
+            MotionEditor editor = window.Session.Editor;
+            ThreeInARow(window);
+            window.SelectEmojiRigsFromForm("a", "c");
+            window.PickToolFromStrip(ManipulatorMode.Move);
+
+            // 고른 그림(c)을 눌러 끈다 — a도 같이 간다. b는 그대로다.
+            long before = editor.Revision;
+            Point c = CenterOf(window, "c");
+            Assert.True(window.Viewport.DragEmojiForTest(c, c + new Vector(60, 0)));
+            Assert.Equal(before + 1, editor.Revision);
+            float moved = Rig(window, "c").PlaceX - 150f;
+            Assert.True(moved > 0f, $"c가 움직인 거리 {moved}");
+            Assert.Equal(-150f + moved, Rig(window, "a").PlaceX, 0);
+            Assert.Equal(0f, Rig(window, "b").PlaceX, 3);
+            Assert.Equal(new[] { "a", "c" }, window.Viewport.SelectedEmojiRigs.OrderBy(r => r)); // 끈 뒤에도 그대로 골라져 있다
+
+            // 되돌리기 한 번에 둘 다 돌아온다.
+            editor.Undo();
+            Assert.Equal(150f, Rig(window, "c").PlaceX, 3);
+            Assert.Equal(-150f, Rig(window, "a").PlaceX, 3);
+
+            // 회전은 그림마다 제 가운데에서 — 자리는 그대로, 각만 같이 돈다.
+            window.PickToolFromStrip(ManipulatorMode.Rotate);
+            Point center = Gizmo(window).Center;
+            double arm = Gizmo(window).XEnd.X - center.X;
+            Assert.True(window.Viewport.DragEmojiForTest(new Point(center.X + arm, center.Y), new Point(center.X, center.Y - arm)));
+            Assert.Equal(90f, Rig(window, "a").Rotation, 0);
+            Assert.Equal(90f, Rig(window, "c").Rotation, 0);
+            Assert.Equal(0f, Rig(window, "b").Rotation, 3);
+            Assert.Equal(-150f, Rig(window, "a").PlaceX, 3);
+        });
+    }
+
+    [Fact]
+    public void 여럿을_고른_채_자동_키와_S는_고른_것_전부에_키를_놓는다()
+    {
+        Run(window =>
+        {
+            MotionEditor editor = window.Session.Editor;
+            EmojiRigFrame frame = window.Session.EmojiFrame!;
+            ThreeInARow(window);
+            window.SelectEmojiRigsFromForm("a", "c");
+            window.SetAutoKeyFromStrip(true);
+            window.Viewport.ScrubTo(EmojiAsset.SecondsOf(4));
+            window.PickToolFromStrip(ManipulatorMode.Move);
+
+            long before = editor.Revision;
+            Point c = CenterOf(window, "c");
+            Assert.True(window.Viewport.DragEmojiForTest(c, c + new Vector(0, -40)));
+            Assert.Equal(before + 1, editor.Revision);
+
+            MotionAsset timeline = editor.Document.Find(EmojiAsset.TimelineNameOf("emoji"))!;
+            Assert.NotNull(timeline.FindChannel(frame.TargetNode("a"), ChannelKind.Position));
+            Assert.NotNull(timeline.FindChannel(frame.TargetNode("c"), ChannelKind.Position));
+            Assert.Null(timeline.FindChannel(frame.TargetNode("b"), ChannelKind.Position));
+            Assert.Equal(EmojiAsset.SecondsOf(4), window.Viewport.Clock.Time, 4);
+
+            // S — 회전 도구면 고른 둘의 회전에 키(한 칸).
+            window.PickToolFromStrip(ManipulatorMode.Rotate);
+            before = editor.Revision;
+            window.Viewport.SetKey();
+            Assert.Equal(before + 1, editor.Revision);
+            Assert.NotNull(timeline.FindChannel(frame.TargetNode("a"), ChannelKind.Euler));
+            Assert.NotNull(timeline.FindChannel(frame.TargetNode("c"), ChannelKind.Euler));
+        });
+    }
+
+    [Fact]
+    public void 여럿을_고른_채_하나를_끌지_않고_누르면_그것만_남는다()
+    {
+        Run(window =>
+        {
+            ThreeInARow(window);
+            window.SelectEmojiRigsFromForm("a", "b", "c");
+            window.PickToolFromStrip(ManipulatorMode.Move);
+            long before = window.Session.Editor.Revision;
+
+            Point b = CenterOf(window, "b");
+            Assert.True(window.Viewport.DragEmojiForTest(b, b));
+
+            Assert.Equal(new[] { "b" }, window.Viewport.SelectedEmojiRigs);
+            Assert.Equal(before, window.Session.Editor.Revision);
         });
     }
 

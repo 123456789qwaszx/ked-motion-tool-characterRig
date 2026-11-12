@@ -2215,6 +2215,7 @@ public partial class MainWindow : Window
         "  블록을 고르고 그 블록 안의 시각이면 뷰포트 끌기·채널 박스·S가 그 블록의 모션에 키를 놓는다      아래 경계를 끌면 타임라인 높이\n\n" +
         "이모지 (툴바의 '이모지' 모드 — 그래프 · 도프 시트 · 뷰포트가 그 타임라인을 본다)\n" +
         "  Q / W / E / R  선택 · 이동 · 회전 · 크기(뷰포트 오른쪽 위의 띠와 같다)      그림 누르기  고르기 — 빈 곳은 맞지 않는다 · 겹친 곳을 다시 누르면 밑의 것 · 빈 데를 누르면 이모지 전체\n" +
+        "  Shift/Ctrl+누르기  더하기 · 빼기      빈 데서 끌기  상자로 고르기      여럿을 고르면 함께 끌리고 S가 전부를 키한다(한 칸)\n" +
         "  매니퓰레이터 끌기  Auto Key 꺼짐 = 기본값(그림의 자리 · 크기 · 회전, 이모지의 머리에서의 자리 — 키가 아니다) · 켜짐 = 지금 프레임에 키      S  지금 값을 키(도구의 종류만, 선택 도구면 셋 다)\n" +
         "  F  이모지에 맞춤      '게임처럼 재생'  등장 → 머묾 × 바퀴 → 퇴장      '왼쪽을 보는 인물로'  뒤집힌 인물에게 뜨는 모습(보기만 — 켠 동안 끌기 없음)\n" +
         "  그래프 목록 '키 없음' ＋  지금 값에 키(이모지 전체 · 그림마다 자리 · 크기 · 회전 · 투명도 · 그림)\n\n" +
@@ -3051,7 +3052,9 @@ public partial class MainWindow : Window
             int index = selected is null ? -1 : names.IndexOf(selected);
             _motionList.SelectedIndex = index;
 
-            if (index < 0 && _graph.MotionName is not null && SelectedClip is null)
+            // 그래프가 이모지의 타임라인을 묶고 있으면 모션 목록에 없는 것이 맞다 — 다시 묶지 않는다
+            // (다시 묶으면 시계가 처음으로 돌아가, 키를 놓을 때마다 0프레임으로 튀었다). 이모지가 사라진 것은 RefreshEmojis가 본다.
+            if (index < 0 && _graph.MotionName is { } bound && !EmojiAsset.IsTimelineName(bound, out _) && SelectedClip is null)
             {
                 BindMotion(null);
             }
