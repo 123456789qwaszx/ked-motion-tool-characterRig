@@ -285,6 +285,73 @@ public sealed partial class MotionEditor
         }
     }
 
+    /// <summary>
+    /// 움직임을 가져와 넣는다 — <paramref name="startFrame"/>…<paramref name="endFrame"/>(끝 포함)에 그 움직임의 키를 깐다. 한 칸이다.
+    /// 대상은 그림들(리그 이름)이고 빈 이름은 이모지 전체다. 그 범위에 있던 같은 성분의 키는 바뀌고, 범위 밖의 키와 다른 성분은 그대로다.
+    /// 채널이 없으면 만든다. 넣은 것은 그냥 키다 — 프리셋을 가리키지 않는다.
+    /// </summary>
+    /// <param name="frame">이모지 리그의 틀(키를 받는 노드의 이름). null이면 내장 덤프의 것.</param>
+    /// <returns>깐 키의 수.</returns>
+    public int LayEmojiMove(string emojiName, IReadOnlyList<string> targets, EmojiMove move, int startFrame, int endFrame, EmojiRigFrame? frame = null)
+    {
+        ArgumentNullException.ThrowIfNull(targets);
+        EmojiAsset emoji = RequireEmoji(emojiName);
+        RequireSpanRange(startFrame, endFrame);
+
+        if (endFrame > emoji.LastFrame)
+        {
+            throw new InvalidOperationException($"움직임을 넣을 곳({startFrame}~{endFrame}fr)이 타임라인(0~{emoji.LastFrame}fr) 밖이다.");
+        }
+
+        if (targets.Count == 0)
+        {
+            throw new InvalidOperationException("움직임을 넣을 대상이 없다.");
+        }
+
+        foreach (string target in targets.Where(t => t.Length > 0))
+        {
+            RequireRig(emoji, target);
+        }
+
+        EmojiRigFrame shape = frame ?? EmojiRigFrame.Builtin;
+        float from = EmojiAsset.SecondsOf(startFrame) - MotionRules.Tolerance;
+        float to = EmojiAsset.SecondsOf(endFrame) + MotionRules.Tolerance;
+        int laid = 0;
+
+        Mutate(MotionChangeKind.Keys, () =>
+        {
+            foreach (string target in targets.Distinct(StringComparer.Ordinal))
+            {
+                string node = shape.TargetNode(target);
+
+                foreach (EmojiMoveCurve curve in EmojiMoves.Curves(move))
+                {
+                    ChannelAsset? channel = emoji.Timeline.FindChannel(node, curve.Kind);
+
+                    if (channel is null)
+                    {
+                        channel = new ChannelAsset { Node = node, Kind = curve.Kind };
+                        emoji.Timeline.Channels.Add(channel);
+                    }
+
+                    IReadOnlyList<(int Frame, float Value, TangentMode Tangent)> placed = EmojiMoves.Place(curve, startFrame, endFrame);
+
+                    foreach (Axis axis in curve.Axes)
+                    {
+                        List<KeyAsset> keys = channel.Get(axis)?.Keys.Where(k => k.T < from || k.T > to).ToList() ?? new List<KeyAsset>();
+                        keys.AddRange(placed.Select(p => new KeyAsset { T = EmojiAsset.SecondsOf(p.Frame), V = p.Value, Tangent = p.Tangent }));
+                        var component = new ComponentCurve { Keys = keys.OrderBy(k => k.T).ToList() };
+                        TangentMath.Recompute(component.Keys);
+                        channel.Set(axis, component);
+                        laid += placed.Count;
+                    }
+                }
+            }
+        });
+
+        return laid;
+    }
+
     // ── 구간과 잇기 ───────────────────────────────────────────────────
 
     /// <summary>이름 붙은 구간을 더한다(프레임, 끝 포함). 겹쳐도 된다. 타임라인 밖이면 검증이 알린다.</summary>

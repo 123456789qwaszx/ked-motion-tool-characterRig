@@ -10,7 +10,7 @@ using Mt.Authoring.Settings;
 namespace Mt.App;
 
 // 수명의 띠(docs/PLAN-ux.md U5) — 뷰포트와 타임 슬라이더 사이, 이모지 모드에서만.
-//   윗줄: 이 이모지가 어떻게 사는가 한 줄 · [+ 등장] [+ 머묾] [+ 퇴장](아직 없는 것만) · [게임처럼 재생] 머묾 n 바퀴
+//   윗줄: 이 이모지가 어떻게 사는가 한 줄 · [움직임 가져오기 ▾] · [+ 등장] [+ 머묾] [+ 퇴장](아직 없는 것만) · [게임처럼 재생] 머묾 n 바퀴
 //   아랫줄: 등장 · 머묾 · 퇴장의 색 띠 — 타임 슬라이더와 같은 눈금. 끝을 끌어 길이를, 몸통을 끌어 자리를 고친다.
 // 이름과 프레임을 숫자로 적는 칸(오른쪽 "구간과 잇기")은 그대로다 — 띠는 그 위의 빠른 길이다.
 public partial class MainWindow
@@ -62,6 +62,11 @@ public partial class MainWindow
             buttons.Children.Add(add);
         }
 
+        Button import = SmallButton("움직임 가져오기 ▾", (_, _) => OpenMoveMenu());
+        ToolTip.SetTip(import, "움직임 가져오기 — 튀어나오기 · 서서히 나타나기(등장) / 두근거리기 · 흔들기(머묾) / 위로 사라지기 · 줄어들며 사라지기(퇴장)의 키를 넣는다(되돌리기 한 칸). "
+                               + "대상은 고른 그림들(없으면 이모지 전체), 넣을 곳은 띠에서 고른 구간(없으면 그 움직임의 자리 — 등장 · 머묾 · 퇴장. 그 자리가 비었으면 구간을 놓는다). 넣은 것은 그냥 키라서 그래프에서 고친다");
+        _moveButton = import;
+        buttons.Children.Insert(0, import);
         buttons.Children.Add(_emojiLifeToggle);
         buttons.Children.Add(Small("머묾"));
         buttons.Children.Add(_emojiHoldCycles);
@@ -118,6 +123,101 @@ public partial class MainWindow
 
         var rows = new StackPanel { Children = { head, body } };
         return OnlyIn(WorkMode.Emoji, rows);
+    }
+
+    // ── 움직임 가져오기 (docs/PLAN-ux.md U8) ─────────────────────────
+
+    private Button? _moveButton;
+
+    /// <summary>테스트 손잡이 — "움직임 가져오기"에서 하나를 고른다.</summary>
+    internal void ImportMoveFromForm(EmojiMove move) => ImportMove(move);
+
+    /// <summary>테스트 손잡이 — 지금 고르면 어디에 무엇에 넣는가(메뉴의 머리 두 줄).</summary>
+    internal (string Targets, string Where) MoveMenuNotes(EmojiMove move) => (MoveTargetsNote(), MoveWhereNote(move));
+
+    /// <summary>움직임을 넣을 대상 — 고른 그림들, 없으면 이모지 전체(빈 이름).</summary>
+    private IReadOnlyList<string> MoveTargets() => SelectedEmojiRigs.Count > 0 ? SelectedEmojiRigs : new[] { "" };
+
+    private string MoveTargetsNote() => "대상: " + string.Join(" · ", MoveTargets().Select(t => t.Length == 0 ? EmojiWords.WholeEmoji : t));
+
+    /// <summary>넣을 구간 — 띠에서 고른 구간, 없으면 그 움직임의 자리에 이은 구간. 둘 다 없으면 null(그 자리에 구간을 놓는다).</summary>
+    private EmojiSpan? MoveSpan(EmojiAsset emoji, EmojiMove move)
+        => emoji.FindSpan(_lifeStrip.Picked) ?? emoji.FindSpan(EmojiLife.LinkOf(emoji, EmojiMoves.Role(move)));
+
+    private string MoveWhereNote(EmojiMove move)
+    {
+        if (CurrentEmoji is not { } emoji)
+        {
+            return "";
+        }
+
+        string role = EmojiLife.Label(EmojiMoves.Role(move));
+
+        if (MoveSpan(emoji, move) is { } span)
+        {
+            string name = EmojiLife.RoleOf(emoji, span.Name) is { } linked ? EmojiLife.Label(linked) : span.Name;
+            return $"{name} {span.Start}~{span.End}fr" + (span.Name == _lifeStrip.Picked ? "(띠에서 고른 구간)" : "");
+        }
+
+        (int start, int end) = EmojiLife.Suggest(emoji, EmojiMoves.Role(move));
+        return $"{role} {start}~{end}fr(구간을 새로 놓는다)";
+    }
+
+    private void OpenMoveMenu()
+    {
+        if (CurrentEmoji is null || _moveButton is null)
+        {
+            return;
+        }
+
+        var menu = new ContextMenu();
+        menu.Items.Add(new MenuItem { Header = MoveTargetsNote(), IsEnabled = false });
+        EmojiLifeRole? group = null;
+
+        foreach (EmojiMove move in EmojiMoves.All)
+        {
+            if (EmojiMoves.Role(move) != group)
+            {
+                group = EmojiMoves.Role(move);
+                menu.Items.Add(new Separator());
+            }
+
+            EmojiMove captured = move;
+            var item = new MenuItem { Header = $"{EmojiMoves.Label(move)}  →  {MoveWhereNote(move)}" };
+            ToolTip.SetTip(item, EmojiMoves.Describe(move));
+            item.Click += (_, _) => ImportMove(captured);
+            menu.Items.Add(item);
+        }
+
+        menu.Open(_moveButton);
+    }
+
+    /// <summary>움직임의 키를 넣는다 — 구간을 새로 놓아야 하면 그것까지 한 칸이다.</summary>
+    private void ImportMove(EmojiMove move)
+    {
+        if (CurrentEmoji is not { } emoji || _session.EmojiFrame is not { } frame)
+        {
+            return;
+        }
+
+        IReadOnlyList<string> targets = MoveTargets().ToList();
+        string targetsNote = MoveTargetsNote();
+
+        Guard("움직임 가져오기", () =>
+        {
+            MotionEditor editor = _session.Editor;
+            EmojiSpan? span = null;
+            int laid = 0;
+
+            editor.Batch(MotionChangeKind.Structure, () =>
+            {
+                span = MoveSpan(emoji, move) ?? editor.AddEmojiLifeSpan(emoji.Name, EmojiMoves.Role(move));
+                laid = editor.LayEmojiMove(emoji.Name, targets, move, span.Start, Math.Min(span.End, emoji.LastFrame), frame);
+            });
+
+            _graph.FitAll(); // 새 곡선이 눈금 안에 들어오게
+            _session.SetStatus($"움직임 가져오기: {EmojiMoves.Label(move)} — {targetsNote}, {span!.Name} {span.Start}~{span.End}fr에 키 {laid}개");
+        });
     }
 
     private void AddLifeSpan(EmojiLifeRole role)
