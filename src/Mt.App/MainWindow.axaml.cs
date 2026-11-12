@@ -276,7 +276,6 @@ public partial class MainWindow : Window
                 _dope.CurrentTime = graphTime;
             });
             RefreshChannelBox();
-            RefreshCameraPanel();
         };
         _viewport.PlayStateChanged += (_, _) => _playButton.Content = _viewport.IsPlaying ? "❚❚" : "▶";
 
@@ -1850,10 +1849,6 @@ public partial class MainWindow : Window
             Children = { addMotionButton, SmallButton("모션 삭제", (_, _) => Guard("모션 삭제", RemoveMotion)) },
         });
 
-        Button addCameraButton = SmallButton("카메라 모션 추가", (_, _) => Guard("카메라 모션 추가", () => AddCameraMotion()));
-        ToolTip.SetTip(addCameraButton, "카메라(zoom·pan)를 키와 커브로 움직이는 모션 — 이름 camera, camera_2…, 길이 1초, 유지·절대값. 지금 씬 카메라 값으로 처음·끝 키가 선다. 오른쪽 '모션' 탭의 카메라 칸에 값을 넣으면 그 시각에 키, 커브는 그래프에서. 클립의 카메라 트랙에 놓는다. motions.json에는 나가지 않는다");
-        LeftPanel.Children.Add(addCameraButton);
-
         Button addPresetButton = SmallButton("프리셋에서 추가", (_, _) => Guard("프리셋에서 추가", () => AddPreset()));
         ToolTip.SetTip(addPresetButton, "컨트롤러 표 위에 지은 연기 9종(끄덕·젓기·깡충·움찔·떨림·숙임·바운스·호흡·돌아서기)을 선택 오브젝트의 리그로 더한다 — 이름은 id(겹치면 id_2…). 표가 없는 리그는 안 된다");
         _presetCombo.SelectionChanged += (_, _) =>
@@ -2058,8 +2053,6 @@ public partial class MainWindow : Window
         panel.Children.Add(Labeled("재생 기준", _motionDefaultMode));
         ToolTip.SetTip(_motionDefaultMode, "키 값을 어떻게 읽나 — 상대값(relative) = 시작값 + 키(배율은 ×) · 절대값(absolute) = 키 그대로. 뷰포트 미리보기와 매니퓰레이터·채널 박스가 포즈를 키 값으로 바꿀 때 쓴다. 파일에는 안 나간다: 재생은 대본의 <<motion slot 이름 relative|absolute>>가 정한다(생략 = relative)");
 
-        panel.Children.Add(BuildCameraPanel());
-
         OnCommit(_motionName, text => WithMotion(m =>
         {
             if (text != m.Name)
@@ -2254,7 +2247,7 @@ public partial class MainWindow : Window
         "타임라인 (연출 클립 — 왼쪽 '클립'에서 고른다)\n" +
         "  LMB  블록 선택(아래 그래프가 그 모션을 묶는다 — 클립 안에서 바로 고친다) · 빈 곳/눈금자 스크럽\n" +
         "  블록 드래그(LMB·MMB)  이동(가로 시각 · 세로 트랙)      더블클릭  그 모션만 열기(클립을 떠난다)\n" +
-        "  우클릭  모션 놓기 · 상태 놓기(보이기·자리·층·오프셋) · 카메라 트랙 · 상대값/절대값 · 배역 끄기 · 새 모션으로 굽기 · 트랙 추가/삭제      Ctrl+D  이어서 한 번 더      Del  삭제\n" +
+        "  우클릭  모션 놓기 · 상대값/절대값 · 배역 끄기 · 새 모션으로 굽기 · 트랙 추가/삭제      Ctrl+D  이어서 한 번 더      Del  삭제\n" +
         "  줄 머리 🔊  그 배역 끄기/켜기(미리보기에서만 빠진다)      M  고른 블록 하나만 끄기/켜기(파일에 남는다)\n" +
         "  블록을 고르고 그 블록 안의 시각이면 뷰포트 끌기·채널 박스·S가 그 블록의 모션에 키를 놓는다      아래 경계를 끌면 타임라인 높이\n\n" +
         "이모지 (툴바의 '이모지' 모드 — 그래프 · 도프 시트 · 뷰포트가 그 타임라인을 본다)\n" +
@@ -3094,7 +3087,7 @@ public partial class MainWindow : Window
             _motionList.ItemTemplate ??= new Avalonia.Controls.Templates.FuncDataTemplate<string>((name, _) =>
             {
                 MotionAsset? motion = _session.Editor.Document.Find(name);
-                bool fits = motion is null || CameraRig.IsCamera(motion) || _viewport.SelectedObject is not { } o || _session.Rig is null || ScenePreview.CanWear(_session.Rig, o, motion);
+                bool fits = motion is null || _viewport.SelectedObject is not { } o || _session.Rig is null || ScenePreview.CanWear(_session.Rig, o, motion);
                 var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Opacity = string.IsNullOrEmpty(name) ? 0.6 : fits ? 1 : 0.5 };
                 row.Children.Add(new TextBlock { Text = string.IsNullOrEmpty(name) ? "(이름 없음 — 아래 문제 칸의 '이름 고치기')" : name, FontSize = 11 });
                 row.Children.Add(new TextBlock { Text = motion is null ? "" : motion.Rig + (fits ? "" : " · 안 맞음"), FontSize = 10, Opacity = 0.6, VerticalAlignment = VerticalAlignment.Center });
@@ -3468,7 +3461,7 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>캐릭터 · 카메라 모션의 "키 없음" 줄들 — 리그 덤프의 노드마다 위치 · 배율 · 회전. 노드가 너무 많으면 null.</summary>
+    /// <summary>캐릭터 모션의 "키 없음" 줄들 — 리그 덤프의 노드마다 위치 · 배율 · 회전. 노드가 너무 많으면 null.</summary>
     private IReadOnlyList<UnkeyedTarget>? RigUnkeyedTargets(MotionAsset motion, ControllerRig? labels)
     {
         if (_session.Rig is not { } rig || !rig.NodeIds.TryGetValue(motion.Rig, out ICollection<string>? nodes) || nodes.Count > UnkeyedRowsMaxNodes)
@@ -3787,7 +3780,6 @@ public partial class MainWindow : Window
         finally
         {
             _refreshDepth--;
-            RefreshCameraPanel();
         }
     }
 

@@ -513,7 +513,7 @@ public class ClipPreviewTests
         ClipBlock lean = Greet(editor).Tracks[0].Blocks[1];
 
         Near(13f, SwayZ(Pose(editor, 1.5), "s1"));
-        Near(8f, SwayZ(ClipPreview.Pose(Template(editor), editor.Document, Greet(editor), 1.5, null, null, lean), "s1")); // lean의 시작값
+        Near(8f, SwayZ(ClipPreview.Pose(Template(editor), editor.Document, Greet(editor), 1.5, null, lean), "s1")); // lean의 시작값
     }
 
     [Fact]
@@ -568,7 +568,7 @@ public class ClipPreviewTests
         Near(15f, SwayZ(StageReducer.ApplyAll(StageReducer.CreateInitialState(tuning), commands, tuning).Nodes, "s1"));
 
         // except: 둘째 바퀴(번호 1)부터 빼면 첫 바퀴가 남긴 5가 시작값이다.
-        Near(5f, SwayZ(ClipPreview.Pose(Template(editor), editor.Document, clip, 0.75, null, null, clip.Tracks[0].Blocks[0], 1), "s1"));
+        Near(5f, SwayZ(ClipPreview.Pose(Template(editor), editor.Document, clip, 0.75, null, clip.Tracks[0].Blocks[0], 1), "s1"));
 
         // 겹침·길이 검사는 늘어난 길이로 본다. 굽기는 바퀴를 다 담는다.
         editor.AddClipBlock("greet", 0, "bow", 1.2f); // lean ×3(0 ~ 1.5)과 같은 노드

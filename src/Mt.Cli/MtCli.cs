@@ -219,14 +219,12 @@ public static class MtCli
         {
             ClipAsset clip = document.FindClip(clipName) ?? throw new KeyNotFoundException($"클립 '{clipName}'이 없다.");
             SceneAsset scene = ClipPreview.SceneOf(document, clip) ?? throw new InvalidOperationException($"클립 '{clipName}'의 씬이 없다.");
-            ClipStage stage = ClipStage.Build(document, clip, s => BuildTree(rig, s))!;
-            RectNodeTree pose = ClipPreview.Pose(stage.TreeAt(time), document, clip, time, null, stage.CameraAt(time));
-            CameraSettings camera = ClipPreview.CameraAt(document, clip, stage.CameraAt(time), time) ?? stage.CameraAt(time);
+            RectNodeTree pose = ClipPreview.Pose(BuildTree(rig, scene), document, clip, time);
 
             // 클립이 건드리는 노드만 — 배역마다, 그 배역의 블록이 쓰는 (노드, 종류).
             var objects = new JsonObject();
 
-            foreach (ClipTrack track in clip.Tracks.Where(t => !t.IsCamera))
+            foreach (ClipTrack track in clip.Tracks)
             {
                 if (ClipPreview.ObjectOf(document, clip, track) is not { } actor)
                 {
@@ -236,19 +234,15 @@ public static class MtCli
                 var nodes = objects[actor.Id] as JsonObject ?? new JsonObject();
                 objects[actor.Id] = nodes;
 
-                foreach (ChannelAsset channel in track.Blocks.Where(b => b.IsMotion).SelectMany(b => document.Find(b.Motion)?.Channels ?? Enumerable.Empty<ChannelAsset>()))
+                foreach (ChannelAsset channel in track.Blocks.SelectMany(b => document.Find(b.Motion)?.Channels ?? Enumerable.Empty<ChannelAsset>()))
                 {
                     AddNodeValue(nodes, pose, actor, channel);
                 }
-
-                nodes["opacity"] = stage.OpacityOf(actor.Id, time);
             }
 
             result["clip"] = clip.Name;
             result["duration"] = ClipTiming.DurationOf(document, clip);
             result["objects"] = objects;
-            result["camera"] = new JsonObject { ["zoom"] = camera.Zoom, ["panX"] = camera.PanX, ["panY"] = camera.PanY };
-            _ = scene;
         }
         else if (options.Value("motion") is { } motionName)
         {
@@ -261,27 +255,19 @@ public static class MtCli
             result["duration"] = motion.Duration;
             result["mode"] = MotionModeToken.Of(mode);
 
-            if (CameraRig.IsCamera(motion))
-            {
-                CameraSettings camera = CameraRig.Pose(scene.Camera, motion, time, mode);
-                result["camera"] = new JsonObject { ["zoom"] = camera.Zoom, ["panX"] = camera.PanX, ["panY"] = camera.PanY };
-            }
-            else
-            {
-                SceneObject actor = options.Value("object") is { } id
-                    ? scene.Find(id) ?? throw new KeyNotFoundException($"오브젝트 '{id}'가 없다.")
-                    : scene.Objects.FirstOrDefault(o => o.Rig == motion.Rig) ?? throw new InvalidOperationException($"씬에 리그 '{motion.Rig}'의 오브젝트가 없다 — --object로 고른다.");
-                RectNodeTree pose = MotionPreview.Pose(BuildTree(rig, scene), motion, time, mode, null, actor.Prefix);
-                var nodes = new JsonObject();
+            SceneObject actor = options.Value("object") is { } id
+                ? scene.Find(id) ?? throw new KeyNotFoundException($"오브젝트 '{id}'가 없다.")
+                : scene.Objects.FirstOrDefault(o => o.Rig == motion.Rig) ?? throw new InvalidOperationException($"씬에 리그 '{motion.Rig}'의 오브젝트가 없다 — --object로 고른다.");
+            RectNodeTree pose = MotionPreview.Pose(BuildTree(rig, scene), motion, time, mode, null, actor.Prefix);
+            var nodes = new JsonObject();
 
-                foreach (ChannelAsset channel in motion.Channels)
-                {
-                    AddNodeValue(nodes, pose, actor, channel);
-                }
-
-                result["object"] = actor.Id;
-                result["nodes"] = nodes;
+            foreach (ChannelAsset channel in motion.Channels)
+            {
+                AddNodeValue(nodes, pose, actor, channel);
             }
+
+            result["object"] = actor.Id;
+            result["nodes"] = nodes;
         }
         else if (options.Value("emoji") is { } emojiName)
         {
@@ -330,7 +316,7 @@ public static class MtCli
     {
         var problems = new JsonArray();
         bool blocking = false;
-        IReadOnlyDictionary<string, ICollection<string>>? nodeIds = CameraRig.WithCamera(rig.NodeIds);
+        IReadOnlyDictionary<string, ICollection<string>>? nodeIds = rig.NodeIds;
 
         foreach (MotionProblem p in MotionValidator.Validate(document, nodeIds))
         {

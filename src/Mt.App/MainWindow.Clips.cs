@@ -117,7 +117,7 @@ public partial class MainWindow
     /// <summary>
     /// 클립 안에서 고치기(<c>PLAN-clip.md</c> K4b 1단계) — 타임라인에서 고른 모션 블록의 모션을 그래프·도프 시트에 묶는다. 클립은 고른 채로 남고
     /// 뷰포트는 계속 클립 전체를 보이므로, 커브를 고치면 다른 출연자와 함께 바로 보인다. 그래프의 시각은 모션 기준(0부터)이고
-    /// 뷰포트 시계와는 블록의 시작 시각만큼 어긋난다(<see cref="_blockOffset"/>). 블록을 안 골랐거나 상태 블록이면 그래프는 빈다.
+    /// 뷰포트 시계와는 블록의 시작 시각만큼 어긋난다(<see cref="_blockOffset"/>). 블록을 안 골랐으면 그래프는 빈다.
     /// 문서가 바뀔 때마다 다시 맞춘다 — 블록을 옮기면 시각 차가, 모션을 바꾸면 묶인 모션이 따라간다.
     /// </summary>
     private void SyncBlockContext()
@@ -131,7 +131,7 @@ public partial class MainWindow
             && at.Track < clip.Tracks.Count && at.Index < clip.Tracks[at.Track].Blocks.Count
                 ? clip.Tracks[at.Track].Blocks[at.Index]
                 : null;
-        string? motion = block is { IsMotion: true } && _session.Editor.Document.Find(block.Motion) is not null ? block.Motion : null;
+        string? motion = block is not null && _session.Editor.Document.Find(block.Motion) is not null ? block.Motion : null;
         // 뷰포트도 같은 블록을 본다 — 끌기·채널 박스·S가 그 블록의 모션에 키를 놓는다(2단계).
         _viewport.ClipBlockContext = motion is null ? null : _timeline.SelectedBlock;
         _blockOffset = motion is null ? 0 : _viewport.ClipBlockTimeOffset; // 블록의 시작 + 지나온 바퀴(반복하는 블록)
@@ -146,7 +146,6 @@ public partial class MainWindow
             RefreshKeyInspector();
         }
 
-        RefreshCameraPanel(); // 카메라 모션 블록이면 '모션' 탭의 카메라 값 칸이 그 블록을 본다
         _timeSlider.InvalidateVisual(); // 고치는 블록의 모션의 키 틱
 
         // 시계는 하나다 — 그래프의 현재 시각을 클립 시각에서 블록 시작을 뺀 자리로.
@@ -452,19 +451,16 @@ public partial class MainWindow
             }
 
             ClipBlock block = clip.Tracks[at.Track].Blocks[at.Index];
-            int uses = block.IsMotion ? ClipTiming.UsesOf(_session.Editor.Document, block.Motion) : 0;
+            int uses = ClipTiming.UsesOf(_session.Editor.Document, block.Motion);
             _clipBlock.Children.Add(new TextBlock
             {
-                Text = !block.IsMotion ? $"상태 · {block.Describe()}" : uses > 1 ? $"모션 · {block.Motion} — {uses}곳에서 쓰인다(고치면 다 바뀐다)" : $"모션 · {block.Motion}",
+                Text = uses > 1 ? $"모션 · {block.Motion} — {uses}곳에서 쓰인다(고치면 다 바뀐다)" : $"모션 · {block.Motion}",
                 FontSize = 11,
                 FontWeight = FontWeight.SemiBold,
                 TextWrapping = TextWrapping.Wrap,
             });
-            if (block.IsMotion)
-            {
-                _clipBlock.Children.Add(BlockNumber("반복(번)", block.Cycles, v => b => b.Repeat = v is null ? null : (int)Math.Round(v.Value),
-                    "그 모션을 이어서 몇 번 도는가 — 같은 블록을 끝에 이어 놓은 것과 같다(유지 모션은 돌 때마다 쌓이고, 복원 모션은 매번 처음 자세에서 다시 돈다). 비우면 한 번"));
-            }
+            _clipBlock.Children.Add(BlockNumber("반복(번)", block.Cycles, v => b => b.Repeat = v is null ? null : (int)Math.Round(v.Value),
+                "그 모션을 이어서 몇 번 도는가 — 같은 블록을 끝에 이어 놓은 것과 같다(유지 모션은 돌 때마다 쌓이고, 복원 모션은 매번 처음 자세에서 다시 돈다). 비우면 한 번"));
 
             var off = new CheckBox { Content = "이 블록 끄기 (M)", IsChecked = block.IsMuted, FontSize = 11 };
             ToolTip.SetTip(off, "자리는 그대로 두고 적용만 뺀다 — 미리보기·굽기·겹침 검사에서 없는 것처럼. 파일에 남는다(되돌리기 한 번)");
@@ -472,65 +468,9 @@ public partial class MainWindow
             _clipBlock.Children.Add(off);
             _clipBlock.Children.Add(BlockNumber("시작(초)", block.At, v => b => b.At = v ?? 0f, "블록이 시작하는 시각. 타임라인에서 끌어도 된다"));
 
-            if (block.IsMotion)
-            {
-                var mode = new ComboBox { ItemsSource = new[] { "상대값(relative)", "절대값(absolute)" }, SelectedIndex = (int)block.Mode, FontSize = 11 };
-                mode.SelectionChanged += (_, _) => FromBlockControl(() => UpdateSelectedClipBlock(b => b.Mode = (MotionChannelMode)mode.SelectedIndex), mode.SelectedIndex >= 0);
-                _clipBlock.Children.Add(Labeled("재생 기준", mode));
-                return;
-            }
-
-            _clipBlock.Children.Add(BlockNumber("길이(초)", block.Duration, v => b => b.Duration = v, "비우거나 0이면 그 순간에 바뀐다"));
-            string[] eases = Enum.GetNames<EaseKind>();
-            var ease = new ComboBox { ItemsSource = eases, SelectedIndex = (int)(block.Ease ?? EaseKind.Linear), FontSize = 11 };
-            ease.SelectionChanged += (_, _) => FromBlockControl(() => UpdateSelectedClipBlock(b => b.Ease = ease.SelectedIndex == 0 ? null : (EaseKind)ease.SelectedIndex), ease.SelectedIndex >= 0);
-            ToolTip.SetTip(ease, "길이 동안 값이 가는 모양(DOTween 이징). 중간 프레임은 런타임 트윈을 따라 그린 근사다 — 끝 상태만 런타임과 같다");
-            _clipBlock.Children.Add(Labeled("이징", ease));
-
-            switch (block.Kind)
-            {
-                case ClipBlockKind.Visible:
-                    var visible = new CheckBox { Content = "보이기", IsChecked = block.Visible ?? true, FontSize = 11 };
-                    visible.IsCheckedChanged += (_, _) => FromBlockControl(() => UpdateSelectedClipBlock(b => b.Visible = visible.IsChecked == true));
-                    _clipBlock.Children.Add(visible);
-                    break;
-
-                case ClipBlockKind.Place:
-                    var points = new List<string> { "(자리 풀기)" };
-                    points.AddRange(ScenePreview.ScreenPoints);
-                    var point = new ComboBox { ItemsSource = points, SelectedIndex = string.IsNullOrEmpty(block.Place) ? 0 : Math.Max(0, points.IndexOf(block.Place)), FontSize = 11 };
-                    point.SelectionChanged += (_, _) => FromBlockControl(() => UpdateSelectedClipBlock(b => b.Place = point.SelectedIndex == 0 ? "" : points[point.SelectedIndex]), point.SelectedIndex >= 0);
-                    _clipBlock.Children.Add(Labeled("화면 지점", point));
-                    var focuses = new List<string> { "(그대로)" };
-                    focuses.AddRange(ScenePreview.FocusPresets);
-                    var focus = new ComboBox { ItemsSource = focuses, SelectedIndex = block.PlaceFocus is null ? 0 : Math.Max(0, focuses.IndexOf(block.PlaceFocus)), FontSize = 11 };
-                    focus.SelectionChanged += (_, _) => FromBlockControl(() => UpdateSelectedClipBlock(b => b.PlaceFocus = focus.SelectedIndex == 0 ? null : focuses[focus.SelectedIndex]), focus.SelectedIndex >= 0);
-                    _clipBlock.Children.Add(Labeled("focus", focus));
-                    break;
-
-                case ClipBlockKind.Layer:
-                    var layers = SceneLayers.Order.ToList();
-                    var layer = new ComboBox { ItemsSource = layers, SelectedIndex = layers.IndexOf(block.Layer ?? ""), FontSize = 11 };
-                    layer.SelectionChanged += (_, _) => FromBlockControl(() => UpdateSelectedClipBlock(b => b.Layer = layers[layer.SelectedIndex]), layer.SelectedIndex >= 0);
-                    _clipBlock.Children.Add(Labeled("층", layer));
-                    break;
-
-                case ClipBlockKind.Offset:
-                    const string keep = "비우면 그 값은 안 바뀐다";
-                    _clipBlock.Children.Add(BlockNumber("오프셋 X", block.X, v => b => b.X = v, keep));
-                    _clipBlock.Children.Add(BlockNumber("오프셋 Y", block.Y, v => b => b.Y = v, keep));
-                    _clipBlock.Children.Add(BlockNumber("회전(도)", block.Rotation, v => b => b.Rotation = v, keep));
-                    _clipBlock.Children.Add(BlockNumber("배율 X", block.ScaleX, v => b => b.ScaleX = v, keep));
-                    _clipBlock.Children.Add(BlockNumber("배율 Y", block.ScaleY, v => b => b.ScaleY = v, keep));
-                    break;
-
-                case ClipBlockKind.Camera:
-                    const string keepCamera = "비우면 그 값은 안 바뀐다. zoom 1당 배율 0.05, pan은 px";
-                    _clipBlock.Children.Add(BlockNumber("zoom", block.Zoom, v => b => b.Zoom = v, keepCamera));
-                    _clipBlock.Children.Add(BlockNumber("pan X", block.PanX, v => b => b.PanX = v, keepCamera));
-                    _clipBlock.Children.Add(BlockNumber("pan Y", block.PanY, v => b => b.PanY = v, keepCamera));
-                    break;
-            }
+            var mode = new ComboBox { ItemsSource = new[] { "상대값(relative)", "절대값(absolute)" }, SelectedIndex = (int)block.Mode, FontSize = 11 };
+            mode.SelectionChanged += (_, _) => FromBlockControl(() => UpdateSelectedClipBlock(b => b.Mode = (MotionChannelMode)mode.SelectedIndex), mode.SelectedIndex >= 0);
+            _clipBlock.Children.Add(Labeled("재생 기준", mode));
         }
         finally
         {

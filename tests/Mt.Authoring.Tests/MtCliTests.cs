@@ -166,8 +166,6 @@ public class MtCliTests
         Assert.Equal(0, code);
         Assert.Equal(8.0, json!["objects"]!["s1"]!["CharacterPortrait_SwayPivot"]!["euler"]![2]!.GetValue<double>(), 3);
         Assert.Equal(-18.0, json["objects"]!["s2"]!["CharacterPortrait_Track_Move_Y"]!["position"]![1]!.GetValue<double>(), 3);
-        Assert.Equal(1.0, json["objects"]!["s2"]!["opacity"]!.GetValue<double>(), 3);
-        Assert.Equal(0.0, json["camera"]!["zoom"]!.GetValue<double>(), 3);
     }
 
     [Fact]

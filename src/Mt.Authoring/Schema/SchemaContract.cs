@@ -16,7 +16,7 @@ public sealed record SchemaViolation(string Kind, string Subject, string Message
 /// 문서(모션 · 클립의 배역)는 스키마에 있는 리그와 노드만 쓴다. "스키마에 없는 리그 · 노드"를 보는 곳은 여기 하나다 —
 /// 모션 · 클립 검증이 이것을 불러 **막는 문제**로 올린다(어긋난 문서는 내보내지 못한다).
 ///
-/// 스키마는 rigKind → 노드 id 목록으로 받는다. 툴은 덤프에 카메라의 가짜 리그를 더한 것을 넘긴다.
+/// 스키마는 rigKind → 노드 id 목록으로 받는다.
 /// </summary>
 public static class SchemaContract
 {

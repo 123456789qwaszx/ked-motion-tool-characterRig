@@ -58,7 +58,6 @@ public sealed partial class ViewportView : Control
     private MotionEditor? _editor;
     private string? _motionName;
     private string? _clipName;
-    private ClipStage? _clipStage;
     private string? _lastClipName; // 모션을 열었다 돌아와도 같은 클립이면 끈 배역이 남는다
     private RigSchemaFile? _rig;
     private DepthTuningFile? _depth;
@@ -312,7 +311,7 @@ public sealed partial class ViewportView : Control
             return times;
         }
 
-        if (ShownClip is not null && AnyContextEntry is { } entry && _editor.Document.Find(entry.Block.Motion) is { } blockMotion)
+        if (ShownClip is not null && ContextEntry is { } entry && _editor.Document.Find(entry.Block.Motion) is { } blockMotion)
         {
             List<float> keys = KeyTimes.All(blockMotion);
 
@@ -324,27 +323,6 @@ public sealed partial class ViewportView : Control
         }
 
         return times;
-    }
-
-    /// <summary>문맥의 블록 — 클립을 보는 중이고, 그 자리에 캐릭터 모션 블록이 있고, 꺼지지 않았을 때만.</summary>
-    private (ClipTrack Track, ClipBlock Block)? ContextEntry => AnyContextEntry is { } entry && !entry.Track.IsCamera ? entry : null;
-
-    /// <summary>
-    /// 문맥이 카메라 모션 블록일 때 — 그 블록과 모션. 지금 시각이 블록 안일 때만(캐릭터와 같은 까닭: 밖에서는 그 모션이 보이지 않는다).
-    /// 캐릭터의 포즈는 안 잡히고, 카메라 값 칸(<see cref="SetCameraValue"/>)만 그 블록의 모션에 키를 놓는다.
-    /// </summary>
-    private (ClipBlock Block, MotionAsset Motion)? CameraContext
-    {
-        get
-        {
-            if (_editor is null || AnyContextEntry is not { } entry || !entry.Track.IsCamera
-                || _editor.Document.Find(entry.Block.Motion) is not { } motion || !CameraRig.IsCamera(motion))
-            {
-                return null;
-            }
-
-            return CycleOf(entry.Block, motion).InRange ? (entry.Block, motion) : null;
-        }
     }
 
     /// <summary>
@@ -370,18 +348,12 @@ public sealed partial class ViewportView : Control
     /// 셸이 그래프·도프 시트의 현재 시각을 이만큼 어긋나게 맞춘다.
     /// </summary>
     public double ClipBlockTimeOffset
-        => _editor is not null && AnyContextEntry is { } entry && _editor.Document.Find(entry.Block.Motion) is { } motion
+        => _editor is not null && ContextEntry is { } entry && _editor.Document.Find(entry.Block.Motion) is { } motion
             ? entry.Block.At + CycleOf(entry.Block, motion).Cycle * (double)motion.Duration
             : 0;
 
-    /// <summary>그 시각의 클립 카메라 — 카메라 블록(상태)까지 반영한 값에 카메라 모션을 얹은 것. <paramref name="except"/>는 빼고.</summary>
-    private CameraSettings ClipCameraAt(ClipAsset clip, double seconds, ClipBlock? except)
-    {
-        CameraSettings stage = _clipStage?.CameraAt(seconds) ?? Scene?.Camera ?? new CameraSettings();
-        return ClipPreview.CameraAt(_editor!.Document, clip, stage, seconds, IsClipTrackMuted, except, ContextCycle) ?? stage;
-    }
-
-    private (ClipTrack Track, ClipBlock Block)? AnyContextEntry
+    /// <summary>문맥의 블록 — 클립을 보는 중이고, 그 자리에 블록이 있고, 꺼지지 않았을 때만.</summary>
+    private (ClipTrack Track, ClipBlock Block)? ContextEntry
     {
         get
         {
@@ -393,7 +365,7 @@ public sealed partial class ViewportView : Control
 
             ClipTrack track = clip.Tracks[at.Track];
             ClipBlock block = track.Blocks[at.Index];
-            return block.IsMotion && !block.IsMuted && !IsClipTrackMuted(track) ? (track, block) : null;
+            return !block.IsMuted && !IsClipTrackMuted(track) ? (track, block) : null;
         }
     }
 
@@ -427,20 +399,20 @@ public sealed partial class ViewportView : Control
 
     /// <summary>문맥 블록의 지금 바퀴 — 시작값은 이 바퀴부터 뺀 상태다(앞 바퀴가 남긴 것은 시작값의 일부).</summary>
     private int ContextCycle
-        => _editor is not null && AnyContextEntry is { } entry && _editor.Document.Find(entry.Block.Motion) is { } motion ? CycleOf(entry.Block, motion).Cycle : 0;
+        => _editor is not null && ContextEntry is { } entry && _editor.Document.Find(entry.Block.Motion) is { } motion ? CycleOf(entry.Block, motion).Cycle : 0;
 
     /// <summary>키 값을 읽는 기준 — 클립 안에서는 블록의 재생 기준(모션의 렌즈가 아니다).</summary>
     private MotionChannelMode EditModeOf(MotionAsset motion) => ContextEntry?.Block.Mode ?? motion.PreviewMode;
 
     /// <summary>
     /// 키 값의 시작값 — 보통은 씬으로 세운 트리. 클립 안에서는 지금 시각의 클립 포즈에서 **이 블록만 뺀** 것이다
-    /// (앞 블록이 남긴 값·상태 블록이 옮긴 자리 위에 이 블록이 얹힌다 — 미리보기와 같은 함수라 놓은 키가 보이는 자리에 그대로 선다).
+    /// (앞 블록이 남긴 값 위에 이 블록이 얹힌다 — 미리보기와 같은 함수라 놓은 키가 보이는 자리에 그대로 선다).
     /// </summary>
     private RectNodeState StartStateOf(string key)
     {
         if (_editor is not null && _template is not null && ShownClip is { } clip && ContextEntry is { } entry)
         {
-            RectNodeTree start = ClipPreview.Pose(_clipStage?.TreeAt(_clock.Time) ?? _template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, _clipStage?.CameraAt(_clock.Time), entry.Block, ContextCycle);
+            RectNodeTree start = ClipPreview.Pose(_template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, entry.Block, ContextCycle);
             return start.GetState(key);
         }
 
@@ -682,8 +654,7 @@ public sealed partial class ViewportView : Control
 
         MotionAsset? motion = EditMotion;
 
-        // 카메라 모션에는 캐릭터의 포즈를 키하지 않는다 — 카메라 값은 SetCameraValue로.
-        if (_editor is null || motion is null || CameraRig.IsCamera(motion))
+        if (_editor is null || motion is null)
         {
             return;
         }
@@ -820,7 +791,7 @@ public sealed partial class ViewportView : Control
 
         string key = Prefix + node;
 
-        if (_editor is null || motion is null || CameraRig.IsCamera(motion) || _template is null || pose is null || !pose.Contains(key) || axes.Count == 0)
+        if (_editor is null || motion is null || _template is null || pose is null || !pose.Contains(key) || axes.Count == 0)
         {
             return;
         }
@@ -1000,7 +971,6 @@ public sealed partial class ViewportView : Control
     {
         if (muted ? _mutedClipRoles.Add(role) : _mutedClipRoles.Remove(role))
         {
-            RebuildTemplate(); // 끈 배역의 상태 블록은 무대에서도 빠진다
             ClipMuteChanged?.Invoke(this, EventArgs.Empty);
             InvalidateVisual();
         }
@@ -1017,51 +987,6 @@ public sealed partial class ViewportView : Control
             ClipMuteChanged?.Invoke(this, EventArgs.Empty);
             InvalidateVisual();
         }
-    }
-
-    /// <summary>클립을 보는 중일 때 그 시각의 오브젝트 불투명도(보이기 블록) — 클립이 아니면 씬의 보이기 그대로.</summary>
-    public float OpacityOf(string objectId)
-        => ShownClip is not null && _clipStage is { } stage
-            ? stage.OpacityOf(objectId, _clock.Time)
-            : Scene?.Find(objectId) is { Visible: true } ? 1f : 0f;
-
-    /// <summary>카메라 모션을 보는 중일 때 지금 시각의 카메라 값(zoom·pan). 카메라 모션이 아니면 null.</summary>
-    public CameraSettings? CameraValue()
-    {
-        if (Motion is { } motion && CameraRig.IsCamera(motion) && Scene is { } scene)
-        {
-            return CameraRig.Pose(scene.Camera, motion, _clock.Time, motion.PreviewMode, _flags.IsMuted);
-        }
-
-        // 클립 안에서 카메라 모션 블록을 고쳤으면 — 그 시각의 클립 카메라(보이는 그 값).
-        return ShownClip is { } clip && CameraContext is not null ? ClipCameraAt(clip, _clock.Time, null) : null;
-    }
-
-    /// <summary>
-    /// 카메라 값을 지금 시각에 키한다(마야 채널 박스에 값을 넣은 것) — 그 성분의 키 하나, 되돌리기 한 칸.
-    /// <paramref name="node"/>는 <see cref="CameraRig.PanNode"/>(x·y) 또는 <see cref="CameraRig.ZoomNode"/>(x). 재생 기준이 상대값이면 씬의 카메라와의 차가 키 값이다.
-    /// </summary>
-    public void SetCameraValue(string node, Axis axis, float value)
-    {
-        // 클립 안: 고른 카메라 모션 블록에 키를 놓는다 — 시각은 시계 − 블록의 시작, 재생 기준은 블록의 것,
-        // 시작값은 그 시각의 클립 카메라에서 이 블록만 뺀 값(카메라 블록이 보낸 값·앞 카메라 모션이 남긴 값 위에 이 블록이 얹힌다).
-        if (_editor is not null && ShownClip is { } clip && CameraContext is { } context)
-        {
-            CameraSettings before = ClipCameraAt(clip, _clock.Time, context.Block);
-            float from = node == CameraRig.ZoomNode ? before.Zoom : axis == Axis.X ? before.PanX : before.PanY;
-            float at = (float)Math.Max(0, SnapTime(_clock.Time - ClipBlockTimeOffset));
-            _editor.KeyComponents(context.Motion.Name, node, ChannelKind.Position, at, new[] { (axis, CameraRig.KeyValueFor(context.Block.Mode, from, value)) }, DefaultTangent);
-            return;
-        }
-
-        if (_editor is null || Motion is not { } motion || !CameraRig.IsCamera(motion) || Scene is not { } scene)
-        {
-            return;
-        }
-
-        float start = node == CameraRig.ZoomNode ? scene.Camera.Zoom : axis == Axis.X ? scene.Camera.PanX : scene.Camera.PanY;
-        float time = (float)Math.Max(0, SnapTime(_clock.Time));
-        _editor.KeyComponents(motion.Name, node, ChannelKind.Position, time, new[] { (axis, CameraRig.KeyValueFor(motion.PreviewMode, start, value)) }, DefaultTangent);
     }
 
     /// <summary>씬으로 세운 시작 상태의 트리(읽기 전용으로 쓴다) — 굽기가 표본을 뜨는 바탕.</summary>
@@ -1264,7 +1189,6 @@ public sealed partial class ViewportView : Control
     private void RebuildTemplate()
     {
         _template = null;
-        _clipStage = null;
         SceneAsset? scene = Scene;
 
         if (_rig is null || scene is null)
@@ -1273,13 +1197,6 @@ public sealed partial class ViewportView : Control
         }
 
         _template = ScenePreview.Build(_rig, scene, AspectOf, null, _depth, _focus, _stage);
-
-        // 클립을 보는 중이면 상태 블록의 단계도 같이 세운다 — 문서·자산·끈 배역이 바뀔 때만 다시 세우고 프레임마다는 섞기만 한다.
-        if (_editor is not null && ShownClip is { } clip)
-        {
-            RigSchemaFile rig = _rig;
-            _clipStage = ClipStage.Build(_editor.Document, clip, s => ScenePreview.Build(rig, s, AspectOf, null, _depth, _focus, _stage), IsClipTrackMuted);
-        }
     }
 
     // ── 시계 ──────────────────────────────────────────────────────────
@@ -1391,16 +1308,7 @@ public sealed partial class ViewportView : Control
 
         if (_editor is not null && ShownClip is { } clip)
         {
-            // 무대(상태 블록)가 먼저 서고 모션이 그 위에 얹힌다.
-            return ClipPreview.Pose(_clipStage?.TreeAt(seconds) ?? _template, _editor.Document, clip, seconds, IsClipTrackMuted, _clipStage?.CameraAt(seconds));
-        }
-
-        // 카메라 모션 — 씬의 카메라 값에 모션을 얹어 무대의 카메라 노드를 다시 세운다. 캐릭터는 시작 상태로 선다.
-        if (CameraRig.IsCamera(motion) && Scene is { } cameraScene)
-        {
-            RectNodeTree tree = _template.Clone();
-            StageShotResponse.Apply(tree, CameraRig.Pose(cameraScene.Camera, motion!, seconds, motion!.PreviewMode, _flags.IsMuted));
-            return tree;
+            return ClipPreview.Pose(_template, _editor.Document, clip, seconds, IsClipTrackMuted);
         }
 
         return motion is not null && SelectedObject is { } o && CanWear(o)
@@ -1490,12 +1398,6 @@ public sealed partial class ViewportView : Control
         DrawOutside(context, stage);
         context.DrawRectangle(StagePen, stage);
 
-        if (CameraRig.IsCamera(motion) && CameraValue() is { } shot)
-        {
-            DrawLabel(context, $"카메라 모션 {motion!.Name} · zoom {shot.Zoom:0.##} · pan {shot.PanX:0.#}, {shot.PanY:0.#}", new Point(stage.X + 8, stage.Y + 6));
-            return;
-        }
-
         if (ShownClip is { } shown)
         {
             // 고른 블록 안이면 그 캐릭터에 손잡이가 선다 — 클립 안에서 바로 포즈를 잡는다.
@@ -1504,12 +1406,6 @@ public sealed partial class ViewportView : Control
                 DrawAxes(context, pose);
                 DrawGizmo(context, pose);
                 DrawLabel(context, $"클립 {shown.Name} › {editing.Name} @ {entry.Block.At:0.###}s · {MotionModeLabel.Of(entry.Block.Mode)} — 이 블록의 모션에 키가 놓인다", new Point(stage.X + 8, stage.Y + 6));
-                return;
-            }
-
-            if (CameraContext is { } cameraEdit)
-            {
-                DrawLabel(context, $"클립 {shown.Name} › 카메라 모션 {cameraEdit.Motion.Name} @ {cameraEdit.Block.At:0.###}s · {MotionModeLabel.Of(cameraEdit.Block.Mode)} — '모션' 탭의 카메라 칸이 이 블록에 키를 놓는다", new Point(stage.X + 8, stage.Y + 6));
                 return;
             }
 
@@ -1589,27 +1485,6 @@ public sealed partial class ViewportView : Control
 
         if (scene is null)
         {
-            return;
-        }
-
-        // 클립의 상태 블록이 있으면 그 시각의 씬(층·그리는 순서)과 불투명도(보이기 블록의 페이드)로 그린다.
-        if (ShownClip is not null && _clipStage is { } stage)
-        {
-            foreach (SceneObject o in stage.SceneAt(_clock.Time).DrawOrder())
-            {
-                float opacity = stage.OpacityOf(o.Id, _clock.Time);
-
-                if (opacity <= 0.001f)
-                {
-                    continue;
-                }
-
-                using (context.PushOpacity(opacity))
-                {
-                    DrawObject(context, pose, o, selected: o.Id == _selectedObjectId);
-                }
-            }
-
             return;
         }
 
@@ -1851,8 +1726,8 @@ public sealed partial class ViewportView : Control
             return;
         }
 
-        // 클립 층에서는 고른 블록 안에서만 포즈를 잡는다(EditMotion). 카메라 모션에는 캐릭터의 포즈를 키하지 않는다.
-        bool canPose = ShownClip is null ? !CameraRig.IsCamera(Motion) : EditMotion is not null && ContextEntry is not null;
+        // 클립 층에서는 고른 블록 안에서만 포즈를 잡는다(EditMotion).
+        bool canPose = ShownClip is null || (EditMotion is not null && ContextEntry is not null);
 
         if (canPose && TryStartManipulation(position))
         {
@@ -1885,7 +1760,7 @@ public sealed partial class ViewportView : Control
 
         foreach (SceneObject o in scene.DrawOrder().Reverse())
         {
-            if (OpacityOf(o.Id) <= 0.001f)
+            if (!o.Visible)
             {
                 continue;
             }
@@ -2097,7 +1972,7 @@ public sealed partial class ViewportView : Control
         RectNodeTree? pose = CurrentPose();
         string key = Prefix + node;
 
-        if (motion is null || CameraRig.IsCamera(motion) || pose is null || !pose.Contains(key) || MotionRules.ForbiddenNodes.Contains(node))
+        if (motion is null || pose is null || !pose.Contains(key) || MotionRules.ForbiddenNodes.Contains(node))
         {
             return;
         }

@@ -15,6 +15,9 @@ namespace Mt.Authoring.Serialization;
 /// </summary>
 public static class MotionDocumentJson
 {
+    private const string LegacyCameraRig = "camera";
+    private const string LegacyCameraRole = "@camera";
+
     private static readonly JsonSerializerOptions Options = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -67,14 +70,20 @@ public static class MotionDocumentJson
 
         document.EnsureDefaultScene();
 
+        // 예전 판의 흔적은 읽을 때 버린다 — 카메라 모션(rig "camera")과 카메라 줄("@camera"), 모션이 없는 블록(상태 블록).
+        // 이 툴은 카메라를 움직이지 않고(컷은 형제 저장소의 일), 클립은 모션을 겹치는 데만 쓴다.
+        document.Motions.RemoveAll(m => string.Equals(m.Rig, LegacyCameraRig, StringComparison.Ordinal));
+
         foreach (ClipAsset clip in document.Clips)
         {
             clip.Roles ??= new List<ClipRole>();
             clip.Tracks ??= new List<ClipTrack>();
+            clip.Tracks.RemoveAll(t => string.Equals(t.Role, LegacyCameraRole, StringComparison.Ordinal));
 
             foreach (ClipTrack track in clip.Tracks)
             {
                 track.Blocks ??= new List<ClipBlock>();
+                track.Blocks.RemoveAll(b => string.IsNullOrEmpty(b.Motion));
             }
         }
 

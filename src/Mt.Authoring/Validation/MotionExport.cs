@@ -19,10 +19,9 @@ public static class MotionExport
     {
         ArgumentNullException.ThrowIfNull(document);
 
-        // 카메라 모션은 싣지 않는다 — motions/2는 리그 노드만 알고, 런타임 로더는 모르는 rigKind의 클립을 버린다(CameraRig).
-        List<MotionAsset> selected = document.Motions.Where(m => !Preview.CameraRig.IsCamera(m) && (filter is null || filter(m))).ToList();
+        List<MotionAsset> selected = document.Motions.Where(m => filter is null || filter(m)).ToList();
         var names = new HashSet<string>(selected.Select(m => m.Name), StringComparer.Ordinal);
-        problems = MotionValidator.Validate(document, Preview.CameraRig.WithCamera(rigNodeIds))
+        problems = MotionValidator.Validate(document, rigNodeIds)
             .Where(p => p.Blocking && (string.IsNullOrEmpty(p.MotionName) || names.Contains(p.MotionName)))
             .ToList();
 
@@ -40,6 +39,6 @@ public static class MotionExport
     public static List<MotionClip> ToClips(MotionDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
-        return document.Motions.Where(m => !Preview.CameraRig.IsCamera(m)).Select(m => MotionAssetCodec.ToClip(m, skipEmojiOnly: true)).ToList();
+        return document.Motions.Select(m => MotionAssetCodec.ToClip(m, skipEmojiOnly: true)).ToList();
     }
 }

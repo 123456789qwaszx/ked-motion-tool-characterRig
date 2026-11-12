@@ -26,14 +26,6 @@ public sealed class SceneAsset
     public IEnumerable<SceneObject> DrawOrder()
         => Objects.OrderBy(o => StageNodes.IndexOf(o.Stage)).ThenBy(o => SceneLayers.IndexOf(o.Layer)).ThenBy(o => Objects.IndexOf(o));
 
-    /// <summary>값이 같은 사본 — 연출 클립의 상태 블록이 원본을 건드리지 않고 "그때의 씬"을 만든다.</summary>
-    public SceneAsset Clone() => new()
-    {
-        Name = Name,
-        Camera = new CameraSettings { Zoom = Camera.Zoom, PanX = Camera.PanX, PanY = Camera.PanY },
-        Objects = Objects.Select(o => o.Clone()).ToList(),
-    };
-
     /// <summary>캐릭터 리그 하나(s1, stage00/mid)를 세운 기본 씬 — 씬이 없던 문서(예전 판)와 새 문서가 이것으로 시작한다.</summary>
     public static SceneAsset Default(string? portrait = null) => new()
     {

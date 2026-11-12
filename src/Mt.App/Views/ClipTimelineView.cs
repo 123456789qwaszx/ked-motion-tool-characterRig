@@ -27,9 +27,6 @@ public sealed class ClipTimelineView : Control
     private const double RightPad = 10;
     private const double DragThreshold = 3;
 
-    /// <summary>메뉴로 놓는 상태 블록의 기본 길이(초).</summary>
-    public const float DefaultStateDuration = 0.5f;
-
     private static readonly IBrush Background = new SolidColorBrush(Color.FromRgb(0x2B, 0x2B, 0x2B));
     private static readonly IBrush RulerBrush = new SolidColorBrush(Color.FromRgb(0x38, 0x38, 0x38));
     private static readonly IBrush RowBrush = new SolidColorBrush(Color.FromRgb(0x33, 0x33, 0x33));
@@ -39,8 +36,6 @@ public sealed class ClipTimelineView : Control
     private static readonly IBrush DimBrush = new SolidColorBrush(Color.FromRgb(0x9A, 0x9A, 0x9A));
     private static readonly IBrush OutsideBrush = new SolidColorBrush(Color.FromArgb(0x60, 0x10, 0x10, 0x10));
     private static readonly IBrush GhostBrush = new SolidColorBrush(Color.FromArgb(0x70, 0xFF, 0xFF, 0xFF));
-    private static readonly IBrush StateBrush = new SolidColorBrush(Color.FromRgb(0x5C, 0x5C, 0x6E));
-    private static readonly IBrush CameraBrush = new SolidColorBrush(Color.FromRgb(0x8C, 0x7A, 0x3A));
     private static readonly IBrush MissingBrush = new SolidColorBrush(Color.FromRgb(0x6A, 0x3A, 0x3A));
     private static readonly Pen CycleMarkPen = new(new SolidColorBrush(Color.FromArgb(0xB0, 0x20, 0x20, 0x20)), 1);
     private static readonly Pen TickPen = new(new SolidColorBrush(Color.FromRgb(0x55, 0x55, 0x55)), 1);
@@ -296,21 +291,7 @@ public sealed class ClipTimelineView : Control
         _editor.RemoveClipBlock(clip.Name, s.Track, s.Index);
     }
 
-    /// <summary>상태 블록을 놓는다(메뉴의 "상태 놓기"·"카메라 놓기"). 시각은 스냅되고, 놓은 블록이 골라진다 — 값은 오른쪽 '클립' 탭에서 고친다.</summary>
-    public void PlaceState(int track, ClipBlock state, double seconds)
-    {
-        if (_editor is null || ShownClip is not { } clip)
-        {
-            return;
-        }
-
-        ClipBlock block = state.Clone();
-        block.At = SnapTime(seconds);
-        int index = _editor.AddClipStateBlock(clip.Name, track, block);
-        Select((track, index));
-    }
-
-    /// <summary>고른 블록을 그 끝에 바로 이어 한 번 더 놓는다(Ctrl+D). 길이 없는 상태 블록은 한 프레임 뒤에. 새 블록이 골라진다.</summary>
+    /// <summary>고른 블록을 그 끝에 바로 이어 한 번 더 놓는다(Ctrl+D). 새 블록이 골라진다.</summary>
     public void DuplicateSelected()
     {
         if (_editor is null || ShownClip is not { } clip || _selected is not { } s || Resolve(s) is not { } block)
@@ -319,19 +300,7 @@ public sealed class ClipTimelineView : Control
         }
 
         float end = ClipTiming.EndOf(_editor.Document, block);
-        int index;
-
-        if (block.IsMotion)
-        {
-            index = _editor.AddClipBlock(clip.Name, s.Track, block.Motion, end, block.Mode);
-        }
-        else
-        {
-            ClipBlock copy = block.Clone();
-            copy.At = end > block.At ? end : block.At + (float)(1.0 / TimeSnap.FramesPerSecond);
-            index = _editor.AddClipStateBlock(clip.Name, s.Track, copy);
-        }
-
+        int index = _editor.AddClipBlock(clip.Name, s.Track, block.Motion, end, block.Mode);
         Select((s.Track, index));
     }
 
@@ -340,7 +309,7 @@ public sealed class ClipTimelineView : Control
     /// </summary>
     public string? MakeSelectedUnique()
     {
-        if (_editor is null || ShownClip is not { } clip || _selected is not { } s || Resolve(s) is not { IsMotion: true } block)
+        if (_editor is null || ShownClip is not { } clip || _selected is not { } s || Resolve(s) is not { } block)
         {
             return null;
         }
@@ -451,7 +420,7 @@ public sealed class ClipTimelineView : Control
         {
             Select(hit);
 
-            if (e.ClickCount == 2 && Resolve(hit)?.IsMotion == true)
+            if (e.ClickCount == 2)
             {
                 BlockOpened?.Invoke(this, hit.Value);
             }
@@ -585,40 +554,15 @@ public sealed class ClipTimelineView : Control
 
         if (hit is { } h && Resolve(h) is { } block)
         {
-            if (block.IsMotion)
-            {
-                menu.Items.Add(Item((block.Mode == MotionChannelMode.Relative ? "● " : "○ ") + "상대값(relative)", () => SetSelectedMode(MotionChannelMode.Relative)));
-                menu.Items.Add(Item((block.Mode == MotionChannelMode.Absolute ? "● " : "○ ") + "절대값(absolute)", () => SetSelectedMode(MotionChannelMode.Absolute)));
-                menu.Items.Add(new Separator());
-                int uses = ClipTiming.UsesOf(_editor.Document, block.Motion);
-                menu.Items.Add(Item(uses > 1 ? $"이 블록만 따로 (모션 복제 — 지금 {uses}곳에서 쓰인다)" : "이 블록만 따로 (모션 복제)", () => MakeSelectedUnique()));
-                menu.Items.Add(Item("모션만 열기 (더블클릭)", () => BlockOpened?.Invoke(this, h)));
-            }
-
+            menu.Items.Add(Item((block.Mode == MotionChannelMode.Relative ? "● " : "○ ") + "상대값(relative)", () => SetSelectedMode(MotionChannelMode.Relative)));
+            menu.Items.Add(Item((block.Mode == MotionChannelMode.Absolute ? "● " : "○ ") + "절대값(absolute)", () => SetSelectedMode(MotionChannelMode.Absolute)));
+            menu.Items.Add(new Separator());
+            int uses = ClipTiming.UsesOf(_editor.Document, block.Motion);
+            menu.Items.Add(Item(uses > 1 ? $"이 블록만 따로 (모션 복제 — 지금 {uses}곳에서 쓰인다)" : "이 블록만 따로 (모션 복제)", () => MakeSelectedUnique()));
+            menu.Items.Add(Item("모션만 열기 (더블클릭)", () => BlockOpened?.Invoke(this, h)));
             menu.Items.Add(Item(block.IsMuted ? "블록 켜기 (M)" : "블록 끄기 (M)", ToggleSelectedMuted));
             menu.Items.Add(Item("이어서 한 번 더 (Ctrl+D)", DuplicateSelected));
             menu.Items.Add(Item("블록 삭제 (Del)", RemoveSelected));
-        }
-        else if (TrackAtY(position.Y) is { } cameraTrack && clip.Tracks[cameraTrack].IsCamera)
-        {
-            double at = TimeAtX(Math.Max(Gutter, position.X));
-            CameraSettings camera = _viewport?.Scene?.Camera ?? new CameraSettings();
-            menu.Items.Add(Item($"카메라 놓기 ({TimeText.Format(SnapTime(at), TimeDisplay)})", () =>
-                PlaceState(cameraTrack, new ClipBlock { Kind = ClipBlockKind.Camera, Duration = DefaultStateDuration, Zoom = camera.Zoom, PanX = camera.PanX, PanY = camera.PanY }, at)));
-            var cameraMotions = new MenuItem { Header = $"카메라 모션 놓기 ({TimeText.Format(SnapTime(at), TimeDisplay)})", FontSize = 11 };
-
-            foreach (MotionAsset motion in _editor.Document.Motions.Where(Mt.Authoring.Preview.CameraRig.IsCamera).OrderBy(m => m.Name, StringComparer.Ordinal))
-            {
-                string name = motion.Name;
-                cameraMotions.Items.Add(Item($"{name}  ·  {motion.Duration:0.###}s", () => PlaceMotion(cameraTrack, name, at)));
-            }
-
-            cameraMotions.IsEnabled = cameraMotions.Items.Count > 0;
-            menu.Items.Add(cameraMotions);
-            menu.Items.Add(new Separator());
-            bool muted = _viewport?.IsClipRoleMuted(ClipTrack.CameraRole) == true;
-            menu.Items.Add(Item(muted ? "카메라 켜기" : "카메라 끄기", () => ToggleRoleMuted(cameraTrack)));
-            menu.Items.Add(Item("트랙 삭제", () => _editor.RemoveClipTrack(clip.Name, cameraTrack)));
         }
         else if (TrackAtY(position.Y) is { } track)
         {
@@ -635,7 +579,6 @@ public sealed class ClipTimelineView : Control
 
             place.IsEnabled = place.Items.Count > 0;
             menu.Items.Add(place);
-            menu.Items.Add(StateMenu(track, clip.FindRole(roleName)?.Object, at));
             menu.Items.Add(new Separator());
             bool muted = _viewport?.IsClipRoleMuted(roleName) == true;
             string? actor = clip.FindRole(roleName)?.Object;
@@ -646,16 +589,6 @@ public sealed class ClipTimelineView : Control
             menu.Items.Add(Item("트랙 삭제", () => _editor.RemoveClipTrack(clip.Name, track)));
         }
 
-        if (hit is null && !clip.Tracks.Any(t => t.IsCamera))
-        {
-            if (menu.Items.Count > 0)
-            {
-                menu.Items.Add(new Separator());
-            }
-
-            menu.Items.Add(Item("카메라 트랙 추가", () => _editor.AddClipTrack(clip.Name, ClipTrack.CameraRole)));
-        }
-
         if (menu.Items.Count == 0)
         {
             return;
@@ -664,56 +597,6 @@ public sealed class ClipTimelineView : Control
         _menu?.Close();
         _menu = menu;
         menu.Open(this);
-    }
-
-    /// <summary>
-    /// "상태 놓기" — 보이기·숨기기 · 자리(화면 지점) · 층 · 오프셋. 오프셋은 그 캐릭터의 지금 씬 값으로 놓인다(놓은 뒤 '클립' 탭에서 고친다).
-    /// </summary>
-    private MenuItem StateMenu(int track, string? actor, double at)
-    {
-        var menu = new MenuItem { Header = $"상태 놓기 ({TimeText.Format(SnapTime(at), TimeDisplay)})", FontSize = 11 };
-
-        MenuItem Item(string header, Func<ClipBlock> make)
-        {
-            var item = new MenuItem { Header = header, FontSize = 11 };
-            item.Click += (_, _) => Guarded(() => PlaceState(track, make(), at));
-            return item;
-        }
-
-        menu.Items.Add(Item("보이기 (페이드 인)", () => new ClipBlock { Kind = ClipBlockKind.Visible, Duration = DefaultStateDuration, Visible = true }));
-        menu.Items.Add(Item("숨기기 (페이드 아웃)", () => new ClipBlock { Kind = ClipBlockKind.Visible, Duration = DefaultStateDuration, Visible = false }));
-
-        var place = new MenuItem { Header = "자리", FontSize = 11 };
-
-        foreach (string point in Mt.Authoring.Preview.ScenePreview.ScreenPoints)
-        {
-            place.Items.Add(Item(point, () => new ClipBlock { Kind = ClipBlockKind.Place, Duration = DefaultStateDuration, Place = point }));
-        }
-
-        menu.Items.Add(place);
-        var layer = new MenuItem { Header = "층", FontSize = 11 };
-
-        foreach (string name in SceneLayers.Order)
-        {
-            layer.Items.Add(Item(name, () => new ClipBlock { Kind = ClipBlockKind.Layer, Duration = DefaultStateDuration, Layer = name }));
-        }
-
-        menu.Items.Add(layer);
-        menu.Items.Add(Item("오프셋·회전·배율 (지금 값)", () =>
-        {
-            SceneObject? o = actor is null ? null : _viewport?.Scene?.Find(actor);
-            return new ClipBlock
-            {
-                Kind = ClipBlockKind.Offset,
-                Duration = DefaultStateDuration,
-                X = o?.PositionX ?? 0f,
-                Y = o?.PositionY ?? 0f,
-                Rotation = o?.RotationZ ?? 0f,
-                ScaleX = o?.ScaleX ?? 1f,
-                ScaleY = o?.ScaleY ?? 1f,
-            };
-        }));
-        return menu;
     }
 
     /// <summary>메뉴의 명령이 던져도 창이 죽지 않게 — 편집기는 흔적을 남기지 않는다.</summary>
@@ -756,9 +639,9 @@ public sealed class ClipTimelineView : Control
 
             ClipRole? role = clip.FindRole(track.Role);
             int roleIndex = role is null ? -1 : clip.Roles.IndexOf(role);
-            string label = track.IsCamera ? "카메라" : role is null ? $"{track.Role} (배역 없음)" : role.Object is null ? $"{role.Name} · 안 묶음" : $"{role.Name} · {role.Object}";
+            string label = role is null ? $"{track.Role} (배역 없음)" : role.Object is null ? $"{role.Name} · 안 묶음" : $"{role.Name} · {role.Object}";
             bool muted = _viewport.IsClipRoleMuted(track.Role);
-            Draw(context, label, new Point(8, row.Y + 6), (role?.Object is null && !track.IsCamera) || muted ? DimBrush : LabelBrush);
+            Draw(context, label, new Point(8, row.Y + 6), role?.Object is null || muted ? DimBrush : LabelBrush);
             Draw(context, muted ? "🔇" : "🔊", new Point(MuteRect(t).X + 3, row.Y + 5), muted ? DimBrush : LabelBrush);
             using IDisposable? dim = muted ? context.PushOpacity(0.35) : null; // 끈 배역의 블록은 흐리게
 
@@ -767,11 +650,7 @@ public sealed class ClipTimelineView : Control
                 ClipBlock block = track.Blocks[i];
                 MotionAsset? motion = _editor.Document.Find(block.Motion);
                 Rect rect = BlockRect(t, i);
-                IBrush fill = !block.IsMotion
-                    ? (track.IsCamera ? CameraBrush : roleIndex < 0 ? MissingBrush : StateBrush)
-                    : motion is null ? MissingBrush
-                    : track.IsCamera ? CameraBrush
-                    : roleIndex < 0 ? MissingBrush : RoleBrushes[roleIndex % RoleBrushes.Length];
+                IBrush fill = motion is null || roleIndex < 0 ? MissingBrush : RoleBrushes[roleIndex % RoleBrushes.Length];
                 Pen? pen = _selected == (t, i) ? SelectedPen : overlapping.Contains((t, i)) ? OverlapPen : null;
 
                 // 끈 블록은 흐리게, 이름 앞에 표시 — 자리는 남아 있다.
@@ -785,18 +664,9 @@ public sealed class ClipTimelineView : Control
                     context.DrawLine(CycleMarkPen, new Point(x, rect.Y + 2), new Point(x, rect.Bottom - 2));
                 }
 
-                string text = (block.IsMuted ? "🔇 " : "") + (!block.IsMotion
-                    ? block.Describe()
-                    : motion is null
+                string text = (block.IsMuted ? "🔇 " : "") + (motion is null
                     ? $"{block.Motion} (없음)"
                     : $"{block.Describe()} · {(block.Mode == MotionChannelMode.Relative ? "rel" : "abs")} · {(motion.End == MotionEnd.Restore ? "restore" : "commit")}");
-
-                // 길이 없는 상태 블록은 막대가 좁다 — 이름은 막대 옆에 쓴다.
-                if (!block.IsMotion && rect.Width < 40)
-                {
-                    Draw(context, text, new Point(rect.Right + 3, rect.Y + 3), DimBrush);
-                    continue;
-                }
 
                 using (context.PushClip(rect))
                 {
