@@ -4,7 +4,7 @@
 
 - 먼저 읽을 것: `docs/PLAN-characterRig.md` — 방향 · 정해진 것 · 단계(R1~R6) · 먼저 정해야 하는 것. 단계가 끝날 때마다 그 문서에 결정과 상태를 적는다.
 - 이모지는 `docs/PLAN-emoji.md`(런타임의 새 정의에 맞추는 단계 E1~E7)를 따른다.
-- 이모지 모드의 화면(작업 모드 · 수명의 띠 · 뷰포트의 인물 · 움직임 가져오기 · 새 이모지의 첫 화면)은 `docs/PLAN-ux.md`(U1~U10)가 정한 것이다.
+- 이모지 모드의 화면(작업 모드 · 수명의 띠 · 뷰포트의 인물 · 움직임 가져오기 · 새 이모지의 첫 화면)은 `docs/PLAN-ux.md`(U1~U10)가 정한 것이다. 트윈머신(따로 뜨는 창)은 `docs/PLAN-tween.md`.
 - 그 밖의 계획서(`docs/PLAN.md` · `PLAN-controller.md` · `PLAN-clip.md` · `PLAN-scene.md` …)는 지금 있는 기능의 명세다. 인수인계는 `docs/HANDOFF.md`, 코어 사본의 동기화는 `docs/MAINTENANCE.md`와 `src/Ked.Presentation.Core/vendoring.md`.
 - `main`은 출발점(`ked-motion-tool-extend`의 `d37c678`) 그대로다. 일은 `dev`에서 한다.
 - 형제 저장소: `ked-motion-tool-extend`(컷 — 씬 + 카메라 + 타임라인) · `ked-motion-tool-screenTransition`(화면 전환). 여기서는 그 둘의 일(세트 · 조립 · 컷 · 전환)을 하지 않는다.

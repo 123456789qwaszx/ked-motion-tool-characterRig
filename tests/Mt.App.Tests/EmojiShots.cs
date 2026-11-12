@@ -100,6 +100,18 @@ public class EmojiShots
                 window.SelectEmojiRigFromForm(null);
                 Shot(window, "ux-star-lanes-all");
 
+                // 트윈머신 — 따로 뜨는 창. 두 키 사이에서 30%로 끌어 둔 모습.
+                window.SelectEmojiRigFromForm("body");
+                window.Viewport.ScrubTo(EmojiAsset.SecondsOf(3));
+                window.OpenTweenFromForm();
+                window.DragTweenFromForm(30);
+                Shot(window.TweenWindow!, "ux-tween-window");
+                Shot(window, "ux-tween-dragging");
+                window.ReleaseTweenFromForm();
+                window.CloseTweenFromForm();
+                window.Session.Editor.Undo();
+                window.SelectEmojiRigFromForm(null);
+
                 // 그림 하나를 고르면 그래프는 그 그림의 것만.
                 window.SelectEmoji("twinkle");
                 window.SelectEmojiRigFromForm("center");

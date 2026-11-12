@@ -103,6 +103,7 @@ public partial class MainWindow : Window
     private readonly TabControl _inspectorTabs = new() { Padding = new Avalonia.Thickness(0) };
     private readonly HashSet<string> _collapsedGroups = new(StringComparer.Ordinal);
     private Window? _settingsWindow;
+    private bool _closing; // 본 창이 닫히는 중 — 딸린 창이 닫혀도 "열려 있었다"를 지우지 않는다
     private Window? _shortcutsWindow;
     private readonly List<Panel> _settingsRows = new();
     private readonly TextBlock _pendingText = new() { FontSize = 11, Foreground = Brushes.Orange, TextWrapping = TextWrapping.Wrap };
@@ -288,7 +289,20 @@ public partial class MainWindow : Window
         }
 
         _autoSaveTimer.Tick += (_, _) => Guard("자동 저장", () => _session.AutoSave());
-        Closing += (_, _) => SaveSettings();
+        Closing += (_, _) =>
+        {
+            // 딸린 창(트윈머신)을 먼저 닫는다 — 열려 있었다는 것은 설정에 남는다(다음에 다시 뜬다).
+            _closing = true;
+            _tweenWindow?.Close();
+            SaveSettings();
+        };
+        Opened += (_, _) =>
+        {
+            if (_settings.TweenWindowOpen)
+            {
+                OpenTween();
+            }
+        };
         AddHandler(KeyDownEvent, OnShellKeyDown, RoutingStrategies.Tunnel);
     }
 
@@ -1775,6 +1789,10 @@ public partial class MainWindow : Window
         Toolbar.Children.Add(ToolButton("되돌리기", (_, _) => UndoCommand()));
         Toolbar.Children.Add(ToolButton("다시하기", (_, _) => RedoCommand()));
         Toolbar.Children.Add(Separator());
+        BuildTween();
+        Button tween = ToolButton("트윈머신", (_, _) => OpenTween());
+        ToolTip.SetTip(tween, "트윈머신 창을 띄운다 — 앞 키와 뒤 키 사이의 값을 슬라이더로 골라 지금 프레임에 키로 놓는다(사이 포즈 · 오버슈트). 창은 떠 있는 채로 뷰포트 · 타임라인을 만진다");
+        Toolbar.Children.Add(OnlyIn(WorkMode.Emoji, tween));
         Toolbar.Children.Add(ToolButton("설정…", (_, _) => OpenSettings()));
         Toolbar.Children.Add(ToolButton("단축키 (F1)", (_, _) => OpenShortcuts()));
     }
@@ -2239,6 +2257,7 @@ public partial class MainWindow : Window
         "  블록을 고르고 그 블록 안의 시각이면 뷰포트 끌기·채널 박스·S가 그 블록의 모션에 키를 놓는다      아래 경계를 끌면 타임라인 높이\n\n" +
         "이모지 (툴바의 '이모지' 모드 — 그래프 · 도프 시트 · 뷰포트가 그 타임라인을 본다)\n" +
         "  '이모지 추가'  새 이모지의 첫 화면 — 그림(PNG 끌어다 놓기) · 어떻게 뜨는가 · 움직임 → 만들기(한 칸) · '빈 이모지로 시작'\n" +
+        "  툴바 '트윈머신'  따로 뜨는 창 — 앞 키 ↔ 뒤 키 사이의 값을 지금 프레임에(슬라이더: 끄는 동안 보이고 놓으면 한 칸 · 단추 · 오버슈트)\n" +
         "  오른쪽 '키 놓기'  자리 · 크기 · 회전 · 투명도 · 그림 — 고른 그림들(없으면 이모지 전체)의 지금 값을 지금 프레임에      그래프 '종류별 칸'  종류마다 제 눈금\n" +
         "  그림을 고르면 그래프는 그 그림의 것만 · 왼쪽 목록에서 이모지를 누르면 대상이 이모지 전체(머리에서의 자리를 끈다)\n" +
         "  Q / W / E / R  선택 · 이동 · 회전 · 크기(뷰포트 오른쪽 위의 띠와 같다)      그림 누르기  고르기 — 빈 곳은 맞지 않는다 · 겹친 곳을 다시 누르면 밑의 것 · 빈 데를 누르면 전부 풀린다(이모지 전체는 왼쪽 목록에서 이모지를 누른다)\n" +

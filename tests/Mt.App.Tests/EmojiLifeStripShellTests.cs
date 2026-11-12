@@ -445,6 +445,71 @@ public class EmojiLifeStripShellTests
         });
     }
 
+    // ── 트윈머신 (PLAN-tween.md T1) ──────────────────────────────
+
+    [Fact]
+    public void 트윈머신_창은_고른_것과_지금_프레임을_따라가고_끌면_보이고_놓으면_한_칸이다()
+    {
+        Run(window =>
+        {
+            window.SelectEmoji("star");
+            MotionEditor editor = window.Session.Editor;
+            EmojiRigFrame frame = window.Session.EmojiFrame!;
+            var scaleX = new Mt.Authoring.Graph.CurveRef(frame.ImageNodeOf("body"), ChannelKind.Scale, Axis.X);
+            KeyAsset[] keys = scaleX.Resolve(editor.Document.FindEmoji("star")!.Timeline)!.Keys.ToArray();
+            (KeyAsset a, KeyAsset b) = (keys[0], keys[1]);
+            int between = (EmojiAsset.FrameOf(a.T) + EmojiAsset.FrameOf(b.T)) / 2;
+            Assert.True(between > EmojiAsset.FrameOf(a.T) && between < EmojiAsset.FrameOf(b.T), "예시의 첫 두 키 사이에 프레임이 있어야 한다");
+
+            window.OpenTweenFromForm();
+            Assert.True(window.TweenOpen);
+
+            // 그림을 고르고 두 키 사이로 간다 — 창이 무엇에, 어느 키 사이에 놓이는지 적는다.
+            window.SelectEmojiRigFromForm("body");
+            window.Viewport.ScrubTo(EmojiAsset.SecondsOf(between));
+            Assert.StartsWith($"body  |  {between}fr에 — 앞 키 ", window.TweenNote);
+
+            // 끈다 — 문서가 따라오지만(뷰포트 · 그래프에 보인다) 기록은 아직 없다.
+            long before = editor.Revision;
+            window.DragTweenFromForm(20);
+            window.DragTweenFromForm(80);
+            Assert.Equal(before, editor.Revision);
+            float shown = scaleX.Resolve(editor.Document.FindEmoji("star")!.Timeline)!.Keys.Single(k => EmojiAsset.FrameOf(k.T) == between).V;
+            Assert.Equal(a.V + (b.V - a.V) * 0.8f, shown, 3);
+            Assert.Equal(EmojiAsset.SecondsOf(between), window.Viewport.Clock.Time, 4); // 보고 있던 프레임 그대로
+
+            // 놓는다 — 한 칸. 되돌리면 끌기 전으로.
+            window.ReleaseTweenFromForm();
+            Assert.Equal(before + 1, editor.Revision);
+            editor.Undo();
+            Assert.DoesNotContain(scaleX.Resolve(editor.Document.FindEmoji("star")!.Timeline)!.Keys, k => EmojiAsset.FrameOf(k.T) == between);
+
+            // 값 단추 — 바로 한 칸. 고른 그림의 것만 건드린다(이모지 전체의 채널은 그대로).
+            string wholeBefore = string.Join(",", editor.Document.FindEmoji("star")!.Timeline.Channels.Where(c => c.Node == frame.OffsetNode).SelectMany(c => c.X?.Keys ?? new List<KeyAsset>()).Select(k => k.T));
+            before = editor.Revision;
+            window.PressTweenButtonFromForm(50);
+            Assert.Equal(before + 1, editor.Revision);
+            Assert.Equal((a.V + b.V) / 2, scaleX.Resolve(editor.Document.FindEmoji("star")!.Timeline)!.Keys.Single(k => EmojiAsset.FrameOf(k.T) == between).V, 3);
+            Assert.Equal(wholeBefore, string.Join(",", editor.Document.FindEmoji("star")!.Timeline.Channels.Where(c => c.Node == frame.OffsetNode).SelectMany(c => c.X?.Keys ?? new List<KeyAsset>()).Select(k => k.T)));
+            Assert.Equal(50, window.TweenSliderState.Value);
+
+            // 오버슈트 — 범위가 넓어진다.
+            Assert.Equal((0d, 100d), (window.TweenSliderState.Min, window.TweenSliderState.Max));
+            window.SetTweenOvershootFromForm(true);
+            Assert.Equal((-50d, 150d), (window.TweenSliderState.Min, window.TweenSliderState.Max));
+
+            // 첫 프레임 — 앞에 키가 없다. 놓일 곳이 없다고 적고 아무것도 하지 않는다.
+            window.Viewport.ScrubTo(0);
+            Assert.Contains("앞과 뒤에 키가 있는 곡선이 없다", window.TweenNote);
+            before = editor.Revision;
+            window.PressTweenButtonFromForm(50);
+            Assert.Equal(before, editor.Revision);
+
+            window.CloseTweenFromForm();
+            Assert.False(window.TweenOpen);
+        });
+    }
+
     private static string RepoRoot()
     {
         for (DirectoryInfo? d = new(AppContext.BaseDirectory); d is not null; d = d.Parent)

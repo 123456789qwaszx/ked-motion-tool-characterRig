@@ -1162,6 +1162,8 @@ public sealed partial class MotionEditor
 
     public void Undo()
     {
+        EndGesture(); // 끄는 조작이 열려 있으면 먼저 한 칸으로 닫는다
+
         if (_undo.Count == 0)
         {
             return;
@@ -1175,6 +1177,8 @@ public sealed partial class MotionEditor
 
     public void Redo()
     {
+        EndGesture(); // 끄는 조작이 열려 있으면 먼저 한 칸으로 닫는다
+
         if (_redo.Count == 0)
         {
             return;
@@ -1263,6 +1267,112 @@ public sealed partial class MotionEditor
         List<(Action Undo, Action Redo)>? sides = _batchSides;
         _batchSides = null;
         Commit(kind, before, ComposeUndo(sides), ComposeRedo(sides));
+    }
+
+    // ── 끄는 조작 ─────────────────────────────────────────────────────
+    //
+    // 슬라이더처럼 끄는 동안 값이 계속 바뀌는 조작 — 끄는 동안은 문서를 바로 고쳐 화면에 보이고(이력 · Revision 없이),
+    // 놓으면 처음부터 끝까지가 되돌리기 한 칸이 된다. 묶음(Batch)을 열어 둔 것과 같다.
+
+    private string? _gestureBefore;
+    private MotionChangeKind _gestureKind;
+
+    /// <summary>끄는 조작이 열려 있는가.</summary>
+    public bool InGesture => _gestureBefore is not null;
+
+    /// <summary>끄는 조작을 연다. 이미 열려 있거나 묶음 안이면 막는다.</summary>
+    public void BeginGesture(MotionChangeKind kind)
+    {
+        if (InGesture || _batchDepth > 0)
+        {
+            throw new InvalidOperationException("끄는 조작은 한 번에 하나다(묶음 안에서도 열지 않는다).");
+        }
+
+        _gestureBefore = MotionDocumentJson.Write(Document);
+        _gestureKind = kind;
+        _batchDepth++;
+        _batchSides = null;
+    }
+
+    /// <summary>끄는 중에 문서를 고쳤다 — 화면이 따라오게 알린다. 이력에도 <see cref="Revision"/>에도 남지 않는다.</summary>
+    public void GestureChanged()
+    {
+        if (InGesture)
+        {
+            Changed?.Invoke(this, new MotionChangedEventArgs(_gestureKind));
+        }
+    }
+
+    /// <summary>놓았다 — 연 뒤로 바뀐 것이 한 칸이 된다. 바뀐 것이 없으면 흔적이 없다.</summary>
+    public void EndGesture()
+    {
+        if (_gestureBefore is not { } before)
+        {
+            return;
+        }
+
+        _gestureBefore = null;
+        _batchDepth--;
+        _batchSides = null;
+        Commit(_gestureKind, before, null, null);
+    }
+
+    /// <summary>끄는 조작을 버린다 — 문서를 열기 전으로 되돌린다.</summary>
+    public void CancelGesture()
+    {
+        if (_gestureBefore is not { } before)
+        {
+            return;
+        }
+
+        _gestureBefore = null;
+        _batchDepth--;
+        _batchSides = null;
+        Document = MotionDocumentJson.Read(before);
+        Changed?.Invoke(this, new MotionChangedEventArgs(MotionChangeKind.Structure));
+    }
+
+    /// <summary>
+    /// 사이 포즈(트윈머신) — <paramref name="time"/>에, 그 앞의 키와 뒤의 키 사이 <paramref name="bias"/>(0 = 앞 키 · 1 = 뒤 키,
+    /// 0 아래 · 1 위는 오버슈트)의 값으로 키를 놓는다. 그 시각에 키가 있으면 값만 바꾼다. 앞이나 뒤에 키가 없는 곡선은 건너뛴다.
+    /// 그림 바꾸기는 계단 값이라 건드리지 않는다. 한 칸.
+    /// </summary>
+    /// <param name="tangent">새로 놓는 키의 탄젠트. 앞 키가 계단이면 새 키도 계단이다(스텝으로 포즈를 잡는 중).</param>
+    /// <returns>키가 놓인(값이 바뀐) 곡선들.</returns>
+    public List<CurveRef> TweenKeys(string name, IEnumerable<CurveRef> curves, float time, double bias, TangentMode tangent)
+    {
+        ArgumentNullException.ThrowIfNull(curves);
+        MotionAsset motion = Require(name);
+        var done = new List<CurveRef>();
+
+        Mutate(MotionChangeKind.Keys, () =>
+        {
+            foreach (CurveRef curveRef in curves.Distinct())
+            {
+                if (curveRef.Kind == ChannelKind.Image || curveRef.Resolve(motion) is not { } curve
+                    || !TweenMath.TryValue(curve.Keys, time, bias, out float value, out KeyAsset? before))
+                {
+                    continue;
+                }
+
+                KeyAsset? existing = curve.Keys.FirstOrDefault(k => Math.Abs(k.T - time) <= MotionRules.Tolerance);
+
+                if (existing is not null)
+                {
+                    existing.V = value;
+                }
+                else
+                {
+                    curve.Keys.Add(new KeyAsset { T = time, V = value, Tangent = before!.Tangent == TangentMode.Step ? TangentMode.Step : tangent });
+                    curve.Keys.Sort((a, b) => a.T.CompareTo(b.T));
+                }
+
+                TangentMath.Recompute(curve.Keys);
+                done.Add(curveRef);
+            }
+        });
+
+        return done;
     }
 
     /// <summary>

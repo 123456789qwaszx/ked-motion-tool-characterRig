@@ -55,6 +55,15 @@ public sealed class ToolSettings
     /// <summary>이모지의 그래프를 종류별 칸(자리 · 크기 · 회전 · 투명도 · 그림)에 나눠 그린다 — 칸마다 제 세로 눈금. 기본은 켜짐.</summary>
     public bool StackEmojiGraph { get; set; } = true;
 
+    /// <summary>트윈머신 창 — 닫을 때 열려 있었는가(다음에 열 때 다시 띄운다) · 화면의 자리 · 오버슈트.</summary>
+    public bool TweenWindowOpen { get; set; }
+
+    public int? TweenWindowX { get; set; }
+
+    public int? TweenWindowY { get; set; }
+
+    public bool TweenOvershoot { get; set; }
+
     /// <summary>마지막 작업 모드.</summary>
     public WorkMode WorkMode { get; set; }
 

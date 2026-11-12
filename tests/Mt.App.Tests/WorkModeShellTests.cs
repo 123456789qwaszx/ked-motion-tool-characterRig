@@ -66,7 +66,7 @@ public class WorkModeShellTests
             Assert.True(state.EmojiLeft);
             Assert.False(state.Tabs);
             Assert.True(state.EmojiPane);
-            Assert.Equal(new[] { "emojis.json 내보내기…" }, state.Exports);
+            Assert.Equal(new[] { "emojis.json 내보내기…", "트윈머신" }, state.Exports);
         });
     }
 
