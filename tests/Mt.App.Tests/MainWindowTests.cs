@@ -36,7 +36,7 @@ public class MainWindowTests
 
             try
             {
-                Assert.Equal("ked-motion-tool", window.Title);
+                Assert.Equal("ked-motion-tool-characterRig", window.Title);
 
                 var status = window.FindControl<TextBlock>("StatusText");
                 Assert.NotNull(status);

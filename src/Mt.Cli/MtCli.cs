@@ -24,7 +24,7 @@ namespace Mt.Cli;
 public static class MtCli
 {
     public const string Usage = """
-        mt — ked-motion-tool 명령줄 (결과는 stdout의 JSON, 종료 코드 0 됨 · 1 막는 문제 · 2 쓰는 법)
+        mt — ked-motion-tool-characterRig 명령줄 (결과는 stdout의 JSON, 종료 코드 0 됨 · 1 막는 문제 · 2 쓰는 법)
 
           mt info     <문서>                                   모션·클립·씬·이모지의 목록
           mt validate <문서> [--rig <덤프>]                    문제 목록(모션·클립·이모지). 막는 문제가 있으면 종료 코드 1

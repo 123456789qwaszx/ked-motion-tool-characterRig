@@ -83,7 +83,9 @@
 | C-1 A4 | 끝 — `clips.json`(K6)은 하지 않는다. 클립은 굽기로 모션이 되어 `motions.json`으로 나간다. `PLAN-clip.md`는 C-3에서 지난 기록으로 옮긴다 |
 | C-1 A5 · A6 | 끝 — 화면이 부르지 않는 편집 명령을 지웠다: `AddScene` · `DuplicateScene` · `RemoveScene` · `RenameScene` · `SetActiveScene` · `SetPreviewPortrait` · `RemoveKey` · `SetClipScene` · `RenameClipRole` · `SetClipRoleRig` · `SetClipBlockRepeat` · `SetClipBlockMotion` · `CancelGesture` |
 | C-1 A7 · A8 | 끝 — 이모지 오른쪽의 "구간과 잇기"는 접힌 채로 시작한다. 타임 슬라이더는 타임라인 보기에서 구간 띠를 깔지 않는다(수명 재생의 단계 띠는 남는다) |
-| C-2 · C-3 | 시작 전 |
+| C-2 B2 | 끝 — 설정은 `%APPDATA%/ked-motion-tool-characterRig/settings.json`. 제 파일이 없으면 옛 자리(`ked-motion-tool`)의 것을 한 번 읽어 오고, 저장은 제 자리에만 한다(옛 파일은 형제 툴의 것이라 건드리지 않는다). 창 제목도 `ked-motion-tool-characterRig` |
+| C-2 B1 · B3 | 시작 전 |
+| C-3 | 시작 전 |
 
 ### 적어 둘 것
 
