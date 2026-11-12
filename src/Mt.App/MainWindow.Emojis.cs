@@ -443,13 +443,8 @@ public partial class MainWindow
             OnCommit(captured, _ => CommitEmojiBox(captured));
         }
 
-        _viewport.EmojiRigPicked += (_, _) =>
-        {
-            if (_viewport.SelectedEmojiRig is { } rig)
-            {
-                _emojiRigList.SelectedItem = rig;
-            }
-        };
+        // 뷰포트에서 그림을 골랐거나 빈 곳을 눌러 풀었다 — 왼쪽 목록과 오른쪽이 따라온다.
+        _viewport.EmojiRigPicked += (_, _) => _emojiRigList.SelectedItem = _viewport.SelectedEmojiRig;
 
         return panel;
     }

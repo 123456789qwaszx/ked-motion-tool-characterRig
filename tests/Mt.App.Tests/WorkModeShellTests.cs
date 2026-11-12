@@ -306,6 +306,22 @@ public class WorkModeShellTests
 
             window.SelectEmojiRigFromForm("body");
             Shot(window, "mode-emoji-rig");
+
+            // 도구와 매니퓰레이터(PLAN-ux U4) — 회전 고리와 Auto Key.
+            window.PickToolFromStrip(Mt.Authoring.Preview.ManipulatorMode.Rotate);
+            window.SetAutoKeyFromStrip(true);
+            Shot(window, "mode-emoji-rotate");
+            window.PickToolFromStrip(Mt.Authoring.Preview.ManipulatorMode.Move);
+            window.SetAutoKeyFromStrip(false);
+            Shot(window, "mode-emoji-move");
+
+            // 실제로 그릴 때만(Skia) 그림의 픽셀을 읽을 수 있다 — 별의 귀퉁이는 비어 있어 눌러도 맞지 않고, 가운데는 맞는다.
+            if (RenderShots.Directory is not null)
+            {
+                Avalonia.Rect box = window.Viewport.EmojiControlBox()!.Value;
+                Assert.Empty(window.Viewport.EmojiRigsAtControlForTest(new Avalonia.Point(box.X + box.Width * 0.06, box.Y + box.Height * 0.06)));
+                Assert.Equal(new[] { "body" }, window.Viewport.EmojiRigsAtControlForTest(box.Center));
+            }
         });
     }
 

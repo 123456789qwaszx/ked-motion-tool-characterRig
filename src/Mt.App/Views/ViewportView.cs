@@ -143,7 +143,25 @@ public sealed partial class ViewportView : Control
     /// <summary>매니퓰레이터·S·Auto Key로 키가 들어갔다.</summary>
     public event EventHandler? PoseKeyed;
 
-    public ManipulatorMode Manipulator { get; set; } = ManipulatorMode.Move;
+    private ManipulatorMode _manipulator = ManipulatorMode.Move;
+
+    /// <summary>지금 도구 — 선택(Q) · 이동(W) · 회전(E) · 크기(R). 캐릭터의 컨트롤러와 이모지의 그림이 함께 쓴다.</summary>
+    public ManipulatorMode Manipulator
+    {
+        get => _manipulator;
+        set
+        {
+            if (_manipulator != value)
+            {
+                _manipulator = value;
+                ManipulatorChanged?.Invoke(this, EventArgs.Empty);
+                InvalidateVisual();
+            }
+        }
+    }
+
+    /// <summary>도구가 바뀌었다(단축키든 단추든).</summary>
+    public event EventHandler? ManipulatorChanged;
 
     // 보기 변환(네비게이션): 무대를 컨트롤에 맞춘 배율 × ViewZoom, 가운데에서 ViewPan만큼. 씬 데이터가 아니라 화면뿐이다.
     private double _viewZoom = 1;
@@ -655,6 +673,13 @@ public sealed partial class ViewportView : Control
     /// </summary>
     public void SetKey()
     {
+        // 이모지를 보는 중이면 그 대상의 지금 값을 키한다(ViewportView.Emoji).
+        if (ShownEmoji is not null)
+        {
+            KeyEmojiTarget();
+            return;
+        }
+
         MotionAsset? motion = EditMotion;
 
         // 카메라 모션에는 캐릭터의 포즈를 키하지 않는다 — 카메라 값은 SetCameraValue로.
@@ -1078,8 +1103,7 @@ public sealed partial class ViewportView : Control
         }
 
         _emojiName = null;
-        _emojiDrag = null;
-        _emojiDragPlace = null;
+        CancelEmojiPress();
         _contextBlock = null;
 
         if (_editor is not null)
@@ -1791,7 +1815,7 @@ public sealed partial class ViewportView : Control
             return;
         }
 
-        // 이모지를 보는 중 — 리그의 그림을 끌어 기본 자리를 옮긴다(타임라인 보기). 캐릭터의 포즈는 잡지 않는다.
+        // 이모지를 보는 중 — 그림을 고르고 매니퓰레이터로 끈다(타임라인 보기, ViewportView.Emoji). 캐릭터의 포즈는 잡지 않는다.
         if (ShownEmoji is not null)
         {
             if (TryStartEmojiDrag(position))
@@ -2134,7 +2158,7 @@ public sealed partial class ViewportView : Control
             return;
         }
 
-        if (_emojiDrag is not null)
+        if (_emojiPress)
         {
             DragEmojiPlace(e.GetPosition(this));
             e.Handled = true;
@@ -2168,7 +2192,7 @@ public sealed partial class ViewportView : Control
             return;
         }
 
-        if (_emojiDrag is not null)
+        if (_emojiPress)
         {
             EndEmojiDrag();
             e.Pointer.Capture(null);
