@@ -16,7 +16,20 @@ public partial class MainWindow
         IReadOnlyList<EmojiProblem> emojiProblems = _session.EmojiProblems;
         ProblemsPanel.Children.Clear();
         SchemaDiff schemaChange = _session.SchemaChange;
-        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count + emojiProblems.Count > 0 || !schemaChange.IsEmpty;
+        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count + emojiProblems.Count + _session.UnknownKeys.Count > 0 || !schemaChange.IsEmpty;
+
+        // 연 파일의 모르는 키 — 손으로(또는 AI가) 쓴 문서의 오타. 읽지 않았으니 뜻한 값이 빠져 있다.
+        foreach (string key in _session.UnknownKeys)
+        {
+            ProblemsPanel.Children.Add(new TextBlock
+            {
+                Text = $"△ 문서: 모르는 키 '{key}' — 읽지 않았다(오타인가?). 저장하면 파일에서 사라진다",
+                FontSize = 11,
+                Foreground = Brushes.Goldenrod,
+                TextWrapping = TextWrapping.Wrap,
+                MaxWidth = 900,
+            });
+        }
 
         foreach (MotionProblem problem in problems)
         {

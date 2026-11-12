@@ -160,4 +160,21 @@ public class DocumentShellTests
             window.AnswerUnsavedFromForm("cancel");
         });
     }
+
+    [Fact]
+    public void 연_파일의_모르는_키를_문제_칸이_알리고_저장하면_사라진다()
+    {
+        Run((window, directory) =>
+        {
+            string path = Path.Combine(directory, "typo.motion-authoring.json");
+            File.WriteAllText(path, """{ "schema": "motion-authoring/2", "motions": [ { "name": "m", "rig": "character", "duration": 1, "end": "restore", "ednn": "commit" } ] }""");
+
+            window.OpenDocument(path);
+            Assert.Equal(new[] { "motions[0].ednn" }, window.Session.UnknownKeys);
+            Assert.True(window.ProblemRowsShown > 0);
+
+            window.Session.Save();
+            Assert.Empty(window.Session.UnknownKeys);
+        });
+    }
 }

@@ -57,4 +57,26 @@ public class ShapeProblemsTests
             Assert.Equal(all.Count, all.Distinct().Count());
         }
     }
+
+    [Fact]
+    public void 모르는_키는_자리와_함께_알린다()
+    {
+        const string json = """
+            { "schema": "motion-authoring/2", // 주석은 읽어 준다
+              "motions": [ { "name": "m", "rig": "character", "duration": 0.5, "end": "restore", "ednn": "commit",
+                "channels": [ { "node": "N", "kind": "position",
+                  "y": { "keyz": [], "keys": [ { "t": 0, "v": 0, "tangent": "flat", "tangnt": "x" }, { "T": 0.5, "v": 0 } ] } } ] } ],
+              "emojis": [ { "name": "e", "rigs": [ { "name": "a", "images": [ "x.png" ], "plaseX": 5, "placex": 5 } ],
+                "timeline": { "duration": 1, "channels": [] }, "spans": [ { "name": "hold", "start": 0, "end": 3, "loop": true } ], "hold": "hold" } ],
+              "scenes": [ { "name": "scene", "objects": [ { "id": "s1", "rig": "character", "plase": "left" } ] } ], }
+            """;
+
+        Assert.Equal(
+            new[] { "motions[0].ednn", "motions[0].channels[0].y.keyz", "motions[0].channels[0].y.keys[0].tangnt", "emojis[0].rigs[0].plaseX", "emojis[0].spans[0].loop", "scenes[0].objects[0].plase" },
+            MotionDocumentJson.UnknownKeys(json));
+
+        // 대소문자는 가리지 않는다(읽기가 그렇다). 툴이 쓴 문서에는 모르는 키가 없다.
+        Assert.Empty(MotionDocumentJson.UnknownKeys(MotionDocumentJson.Write(MotionDocumentJson.Read(json))));
+        Assert.Empty(MotionDocumentJson.UnknownKeys("{ broken"));
+    }
 }

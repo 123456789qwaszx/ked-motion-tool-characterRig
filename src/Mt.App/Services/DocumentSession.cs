@@ -263,10 +263,17 @@ public sealed class DocumentSession
         SetStatus("새 문서.");
     }
 
+    /// <summary>
+    /// 연 파일에 있던 모르는 키(오타일 수 있다 — 읽지 않았다). 그 파일을 연 동안만 든다: 저장하면 파일에서 사라지므로 비운다.
+    /// </summary>
+    public IReadOnlyList<string> UnknownKeys { get; private set; } = Array.Empty<string>();
+
     public void Open(string path)
     {
-        MotionDocument document = MotionDocumentJson.Read(File.ReadAllText(path));
+        string json = File.ReadAllText(path);
+        MotionDocument document = MotionDocumentJson.Read(json);
         Replace(document, path);
+        UnknownKeys = MotionDocumentJson.UnknownKeys(json);
         TryLoadRigFromDocument();
         TryLoadAssetsFromDocument();
         _assetFingerprint = AssetFingerprintOf(Editor.Document);
@@ -308,6 +315,7 @@ public sealed class DocumentSession
         File.WriteAllText(path, MotionDocumentJson.Write(Editor.Document));
         DocumentPath = path;
         _savedRevision = Editor.Revision;
+        UnknownKeys = Array.Empty<string>();
         SetStatus($"저장했다: {path}");
     }
 
@@ -510,6 +518,7 @@ public sealed class DocumentSession
 
     private void Replace(MotionDocument document, string? path)
     {
+        UnknownKeys = Array.Empty<string>();
         Editor.Changed -= OnEditorChanged;
         Editor = new MotionEditor(document);
         Editor.Changed += OnEditorChanged;

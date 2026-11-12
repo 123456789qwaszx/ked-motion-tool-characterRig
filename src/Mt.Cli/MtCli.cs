@@ -171,7 +171,14 @@ public static partial class MtCli
     {
         MotionDocument document = Load(options, out RigSchemaFile rig);
         (JsonArray problems, bool blocking) = Problems(document, rig);
-        string directory = Path.GetDirectoryName(Path.GetFullPath(options.Positional(0, "문서 경로"))) ?? ".";
+        string path = options.Positional(0, "문서 경로");
+        string directory = Path.GetDirectoryName(Path.GetFullPath(path)) ?? ".";
+
+        // 모르는 키 — 읽을 때 말없이 버려진 것. 오타면 뜻한 값이 빠진 채 내보내진다.
+        foreach (string key in MotionDocumentJson.UnknownKeys(File.ReadAllText(path)))
+        {
+            problems.Add(new JsonObject { ["kind"] = "document", ["name"] = key, ["message"] = $"모르는 키 '{key}' — 읽지 않았다(오타인가?)", ["blocking"] = false });
+        }
 
         foreach (EmojiProblem p in EmojiValidator.MissingImages(document, directory))
         {

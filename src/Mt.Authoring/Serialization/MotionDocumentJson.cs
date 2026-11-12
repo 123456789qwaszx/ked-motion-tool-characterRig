@@ -1,5 +1,7 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 using System.Text.Json.Serialization;
 using Mt.Authoring.Model;
 
@@ -32,6 +34,58 @@ public static class MotionDocumentJson
     {
         ArgumentNullException.ThrowIfNull(document);
         return JsonSerializer.Serialize(document, Options) + "\n";
+    }
+
+    /// <summary>
+    /// 문서가 모르는 키들 — <c>motions[0].ednn</c> 같은 자리로 낸다. 읽을 때 모르는 키는 말없이 버려지므로
+    /// 키 이름의 오타(<c>keyz</c> · <c>placex</c>)가 뜻한 값을 빼먹은 채 지나간다. 검증이 이것으로 알린다.
+    /// 깨진 JSON이면 빈 목록이다(읽기가 따로 알린다).
+    /// </summary>
+    public static IReadOnlyList<string> UnknownKeys(string json)
+    {
+        ArgumentNullException.ThrowIfNull(json);
+        var unknown = new List<string>();
+
+        try
+        {
+            JsonNode? root = JsonNode.Parse(json, null, new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true });
+            CollectUnknown(root, typeof(MotionDocument), "", unknown);
+        }
+        catch (JsonException)
+        {
+        }
+
+        return unknown;
+    }
+
+    private static void CollectUnknown(JsonNode? node, Type type, string path, List<string> unknown)
+    {
+        JsonTypeInfo info = Options.GetTypeInfo(Nullable.GetUnderlyingType(type) ?? type);
+
+        if (node is JsonArray array && info.Kind == JsonTypeInfoKind.Enumerable && info.ElementType is { } element)
+        {
+            for (int i = 0; i < array.Count; i++)
+            {
+                CollectUnknown(array[i], element, $"{path}[{i}]", unknown);
+            }
+        }
+        else if (node is JsonObject obj && info.Kind == JsonTypeInfoKind.Object)
+        {
+            foreach ((string key, JsonNode? value) in obj)
+            {
+                JsonPropertyInfo? property = info.Properties.FirstOrDefault(p => string.Equals(p.Name, key, StringComparison.OrdinalIgnoreCase));
+                string here = path.Length == 0 ? key : $"{path}.{key}";
+
+                if (property is null)
+                {
+                    unknown.Add(here);
+                }
+                else
+                {
+                    CollectUnknown(value, property.PropertyType, here, unknown);
+                }
+            }
+        }
     }
 
     /// <summary>
