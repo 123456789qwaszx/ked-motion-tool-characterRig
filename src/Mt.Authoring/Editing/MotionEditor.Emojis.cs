@@ -38,6 +38,92 @@ public sealed partial class MotionEditor
         return emoji;
     }
 
+    /// <summary>
+    /// 새 이모지를 한 칸에 짓는다(첫 화면 — <see cref="EmojiStart"/>): 그림 한 장에 그림(리그) 하나, 수명, 움직임의 키.
+    ///
+    /// - 그림의 이름은 파일 이름에서 온다(규칙에 맞게 고치고, 겹치면 번호). 그림이 없으면 빈 그림 <c>body</c> 하나.
+    /// - 머무는 이모지: 머묾 구간을 놓고 잇는다. 등장 · 퇴장의 움직임을 골랐으면 그 구간도 놓는다(타임라인을 셋으로 — 고르지 않은 쪽은 머묾이 차지한다).
+    /// - 한 번 재생하는 이모지: 구간 없이, 등장의 움직임은 앞 1/3에 · 퇴장의 움직임은 뒤 1/3에. 머묾의 움직임은 가운데에.
+    /// - 움직임의 대상은 이모지 전체다 — 그림이 여럿이어도 함께 움직인다. 넣은 것은 그냥 키다.
+    /// </summary>
+    public EmojiAsset StartEmoji(EmojiStart start, EmojiRigFrame? frame = null)
+    {
+        ArgumentNullException.ThrowIfNull(start);
+        RequireNewEmojiName(start.Name);
+        EmojiAsset? made = null;
+
+        Batch(MotionChangeKind.Emoji, () =>
+        {
+            EmojiAsset emoji = AddEmoji(start.Name);
+            made = emoji;
+
+            foreach (string image in start.Images)
+            {
+                string stem = MotionNames.Sanitize(Path.GetFileNameWithoutExtension(image));
+                string rig = stem;
+
+                for (int i = 2; emoji.FindRig(rig) is not null; i++)
+                {
+                    rig = $"{stem}_{i.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+                }
+
+                AddEmojiRig(emoji.Name, rig, new[] { image });
+            }
+
+            if (emoji.Rigs.Count == 0)
+            {
+                AddEmojiRig(emoji.Name, "body");
+            }
+
+            int last = emoji.LastFrame;
+            int third = Math.Max(1, (last + 1) / 3);
+            bool leadIn = start.In is not null;
+            bool leadOut = start.Out is not null;
+            (int Start, int End) @in = (0, third - 1);
+            (int Start, int End) @out = (last - third + 1, last);
+            (int Start, int End) hold = (leadIn || !start.Stays ? third : 0, leadOut || !start.Stays ? last - third : last);
+
+            if (start.Stays)
+            {
+                string? inName = null;
+                string? outName = null;
+
+                if (leadIn)
+                {
+                    inName = AddEmojiSpan(emoji.Name, EmojiLife.SpanStem(EmojiLifeRole.In), @in.Start, @in.End).Name;
+                }
+
+                string holdName = AddEmojiSpan(emoji.Name, EmojiLife.SpanStem(EmojiLifeRole.Hold), hold.Start, hold.End).Name;
+
+                if (leadOut)
+                {
+                    outName = AddEmojiSpan(emoji.Name, EmojiLife.SpanStem(EmojiLifeRole.Out), @out.Start, @out.End).Name;
+                }
+
+                SetEmojiLinks(emoji.Name, inName, holdName, outName);
+            }
+
+            string[] whole = { "" };
+
+            if (start.In is { } inMove)
+            {
+                LayEmojiMove(emoji.Name, whole, inMove, @in.Start, @in.End, frame);
+            }
+
+            if (start.Hold is { } holdMove)
+            {
+                LayEmojiMove(emoji.Name, whole, holdMove, hold.Start, hold.End, frame);
+            }
+
+            if (start.Out is { } outMove)
+            {
+                LayEmojiMove(emoji.Name, whole, outMove, @out.Start, @out.End, frame);
+            }
+        });
+
+        return made!;
+    }
+
     /// <summary>이모지를 지운다 — 타임라인도 함께.</summary>
     public void RemoveEmoji(string name)
     {

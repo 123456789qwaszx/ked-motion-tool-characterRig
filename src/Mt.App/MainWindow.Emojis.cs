@@ -230,8 +230,8 @@ public partial class MainWindow
         ToolTip.SetTip(_emojiList, "이모지 — 리그 여럿(그림 하나에 리그 하나) + 자기 타임라인 + 구간. 고르면 그래프 · 도프 시트가 그 타임라인을, 뷰포트가 캐릭터의 발에 선 그 이모지를 보인다(모션 · 클립 선택은 풀린다)");
         LeftPanel.Children.Add(_emojiList);
 
-        Button add = SmallButton("이모지 추가", (_, _) => Guard("이모지 추가", () => AddEmoji()));
-        ToolTip.SetTip(add, "이름 emoji, emoji_2…로 만든다 — 리그 body 하나, 타임라인 24프레임. 오른쪽 '이모지' 탭에서 그림 · 구간을 준다");
+        Button add = SmallButton("이모지 추가", (_, _) => OpenNewEmoji());
+        ToolTip.SetTip(add, "새 이모지의 첫 화면을 연다 — 그림(PNG를 끌어다 놓는다) · 어떻게 뜨는가 · 움직임을 정하면 움직이는 이모지가 생긴다. '빈 이모지로 시작'도 거기 있다");
         Button duplicate = SmallButton("복제", (_, _) => Guard("이모지 복제", DuplicateEmoji));
         ToolTip.SetTip(duplicate, "고른 이모지를 키까지 통째로 복제한다 — 재사용은 가져와서 고치는 것이다");
         LeftPanel.Children.Add(new StackPanel
@@ -1071,6 +1071,20 @@ public partial class MainWindow
         RefreshEmojiMarks();
         RefreshLifeStrip();
         SyncEmojiGraphScope();
+        SyncEmojiImages();
+    }
+
+    private string _emojiImageSet = "";
+
+    /// <summary>문서의 그림 파일들이 달라졌으면(그림을 더했다 · 새 이모지 · 되돌리기) 비트맵을 다시 싣는다 — 뷰포트와 목록의 작은 그림이 따라온다.</summary>
+    private void SyncEmojiImages()
+    {
+        string set = string.Join("\n", _session.Editor.Document.Emojis.SelectMany(e => e.Rigs).SelectMany(r => r.Images).Distinct(StringComparer.Ordinal));
+
+        if (set != _emojiImageSet)
+        {
+            LoadEmojiImages();
+        }
     }
 
     // ── 그래프의 범위 ─────────────────────────────────────────────────
@@ -1168,6 +1182,7 @@ public partial class MainWindow
     /// <summary>이모지의 그림들을 뷰포트에 싣는다 — 문서 기준 경로, 못 읽으면 자리표시.</summary>
     private void LoadEmojiImages()
     {
+        _emojiImageSet = string.Join("\n", _session.Editor.Document.Emojis.SelectMany(e => e.Rigs).SelectMany(r => r.Images).Distinct(StringComparer.Ordinal));
         _viewport.ClearEmojiImages();
         _emojiBitmaps.Clear();
 

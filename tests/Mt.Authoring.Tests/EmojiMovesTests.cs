@@ -130,4 +130,77 @@ public class EmojiMovesTests
         Assert.Throws<InvalidOperationException>(() => editor.LayEmojiMove("pop", Array.Empty<string>(), EmojiMove.Shake, 0, 5));
         Assert.Equal(before, editor.Revision);
     }
+
+    // ── 새 이모지의 첫 화면 (PLAN-ux.md U9) ──────────────────────
+
+    [Fact]
+    public void 머무는_이모지를_한_칸에_짓는다()
+    {
+        var editor = new MotionEditor(new MotionDocument());
+        long before = editor.Revision;
+
+        EmojiAsset made = editor.StartEmoji(new EmojiStart("heart", new[] { "art/Heart Big.png", "art/spark.png", "more/spark.png" }, true, EmojiMove.PopIn, EmojiMove.Pulse, EmojiMove.ShrinkOut));
+
+        Assert.Equal(before + 1, editor.Revision);
+        Assert.Equal(new[] { "heart_big", "spark", "spark_2" }, made.Rigs.Select(r => r.Name)); // 파일 이름에서 — 규칙에 맞게, 겹치면 번호
+        Assert.Equal(new[] { "art/Heart Big.png" }, made.Rigs[0].Images);
+        Assert.Equal(("in", "hold", "out"), (made.In, made.Hold, made.Out));
+        Assert.Equal(new[] { (0, 7), (8, 16), (17, 24) }, made.Spans.Select(s => (s.Start, s.End)));
+        Assert.Empty(EmojiValidator.Validate(editor.Document));
+
+        // 움직임은 이모지 전체에 — 그림이 여럿이어도 함께 움직인다.
+        Assert.Equal(new[] { 0f, 4f, 7f, 8f, 12f, 16f, 17f, 24f }, FramesOf(made, Frame.OffsetNode, ChannelKind.Scale, Axis.X));
+        Assert.DoesNotContain(made.Timeline.Channels, c => c.Node != Frame.OffsetNode);
+
+        // 내보낸 정의가 코어로 읽힌다 — 머무는 이모지이고 세 클립이 있다.
+        EmojiDefinition definition = EmojiPreview.Definition(made, Frame, out string? why)!;
+        Assert.Null(why);
+        Assert.True(definition.Stays);
+        Assert.NotNull(definition.In);
+        Assert.NotNull(definition.Out);
+
+        editor.Undo();
+        Assert.Empty(editor.Document.Emojis);
+    }
+
+    [Fact]
+    public void 등장과_퇴장을_고르지_않으면_머묾이_타임라인을_다_쓴다()
+    {
+        var editor = new MotionEditor(new MotionDocument());
+        EmojiAsset made = editor.StartEmoji(new EmojiStart("idle", new[] { "a.png" }, true, null, EmojiMove.Shake, null));
+
+        EmojiSpan hold = Assert.Single(made.Spans);
+        Assert.Equal((0, 24), (hold.Start, hold.End));
+        Assert.Equal((null, "hold", null), (made.In, made.Hold, made.Out));
+        Assert.Equal(new[] { 0f, 6f, 18f, 24f }, FramesOf(made, Frame.OffsetNode, ChannelKind.Euler, Axis.Z));
+        Assert.Empty(EmojiValidator.Validate(editor.Document));
+    }
+
+    [Fact]
+    public void 한_번_재생하는_이모지는_구간_없이_앞과_뒤에_움직임을_넣는다()
+    {
+        var editor = new MotionEditor(new MotionDocument());
+        EmojiAsset made = editor.StartEmoji(new EmojiStart("blink", new[] { "a.png" }, false, EmojiMove.FadeIn, null, EmojiMove.FloatOut));
+
+        Assert.False(made.Stays);
+        Assert.Empty(made.Spans);
+        Assert.Equal(new[] { 0f, 7f, 17f, 24f }, FramesOf(made, Frame.OffsetNode, ChannelKind.Alpha, Axis.X));
+        Assert.Empty(EmojiValidator.Validate(editor.Document));
+    }
+
+    [Fact]
+    public void 그림과_움직임이_없으면_빈_그림_하나짜리이고_겹치는_이름은_막는다()
+    {
+        var editor = new MotionEditor(new MotionDocument());
+        EmojiAsset made = editor.StartEmoji(new EmojiStart("bare", Array.Empty<string>(), false, null, null, null));
+
+        Assert.Equal("body", Assert.Single(made.Rigs).Name);
+        Assert.Empty(made.Rigs[0].Images);
+        Assert.Empty(made.Timeline.Channels);
+
+        long before = editor.Revision;
+        Assert.Throws<InvalidOperationException>(() => editor.StartEmoji(new EmojiStart("bare", Array.Empty<string>(), false, null, null, null)));
+        Assert.Throws<InvalidOperationException>(() => editor.StartEmoji(new EmojiStart("Bad Name", Array.Empty<string>(), false, null, null, null)));
+        Assert.Equal(before, editor.Revision);
+    }
 }
