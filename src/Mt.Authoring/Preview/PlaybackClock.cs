@@ -37,13 +37,6 @@ public sealed class PlaybackClock
 
     public PlaybackMode Mode { get; set; } = PlaybackMode.Loop;
 
-    /// <summary>호환용 — Loop ↔ Once. 왕복은 <see cref="Mode"/>로.</summary>
-    public bool Loop
-    {
-        get => Mode != PlaybackMode.Once;
-        set => Mode = value ? PlaybackMode.Loop : PlaybackMode.Once;
-    }
-
     /// <summary>재생 속도 배율(0.25·0.5·1·2…). 양수.</summary>
     public double Speed { get; set; } = 1;
 

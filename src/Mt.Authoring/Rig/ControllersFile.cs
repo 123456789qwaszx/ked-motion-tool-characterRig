@@ -18,7 +18,7 @@ public enum ControllerBake
 /// <summary>컨트롤러 묶음 — 자리 · 깊이 · 연기. <see cref="Mode"/>는 이 묶음의 모션을 재생할 때 권장하는 mode다.</summary>
 public sealed record ControllerGroup(string Id, string Label, MotionChannelMode Mode, string? Note);
 
-/// <summary>옛 모션·축별 노드가 같은 손잡이로 보이게 하는 별칭 — (노드, 성분) → 컨트롤러의 같은 성분.</summary>
+/// <summary>축별 노드(<c>Track_Move_X</c> · <c>_Y</c> …)에 놓인 키가 같은 손잡이로 보이게 하는 별칭 — (노드, 성분) → 컨트롤러의 같은 성분.</summary>
 public sealed record ControllerAlias(string Node, Axis Axis);
 
 /// <summary>

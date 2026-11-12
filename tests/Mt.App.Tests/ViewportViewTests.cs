@@ -124,7 +124,7 @@ public class ViewportViewTests
             Assert.Equal(0.3, view.Time, 9);
             Assert.Equal(1, changes);
 
-            view.Loop = false;
+            view.Mode = PlaybackMode.Once;
             view.Advance(1);
             Assert.Equal(0.6f, view.Time, 6); // 길이는 float(0.6f)다
             Assert.False(view.IsPlaying);
@@ -476,14 +476,14 @@ public class ViewportViewTests
             Assert.Equal(PortraitLayout.PlaceholderAspect, view.Aspect);
 
             using var bitmap = new WriteableBitmap(new PixelSize(80, 100), new Vector(96, 96));
-            view.SetPortrait(bitmap);
+            view.SetPortrait(SceneObject.DefaultId, bitmap);
 
             Assert.Equal(0.8f, view.Aspect, 4);
             Quad quad = view.CurrentPortraitQuad()!.Value;
             Assert.Equal(864f, (quad.BottomRight - quad.BottomLeft).X, 1);
             Assert.Equal(1080f, (quad.TopLeft - quad.BottomLeft).Y, 1);
 
-            view.SetPortrait(null);
+            view.SetPortrait(SceneObject.DefaultId, null);
             Assert.Equal(PortraitLayout.PlaceholderAspect, view.Aspect);
         }
         finally

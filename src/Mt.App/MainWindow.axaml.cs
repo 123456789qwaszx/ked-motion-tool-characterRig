@@ -196,16 +196,15 @@ public partial class MainWindow : Window
 
     private bool _refreshing => _refreshDepth > 0;
 
-    public MainWindow() : this(ToolSettings.DefaultPath(), ToolSettings.SharedLegacyPath())
+    public MainWindow() : this(ToolSettings.DefaultPath())
     {
     }
 
     /// <param name="settingsPath">설정 파일 자리 — 테스트가 임시 경로를 준다.</param>
-    /// <param name="legacySettingsPath">제 설정이 아직 없을 때 한 번 읽어 올 옛 자리.</param>
-    internal MainWindow(string settingsPath, string? legacySettingsPath = null)
+    internal MainWindow(string settingsPath)
     {
         _settingsPath = settingsPath;
-        _settings = ToolSettings.Load(settingsPath, legacySettingsPath);
+        _settings = ToolSettings.Load(settingsPath);
         InitializeComponent();
         BuildToolbar();
         BuildLeft();

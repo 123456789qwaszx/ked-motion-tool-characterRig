@@ -124,11 +124,11 @@ public class MotionsJsonTests
     }
 
     [Fact]
-    public void 다른_스키마는_경고하되_읽기는_시도한다()
+    public void 다른_스키마는_읽지_않는다()
     {
         const string json = """{ "schema": "motions/0", "motions": [] }""";
 
-        Assert.True(MotionsJson.TryRead(json, out List<MotionClip> clips, out List<string> problems));
+        Assert.False(MotionsJson.TryRead(json, out List<MotionClip> clips, out List<string> problems));
         Assert.Empty(clips);
         Assert.Single(problems);
         Assert.Contains("motions/0", problems[0], StringComparison.Ordinal);

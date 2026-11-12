@@ -262,16 +262,6 @@ public class ToolSettingsTests
             Assert.EndsWith("one.motion-authoring.json", back.RecentFiles[0]);
             Assert.Contains("\"plateau\"", File.ReadAllText(path), StringComparison.Ordinal);
 
-            // 제 파일이 없으면 옛 자리의 것을 읽어 온다 — 저장은 제 자리에만 한다(옛 파일은 형제 툴의 것이라 건드리지 않는다).
-            string own = Path.Combine(directory, "own", Mt.Authoring.Settings.ToolSettings.FileName);
-            var moved = Mt.Authoring.Settings.ToolSettings.Load(own, path);
-            Assert.False(moved.SnapEnabled);
-            moved.SnapEnabled = true;
-            moved.Save(own);
-            Assert.True(Mt.Authoring.Settings.ToolSettings.Load(own, path).SnapEnabled);
-            Assert.False(Mt.Authoring.Settings.ToolSettings.Load(path).SnapEnabled);
-            Assert.NotEqual(Mt.Authoring.Settings.ToolSettings.DefaultPath(), Mt.Authoring.Settings.ToolSettings.SharedLegacyPath());
-
             File.WriteAllText(path, "{ broken");
             var broken = Mt.Authoring.Settings.ToolSettings.Load(path);
             Assert.True(broken.SnapEnabled);

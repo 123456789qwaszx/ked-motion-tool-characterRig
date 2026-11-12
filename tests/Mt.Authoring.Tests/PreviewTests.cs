@@ -200,9 +200,7 @@ public class PlaybackClockTests
         // 끝에 선 채 다시 재생하면 범위 처음부터.
         clock.Play();
         Assert.Equal(0, clock.Time, 9);
-        Assert.False(clock.Loop);
-        clock.Loop = true;
-        Assert.Equal(PlaybackMode.Loop, clock.Mode);
+        Assert.Equal(PlaybackMode.Once, clock.Mode);
     }
 
     [Fact]

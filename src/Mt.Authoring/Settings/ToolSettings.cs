@@ -118,23 +118,13 @@ public sealed class ToolSettings
     public static string DefaultPath()
         => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ked-motion-tool-characterRig", FileName);
 
-    /// <summary>갈라지기 전의 자리 — 형제 툴이 지금도 쓴다. 이 툴은 제 설정이 아직 없을 때 한 번 읽어 올 뿐, 쓰지 않는다.</summary>
-    public static string SharedLegacyPath()
-        => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ked-motion-tool", FileName);
-
-    /// <param name="fallback">제 파일이 없을 때 대신 읽을 파일(옛 자리). 저장은 언제나 <paramref name="path"/>에 한다.</param>
-    public static ToolSettings Load(string path, string? fallback = null)
+    public static ToolSettings Load(string path)
     {
         ArgumentNullException.ThrowIfNull(path);
 
         if (!File.Exists(path))
         {
-            if (fallback is null || !File.Exists(fallback))
-            {
-                return new ToolSettings();
-            }
-
-            path = fallback;
+            return new ToolSettings();
         }
 
         try

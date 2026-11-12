@@ -83,7 +83,7 @@
 | C-1 A4 | 끝 — `clips.json`(K6)은 하지 않는다. 클립은 굽기로 모션이 되어 `motions.json`으로 나간다. `PLAN-clip.md`는 C-3에서 지난 기록으로 옮긴다 |
 | C-1 A5 · A6 | 끝 — 화면이 부르지 않는 편집 명령을 지웠다: `AddScene` · `DuplicateScene` · `RemoveScene` · `RenameScene` · `SetActiveScene` · `SetPreviewPortrait` · `RemoveKey` · `SetClipScene` · `RenameClipRole` · `SetClipRoleRig` · `SetClipBlockRepeat` · `SetClipBlockMotion` · `CancelGesture` |
 | C-1 A7 · A8 | 끝 — 이모지 오른쪽의 "구간과 잇기"는 접힌 채로 시작한다. 타임 슬라이더는 타임라인 보기에서 구간 띠를 깔지 않는다(수명 재생의 단계 띠는 남는다) |
-| C-2 B2 | 끝 — 설정은 `%APPDATA%/ked-motion-tool-characterRig/settings.json`. 제 파일이 없으면 옛 자리(`ked-motion-tool`)의 것을 한 번 읽어 오고, 저장은 제 자리에만 한다(옛 파일은 형제 툴의 것이라 건드리지 않는다). 창 제목도 `ked-motion-tool-characterRig` |
+| C-2 B2 | 끝 — 설정은 `%APPDATA%/ked-motion-tool-characterRig/settings.json`. 옛 자리(`ked-motion-tool`)의 것은 읽어 오지 않는다(처음에는 읽어 오게 했다가 소유자 지시로 뺐다 — 새 설정으로 시작한다). 창 제목도 `ked-motion-tool-characterRig` |
 | C-2 B1 | 끝 — `MainWindow.axaml.cs` 4,292줄 → 1,409줄. 옮기기만 했다(줄을 모아 견줘 빠진 것이 없음을 확인): `MainWindow.Shortcuts.cs`(전역 단축키 · 시간 명령) · `.Settings.cs`(설정 · 창 배치 · 설정 창 · F1) · `.ChannelBox.cs` · `.Scene.cs`(하이어아키 · 씬 탭) · `.Outliner.cs`(그래프 왼쪽 채널 목록) · `.Problems.cs`(문제 칸) · `.Files.cs`(열기 · 저장 · 가져오기 · 내보내기). 남은 것은 필드 · 생성자 · 화면 짜기 · 모션 목록과 인스펙터 · 명령 · 작은 도우미 |
 | C-2 B3 | 끝 — `EmojiLifeStripShellTests`를 주제별로: `EmojiLifeStripShellTests`(수명의 띠) · `EmojiHostShellTests`(인물 · 고르기) · `EmojiMoveShellTests` · `NewEmojiShellTests` · `EmojiKeyShellTests`(키 단추 · 종류별 칸) · `TweenShellTests`. 창을 여는 일은 `EmojiExampleWindow`가 한다. 테스트 수는 그대로(862) |
 | C-3 | 끝 — 계획서 12개와 정리 전의 README를 `docs/history/`로 옮겼다(그 폴더의 `README.md`가 무엇이 지금과 다른지 적는다). `HANDOFF.md`를 다시 썼고, `MAINTENANCE.md`를 지금 것으로 고쳤고(코드 지도 · 불변식 · 재반입 절차 · 테스트 요령 · 함정), `README.md`를 줄였고(무엇인가 · 처음 열기 · `mt` · 문서의 지도 · 빌드), `CLAUDE.md`를 맞췄다. 코드 주석의 VnTool 언급도 지웠다 |
@@ -101,4 +101,5 @@
 - **씬이 여럿인 문서는 그대로 읽고 쓴다**(`scenes[]` · `activeScene`). 더하거나 바꾸는 명령만 없다. 테스트가 본다.
 - 반복 · 모션 바꾸기는 `UpdateClipBlock`(블록 인스펙터) 하나로 한다.
 
-- 설정 파일만은 옛 자리의 것을 처음 한 번 읽어 온다(B2) — 문서가 아니라 창 배치 · 최근 문서를 잇는 것이라 남겼다.
+- 같은 지시로 뺀 것: 설정 파일을 옛 자리에서 읽어 오던 것 · `motions.json`의 스키마가 달라도 읽기를 시도하던 것 · "호환용"으로 남아 있던 `PlaybackClock.Loop` · `ViewportView.Loop` · `ViewportView.SetPortrait(비트맵)`.
+- **남긴 것 — 컨트롤러의 별칭**(`controllers.json`의 `aliases` — `Track_Move_X/Y` · `ActingScale_Y`). 주석은 "옛 모션"이라 하지만 런타임의 지금 견본(`nod`)이 그 노드에 키를 둔다 — 옛 파일을 위한 것이 아니라 지금 리그의 축별 노드를 한 손잡이로 보이는 것이다.

@@ -12,7 +12,7 @@
 
 처음 열면 **내장 리그**(유니티 덤프의 사본)로 캐릭터 `s1`이 선 빈 문서가 뜬다. 덤프 파일이나 초상 PNG가 없어도 바로 모션을 만들 수 있다. 상태 줄에 `내장 리그(…)`가 보이면 정상이다.
 
-설정 파일은 `%APPDATA%\ked-motion-tool-characterRig\settings.json`에(처음 한 번은 옛 자리 `ked-motion-tool`의 것을 읽어 온다), 자동 저장은 문서 옆 `<이름>.autosave.motion-authoring.json`에 남는다.
+설정 파일은 `%APPDATA%\ked-motion-tool-characterRig\settings.json`에, 자동 저장은 문서 옆 `<이름>.autosave.motion-authoring.json`에 남는다.
 
 ## 2. 화면 구성
 

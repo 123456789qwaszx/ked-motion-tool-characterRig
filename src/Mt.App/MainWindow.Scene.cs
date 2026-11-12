@@ -663,7 +663,7 @@ public partial class MainWindow
         RefreshChannelBox();
     }
 
-    /// <summary>컨트롤러의 노드 — 모션이 주 노드에 채널이 없고 별칭 노드에만 있으면 그 별칭 노드(옛 견본의 Track_Move_Y).</summary>
+    /// <summary>컨트롤러의 노드 — 모션이 주 노드에 채널이 없고 별칭 노드에만 있으면 그 별칭 노드(런타임 견본 nod의 Track_Move_Y).</summary>
     private static string ControllerNodeFor(MotionAsset? motion, Controller c)
     {
         if (motion is null || motion.FindChannel(c.Node, c.Kind) is not null)

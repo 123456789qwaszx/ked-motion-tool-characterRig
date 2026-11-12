@@ -89,7 +89,8 @@ public static class MotionsJson
 
         if (!string.Equals(file.Schema, AuthoringFormat.ExportSchema, StringComparison.Ordinal))
         {
-            problems.Add($"schema '{file.Schema}' (기대 '{AuthoringFormat.ExportSchema}'). 읽기는 시도한다.");
+            problems.Add($"schema '{file.Schema}'는 읽을 수 없다 (기대 '{AuthoringFormat.ExportSchema}').");
+            return false;
         }
 
         if (file.Motions is null)

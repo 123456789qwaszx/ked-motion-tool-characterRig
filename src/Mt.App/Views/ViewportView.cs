@@ -928,12 +928,6 @@ public sealed partial class ViewportView : Control
 
     public bool IsPlaying => _clock.IsPlaying;
 
-    public bool Loop
-    {
-        get => _clock.Loop;
-        set => _clock.Loop = value;
-    }
-
     /// <summary>축을 그릴 노드. null이면 안 그린다.</summary>
     public string? SelectedNode { get; set; }
 
@@ -1106,15 +1100,6 @@ public sealed partial class ViewportView : Control
 
     /// <summary>루트 공간 → 컨트롤 좌표(카메라 적용). 테스트가 쓴다.</summary>
     public Point ToScreen(Vec2 root) => ToControl(root);
-
-    /// <summary>선택 오브젝트의 초상 비트맵(호환용). null이면 자리표시 사각형.</summary>
-    public void SetPortrait(Bitmap? portrait)
-    {
-        if (SelectedObject is { } o)
-        {
-            SetPortrait(o.Id, portrait);
-        }
-    }
 
     /// <summary>오브젝트의 초상 비트맵. 종횡비는 비트맵에서 온다.</summary>
     public void SetPortrait(string objectId, Bitmap? portrait)

@@ -124,9 +124,9 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 | 자산 동기화 | `DocumentSession`은 편집기 Changed에서 리그·초상 지문(`rig=…\nbase=…\nportrait id=…`)이 바뀐 때만 다시 읽는다. 키 편집은 다시 읽지 않는다 |
 | 글 칸 확정 | `OnCommit`: Enter는 확정 + 포커스를 뷰포트로, LostFocus는 글이 바뀐 때만 확정. 같은 값 재확정은 기록이 아니다 |
 | 깊이 슬라이더 | 0‥40, close = 20, 그 너머는 `depth.json` 커브의 할선 연장(런타임 규칙). 놓으면 DepthScale X·Y + DepthY를 한 번에 굽는다 |
-| 옛 파일 | 읽지 않는다. 저작본은 `motion-authoring/2`가 아니면 거부한다. `motions.json`은 스키마가 달라도 읽기를 시도하고 알린다. 지운 기능(카메라 모션 · 상태 블록)이 든 문서는 열리되 검증이 문제로 알린다 |
+| 옛 파일 | 읽지 않는다. 저작본은 `motion-authoring/2`가 아니면 거부한다. `motions.json`도 `motions/2`가 아니면 읽지 않는다. 지운 기능(카메라 모션 · 상태 블록)이 든 문서는 열리되 검증이 문제로 알린다 |
 | 안 쓰는 using | 빌드가 막지 않는다(`IDE0005`는 꺼져 있다). 훑는 법은 `PLAN-cleanup.md` §4 |
-| 설정 파일 | `%APPDATA%/ked-motion-tool-characterRig/`. 옛 자리(`ked-motion-tool`)는 형제 툴이 쓴다 — 읽기만 하고 쓰지 않는다 |
+| 설정 파일 | `%APPDATA%/ked-motion-tool-characterRig/`. 옛 자리(`ked-motion-tool`)는 형제 툴의 것이다 — 읽지도 쓰지도 않는다 |
 | 커밋 메시지 | 모델 식별자를 저장소 산출물에 넣지 않는다. 한국어, "무엇을 왜" |
 
 ## 7. 문서 지도
