@@ -24,8 +24,10 @@
 저장소 루트에서 부른다. 결과는 stdout의 JSON이고, 종료 코드는 **0 됨 · 1 막는 문제(또는 오류) · 2 쓰는 법이 틀림**이다.
 
 ```bash
-dotnet run --project src/Mt.Cli -- validate a.motion-authoring.json
+./mt validate a.motion-authoring.json
 ```
+
+`mt`는 저장소 루트의 스크립트다(Windows의 명령 프롬프트 · PowerShell에서는 `mt …` 또는 `.\mt …`, bash에서는 `./mt …`). 처음 부를 때 한 번 빌드하고 그 뒤로는 빌드된 것을 바로 돌린다 — 여러 번 불러도 빠르다. 소스를 고쳤거나 받아 온 뒤에는 bash의 `./mt`가 알아서 다시 빌드하고, Windows에서는 `mt-build`를 한 번 부른다.
 
 | 명령 | 하는 일 |
 |---|---|
@@ -334,7 +336,7 @@ mt validate a.motion-authoring.json
 ### `mt pose --emoji`
 
 ```bash
-dotnet run --project src/Mt.Cli -- pose a.motion-authoring.json --emoji spark --time 0.1
+./mt pose a.motion-authoring.json --emoji spark --time 0.1
 ```
 
 수명대로 읽는다(등장 → 머묾 되풀이 → `--off <초>`에 내리면 퇴장). `phase` · `clip` · `frame`이 지금 어느 구간의 몇 프레임인지 말하고, `offset`(이모지 전체)과 `rigs[]`(그림마다의 `at` 화면 자리 · `position` · `scale` · `rotation` · `alpha` · `sprite`)가 그때의 모습이다. 구간과 상관없이 타임라인의 그 프레임을 보려면 `--view timeline`, 왼쪽을 보는 인물에게 뜬 모습은 `--facing left`.

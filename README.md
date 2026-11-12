@@ -29,23 +29,25 @@ dotnet run --project src/Mt.App/Mt.App.csproj
 ## 명령줄 `mt` — 창 없이(AI · 스크립트 · CI)
 
 ```
-dotnet run --project src/Mt.Cli -- info     a.motion-authoring.json
-dotnet run --project src/Mt.Cli -- validate a.motion-authoring.json
-dotnet run --project src/Mt.Cli -- export   a.motion-authoring.json motions.json
-dotnet run --project src/Mt.Cli -- emojis   a.motion-authoring.json emojis.json
-dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --motion nod --time 0.3
-dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --emoji star --time 1.2 --off 1.0
-dotnet run --project src/Mt.Cli -- bake     a.motion-authoring.json --clip greet --object s1 --name greet_s1
+./mt info     a.motion-authoring.json
+./mt validate a.motion-authoring.json
+./mt export   a.motion-authoring.json motions.json
+./mt emojis   a.motion-authoring.json emojis.json
+./mt pose     a.motion-authoring.json --motion nod --time 0.3
+./mt pose     a.motion-authoring.json --emoji star --time 1.2 --off 1.0
+./mt bake     a.motion-authoring.json --clip greet --object s1 --name greet_s1
 ```
 
 만드는 명령도 있다 — 파일을 손으로 쓰지 않고 문서를 짓는다:
 
 ```
-dotnet run --project src/Mt.Cli -- new        a.motion-authoring.json
-dotnet run --project src/Mt.Cli -- add-motion a.motion-authoring.json --preset nod
-dotnet run --project src/Mt.Cli -- key        a.motion-authoring.json --motion nod --controller body --axis y --time 0.25 --value -30
-dotnet run --project src/Mt.Cli -- add-emoji  a.motion-authoring.json --name spark --images art/star.png --life stay --in pop_in --hold pulse --out float_out
+./mt new        a.motion-authoring.json
+./mt add-motion a.motion-authoring.json --preset nod
+./mt key        a.motion-authoring.json --motion nod --controller body --axis y --time 0.25 --value -30
+./mt add-emoji  a.motion-authoring.json --name spark --images art/star.png --life stay --in pop_in --hold pulse --out float_out
 ```
+
+`mt`는 저장소 루트의 스크립트다(Windows: `mt …` · bash: `./mt …`). 처음 한 번 빌드하고 그 뒤로는 바로 돈다 — Windows에서 소스를 받아 온 뒤에는 `mt-build`.
 
 결과는 stdout의 JSON, 종료 코드는 0 됨 · 1 막는 문제 · 2 쓰는 법. 인자 없이 부르면 전체 쓰는 법이 나온다. 자세한 것은 [`docs/AUTHORING-FILES.md`](docs/AUTHORING-FILES.md).
 

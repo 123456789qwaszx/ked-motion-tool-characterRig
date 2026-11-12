@@ -98,7 +98,7 @@ python3 tools/guide-figures.py <폴더> docs/guide/img
 MT_WRITE_EXAMPLES=1 dotnet test tests/Mt.Authoring.Tests -c Release --filter EmojiExampleTests
 
 # 창 없이 확인 · 내보내기
-dotnet run --project src/Mt.Cli -- validate examples/authoring/motions.motion-authoring.json
+./mt validate examples/authoring/motions.motion-authoring.json
 ```
 
 앞 세션의 작업 환경에서만 필요했던 것(다음 세션은 필요 없을 것이다): 그 환경에는 `netstandard2.1` 참조 팩이 없어 빌드할 때마다 코어 사본의 csproj를 **작업 공간에서만** `net10.0`으로 바꿨다가 되돌렸다. 저장소에는 한 번도 들어가지 않았다 — `Ked.Presentation.Core.csproj`가 `netstandard2.1`이 아닌 채로 커밋되어 있으면 잘못된 것이다.

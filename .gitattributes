@@ -3,3 +3,5 @@
 *.cs   text eol=lf
 *.md   text eol=lf
 *.sln  text eol=crlf
+*.cmd  text eol=crlf
+/mt    text eol=lf
