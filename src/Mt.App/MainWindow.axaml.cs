@@ -198,6 +198,7 @@ public partial class MainWindow : Window
 
     public MainWindow() : this(ToolSettings.DefaultPath())
     {
+        AsksBeforeDiscard = true;
     }
 
     /// <param name="settingsPath">설정 파일 자리 — 테스트가 임시 경로를 준다.</param>
@@ -226,7 +227,11 @@ public partial class MainWindow : Window
         ApplyLayout();
 
         _session.DocumentReplaced += (_, _) => OnDocumentReplaced();
-        _session.StatusChanged += (_, _) => StatusText.Text = _session.Status;
+        _session.StatusChanged += (_, _) =>
+        {
+            StatusText.Text = _session.Status;
+            RefreshTitle(); // 저장 · 열기 · 새로는 상태 줄을 바꾼다
+        };
         _session.AssetsChanged += (_, _) => RefreshAssets();
         _selection.Changed += (_, _) =>
         {
@@ -284,8 +289,15 @@ public partial class MainWindow : Window
         }
 
         _autoSaveTimer.Tick += (_, _) => Guard("자동 저장", () => _session.AutoSave());
-        Closing += (_, _) =>
+        Closing += (_, e) =>
         {
+            // 저장하지 않은 것이 있으면 닫기를 멈추고 묻는다.
+            if (HoldCloseForUnsaved())
+            {
+                e.Cancel = true;
+                return;
+            }
+
             // 딸린 창(트윈머신)을 먼저 닫는다 — 열려 있었다는 것은 설정에 남는다(다음에 다시 뜬다).
             _closing = true;
             _tweenWindow?.Close();
@@ -867,7 +879,7 @@ public partial class MainWindow : Window
     private void BuildToolbar()
     {
         BuildWorkModeSwitch();
-        Toolbar.Children.Add(ToolButton("새로", (_, _) => Guard("새 문서", _session.New)));
+        Toolbar.Children.Add(ToolButton("새로", OnNewClick));
         Toolbar.Children.Add(ToolButton("열기…", OnOpenClick));
         Toolbar.Children.Add(_recentButton);
         Toolbar.Children.Add(ToolButton("저장", OnSaveClick));
@@ -1056,6 +1068,7 @@ public partial class MainWindow : Window
     {
         _session.Editor.Changed += (_, _) => OnEditorChanged();
         _viewport.ClearClipMutes();
+        RefreshTitle();
         BindMotion(null);
         RefreshAll();
         RefreshAssets();
@@ -1063,6 +1076,7 @@ public partial class MainWindow : Window
 
     private void OnEditorChanged()
     {
+        RefreshTitle();
         RefreshTweenNote();
         RefreshMotionList();
         RefreshClips();

@@ -27,7 +27,7 @@ public partial class MainWindow
 
             if (path is not null)
             {
-                OpenDocument(path);
+                ConfirmUnsaved("다른 문서를 연다", () => Guard("열기", () => OpenDocument(path)));
             }
         }
         catch (Exception exception)

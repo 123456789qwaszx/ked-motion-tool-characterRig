@@ -390,6 +390,7 @@ dotnet run --project src/Mt.App/Mt.App.csproj
 
 | 키 | 뜻 |
 |---|---|
+| **Ctrl+S** · **Ctrl+Shift+S** · **Ctrl+O** · **Ctrl+N** | 저장 · 다른 이름으로 · 열기 · 새로 |
 | **Ctrl+Z** · **Ctrl+Y**(Ctrl+Shift+Z) | 되돌리기 · 다시하기 — 조작 하나가 한 칸이다 |
 | **Alt+Q** · **Alt+`** | 재생 / 멈춤 · 처음부터 재생 |
 | `` ` `` · **Home / End** · **← / →**(Alt+1 / 2) | 첫 프레임 · 처음 / 끝 · 한 프레임 |
@@ -404,6 +405,8 @@ dotnet run --project src/Mt.App/Mt.App.csproj
 
 ## 17. 설정과 파일
 
+- **창 제목**이 지금 문서의 이름을 보인다. 이름 뒤의 **•**는 저장한 뒤 고친 것이 있다는 표시다.
+- 저장하지 않은 것이 있는 채로 **닫기 · 새로 · 열기**를 하면 먼저 묻는다 — 저장하고 계속 / 저장하지 않고 계속 / 그만두기.
 - **설정…** — 리그 노드 보기 · 무대 뼈대 보기 · 시간 스냅 간격(1프레임 기본) · 새 키의 탄젠트 · 시간 표시(프레임 / 초) · 자동 저장 간격. 바꾸는 즉시 적용된다.
 - 설정 파일: `%APPDATA%\ked-motion-tool-characterRig\settings.json`.
 - **자동 저장**: 문서 옆 `<이름>.autosave.motion-authoring.json`(기본 5분, 바뀐 것이 있을 때만). 원래 파일은 건드리지 않는다.

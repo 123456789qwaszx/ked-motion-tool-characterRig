@@ -127,7 +127,7 @@ public partial class MainWindow
         {
             var item = new MenuItem { Header = path, FontSize = 11 };
             string captured = path;
-            item.Click += (_, _) => Guard("최근 파일", () => OpenDocument(captured));
+            item.Click += (_, _) => ConfirmUnsaved("다른 문서를 연다", () => Guard("최근 파일", () => OpenDocument(captured)));
             flyout.Items.Add(item);
         }
 
@@ -279,6 +279,7 @@ public partial class MainWindow
 
     internal const string ShortcutsText =
         "전역 (창 어디서나 · 글 입력 칸 제외)\n" +
+        "  Ctrl+S  저장      Ctrl+Shift+S  다른 이름으로      Ctrl+O  열기      Ctrl+N  새로 — 저장하지 않은 것이 있으면 닫기 · 새로 · 열기 전에 묻는다\n" +
         "  1 / 2  이전·다음 키        Alt+1 / Alt+2  이전·다음 프레임\n" +
         "  `  첫 프레임               Alt+`  처음부터 재생        Alt+Q  재생/일시정지\n" +
         "  S  키 놓기 — 키 없는 포즈가 있으면 그것을, 없으면 고른 컨트롤러의 지금 값을 현재 시각에\n" +

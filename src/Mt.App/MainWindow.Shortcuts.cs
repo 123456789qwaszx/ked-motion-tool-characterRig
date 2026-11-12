@@ -1,3 +1,4 @@
+using Avalonia.Interactivity;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -71,6 +72,19 @@ public partial class MainWindow
                 break;
             case PhysicalKey.Digit2 when shift:
                 Guard("인비트윈 넣기", AddInbetween);
+                break;
+            // 파일 — 저장 · 다른 이름으로 · 열기 · 새로(툴바의 단추와 같은 길).
+            case PhysicalKey.S when mods == KeyModifiers.Control:
+                OnSaveClick(this, new RoutedEventArgs());
+                break;
+            case PhysicalKey.S when mods == (KeyModifiers.Control | KeyModifiers.Shift):
+                OnSaveAsClick(this, new RoutedEventArgs());
+                break;
+            case PhysicalKey.O when mods == KeyModifiers.Control:
+                OnOpenClick(this, new RoutedEventArgs());
+                break;
+            case PhysicalKey.N when mods == KeyModifiers.Control:
+                NewDocument();
                 break;
             // 되돌리기·다시하기 — 창 어디에 포커스가 있든 한 경로(툴바 버튼도 같다). 글 입력 칸은 위에서 빠졌으니 거기서는 글자 되돌리기다.
             case PhysicalKey.Z when mods == (KeyModifiers.Control | KeyModifiers.Shift):
