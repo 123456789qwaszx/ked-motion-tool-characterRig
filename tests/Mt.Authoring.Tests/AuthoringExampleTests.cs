@@ -83,7 +83,7 @@ public class AuthoringExampleTests
 
         try
         {
-            // 예시를 그림 없는 폴더로 옮기면 "../emoji/art/star.png"가 가리키는 데가 없다.
+            // 예시를 그림 없는 폴더로 옮기면 "art/star.png"가 가리키는 데가 없다.
             string moved = Path.Combine(directory, "emojis.motion-authoring.json");
             File.Copy(Example("emojis.motion-authoring.json"), moved);
 
@@ -92,7 +92,7 @@ public class AuthoringExampleTests
             JsonArray problems = json["problems"]!.AsArray();
             Assert.Equal(2, problems.Count); // 그림마다 한 줄 — big · small
             Assert.All(problems, p => Assert.False(p!["blocking"]!.GetValue<bool>()));
-            Assert.Contains("../emoji/art/star.png", problems[0]!["message"]!.GetValue<string>(), StringComparison.Ordinal);
+            Assert.Contains("art/star.png", problems[0]!["message"]!.GetValue<string>(), StringComparison.Ordinal);
         }
         finally
         {

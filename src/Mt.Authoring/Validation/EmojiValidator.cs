@@ -37,6 +37,7 @@ public static class EmojiValidator
     /// <summary>
     /// 그림 파일이 그 경로에 없는 것 — 알림이다(막지 않는다: 게임은 파일 이름으로 그림을 찾고, 내보내기는 파일을 읽지 않는다).
     /// 경로는 문서 기준이라 문서가 놓인 폴더를 받는다. 파일로 만든 문서의 틀린 경로가 툴에서 열어 봐야만 드러났다.
+    /// 있기는 한데 문서의 폴더 밖인 것(절대 경로 · <c>../</c>)도 알린다 — 화면에서 다른 곳의 그림을 고르면 그렇게 적힌다.
     /// </summary>
     public static IReadOnlyList<EmojiProblem> MissingImages(MotionDocument document, string documentDirectory)
     {
@@ -55,6 +56,11 @@ public static class EmojiValidator
                     if (!File.Exists(full))
                     {
                         problems.Add(new EmojiProblem(emoji.Name, $"그림 '{rig.Name}'의 그림 파일을 찾지 못했다: {image} (문서가 놓인 폴더 기준) — 툴에서 자리표시로 보인다", Blocking: false));
+                    }
+                    else if (Path.IsPathRooted(image) || image.Replace('\\', '/').StartsWith("../", StringComparison.Ordinal))
+                    {
+                        // 있는 파일이지만 문서의 폴더 밖이다 — 저작본만 옮기거나 다른 PC에서 열면 그림을 잃는다.
+                        problems.Add(new EmojiProblem(emoji.Name, $"그림 '{rig.Name}'의 그림 파일이 문서의 폴더 밖에 있다: {image} — 저작본을 옮기면 그림을 잃는다. 문서 옆(그 아래 폴더)에 두고 다시 고른다", Blocking: false));
                     }
                 }
             }

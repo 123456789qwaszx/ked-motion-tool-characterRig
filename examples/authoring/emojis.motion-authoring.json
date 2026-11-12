@@ -7,8 +7,8 @@
       "offsetX": -150,
       "offsetY": 60,
       "rigs": [
-        { "name": "big",   "images": [ "../emoji/art/star.png" ], "placeX": 0,  "placeY": 0,  "scale": 0.4 },
-        { "name": "small", "images": [ "../emoji/art/star.png" ], "placeX": 70, "placeY": 50, "scale": 0.2, "rotation": 20 }
+        { "name": "big",   "images": [ "art/star.png" ], "placeX": 0,  "placeY": 0,  "scale": 0.4 },
+        { "name": "small", "images": [ "art/star.png" ], "placeX": 70, "placeY": 50, "scale": 0.2, "rotation": 20 }
       ],
       "timeline": {
         "duration": 1.0,

@@ -122,4 +122,34 @@ public class ShapeProblemsTests
         // 6프레임 = 0.25초 — 맞는다.
         Assert.Empty(EmojiValidator.Validate(MotionDocumentJson.Read(emoji.Replace("SECOND", "0.25", StringComparison.Ordinal))));
     }
+
+    [Fact]
+    public void 이모지의_그림이_문서의_폴더_밖에_있으면_알린다()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", $"images-{Guid.NewGuid():N}");
+        string documents = Path.Combine(root, "docs");
+        Directory.CreateDirectory(Path.Combine(documents, "art"));
+        File.WriteAllBytes(Path.Combine(documents, "art", "in.png"), new byte[] { 0 });
+        File.WriteAllBytes(Path.Combine(root, "out.png"), new byte[] { 0 });
+
+        try
+        {
+            var document = new MotionDocument();
+            var editor = new Mt.Authoring.Editing.MotionEditor(document);
+            editor.AddEmoji("e");
+            editor.AddEmojiRig("e", "inside", new[] { "art/in.png" });
+            editor.AddEmojiRig("e", "outside", new[] { "../out.png" });
+            editor.AddEmojiRig("e", "rooted", new[] { Path.Combine(root, "out.png") });
+
+            IReadOnlyList<EmojiProblem> notices = EmojiValidator.MissingImages(document, documents);
+            Assert.Equal(2, notices.Count);
+            Assert.All(notices, n => Assert.False(n.Blocking));
+            Assert.All(notices, n => Assert.Contains("문서의 폴더 밖에 있다", n.Message, StringComparison.Ordinal));
+            Assert.DoesNotContain(notices, n => n.Message.Contains("'inside'", StringComparison.Ordinal));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
 }

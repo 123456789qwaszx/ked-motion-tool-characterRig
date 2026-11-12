@@ -267,8 +267,8 @@ mt pose     a.motion-authoring.json --clip greet --time 0.5
   "offsetX": -150,
   "offsetY": 60,
   "rigs": [
-    { "name": "big",   "images": [ "../emoji/art/star.png" ], "placeX": 0,  "placeY": 0,  "scale": 0.4 },
-    { "name": "small", "images": [ "../emoji/art/star.png" ], "placeX": 70, "placeY": 50, "scale": 0.2, "rotation": 20 }
+    { "name": "big",   "images": [ "art/star.png" ], "placeX": 0,  "placeY": 0,  "scale": 0.4 },
+    { "name": "small", "images": [ "art/star.png" ], "placeX": 70, "placeY": 50, "scale": 0.2, "rotation": 20 }
   ],
   "timeline": {
     "duration": 1.0,
@@ -387,6 +387,7 @@ mt pose     a.motion-authoring.json --clip greet --time 0.5
 | `모션 '…'이 없다` · `배역 '…'이 없다` | 클립의 블록 · 트랙이 없는 이름을 가리킨다 |
 | `…과 같은 때에 쓴다 — 겹칠 수 없다` | 같은 노드를 쓰는 두 블록의 시간이 겹친다 — `at`을 옮기거나 다른 노드를 쓰는 모션으로 |
 | `머묾 '…'이 되풀이할 때 튄다 — …`(알림) | 머묾의 끝에서 처음으로 넘어가는 한 걸음이 구간 안의 걸음보다 훨씬 크다 — 머묾의 처음과 끝의 값을 맞춘다 |
+| `그림 '…'의 그림 파일이 문서의 폴더 밖에 있다: …`(알림) | 절대 경로이거나 `../`로 나간다 — 저작본을 옮기면 그림을 잃는다. 그림을 문서 옆(그 아래 폴더)에 두고 그 경로로 적는다 |
 | `프레임에 안 맞는 키가 …개다`(알림) | 이모지의 키 시각이 1/24초의 배수가 아니다(0.26초 = 6.24프레임). 그대로 나가고 재생되지만 구간의 경계와 어긋난다 — `t`를 프레임 ÷ 24로 적는다(6프레임 = 0.25) |
 | `그림 '…'의 그림 파일을 찾지 못했다: …`(알림) | `images`의 경로가 틀렸다 — 경로는 **문서 파일이 놓인 폴더** 기준이다 |
 | `그림이 없다` · `그림 '…'에 그림 파일이 없다` | 이모지에 `rigs`가 없다 · 그림에 `images`가 없다 |
