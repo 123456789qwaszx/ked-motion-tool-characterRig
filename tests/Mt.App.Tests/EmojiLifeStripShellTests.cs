@@ -342,6 +342,18 @@ public class EmojiLifeStripShellTests
             Assert.True(window.NewEmojiOpen);
             Assert.Equal(before + 1, editor.Revision);
 
+            // 그림의 순서 — ▲ ▼로 바꾸고, 그 순서로 그림이 생긴다(아래가 위). 끝에서는 그대로다.
+            window.FillNewEmojiFromForm("stack", new[] { Path.Combine(art, "star.png"), Path.Combine(art, "question.png"), Path.Combine(art, "spark.png") }, false, null, null, null);
+            Assert.Equal(new[] { "star.png", "question.png", "spark.png" }, window.NewEmojiFormState.Images);
+            window.MoveNewEmojiImageFromForm(2, -1);
+            window.MoveNewEmojiImageFromForm(0, -1); // 맨 위에서 위로 — 그대로
+            window.MoveNewEmojiImageFromForm(0, 1);
+            Assert.Equal(new[] { "spark.png", "star.png", "question.png" }, window.NewEmojiFormState.Images);
+            Assert.Equal("stack", window.CreateNewEmojiFromForm());
+            Assert.Equal(new[] { "spark", "star", "question" }, editor.Document.FindEmoji("stack")!.Rigs.Select(r => r.Name));
+            Assert.Equal(before + 2, editor.Revision);
+            window.OpenNewEmojiFromForm();
+
             // 빈 이모지로 시작 — 전과 같은 것(빈 그림 body 하나).
             string blank = window.StartBlankEmojiFromForm();
             Assert.False(window.NewEmojiOpen);

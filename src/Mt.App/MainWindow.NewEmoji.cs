@@ -10,7 +10,7 @@ using Mt.Authoring.Model;
 namespace Mt.App;
 
 // 새 이모지의 첫 화면(docs/PLAN-ux.md U9) — "이모지 추가"가 여는 작은 창. 셋만 정하면 움직이는 이모지가 생긴다:
-//   1. 그림 — PNG를 끌어다 놓거나 "그림 고르기…"(한 장에 그림 하나)
+//   1. 그림 — PNG를 끌어다 놓거나 "그림 고르기…"(한 장에 그림 하나). ▲ ▼로 순서를 바꾼다(아래가 위)
 //   2. 어떻게 뜨는가 — 한 번 재생하고 사라진다 / 머문다
 //   3. 움직임 — 등장 · 머묾 · 퇴장(없음도 된다)
 // "만들기"가 그것을 한 칸에 짓고(MotionEditor.StartEmoji), "빈 이모지로 시작"은 전처럼 빈 그림 body 하나짜리를 만든다.
@@ -100,6 +100,10 @@ public partial class MainWindow
                 AddNewEmojiImages(Array.Empty<string>());
             }
         });
+        Button up = SmallButton("▲", (_, _) => MoveNewEmojiImage(-1));
+        Button down = SmallButton("▼", (_, _) => MoveNewEmojiImage(1));
+        ToolTip.SetTip(up, "고른 그림을 위로 — 먼저 그려진다(뒤에 깔린다)");
+        ToolTip.SetTip(down, "고른 그림을 아래로 — 나중에 그려진다(앞에 온다)");
         Button create = SmallButton("만들기", (_, _) => CreateNewEmoji());
         create.FontSize = 12;
         create.Padding = new Avalonia.Thickness(16, 5);
@@ -107,7 +111,7 @@ public partial class MainWindow
         Button blank = SmallButton("빈 이모지로 시작", (_, _) => StartBlankEmojiFromForm());
         Button cancel = SmallButton("취소", (_, _) => _newEmojiWindow?.Close());
         ToolTip.SetTip(blank, "그림도 움직임도 없이 빈 그림 body 하나짜리 이모지를 만든다 — 전부 손으로 짓는다");
-        ToolTip.SetTip(_newEmojiImages, "PNG를 여기에 끌어다 놓는다. 한 장이 그림 하나가 된다(그림의 이름은 파일 이름에서 온다). 순서가 그려지는 순서다(아래가 위)");
+        ToolTip.SetTip(_newEmojiImages, "PNG를 여기에 끌어다 놓는다. 한 장이 그림 하나가 된다(그림의 이름은 파일 이름에서 온다). 순서가 그려지는 순서다(아래가 위) — ▲ ▼로 바꾼다");
 
         var panel = new StackPanel
         {
@@ -119,7 +123,7 @@ public partial class MainWindow
                 Header("1. 그림"),
                 new TextBlock { Text = "PNG를 끌어다 놓거나 고른다. 한 장이 그림 하나가 된다 — 뒤에 더하거나 뺄 수 있다.", FontSize = 10, Opacity = 0.65, TextWrapping = TextWrapping.Wrap },
                 _newEmojiImages,
-                new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { pick, drop } },
+                new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { pick, drop, up, down } },
                 Header("2. 어떻게 뜨는가"),
                 _newEmojiOnce,
                 _newEmojiStays,
@@ -187,6 +191,29 @@ public partial class MainWindow
         }
 
         return name;
+    }
+
+    /// <summary>테스트 손잡이 — 목록에서 그 줄(0부터)을 고르고 ▲(−1) · ▼(+1).</summary>
+    internal void MoveNewEmojiImageFromForm(int index, int step)
+    {
+        _newEmojiImages.SelectedIndex = index;
+        MoveNewEmojiImage(step);
+    }
+
+    /// <summary>고른 그림을 한 칸 위(−1) · 아래(+1)로 — 순서가 그려지는 순서다(아래가 위). 끝에서는 아무 일도 없다. 고른 줄은 따라간다.</summary>
+    private void MoveNewEmojiImage(int step)
+    {
+        int from = _newEmojiImages.SelectedIndex;
+        int to = from + step;
+
+        if (from < 0 || from >= _newEmojiPaths.Count || to < 0 || to >= _newEmojiPaths.Count)
+        {
+            return;
+        }
+
+        (_newEmojiPaths[from], _newEmojiPaths[to]) = (_newEmojiPaths[to], _newEmojiPaths[from]);
+        AddNewEmojiImages(Array.Empty<string>());
+        _newEmojiImages.SelectedIndex = to;
     }
 
     /// <summary>그림을 더한다 — PNG만, 같은 파일은 한 번만.</summary>
