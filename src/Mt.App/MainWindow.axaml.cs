@@ -788,14 +788,14 @@ public partial class MainWindow : Window
     /// <summary>가운데: 위 뷰포트, 트랜스포트 줄, 아래 그래프. 사이에 스플리터.</summary>
     private Control BuildCenter()
     {
-        // 위: 뷰포트 + 트랜스포트 + 레인지 줄(한 덩어리, 아래 두 줄은 늘 제 높이) · 스플리터 · 아래: 그래프/도프 시트.
+        // 위: 뷰포트 + (이모지 모드의 수명의 띠) + 트랜스포트 + 레인지 줄(한 덩어리, 아래 줄들은 늘 제 높이) · 스플리터 · 아래: 그래프/도프 시트.
         // 스플리터는 덩어리와 탭의 별 높이만 바꾼다 — 레인지 줄이 늘어나지 않는다.
         var grid = new Grid { RowDefinitions = new RowDefinitions("2*,4,3*") };
         grid.RowDefinitions[0].MinHeight = 200;
         grid.RowDefinitions[2].MinHeight = 160;
         _centerGrid = grid;
 
-        var scene = new Grid { RowDefinitions = new RowDefinitions("*,Auto,Auto") };
+        var scene = new Grid { RowDefinitions = new RowDefinitions("*,Auto,Auto,Auto") };
         Grid.SetRow(scene, 0);
         grid.Children.Add(scene);
 
@@ -899,8 +899,13 @@ public partial class MainWindow : Window
         DockPanel.SetDock(transportButtons, Dock.Right);
         transportRow.Children.Add(transportButtons);
         transportRow.Children.Add(_timeSlider);
-        Grid.SetRow(transportRow, 1);
+        Grid.SetRow(transportRow, 2);
         scene.Children.Add(transportRow);
+
+        // 이모지 모드 — 뷰포트와 타임 슬라이더 사이에 수명의 띠.
+        Control life = BuildLifeRows(transportButtons);
+        Grid.SetRow(life, 1);
+        scene.Children.Add(life);
 
         // 레인지 슬라이더 줄: [0][범위 시작] ═바═ [범위 끝][길이] · 모드 · 속도 · fps · Auto Key.
         var rangeLeft = new StackPanel
@@ -932,7 +937,7 @@ public partial class MainWindow : Window
         rangeRow.Children.Add(rangeLeft);
         rangeRow.Children.Add(rangeRight);
         rangeRow.Children.Add(_rangeSlider);
-        Grid.SetRow(rangeRow, 2);
+        Grid.SetRow(rangeRow, 3);
         scene.Children.Add(rangeRow);
 
         var splitter = new GridSplitter { ResizeDirection = GridResizeDirection.Rows, Background = Brushes.Transparent };
@@ -1687,6 +1692,7 @@ public partial class MainWindow : Window
         _viewport.SetRig(_session.Rig);
         _viewport.SetDepth(_session.Depth);
         _viewport.SetFocus(_session.Focus);
+        _viewport.EmojiLocators = _session.EmojiLocators;
         _viewport.StageSize = _session.StageSize;
         _viewport.ClearPortraits();
 
@@ -2217,7 +2223,8 @@ public partial class MainWindow : Window
         "  Q / W / E / R  선택 · 이동 · 회전 · 크기(뷰포트 오른쪽 위의 띠와 같다)      그림 누르기  고르기 — 빈 곳은 맞지 않는다 · 겹친 곳을 다시 누르면 밑의 것 · 빈 데를 누르면 이모지 전체\n" +
         "  Shift/Ctrl+누르기  더하기 · 빼기      빈 데서 끌기  상자로 고르기      여럿을 고르면 함께 끌리고 S가 전부를 키한다(한 칸)\n" +
         "  매니퓰레이터 끌기  Auto Key 꺼짐 = 기본값(그림의 자리 · 크기 · 회전, 이모지의 머리에서의 자리 — 키가 아니다) · 켜짐 = 지금 프레임에 키      S  지금 값을 키(도구의 종류만, 선택 도구면 셋 다)\n" +
-        "  F  이모지에 맞춤      '게임처럼 재생'  등장 → 머묾 × 바퀴 → 퇴장      '왼쪽을 보는 인물로'  뒤집힌 인물에게 뜨는 모습(보기만 — 켠 동안 끌기 없음)\n" +
+        "  F  이모지에 맞춤      도구 띠 '인물' · '◀ 왼쪽 보기'(뒤집힌 인물에게 뜨는 모습 — 보기만, 켠 동안 끌기 없음) · '인물과 함께'\n" +
+        "  수명의 띠(뷰포트 밑)  끝 끌기 = 시작 · 끝 · 몸통 끌기 = 통째로(놓을 때 한 칸) · 오른쪽 단추 = 풀기 · 지우기 · '+ 등장/머묾/퇴장' · '게임처럼 재생'\n" +
         "  그래프 목록 '키 없음' ＋  지금 값에 키(이모지 전체 · 그림마다 자리 · 크기 · 회전 · 투명도 · 그림)\n\n" +
         "타임 슬라이더\n" +
         "  클릭·드래그  스크럽      Shift+드래그  프레임 범위 선택      범위 안 MMB  범위의 키 이동      범위 밖 MMB  포즈 들고 스크럽(S로 키)\n" +

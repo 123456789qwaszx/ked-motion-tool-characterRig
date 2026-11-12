@@ -88,12 +88,22 @@ public static class EmojiPreview
     /// <paramref name="parentKey"/>가 null이면 트리의 루트 공간 직속. 노드의 키는 <paramref name="keyPrefix"/>를 머리로 단다.
     /// </summary>
     /// <remarks><paramref name="locatorFlipped"/>면 세운 로케이터를 뒤집는다(<see cref="FlipLocator"/>) — 왼쪽을 보는 인물.</remarks>
-    public static void Attach(RectNodeTree tree, EmojiAsset emoji, EmojiRigFrame frame, string keyPrefix, string? parentKey, bool locatorFlipped = false)
+    /// <param name="locatorPosition">
+    /// 로케이터의 자리(인물의 발에서 잰 px) — 런타임에서는 캐릭터 + 포즈별 표(<c>EmojiLocatorSystem</c>)가 넣는 값이다.
+    /// 툴은 그 표를 보기에만 읽는다(<see cref="EmojiLocatorFile"/>). null이면 덤프의 값 그대로.
+    /// </param>
+    public static void Attach(RectNodeTree tree, EmojiAsset emoji, EmojiRigFrame frame, string keyPrefix, string? parentKey, bool locatorFlipped = false, Vec2? locatorPosition = null)
     {
         ArgumentNullException.ThrowIfNull(tree);
         ArgumentNullException.ThrowIfNull(emoji);
         ArgumentNullException.ThrowIfNull(frame);
         RigSchemaLoader.AddRigTo(tree, frame.Assemble(emoji), keyPrefix ?? "", parentKey);
+
+        if (locatorPosition is { } position)
+        {
+            string locator = tree.GetParentKey((keyPrefix ?? "") + frame.OffsetNode);
+            tree.SetState(locator, tree.GetState(locator).WithAnchoredPosition(position));
+        }
 
         if (locatorFlipped)
         {
@@ -103,7 +113,7 @@ public static class EmojiPreview
 
     /// <summary>
     /// 로케이터(<c>Emoji_Offset</c>의 부모)를 뒤집는다 — 런타임 <c>EmojiLocatorSystem</c>: 인물이 왼쪽을 보면 로케이터의 자리 x와 가로 배율을 뒤집는다.
-    /// 툴은 캐릭터 + 포즈별 자리 표를 읽지 않으므로 그 자리는 덤프의 기본값이다 — 그 x를 뒤집는다. 갓 세운 로케이터에 한 번 쓴다.
+    /// 로케이터에 지금 든 자리(덤프의 값이거나 <see cref="Attach"/>가 넣은 표의 값)의 x를 뒤집는다. 갓 세운 로케이터에 한 번 쓴다.
     /// </summary>
     public static void FlipLocator(RectNodeTree tree, string keyPrefix, EmojiRigFrame frame)
     {

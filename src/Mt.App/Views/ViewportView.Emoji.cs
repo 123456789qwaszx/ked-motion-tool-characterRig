@@ -37,6 +37,11 @@ public sealed partial class ViewportView
     private int _emojiHoldCycles = 2;
     private readonly List<string> _selectedEmojiRigs = new();
     private readonly Dictionary<string, Bitmap?> _emojiImages = new(StringComparer.Ordinal);
+    private EmojiLocatorFile _emojiLocators = EmojiLocatorFile.Empty;
+    private bool _emojiShowHost = true;
+
+    /// <summary>이모지를 그리는 동안의 인물(오브젝트 id) — <c>DrawObject</c>가 이 인물을 감추거나 뒤집어 그린다.</summary>
+    private string? _emojiHostId;
     private (long Revision, string Name, EmojiRigFrame Frame, EmojiDefinition? Definition, EmojiClip? Timeline, string? Why)? _emojiCache;
 
     /// <summary>끄는 조작에 든 대상 하나 — 그림(빈 이름은 이모지 전체)과 값이 들어가는 노드, 시작 값과 지금 값.</summary>
@@ -157,6 +162,33 @@ public sealed partial class ViewportView
     }
 
     /// <summary>
+    /// 캐릭터별 머리의 자리(런타임의 로케이터 표) — 이모지를 인물의 머리에 세워 보인다. 보기만 바뀐다(문서 · 내보내기와 무관).
+    /// </summary>
+    public EmojiLocatorFile EmojiLocators
+    {
+        get => _emojiLocators;
+        set
+        {
+            _emojiLocators = value ?? EmojiLocatorFile.Empty;
+            InvalidateVisual();
+        }
+    }
+
+    /// <summary>이모지가 선 인물을 보이는가(초상, 없으면 실루엣). 꺼도 이모지의 자리는 그대로다 — 인물의 그림만 감춘다.</summary>
+    public bool EmojiShowHost
+    {
+        get => _emojiShowHost;
+        set
+        {
+            if (_emojiShowHost != value)
+            {
+                _emojiShowHost = value;
+                InvalidateVisual();
+            }
+        }
+    }
+
+    /// <summary>
     /// 고른 그림(리그) — 여럿이면 마지막에 고른 것(매니퓰레이터가 서는 자리). 넣으면 그것 하나만 고른다(null이면 푼다).
     /// </summary>
     public string? SelectedEmojiRig
@@ -196,10 +228,10 @@ public sealed partial class ViewportView
         SyncDuration();
         TimeChanged?.Invoke(this, EventArgs.Empty);
 
-        // 다른 이모지로 오면 그 그림에 맞춘다(보기만). 이모지를 놓을 때 무대로 돌아오는 것은 Bind가 한다.
+        // 다른 이모지로 오면 그 그림과 인물의 머리에 맞춘다(보기만). 이모지를 놓을 때 무대로 돌아오는 것은 Bind가 한다.
         if (emojiName is not null && emojiName != before)
         {
-            FrameEmoji();
+            FrameEmoji(withHost: true);
         }
 
         InvalidateVisual();
@@ -370,7 +402,8 @@ public sealed partial class ViewportView
 
         RectNodeTree tree = _template?.Clone() ?? new RectNodeTree(new RectSpace(_stageSize, Vec2.Half));
         SceneObject? host = EmojiHost(tree);
-        EmojiPreview.Attach(tree, emoji, source.Frame, EmojiKeyPrefix, host?.KeyOf(HostNode), _emojiFacingLeft);
+        // 인물이 있으면 그 캐릭터의 머리에 세운다(런타임의 로케이터 표 — 보기에만 읽는다). 없으면 무대 가운데.
+        EmojiPreview.Attach(tree, emoji, source.Frame, EmojiKeyPrefix, host?.KeyOf(HostNode), _emojiFacingLeft, host is null ? null : _emojiLocators.Resolve(host.Character));
 
         EmojiClip? clip;
         float frame;
@@ -452,9 +485,24 @@ public sealed partial class ViewportView
             return;
         }
 
-        DrawObjects(context, now.Tree);
+        SceneObject? host = EmojiHost(now.Tree);
+        _emojiHostId = host?.Id;
 
-        // 로케이터(이모지가 서는 자리) — 작은 십자.
+        try
+        {
+            DrawObjects(context, now.Tree);
+        }
+        finally
+        {
+            _emojiHostId = null;
+        }
+
+        if (host is not null && _emojiShowHost && !HasPortrait(host))
+        {
+            DrawEmojiHostSilhouette(context, now.Tree, _emojiLocators.Resolve(host.Character));
+        }
+
+        // 로케이터(이모지가 서는 자리 — 인물의 머리) — 작은 십자.
         Point locator = ToControl(now.Tree.TransformPoint(EmojiKeyPrefix + RigSchemaLoader.RootKey, Vec3.Zero).XY);
         context.DrawLine(LocatorPen, new Point(locator.X - 6, locator.Y), new Point(locator.X + 6, locator.Y));
         context.DrawLine(LocatorPen, new Point(locator.X, locator.Y - 6), new Point(locator.X, locator.Y + 6));
@@ -1125,11 +1173,82 @@ public sealed partial class ViewportView
         return false;
     }
 
+    // ── 인물(실루엣) ─────────────────────────────────────────────────
+    //
+    // 초상이 없는 인물은 실루엣으로 보인다 — 머리가 로케이터(머리의 자리)에, 몸이 거기서 발까지. 이모지가 "머리에서 얼마나"인지가 보인다.
+    // 로케이터의 좌표로 그리므로 왼쪽을 보는 인물이면(로케이터가 뒤집혔다) 코가 왼쪽을 향한다.
+
+    private const float HeadHalfWidth = 90f;
+    private const float HeadHalfHeight = 105f;
+
+    private static readonly IBrush HostFill = new SolidColorBrush(Color.FromArgb(46, 0x9A, 0xB4, 0xD0));
+    private static readonly Pen HostPen = new(new SolidColorBrush(Color.FromArgb(120, 0x9A, 0xB4, 0xD0)), 1);
+
+    /// <summary>실루엣의 윤곽들(로케이터의 좌표, y 위) — 머리 · 코(보는 쪽) · 몸. <paramref name="locator"/>는 발에서 잰 머리의 자리.</summary>
+    internal static IReadOnlyList<Vec2[]> HostSilhouette(Vec2 locator)
+    {
+        var shapes = new List<Vec2[]>();
+        var head = new Vec2[24];
+
+        for (int i = 0; i < head.Length; i++)
+        {
+            double a = Math.PI * 2 * i / head.Length;
+            head[i] = new Vec2((float)(Math.Cos(a) * HeadHalfWidth), (float)(Math.Sin(a) * HeadHalfHeight));
+        }
+
+        shapes.Add(head);
+        shapes.Add(new[] { new Vec2(HeadHalfWidth - 4f, 14f), new Vec2(HeadHalfWidth + 34f, -8f), new Vec2(HeadHalfWidth - 6f, -26f) });
+
+        // 몸 — 머리가 발보다 충분히 위일 때만. 발은 로케이터에서 (−x, −y)다.
+        if (locator.Y > HeadHalfHeight * 3f)
+        {
+            float footX = -locator.X;
+            float footY = -locator.Y;
+            float neck = -HeadHalfHeight + 6f;
+            float shoulder = Math.Max(footY, neck - 95f);
+            shapes.Add(new[]
+            {
+                new Vec2(-36f, neck), new Vec2(36f, neck), new Vec2(190f, shoulder), new Vec2(footX + 150f, footY),
+                new Vec2(footX - 150f, footY), new Vec2(-190f, shoulder),
+            });
+        }
+
+        return shapes;
+    }
+
+    private void DrawEmojiHostSilhouette(DrawingContext context, RectNodeTree tree, Vec2 locator)
+    {
+        string key = EmojiKeyPrefix + RigSchemaLoader.RootKey;
+
+        foreach (Vec2[] shape in HostSilhouette(locator))
+        {
+            Point[] points = shape.Select(p => ToControl(tree.TransformPoint(key, new Vec3(p.X, p.Y, 0f)).XY)).ToArray();
+            context.DrawGeometry(HostFill, HostPen, new PolylineGeometry(points.Append(points[0]), true));
+        }
+    }
+
+    /// <summary>테스트 손잡이 — 로케이터(머리의 자리)가 선 곳(컨트롤 좌표).</summary>
+    internal Point? EmojiLocatorControlPoint()
+        => EmojiNow() is { } now ? ToControl(now.Tree.TransformPoint(EmojiKeyPrefix + RigSchemaLoader.RootKey, Vec3.Zero).XY) : null;
+
+    /// <summary>테스트 손잡이 — 인물의 발(슬롯의 아래 가운데, 컨트롤 좌표). 인물이 없으면 null.</summary>
+    internal Point? EmojiHostFeetControlPoint()
+    {
+        if (EmojiNow() is not { } now || EmojiHost(now.Tree) is not { } host)
+        {
+            return null;
+        }
+
+        Vec2 locator = _emojiLocators.Resolve(host.Character);
+        return ToControl(now.Tree.TransformPoint(EmojiKeyPrefix + RigSchemaLoader.RootKey, new Vec3(-locator.X, -locator.Y, 0f)).XY);
+    }
+
     /// <summary>
     /// 이모지에 맞춤 — 리그 그림들(지금 시각, 투명해도)을 감싼 상자가 뷰포트의 절반을 채우고 가운데에 오도록 보기 배율 · 이동을 바꾼다.
-    /// 로케이터가 배역의 발치라 그대로는 무대 아래 작게 보인다. 보기만 바뀐다(데이터 · 되돌리기 없음). 이모지가 없으면 false.
+    /// <paramref name="withHost"/>면 인물의 머리까지 감싼다(이모지가 머리에서 얼마나 떨어졌는지가 보이게 — 이모지를 처음 열 때의 보기).
+    /// 보기만 바뀐다(데이터 · 되돌리기 없음). 이모지가 없으면 false.
     /// </summary>
-    public bool FrameEmoji()
+    public bool FrameEmoji(bool withHost = false)
     {
         if (EmojiNow() is not { } now || Bounds.Width <= 0 || Bounds.Height <= 0)
         {
@@ -1147,6 +1266,16 @@ public sealed partial class ViewportView
         if (corners.Count == 0)
         {
             return false;
+        }
+
+        if (withHost && _emojiShowHost && EmojiHost(now.Tree) is not null)
+        {
+            string locator = EmojiKeyPrefix + RigSchemaLoader.RootKey;
+
+            foreach ((float x, float y) in new[] { (-HeadHalfWidth, -HeadHalfHeight * 2.2f), (HeadHalfWidth, -HeadHalfHeight * 2.2f), (HeadHalfWidth, HeadHalfHeight), (-HeadHalfWidth, HeadHalfHeight) })
+            {
+                corners.Add(now.Tree.TransformPoint(locator, new Vec3(x, y, 0f)).XY);
+            }
         }
 
         (Point min, Point max) = ControlBox(corners);

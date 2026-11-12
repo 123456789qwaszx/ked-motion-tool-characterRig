@@ -95,6 +95,7 @@ public sealed class DocumentSession
         RigPath = null;
         Depth = BuiltinTuning.Depth;
         Focus = BuiltinTuning.Focus;
+        EmojiLocators = EmojiLocatorFile.Empty;
         StageSize = BuiltinTuning.BaseResolution;
     }
 
@@ -121,6 +122,9 @@ public sealed class DocumentSession
 
     /// <summary>덤프 옆 presets/focus.json — 배역별 focus 오프셋. 없으면 base 오프셋 없이(0).</summary>
     public FocusTuningFile? Focus { get; private set; }
+
+    /// <summary>덤프 옆 presets/emoji-locator.json — 캐릭터별 머리의 자리(이모지의 로케이터). 보기에만 쓴다. 없으면 빈 표(기본 자리).</summary>
+    public EmojiLocatorFile EmojiLocators { get; private set; } = EmojiLocatorFile.Empty;
 
     /// <summary>컨트롤러 표 — 덤프 옆 <c>presets/controllers.json</c>, 없으면 내장본. 리그에 없는 노드를 가리키면 상태 줄에 알린다.</summary>
     public ControllersFile Controllers { get; private set; } = BuiltinTuning.Controllers;
@@ -367,6 +371,8 @@ public sealed class DocumentSession
             StageSize = BaseResolutionFile.Load(baseResolution);
         }
 
+        LoadEmojiLocatorsBeside(path);
+
         string? controllersPath = LoadControllersBeside(path);
 
         AssetsChanged?.Invoke(this, EventArgs.Empty);
@@ -375,6 +381,26 @@ public sealed class DocumentSession
                   + (depthPath is null ? " · depth.json 없음(내장 깊이 커브)" : " · 깊이 커브")
                   + (focusPath is null ? " · focus 없음(내장 표)" : " · focus 표")
                   + (controllersPath is null ? " · 컨트롤러 내장 표" : " · 컨트롤러 표"));
+    }
+
+    /// <summary>덤프 옆 이모지 로케이터 표를 싣는다(없거나 못 읽으면 빈 표 — 기본 자리). 보기에만 쓰는 표라 못 읽어도 일을 막지 않는다.</summary>
+    private void LoadEmojiLocatorsBeside(string rigSchemasPath)
+    {
+        EmojiLocators = EmojiLocatorFile.Empty;
+
+        if (EmojiLocatorFile.TryFindBeside(rigSchemasPath) is not { } locatorPath)
+        {
+            return;
+        }
+
+        try
+        {
+            EmojiLocators = EmojiLocatorFile.Load(locatorPath);
+        }
+        catch (Exception exception)
+        {
+            SetStatus($"emoji-locator.json을 읽지 못했다: {exception.Message} — 이모지는 기본 머리 자리에 보인다.");
+        }
     }
 
     /// <summary>덤프 옆 컨트롤러 표를 싣는다(없으면 내장본). 리그에 없는 노드를 가리키면 상태 줄에 알리고 그대로 쓴다. 찾은 경로를 돌려준다.</summary>
@@ -548,6 +574,8 @@ public sealed class DocumentSession
             Depth = BuiltinTuning.Depth;
             Focus = BuiltinTuning.Focus;
         }
+
+        LoadEmojiLocatorsBeside(resolved);
 
         if (!string.IsNullOrEmpty(reference.Sha256) && !string.Equals(reference.Sha256, rig.Sha256, StringComparison.Ordinal))
         {

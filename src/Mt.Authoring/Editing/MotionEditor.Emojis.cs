@@ -299,6 +299,42 @@ public sealed partial class MotionEditor
         return span;
     }
 
+    /// <summary>
+    /// 수명의 자리(등장 · 머묾 · 퇴장)에 새 구간을 놓고 잇는다 — 한 칸. 프레임은 <see cref="EmojiLife.Suggest"/>가 정한다.
+    /// 그 자리에 이미 이은 구간이 있으면 막는다.
+    /// </summary>
+    public EmojiSpan AddEmojiLifeSpan(string emojiName, EmojiLifeRole role)
+    {
+        EmojiAsset emoji = RequireEmoji(emojiName);
+
+        if (EmojiLife.LinkOf(emoji, role) is { } linked)
+        {
+            throw new InvalidOperationException($"이모지 '{emoji.Name}'의 {EmojiLife.Label(role)}에는 이미 구간 '{linked}'을 이었다.");
+        }
+
+        (int start, int end) = EmojiLife.Suggest(emoji, role);
+        var span = new EmojiSpan { Name = EmojiLife.FreeSpanName(emoji, role), Start = start, End = end };
+
+        Mutate(MotionChangeKind.Emoji, () =>
+        {
+            emoji.Spans.Add(span);
+
+            switch (role)
+            {
+                case EmojiLifeRole.In:
+                    emoji.In = span.Name;
+                    break;
+                case EmojiLifeRole.Hold:
+                    emoji.Hold = span.Name;
+                    break;
+                default:
+                    emoji.Out = span.Name;
+                    break;
+            }
+        });
+        return span;
+    }
+
     public void SetEmojiSpan(string emojiName, string spanName, int start, int end)
     {
         EmojiAsset emoji = RequireEmoji(emojiName);

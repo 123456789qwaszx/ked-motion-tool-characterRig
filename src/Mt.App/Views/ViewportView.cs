@@ -1200,6 +1200,8 @@ public sealed partial class ViewportView : Control
         InvalidateVisual();
     }
 
+    private bool HasPortrait(SceneObject o) => _portraits.TryGetValue(o.Id, out Bitmap? portrait) && portrait is not null;
+
     public void ClearPortraits()
     {
         _portraits.Clear();
@@ -1624,6 +1626,14 @@ public sealed partial class ViewportView : Control
 
     private void DrawObject(DrawingContext context, RectNodeTree pose, SceneObject o, bool selected)
     {
+        // 이모지를 보는 중의 인물 — 감췄으면 그리지 않는다.
+        bool emojiHost = _emojiHostId == o.Id;
+
+        if (emojiHost && !_emojiShowHost)
+        {
+            return;
+        }
+
         string? imageKey = ScenePreview.ImageKeyOf(pose, o);
 
         if (imageKey is null)
@@ -1652,6 +1662,19 @@ public sealed partial class ViewportView : Control
         Point bottomLeft = ToControl(quad.BottomLeft);
         Point bottomRight = ToControl(quad.BottomRight);
         _portraits.TryGetValue(o.Id, out Bitmap? portrait);
+
+        // 왼쪽을 보는 인물로 보는 중이면 초상도 뒤집는다(런타임이 인물을 뒤집는 것 — 가로 배율 −1).
+        if (emojiHost && _emojiFacingLeft)
+        {
+            (topLeft, topRight) = (topRight, topLeft);
+            (bottomLeft, bottomRight) = (bottomRight, bottomLeft);
+        }
+
+        if (portrait is null && emojiHost)
+        {
+            // 초상이 없는 인물 — 이모지의 그리기가 실루엣으로 보인다(자리표시 상자는 이모지를 가린다).
+            return;
+        }
 
         if (portrait is null)
         {
