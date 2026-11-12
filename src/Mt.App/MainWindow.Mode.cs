@@ -142,5 +142,6 @@ public partial class MainWindow
         {
             _emojiList.SelectedItem = first;
         }
+        RefreshTweenNote();
     }
 }

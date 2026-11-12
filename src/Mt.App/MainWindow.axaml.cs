@@ -1098,6 +1098,7 @@ public partial class MainWindow : Window
         {
             _settings.StackEmojiGraph = _stackGraph.IsChecked == true;
             SyncGraphStacked();
+        RefreshTweenNote();
         };
         ToolTip.SetTip(_stackGraph, "곡선을 종류별 칸에 나눠 그린다 — 자리 · 크기 · 회전 · 투명도 · 그림이 한 칸씩, 칸마다 제 세로 눈금(값이 작은 곡선이 바닥에 깔리지 않는다). 칸의 눈금은 놓인 키에 저절로 맞는다. 끄면 한 눈금에 전부");
         _graph.LaneName = EmojiWords.Kind;
@@ -1791,8 +1792,8 @@ public partial class MainWindow : Window
         Toolbar.Children.Add(Separator());
         BuildTween();
         Button tween = ToolButton("트윈머신", (_, _) => OpenTween());
-        ToolTip.SetTip(tween, "트윈머신 창을 띄운다 — 앞 키와 뒤 키 사이의 값을 슬라이더로 골라 지금 프레임에 키로 놓는다(사이 포즈 · 오버슈트). 창은 떠 있는 채로 뷰포트 · 타임라인을 만진다");
-        Toolbar.Children.Add(OnlyIn(WorkMode.Emoji, tween));
+        ToolTip.SetTip(tween, "트윈머신 창을 띄운다 — 앞 키와 뒤 키 사이의 값을 슬라이더로 골라 지금 프레임에 키로 놓는다(사이 포즈 · 오버슈트). 캐릭터 모션과 이모지 둘 다. 창은 떠 있는 채로 뷰포트 · 타임라인을 만진다");
+        Toolbar.Children.Add(tween);
         Toolbar.Children.Add(ToolButton("설정…", (_, _) => OpenSettings()));
         Toolbar.Children.Add(ToolButton("단축키 (F1)", (_, _) => OpenShortcuts()));
     }
@@ -2317,6 +2318,7 @@ public partial class MainWindow : Window
 
     private void OnEditorChanged()
     {
+        RefreshTweenNote();
         RefreshMotionList();
         RefreshClips();
         RefreshEmojis();

@@ -1313,8 +1313,11 @@ public sealed partial class MotionEditor
 
         _gestureBefore = null;
         _batchDepth--;
+
+        // 끄는 동안 올라온 문서 밖의 손(버린 키 없는 포즈 같은 것)도 같은 칸에 붙는다 — 묶음과 같다.
+        List<(Action Undo, Action Redo)>? sides = _batchSides;
         _batchSides = null;
-        Commit(_gestureKind, before, null, null);
+        Commit(_gestureKind, before, ComposeUndo(sides), ComposeRedo(sides));
     }
 
     /// <summary>끄는 조작을 버린다 — 문서를 열기 전으로 되돌린다.</summary>

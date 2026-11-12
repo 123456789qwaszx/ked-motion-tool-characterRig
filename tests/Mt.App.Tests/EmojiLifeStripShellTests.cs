@@ -510,6 +510,67 @@ public class EmojiLifeStripShellTests
         });
     }
 
+    [Fact]
+    public void 트윈머신은_캐릭터_모션에도_먹고_키_없는_포즈는_버린다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            const string moveY = "CharacterPortrait_Track_Move_Y";
+            string settings = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", $"settings-{Guid.NewGuid():N}.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(settings)!);
+            File.WriteAllText(settings, "{}");
+            var window = new MainWindow(settings) { Width = 1600, Height = 960 };
+            window.Show();
+
+            try
+            {
+                window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
+                MotionEditor editor = window.Session.Editor;
+                editor.AddMotion("nod", "character", 1f);
+                editor.AddChannel("nod", moveY, ChannelKind.Position);
+                editor.SetKeys("nod", moveY, ChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(1f, -40f) });
+                window.SelectMotion("nod");
+                window.OpenTweenFromForm();
+
+                // 모션을 골랐다 — 그 모션의 곡선 전부가 대상이다.
+                window.Viewport.ScrubTo(0.5);
+                Assert.StartsWith("모션 nod  |  12fr에 — 앞 키 0fr ↔ 뒤 키 24fr  |  곡선 1개", window.TweenNote);
+
+                // 키 없는 포즈를 들고 있다가 트윈을 놓으면 — 포즈는 버려지고 그 프레임의 키가 포즈다. 한 칸.
+                window.Viewport.SetComponent(moveY, ChannelKind.Position, Axis.Y, -5f);
+                Assert.True(window.Viewport.HasPending);
+                long before = editor.Revision;
+                window.DragTweenFromForm(25);
+                window.DragTweenFromForm(75);
+                Assert.Equal(before, editor.Revision);
+                Assert.False(window.Viewport.HasPending);
+                window.ReleaseTweenFromForm();
+                Assert.Equal(before + 1, editor.Revision);
+                Assert.Equal(new[] { (0f, 0f), (0.5f, -30f), (1f, -40f) }, editor.Document.Find("nod")!.Channels[0].Y!.Keys.Select(k => (k.T, k.V)));
+
+                // 되돌리면 키가 사라지고 들고 있던 포즈가 돌아온다.
+                editor.Undo();
+                Assert.Equal(2, editor.Document.Find("nod")!.Channels[0].Y!.Keys.Count);
+                Assert.True(window.Viewport.HasPending);
+
+                // 값 단추도 같다 — 한 칸.
+                before = editor.Revision;
+                window.PressTweenButtonFromForm(50);
+                Assert.Equal(before + 1, editor.Revision);
+                Assert.Equal(-20f, editor.Document.Find("nod")!.Channels[0].Y!.Keys[1].V, 3);
+                Assert.False(window.Viewport.HasPending);
+
+                // 모션을 놓으면(아무것도 고르지 않았다) 쓸 곳이 없다.
+                window.SelectMotion(null!);
+                Assert.StartsWith("모션을 고른다", window.TweenNote);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
     private static string RepoRoot()
     {
         for (DirectoryInfo? d = new(AppContext.BaseDirectory); d is not null; d = d.Parent)

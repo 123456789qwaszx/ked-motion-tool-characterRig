@@ -17,7 +17,10 @@ namespace Mt.App;
 //   대상의 한 줄 — "body · spark  |  4fr ↔ 12fr  |  곡선 5개" (창은 지금 고른 것과 지금 프레임을 따라간다)
 //   슬라이더 — 앞 키(0%) ↔ 뒤 키(100%). 끄는 동안 뷰포트 · 그래프에 보이고(편집기의 끄는 조작), 놓으면 되돌리기 한 칸.
 //   단추 — 0 · 25 · 33 · 50 · 67 · 75 · 100(오버슈트를 켜면 −25 · 125). 누르면 바로 한 칸.
-// 대상: 고른 그림들(없으면 이모지 전체)의 자리 · 크기 · 회전 · 투명도. 그래프에서 곡선을 골랐으면 그 가운데 그것만.
+// 대상
+//   이모지 — 고른 그림들(없으면 이모지 전체)의 자리 · 크기 · 회전 · 투명도. 그래프에서 곡선을 골랐으면 그 가운데 그것만.
+//   캐릭터 모션(T4) — 고른 모션의 곡선 전부(포즈 전체의 사이 포즈). 그래프에서 곡선을 골랐으면 그것만.
+//     키 없는 포즈가 있으면 버린다 — 트윈이 그 프레임에 키를 놓으니 그 키가 포즈다(되돌리면 포즈도 돌아온다).
 // 앞이나 뒤에 키가 없는 곡선은 건너뛴다. 그림 바꾸기는 계단 값이라 뺀다.
 public partial class MainWindow
 {
@@ -214,29 +217,60 @@ public partial class MainWindow
         }
     }
 
+    /// <summary>트윈이 놓일 곳 — 어느 모션(이모지면 그 타임라인)의 어느 곡선들에, 어느 시각에. 대상을 한 줄로 적은 글도.</summary>
+    private sealed record TweenTarget(MotionAsset Motion, IReadOnlyList<CurveRef> Curves, float Time, string Label, bool Picked);
+
     /// <summary>
-    /// 트윈이 닿는 곡선들 — 고른 그림들(없으면 이모지 전체)의 자리 · 크기 · 회전 · 투명도 가운데 지금 있는 것.
-    /// 그래프에서 곡선을 골랐으면 그 가운데 그것만. 이모지의 타임라인을 보고 있지 않으면 비어 있다.
+    /// 지금 트윈이 닿는 것. 없으면 null과 그 까닭.
+    ///   이모지 — 고른 그림들(없으면 이모지 전체)의 자리 · 크기 · 회전 · 투명도 가운데 키가 있는 곡선.
+    ///   캐릭터 모션 — 그래프가 보는 모션의 키가 있는 곡선 전부(그림 바꾸기는 뺀다).
+    /// 그래프에서 곡선을 골랐으면 그 가운데 그것만.
     /// </summary>
-    private IReadOnlyList<CurveRef> TweenCurves()
+    private TweenTarget? TweenTargetNow(out string why)
     {
-        if (CurrentEmoji is not { } emoji || _session.EmojiFrame is not { } frame || _viewport.EmojiLife)
+        why = "";
+        IEnumerable<CurveRef> CurvesOf(MotionAsset motion, Func<ChannelAsset, bool> take) => motion.Channels
+            .Where(take)
+            .SelectMany(c => new[] { Axis.X, Axis.Y, Axis.Z }.Where(a => c.Get(a) is { Keys.Count: > 0 }).Select(a => new CurveRef(c.Node, c.Kind, a)));
+
+        TweenTarget Make(MotionAsset motion, List<CurveRef> curves, double seconds, string label)
         {
-            return Array.Empty<CurveRef>();
+            List<CurveRef> picked = curves.Where(_graph.SelectedCurves.Contains).ToList();
+            float time = (float)TimeSnap.Snap(Math.Clamp(seconds, 0, motion.Duration), 1.0 / TimeSnap.FramesPerSecond);
+            return new TweenTarget(motion, picked.Count > 0 ? picked : curves, time, label, picked.Count > 0);
         }
 
-        var nodes = EmojiKeyTargets().Select(frame.TargetNode).ToHashSet(StringComparer.Ordinal);
-        List<CurveRef> curves = emoji.Timeline.Channels
-            .Where(c => nodes.Contains(c.Node) && TweenKinds.Contains(c.Kind))
-            .SelectMany(c => new[] { Axis.X, Axis.Y, Axis.Z }.Where(a => c.Get(a) is { Keys.Count: > 0 }).Select(a => new CurveRef(c.Node, c.Kind, a)))
-            .ToList();
-        List<CurveRef> picked = curves.Where(_graph.SelectedCurves.Contains).ToList();
-        return picked.Count > 0 ? picked : curves;
-    }
+        if (_workMode == WorkMode.Emoji)
+        {
+            if (CurrentEmoji is not { } emoji || _session.EmojiFrame is not { } frame)
+            {
+                why = "이모지를 고른다.";
+                return null;
+            }
 
-    /// <summary>지금 프레임(타임라인의 시각, 프레임에 붙여).</summary>
-    private float TweenTime(EmojiAsset emoji)
-        => (float)TimeSnap.Snap(Math.Clamp(_viewport.EmojiTimelineTime ?? 0, 0, emoji.Timeline.Duration), 1.0 / EmojiAsset.Fps);
+            if (_viewport.EmojiLife)
+            {
+                why = "'게임처럼 재생'을 끄고 쓴다 — 키는 타임라인의 프레임에 놓인다.";
+                return null;
+            }
+
+            IReadOnlyList<string> targets = EmojiKeyTargets();
+            var nodes = targets.Select(frame.TargetNode).ToHashSet(StringComparer.Ordinal);
+            return Make(
+                emoji.Timeline,
+                CurvesOf(emoji.Timeline, c => nodes.Contains(c.Node) && TweenKinds.Contains(c.Kind)).ToList(),
+                _viewport.EmojiTimelineTime ?? 0,
+                string.Join(" · ", targets.Select(t => t.Length == 0 ? EmojiWords.WholeEmoji : t)));
+        }
+
+        if (_graph.MotionName is not { } name || EmojiAsset.IsTimelineName(name, out _) || _session.Editor.Document.Find(name) is not { } bound)
+        {
+            why = "모션을 고른다 — 클립을 보는 중에는 쓰지 않는다(키는 모션에 놓인다).";
+            return null;
+        }
+
+        return Make(bound, CurvesOf(bound, c => c.Kind != ChannelKind.Image).ToList(), _viewport.Time, $"모션 {name}");
+    }
 
     /// <summary>대상의 한 줄 — 무엇에, 어느 키와 어느 키 사이에 놓이는가. 놓일 곳이 없으면 그 까닭.</summary>
     private void RefreshTweenNote()
@@ -248,44 +282,49 @@ public partial class MainWindow
 
         bool ready = false;
 
-        if (CurrentEmoji is not { } emoji || _workMode != WorkMode.Emoji)
+        if (TweenTargetNow(out string why) is not { } target)
         {
-            _tweenNote.Text = "이모지 모드에서 이모지를 고른다 — 지금은 이모지의 키에만 쓴다.";
-        }
-        else if (_viewport.EmojiLife)
-        {
-            _tweenNote.Text = "'게임처럼 재생'을 끄고 쓴다 — 키는 타임라인의 프레임에 놓인다.";
+            _tweenNote.Text = why;
         }
         else
         {
-            float time = TweenTime(emoji);
-            IReadOnlyList<CurveRef> curves = TweenCurves();
-            var between = new List<(int Before, int After)>();
+            var between = new List<(double Before, double After)>();
 
-            foreach (CurveRef curve in curves)
+            foreach (CurveRef curve in target.Curves)
             {
-                if (curve.Resolve(emoji.Timeline) is { } resolved && TweenMath.TryNeighbors(resolved.Keys, time, out KeyAsset? before, out KeyAsset? after))
+                if (curve.Resolve(target.Motion) is { } resolved && TweenMath.TryNeighbors(resolved.Keys, target.Time, out KeyAsset? before, out KeyAsset? after))
                 {
-                    between.Add((EmojiAsset.FrameOf(before!.T), EmojiAsset.FrameOf(after!.T)));
+                    between.Add((before!.T, after!.T));
                 }
             }
 
-            string targets = string.Join(" · ", EmojiKeyTargets().Select(t => t.Length == 0 ? EmojiWords.WholeEmoji : t));
-            string scope = curves.Any(_graph.SelectedCurves.Contains) ? "그래프에서 고른 곡선 " : "곡선 ";
+            static string Frame(double seconds) => Math.Round(TimeSnap.ToFrames(seconds)).ToString(CultureInfo.InvariantCulture);
+            string scope = target.Picked ? "그래프에서 고른 곡선 " : "곡선 ";
             ready = between.Count > 0;
             _tweenNote.Text = ready
-                ? $"{targets}  |  {EmojiAsset.FrameOf(time)}fr에 — 앞 키 {between.Max(b => b.Before)}fr ↔ 뒤 키 {between.Min(b => b.After)}fr  |  {scope}{between.Count}개"
-                : $"{targets}  |  {EmojiAsset.FrameOf(time)}fr의 앞과 뒤에 키가 있는 곡선이 없다 — 두 키 사이의 프레임으로 간다";
+                ? $"{target.Label}  |  {Frame(target.Time)}fr에 — 앞 키 {Frame(between.Max(b => b.Before))}fr ↔ 뒤 키 {Frame(between.Min(b => b.After))}fr  |  {scope}{between.Count}개"
+                : $"{target.Label}  |  {Frame(target.Time)}fr의 앞과 뒤에 키가 있는 곡선이 없다 — 두 키 사이의 프레임으로 간다";
         }
 
         _tweenSlider.IsEnabled = ready;
         _tweenButtons.IsEnabled = ready;
     }
 
+    /// <summary>트윈을 놓는다 — 캐릭터 모션에서 키 없는 포즈가 있으면 먼저 버린다(같은 칸에 붙는다).</summary>
+    private void TweenAt(TweenTarget target, double percent)
+    {
+        if (_workMode != WorkMode.Emoji && _viewport.HasPending)
+        {
+            _viewport.DiscardPending();
+        }
+
+        _session.Editor.TweenKeys(target.Motion.Name, target.Curves, target.Time, percent / 100.0, DefaultTangent);
+    }
+
     /// <summary>슬라이더를 끄는 중 — 끄는 조작을 열고(처음에만) 그 값으로 키를 놓아 보인다.</summary>
     private void PreviewTween(double percent)
     {
-        if (CurrentEmoji is not { } emoji || TweenCurves() is not { Count: > 0 } curves)
+        if (TweenTargetNow(out _) is not { Curves.Count: > 0 } target)
         {
             return;
         }
@@ -299,7 +338,7 @@ public partial class MainWindow
                 editor.BeginGesture(MotionChangeKind.Keys);
             }
 
-            editor.TweenKeys(emoji.Timeline.Name, curves, TweenTime(emoji), percent / 100.0, DefaultTangent);
+            TweenAt(target, percent);
             editor.GestureChanged();
         });
     }
@@ -329,9 +368,9 @@ public partial class MainWindow
             _tweenSetting = false;
         }
 
-        if (CurrentEmoji is { } emoji && TweenCurves() is { Count: > 0 } curves)
+        if (TweenTargetNow(out _) is { Curves.Count: > 0 } target)
         {
-            Guard("트윈", () => _session.Editor.TweenKeys(emoji.Timeline.Name, curves, TweenTime(emoji), percent / 100.0, DefaultTangent));
+            Guard("트윈", () => _session.Editor.Batch(MotionChangeKind.Keys, () => TweenAt(target, percent)));
             RefreshTweenNote();
         }
     }
