@@ -75,10 +75,7 @@ public static class MotionValidator
 
         MotionClip clip = MotionAssetCodec.ToClip(motion, skipEmojiOnly: true);
 
-        if (!MotionRules.TryValidate(clip, null, out string reason))
-        {
-            problems.Add(new MotionProblem(motion.Name, reason));
-        }
+        problems.AddRange(ShapeProblems(clip).Select(reason => new MotionProblem(motion.Name, reason)));
 
         // 경고는 모양 규칙과 무관하게 본다 — 고치는 순서를 작가가 고른다.
 
@@ -184,4 +181,84 @@ public static class MotionValidator
     /// <summary>내보내기를 막는 것만.</summary>
     public static IEnumerable<MotionProblem> Blocking(IEnumerable<MotionProblem> problems)
         => problems.Where(p => p.Blocking);
+
+    /// <summary>
+    /// 모양 규칙에 걸린 것 **전부**. 코어의 검사(<see cref="MotionRules.TryValidate"/>)는 처음 걸린 하나에서 멈춘다 —
+    /// 파일로 만드는 사람은 고치고 다시 돌리기를 되풀이해야 했다. 규칙을 여기에 베끼지 않고, 코어의 검사를
+    /// 조각(머리 · 채널 · 성분)마다 따로 불러 조각마다의 첫 문제를 모은다. 문구는 코어의 것 그대로다.
+    /// </summary>
+    internal static IEnumerable<string> ShapeProblems(MotionClip clip)
+    {
+        // 머리 — 이름 · 길이. 걸린 것을 멀쩡한 값으로 바꿔 가며 다음 것을 묻는다(채널은 뺀다).
+        var head = new MotionClip { Name = clip.Name, Rig = clip.Rig, Duration = clip.Duration, End = clip.End, Channels = Array.Empty<MotionChannel>() };
+
+        for (int guard = 0; guard < 3 && !MotionRules.TryValidate(head, null, out string reason); guard++)
+        {
+            yield return reason;
+
+            if (string.IsNullOrEmpty(head.Name) || !MotionRules.NameRule.IsMatch(head.Name))
+            {
+                head.Name = "a";
+            }
+            else if (!(head.Duration > 0f))
+            {
+                head.Duration = 1f;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        MotionChannel[] channels = clip.Channels ?? Array.Empty<MotionChannel>();
+        var seen = new HashSet<(string, MotionChannelKind)>();
+
+        for (int i = 0; i < channels.Length; i++)
+        {
+            MotionChannel channel = channels[i];
+            bool whole = true;
+
+            // 성분마다 따로 — 한 성분의 문제가 다른 성분의 문제를 가리지 않게.
+            foreach ((CurveKey[]? x, CurveKey[]? y, CurveKey[]? z) in new[] { (channel.X, (CurveKey[]?)null, (CurveKey[]?)null), (null, channel.Y, null), (null, null, channel.Z) })
+            {
+                if ((x ?? y ?? z) is not { Length: > 0 })
+                {
+                    continue;
+                }
+
+                var one = new MotionChannel { Node = channel.Node, Kind = channel.Kind, X = x!, Y = y!, Z = z! };
+
+                if (MotionRules.TryValidateChannel(one, clip.Duration, clip.End, null, out string why))
+                {
+                    continue;
+                }
+
+                // 성분의 문제가 아니면(노드 · 종류) 채널에 한 번만 적는다.
+                bool ofComponent = why.StartsWith("X:", StringComparison.Ordinal) || why.StartsWith("Y:", StringComparison.Ordinal) || why.StartsWith("Z:", StringComparison.Ordinal);
+
+                if (ofComponent || whole)
+                {
+                    yield return $"채널 {i}: {why}";
+                }
+
+                whole &= ofComponent;
+
+                if (!ofComponent)
+                {
+                    break;
+                }
+            }
+
+            // 성분이 하나도 없는 채널 — 통째로 묻는다.
+            if (!channel.HasX && !channel.HasY && !channel.HasZ && !MotionRules.TryValidateChannel(channel, clip.Duration, clip.End, null, out string empty))
+            {
+                yield return $"채널 {i}: {empty}";
+            }
+
+            if (!seen.Add((channel.Node, channel.Kind)))
+            {
+                yield return $"채널 {i}: 같은 노드·종류의 채널이 둘이다 ({channel.Node} {channel.Kind})";
+            }
+        }
+    }
 }

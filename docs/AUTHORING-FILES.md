@@ -47,7 +47,7 @@ dotnet run --project src/Mt.Cli -- validate a.motion-authoring.json
     { "kind": "motion", "name": "nod", "message": "채널 0: Y: restore인데 마지막 키 값이 중립값 0이 아니다 (9) …", "blocking": false } ] }
 ```
 
-  `blocking: true`는 **막는 문제**(내보내지 못한다), `false`는 **알림**(내보내진다 — 뜻한 것이면 둔다). 모양 규칙은 모션마다 **처음 걸린 하나만** 나온다 — 고치고 다시 돌린다.
+  `blocking: true`는 **막는 문제**(내보내지 못한다), `false`는 **알림**(내보내진다 — 뜻한 것이면 둔다). 걸린 것은 **한 번에 전부** 나온다(성분마다 그 성분의 첫 문제).
 - 파일이 없거나 JSON이 깨졌으면 `{ "ok": false, "error": "…" }`와 종료 코드 1.
 
 ## 3. 파일의 뼈대
