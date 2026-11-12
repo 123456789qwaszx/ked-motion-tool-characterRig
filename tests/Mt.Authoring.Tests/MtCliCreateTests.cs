@@ -6,7 +6,7 @@ using Mt.Cli;
 namespace Mt.Authoring.Tests;
 
 /// <summary>
-/// 만드는 명령(mt new · add-motion · add-emoji · key · remove · controllers · presets) — 파일을 손으로 쓰지 않고
+/// 만드는 명령(mt new · add-motion · add-emoji · key · unkey · object · add-clip · block · span · picture · remove · controllers · presets) — 파일을 손으로 쓰지 않고
 /// 문서를 지어, 검증을 지나고 내보내지는 데까지.
 /// </summary>
 public class MtCliCreateTests : IDisposable
@@ -135,5 +135,80 @@ public class MtCliCreateTests : IDisposable
         Assert.Equal(0, code);
         Assert.Contains(presets["motions"]!.AsArray(), p => p!["id"]!.GetValue<string>() == "nod");
         Assert.Equal(new[] { "pop_in", "fade_in", "pulse", "shake", "float_out", "shrink_out" }, presets["emojiMoves"]!.AsArray().Select(m => m!["id"]!.GetValue<string>()));
+    }
+
+    [Fact]
+    public void 명령만으로_두_캐릭터의_클립을_짓고_키_하나를_지운다()
+    {
+        Run("new", _document);
+        Run("add-motion", _document, "--preset", "nod");
+        Run("add-motion", _document, "--preset", "bow");
+
+        // 캐릭터 — 없으면 세우고, 있으면 적은 값만 바꾼다.
+        Assert.Equal("object", Run("object", _document, "--id", "s2", "--x", "300").Json["made"]!.GetValue<string>());
+        JsonNode moved = Run("object", _document, "--id", "s2", "--y", "-20", "--scale", "1.1").Json;
+        Assert.Equal("object-changed", moved["made"]!.GetValue<string>());
+        Assert.Equal(300f, moved["x"]!.GetValue<float>());
+        Assert.Equal(-20f, moved["y"]!.GetValue<float>());
+        Assert.Equal(1.1f, moved["scaleY"]!.GetValue<float>());
+
+        // 클립 — 배역과 트랙은 블록을 놓을 때 선다.
+        Assert.Equal(0, Run("add-clip", _document, "--name", "greet").Code);
+        JsonNode first = Run("block", _document, "--clip", "greet", "--motion", "nod", "--at", "0", "--object", "s1").Json;
+        Assert.Equal(0, first["track"]!.GetValue<int>());
+        JsonNode second = Run("block", _document, "--clip", "greet", "--motion", "bow", "--at", "0.4", "--object", "s2").Json;
+        Assert.Equal(1, second["track"]!.GetValue<int>());
+        Assert.Equal("s2", second["role"]!.GetValue<string>());
+        Assert.False(second["blocking"]!.GetValue<bool>());
+
+        ClipAsset clip = Assert.Single(Read().Clips);
+        Assert.Equal(new[] { "s1", "s2" }, clip.Roles.Select(r => r.Object));
+        Assert.Equal(new[] { 1, 1 }, clip.Tracks.Select(t => t.Blocks.Count));
+
+        // 같은 캐릭터에 한 줄 더.
+        Assert.Equal(2, Run("block", _document, "--clip", "greet", "--motion", "bow", "--at", "1", "--object", "s1", "--track", "new").Json["track"]!.GetValue<int>());
+        Assert.Equal(0, Run("remove", _document, "--clip", "greet", "--track", "2", "--block", "0").Code);
+        Assert.Equal(0, Run("remove", _document, "--clip", "greet", "--track", "2").Code);
+        Assert.Equal(2, Read().Clips[0].Tracks.Count);
+        Assert.Equal(0, Run("pose", _document, "--clip", "greet", "--time", "0.5").Code);
+
+        // 키 하나 지우기 — 없는 시각이면 있는 것을 말한다.
+        Run("add-motion", _document, "--name", "wave", "--duration", "0.5");
+        Run("key", _document, "--motion", "wave", "--controller", "body", "--axis", "x", "--keys", "0:0,0.25:30,0.5:0");
+        (int missing, JsonNode why) = Run("unkey", _document, "--motion", "wave", "--controller", "body", "--axis", "x", "--time", "0.3");
+        Assert.Equal(1, missing);
+        Assert.Contains("0 · 0.25 · 0.5", why["error"]!.GetValue<string>(), StringComparison.Ordinal);
+        Assert.Equal(2, Run("unkey", _document, "--motion", "wave", "--controller", "body", "--axis", "x", "--time", "0.25").Json["left"]!.GetValue<int>());
+
+        Assert.Equal(0, Run("remove", _document, "--object", "s2").Code);
+        Assert.Null(Read().ActiveSceneAsset!.Find("s2"));
+    }
+
+    [Fact]
+    public void 명령으로_이모지의_구간을_옮기고_그림의_기본_자리를_놓는다()
+    {
+        Run("new", _document);
+        Run("add-emoji", _document, "--name", "spark", "--images", "a.png,b.png", "--life", "stay", "--in", "pop_in", "--hold", "pulse", "--out", "float_out");
+        EmojiAsset before = Read().FindEmoji("spark")!;
+        EmojiSpan hold = before.FindSpan(before.Hold)!;
+
+        JsonNode moved = Run("span", _document, "--emoji", "spark", "--name", hold.Name, "--start", hold.Start.ToString(), "--end", (hold.End + 6).ToString()).Json;
+        Assert.Equal("span-moved", moved["made"]!.GetValue<string>());
+        Assert.Equal("hold", moved["linked"]!.GetValue<string>());
+        Assert.Equal(hold.End + 6, Read().FindEmoji("spark")!.FindSpan(hold.Name)!.End);
+
+        Assert.Equal("span", Run("span", _document, "--emoji", "spark", "--name", "extra", "--start", "0", "--end", "3").Json["made"]!.GetValue<string>());
+        Assert.Equal(2, MtCli.Run(new[] { "span", _document, "--emoji", "spark", "--name", "extra", "--start", "0.5", "--end", "3" }, new StringWriter(), new StringWriter())); // 프레임은 정수
+
+        // 적은 값만 바뀐다.
+        JsonNode placed = Run("picture", _document, "--emoji", "spark", "--picture", "b", "--x", "40", "--scale", "0.5").Json;
+        Assert.Equal(40f, placed["x"]!.GetValue<float>());
+        Assert.Equal(0f, placed["y"]!.GetValue<float>());
+        EmojiRigAsset b = Read().FindEmoji("spark")!.FindRig("b")!;
+        Assert.Equal((40f, 0f, 0.5f, 0f), (b.PlaceX, b.PlaceY, b.Scale, b.Rotation));
+
+        // 이모지의 키 하나 지우기 — 프레임으로.
+        Run("key", _document, "--emoji", "spark", "--picture", "b", "--kind", "alpha", "--axis", "x", "--keys", "0:1,6:0.5,12:1");
+        Assert.Equal(2, Run("unkey", _document, "--emoji", "spark", "--picture", "b", "--kind", "alpha", "--axis", "x", "--frame", "6").Json["left"]!.GetValue<int>());
     }
 }

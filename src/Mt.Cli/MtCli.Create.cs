@@ -10,7 +10,7 @@ using Mt.Authoring.Serialization;
 namespace Mt.Cli;
 
 /// <summary>
-/// 만드는 명령 — 파일을 손으로 쓰지 않고 문서를 짓는다(new · add-motion · add-emoji · key · remove)와
+/// 만드는 명령 — 파일을 손으로 쓰지 않고 문서를 짓는다(new · add-motion · add-emoji · key · remove — 나머지는 <c>MtCli.Build.cs</c>)와
 /// 무엇으로 지을 수 있는지 묻는 명령(controllers · presets).
 /// 화면과 같은 편집 명령(<see cref="MotionEditor"/>)을 지나므로 화면에서 만든 것과 같은 문서가 나오고, 화면이 거절하는 것은 여기서도 거절된다.
 /// 고친 문서는 그 자리에 다시 쓴다 — 쓴 뒤의 문제 목록을 같이 낸다.
@@ -165,6 +165,104 @@ public static partial class MtCli
                 ? parsed
                 : throw new UsageException($"--tangent는 auto · flat · linear · spline · plateau · step이다 ('{t}')")
             : TangentMode.Flat;
+        (string motionName, string node, ChannelKind kind, Axis axis, bool frames) = Target(options, document, rig);
+        List<(float Time, float Value)> keys = ParseKeys(options, frames);
+
+        if (ChannelKinds.IsAlwaysStepped(kind))
+        {
+            tangent = TangentMode.Step;
+        }
+
+        editor.Batch(MotionChangeKind.Keys, () =>
+        {
+            if (document.Find(motionName)!.FindChannel(node, kind) is null)
+            {
+                editor.AddChannel(motionName, node, kind);
+            }
+
+            foreach ((float time, float value) in keys)
+            {
+                editor.AddKey(motionName, node, kind, axis, new KeyAsset { T = time, V = value, Tangent = tangent });
+            }
+        });
+
+        ComponentCurve curve = editor.Document.Find(motionName)!.FindChannel(node, kind)!.Get(axis)!;
+
+        return Save(path, editor.Document, rig, stdout, new JsonObject
+        {
+            ["made"] = "keys",
+            ["node"] = node,
+            ["kind"] = KindToken(kind),
+            ["axis"] = axis.ToString().ToLowerInvariant(),
+            ["keys"] = new JsonArray(curve.Keys.Select(k => (JsonNode)new JsonObject
+            {
+                [frames ? "frame" : "t"] = frames ? EmojiAsset.FrameOf(k.T) : k.T,
+                ["v"] = k.V,
+                ["tangent"] = k.Tangent.ToString().ToLowerInvariant(),
+            }).ToArray()),
+        });
+    }
+
+    private static int Remove(Options options, TextWriter stdout)
+    {
+        string path = options.Positional(0, "문서 경로");
+        MotionDocument document = Load(options, out RigSchemaFile rig);
+        var editor = new MotionEditor(document);
+        var removed = new JsonObject { ["made"] = "removed" };
+
+        if (options.Value("motion") is { } motion)
+        {
+            editor.RemoveMotion(motion);
+            removed["motion"] = motion;
+        }
+        else if (options.Value("emoji") is { } emoji)
+        {
+            editor.RemoveEmoji(emoji);
+            removed["emoji"] = emoji;
+        }
+        else if (options.Value("clip") is { } clip)
+        {
+            removed["clip"] = clip;
+
+            if (options.Value("track") is null)
+            {
+                editor.RemoveClip(clip);
+            }
+            else if (options.Value("block") is null)
+            {
+                int track = (int)options.Number("track");
+                editor.RemoveClipTrack(clip, track);
+                removed["track"] = track;
+            }
+            else
+            {
+                int track = (int)options.Number("track"), block = (int)options.Number("block");
+                editor.RemoveClipBlock(clip, track, block);
+                removed["track"] = track;
+                removed["block"] = block;
+            }
+        }
+        else if (options.Value("object") is { } objectId)
+        {
+            editor.RemoveSceneObject(options.Value("scene"), objectId);
+            removed["object"] = objectId;
+        }
+        else
+        {
+            throw new UsageException("remove에는 --motion · --emoji · --clip · --object 중 하나가 있어야 한다");
+        }
+
+        return Save(path, editor.Document, rig, stdout, removed);
+    }
+
+    // ── helper ────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 키가 놓이는 곳 — 모션은 손잡이(<c>--controller</c>)나 노드 · 종류로, 이모지는 그림(<c>--picture</c>, 없으면 전체)과 종류로.
+    /// 이모지면 시각을 프레임으로 센다.
+    /// </summary>
+    private static (string Motion, string Node, ChannelKind Kind, Axis Axis, bool Frames) Target(Options options, MotionDocument document, RigSchemaFile rig)
+    {
         string motionName, node;
         ChannelKind kind;
         bool frames;
@@ -227,74 +325,8 @@ public static partial class MtCli
             throw new InvalidOperationException($"{KindToken(kind)}의 성분은 {string.Join(" · ", allowed.Select(x => x.ToString().ToLowerInvariant()))}다 ({axis.ToString().ToLowerInvariant()}는 없다).");
         }
 
-        List<(float Time, float Value)> keys = ParseKeys(options, frames);
-
-        if (ChannelKinds.IsAlwaysStepped(kind))
-        {
-            tangent = TangentMode.Step;
-        }
-
-        editor.Batch(MotionChangeKind.Keys, () =>
-        {
-            if (document.Find(motionName)!.FindChannel(node, kind) is null)
-            {
-                editor.AddChannel(motionName, node, kind);
-            }
-
-            foreach ((float time, float value) in keys)
-            {
-                editor.AddKey(motionName, node, kind, axis, new KeyAsset { T = time, V = value, Tangent = tangent });
-            }
-        });
-
-        ComponentCurve curve = editor.Document.Find(motionName)!.FindChannel(node, kind)!.Get(axis)!;
-
-        return Save(path, editor.Document, rig, stdout, new JsonObject
-        {
-            ["made"] = "keys",
-            ["node"] = node,
-            ["kind"] = KindToken(kind),
-            ["axis"] = axis.ToString().ToLowerInvariant(),
-            ["keys"] = new JsonArray(curve.Keys.Select(k => (JsonNode)new JsonObject
-            {
-                [frames ? "frame" : "t"] = frames ? EmojiAsset.FrameOf(k.T) : k.T,
-                ["v"] = k.V,
-                ["tangent"] = k.Tangent.ToString().ToLowerInvariant(),
-            }).ToArray()),
-        });
+        return (motionName, node, kind, axis, frames);
     }
-
-    private static int Remove(Options options, TextWriter stdout)
-    {
-        string path = options.Positional(0, "문서 경로");
-        MotionDocument document = Load(options, out RigSchemaFile rig);
-        var editor = new MotionEditor(document);
-        var removed = new JsonObject { ["made"] = "removed" };
-
-        if (options.Value("motion") is { } motion)
-        {
-            editor.RemoveMotion(motion);
-            removed["motion"] = motion;
-        }
-        else if (options.Value("emoji") is { } emoji)
-        {
-            editor.RemoveEmoji(emoji);
-            removed["emoji"] = emoji;
-        }
-        else if (options.Value("clip") is { } clip)
-        {
-            editor.RemoveClip(clip);
-            removed["clip"] = clip;
-        }
-        else
-        {
-            throw new UsageException("remove에는 --motion · --emoji · --clip 중 하나가 있어야 한다");
-        }
-
-        return Save(path, editor.Document, rig, stdout, removed);
-    }
-
-    // ── helper ────────────────────────────────────────────────────────
 
     /// <summary>문서를 그 자리에 쓰고, 한 일과 쓴 뒤의 문제를 낸다. 만드는 도중의 문서는 문제가 있기 마련이라 종료 코드는 0이다.</summary>
     private static int Save(string path, MotionDocument document, RigSchemaFile rig, TextWriter stdout, JsonObject done)

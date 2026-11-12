@@ -67,7 +67,13 @@
 | `mt add-emoji <문서> --name <이름> [--images <a.png,b.png>] [--life once\|stay] [--in <움직임>] [--hold <움직임>] [--out <움직임>]` | 이모지 하나. 그림 한 장이 그림 하나(이름은 파일 이름에서 — 겹치면 `_2`). 경로는 문서 기준. 움직임을 적으면 그 키가 들어간다 |
 | `mt key <문서> --motion <이름> --controller <id> --axis x\|y\|z …` | 모션에 키. 손잡이의 `id`로(또는 `--node <노드> --kind <종류>`로). 시각은 **초** |
 | `mt key <문서> --emoji <이름> [--picture <그림>] --kind <종류> --axis x\|y\|z …` | 이모지에 키. `--picture`가 없으면 이모지 전체. 시각은 **프레임** |
-| `mt remove <문서> --motion <이름> \| --emoji <이름> \| --clip <이름>` | 지운다 |
+| `mt unkey <문서> (key와 같은 자리) --time <초>` (이모지는 `--frame <프레임>`) | 그 시각의 키 하나를 지운다. 없는 시각이면 있는 시각을 말해 준다 |
+| `mt object <문서> --id <id> [--x <px>] [--y <px>] [--rotation <도>] [--scale <배>] [--scene <씬>]` | 씬의 캐릭터 — 없으면 세우고, 있으면 **적은 값만** 바꾼다 |
+| `mt add-clip <문서> --name <이름> [--scene <씬>] [--duration <초>]` | 빈 클립 |
+| `mt block <문서> --clip <이름> --motion <이름> --at <초> --object <id> [--mode relative\|absolute] [--track <번호>\|new]` | 클립에 모션 블록 하나. 배역(이름은 캐릭터의 id — `--role`로 바꾼다)과 그 트랙이 없으면 세운다. 같은 노드가 겹치면 `--track new`로 줄을 나누거나 `--at`을 옮긴다 |
+| `mt span <문서> --emoji <이름> --name <구간> --start <프레임> --end <프레임>` | 이모지의 구간 — 없으면 더하고, 있으면 옮긴다(끝 포함). 등장 · 머묾 · 퇴장에 이은 것이면 `linked`에 나온다 |
+| `mt picture <문서> --emoji <이름> --picture <그림> [--x <px>] [--y <px>] [--scale <배>] [--rotation <도>]` | 그림의 기본 자리(키가 아니다) — 적은 값만 바꾼다 |
+| `mt remove <문서> --motion <이름> \| --emoji <이름> \| --object <id> \| --clip <이름> [--track <번호> [--block <번호>]]` | 지운다. 클립은 통째로, `--track`까지 적으면 그 줄을, `--block`까지 적으면 그 블록만 |
 
 `mt key`의 `…`: 한 개는 `--time <초> --value <값>`(이모지는 `--frame <프레임>`), 여럿은 `--keys "시각:값,시각:값"`. `--tangent`의 기본은 `flat`. 같은 시각에 키가 있으면 **바꾼다**. 채널이 없으면 생긴다.
 
@@ -81,7 +87,17 @@ mt validate a.motion-authoring.json
 ```
 
 - 명령이 쓴 문서는 **툴이 저장한 꼴**이다 — 키마다 `inTangent` · `outTangent`가 적히고 기본 씬이 들어간다. 손으로 쓴 주석과 줄 맞춤은 사라진다.
-- 명령에 없는 것(클립 · 씬 · 구간 옮기기 · 키 하나 지우기 · 그림의 기본 자리)은 파일을 고친다 — 형식은 아래 §3부터.
+- 명령에 없는 것(이름 바꾸기 · 구간을 수명에 잇기 · 블록의 반복 · 캐릭터의 초상과 층 …)은 파일을 고친다 — 형식은 아래 §3부터.
+
+두 캐릭터의 클립을 명령만으로:
+
+```bash
+mt object   a.motion-authoring.json --id s2 --x 300
+mt add-clip a.motion-authoring.json --name greet
+mt block    a.motion-authoring.json --clip greet --motion nod --at 0   --object s1
+mt block    a.motion-authoring.json --clip greet --motion bow --at 0.4 --object s2
+mt pose     a.motion-authoring.json --clip greet --time 0.5
+```
 
 ## 3. 파일의 뼈대
 

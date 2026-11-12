@@ -52,7 +52,18 @@ public static partial class MtCli
           mt key         <문서> --emoji <이름> [--picture <그림>] --kind position|scale|euler|alpha|image --axis x|y|z
                                 (--frame <프레임> --value <값> | --keys "프레임:값,프레임:값") [--tangent flat]
                                                                같은 시각에 키가 있으면 바꾼다. --picture가 없으면 이모지 전체. 탄젠트의 기본은 flat
-          mt remove      <문서> --motion <이름> | --emoji <이름> | --clip <이름>
+          mt unkey       <문서> (key와 같은 자리) (--time <초> | --frame <프레임>)
+                                                               그 시각의 키 하나를 지운다
+          mt object      <문서> --id <id> [--scene <씬>] [--rig-kind character] [--x <px>] [--y <px>] [--rotation <도>] [--scale <배>] [--scale-x …] [--scale-y …]
+                                                               씬의 캐릭터 — 없으면 세우고, 있으면 적은 값만 바꾼다
+          mt add-clip    <문서> --name <이름> [--scene <씬>] [--duration <초>]
+          mt block       <문서> --clip <이름> --motion <이름> --at <초> --object <id> [--role <배역>] [--mode relative|absolute] [--track <번호>|new]
+                                                               클립에 모션 블록 하나. 배역(기본은 캐릭터의 id)과 그 트랙이 없으면 세운다
+          mt span        <문서> --emoji <이름> --name <구간> --start <프레임> --end <프레임>
+                                                               이모지의 구간 — 없으면 더하고, 있으면 옮긴다(끝 포함)
+          mt picture     <문서> --emoji <이름> --picture <그림> [--x <px>] [--y <px>] [--scale <배>] [--rotation <도>]
+                                                               그림의 기본 자리(키가 아니다) — 적은 값만 바꾼다
+          mt remove      <문서> --motion <이름> | --emoji <이름> | --clip <이름> [--track <번호> [--block <번호>]] | --object <id> [--scene <씬>]
 
           <문서>  *.motion-authoring.json        <덤프>  rig-schemas.json (없으면 문서가 적어 둔 것, 그것도 없으면 내장본)
         """;
@@ -93,6 +104,12 @@ public static partial class MtCli
                 "add-motion" => AddMotion(options, stdout),
                 "add-emoji" => AddEmoji(options, stdout),
                 "key" => Key(options, stdout),
+                "unkey" => Unkey(options, stdout),
+                "object" => SceneObjectCommand(options, stdout),
+                "add-clip" => AddClip(options, stdout),
+                "block" => Block(options, stdout),
+                "span" => Span(options, stdout),
+                "picture" => Picture(options, stdout),
                 "remove" => Remove(options, stdout),
                 _ => throw new UsageException($"모르는 명령 '{args[0]}'"),
             };
