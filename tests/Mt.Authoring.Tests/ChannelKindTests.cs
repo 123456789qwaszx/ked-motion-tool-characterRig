@@ -51,7 +51,7 @@ public sealed class ChannelKindTests
     }
 
     [Fact]
-    public void 저작본에는_종류가_소문자_이름으로_적히고_옛_글자가_그대로_읽힌다()
+    public void 저작본에는_종류가_소문자_이름으로_적히고_그대로_읽힌다()
     {
         MotionDocument document = Fixtures.NodBowDocument();
         var editor = new MotionEditor(document);

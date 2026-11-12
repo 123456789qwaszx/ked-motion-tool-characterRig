@@ -15,7 +15,7 @@ namespace Mt.Authoring.Serialization;
 /// (<c>Samples/Dialogue/motions.json</c>)과의 바이트 비교 테스트다.
 ///
 /// <b>읽기는 런타임 로더(<c>MotionLibrary</c>)만큼 관용적이다</b>: 빈 성분 배열은 "없음", 토큰은
-/// 대소문자·공백 무시, end는 필수(기본값 없음). 채널에 mode는 없다 — motions/1의 mode는 무시한다(뜻은 커맨드가 정한다). 어긋난 모션은 사유와 함께 건너뛴다 —
+/// 대소문자·공백 무시, end는 필수(기본값 없음). 채널에 mode는 없다(뜻은 커맨드가 정한다). 어긋난 모션은 사유와 함께 건너뛴다 —
 /// 조용히 빠뜨리지 않는다. 검증(<c>MotionRules</c>)은 여기서 하지 않는다; 호출부가 한다.
 /// </summary>
 public static class MotionsJson
@@ -87,11 +87,7 @@ public static class MotionsJson
             return false;
         }
 
-        if (string.Equals(file.Schema, AuthoringFormat.ExportSchemaV1, StringComparison.Ordinal))
-        {
-            problems.Add($"schema '{file.Schema}' — 채널의 mode는 무시한다(motions/2: relative/absolute는 motion 커맨드가 정한다). 키 값은 그대로 읽는다.");
-        }
-        else if (!string.Equals(file.Schema, AuthoringFormat.ExportSchema, StringComparison.Ordinal))
+        if (!string.Equals(file.Schema, AuthoringFormat.ExportSchema, StringComparison.Ordinal))
         {
             problems.Add($"schema '{file.Schema}' (기대 '{AuthoringFormat.ExportSchema}'). 읽기는 시도한다.");
         }
@@ -272,7 +268,6 @@ public static class MotionsJson
     {
         public string? Node { get; set; }
         public string? Kind { get; set; }
-        public string? Mode { get; set; }
         public List<KeyDto>? X { get; set; }
         public List<KeyDto>? Y { get; set; }
         public List<KeyDto>? Z { get; set; }

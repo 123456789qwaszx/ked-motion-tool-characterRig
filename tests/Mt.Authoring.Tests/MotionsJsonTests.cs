@@ -116,28 +116,6 @@ public class MotionsJsonTests
     }
 
     [Fact]
-    public void 옛_motions_1은_읽히고_채널의_mode는_무시한다_그리고_알린다()
-    {
-        const string json = """
-            {
-              "schema": "motions/1",
-              "motions": [
-                { "name": "old", "rig": "character", "duration": 1, "end": "commit",
-                  "channels": [ { "node": "N", "kind": "position", "mode": "absolute", "x": [ { "t": 0, "v": 140 }, { "t": 1, "v": 360 } ] } ] }
-              ]
-            }
-            """;
-
-        Assert.True(MotionsJson.TryRead(json, out List<MotionClip> clips, out List<string> problems));
-
-        Assert.Equal(140f, Assert.Single(clips).Channels[0].X[0].Value);
-        string note = Assert.Single(problems);
-        Assert.Contains("motions/1", note, StringComparison.Ordinal);
-        Assert.Contains("mode", note, StringComparison.Ordinal);
-        Assert.DoesNotContain("\"mode\"", MotionsJson.Write(clips), StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void 깨진_JSON은_false이고_사유가_하나다()
     {
         Assert.False(MotionsJson.TryRead("{ not json", out List<MotionClip> clips, out List<string> problems));

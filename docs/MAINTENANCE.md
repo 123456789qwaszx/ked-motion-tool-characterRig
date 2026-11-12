@@ -15,7 +15,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 
 - SDK는 `global.json`(10.0.100, latestFeature). 패키지 판은 `Directory.Packages.props` 한 곳(Avalonia 12.1.1).
 - `Directory.Build.props`: ImplicitUsings·Nullable·TreatWarningsAsErrors·LangVersion latest. 반입 코어만 자기 csproj에서 LangVersion 9 · netstandard2.1 · ImplicitUsings/Nullable 끔으로 되돌린다(유니티 호환).
-- CI: `.github/workflows/test.yml` — `main`·`dev` 푸시와 PR, ubuntu-latest, restore → build → test. 테스트 프로젝트 셋(Core 426 · Authoring 304 · App 132건, 2026-11-12). Windows 패키지 스모크는 아직 없다.
+- CI: `.github/workflows/test.yml` — `main`·`dev` 푸시와 PR, ubuntu-latest, restore → build → test. 테스트 프로젝트 셋(Core 426 · Authoring 301 · App 132건, 2026-11-12). Windows 패키지 스모크는 아직 없다.
 - 로컬에 SDK를 못 깔면 CI가 유일한 검증이다. `dotnet test`의 요약 줄이 **셋**(세 프로젝트) 나오는지 세고 "전부 통과"라고 말한다 — 빌드에 실패한 프로젝트는 조용히 건너뛴다.
 
 ## 2. 코드 지도 — 어디를 열면 되나
@@ -24,8 +24,8 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 |---|---|
 | 모션·채널·키 모델, 씬 모델 | `Mt.Authoring/Model/MotionDocument.cs` · `SceneAsset.cs` · `StageNodes.cs`(무대 뼈대 이름 규약·패럴랙스 상수) |
 | 편집 명령 전부(undo 포함) | `Mt.Authoring/Editing/MotionEditor.cs`(+ `.Clips.cs` · `.Emojis.cs`) — `Mutate`·`Batch`·`RecordExternal`·`Undo/Redo`·끄는 조작(`BeginGesture`·`GestureChanged`·`EndGesture`) |
-| 저작 원본 읽고 쓰기 | `Serialization/MotionDocumentJson.cs` (`motion-authoring/2`, 옛 `/1` 읽기) |
-| `motions.json` 읽고 쓰기 | `Serialization/MotionsJson.cs` (`motions/2` 정규 직렬화·관용 읽기, 옛 `/1`) |
+| 저작 원본 읽고 쓰기 | `Serialization/MotionDocumentJson.cs` (`motion-authoring/2`만 읽는다) |
+| `motions.json` 읽고 쓰기 | `Serialization/MotionsJson.cs` (`motions/2` 정규 직렬화·관용 읽기) |
 | 규칙·경고·돕는 손 | `Validation/MotionValidator.cs`(코어 `MotionRules`) · `ClipValidator.cs` · `EmojiValidator.cs` · `MotionFixes.cs` · `MotionExport.cs` · `EmojiExport.cs` |
 | 문서가 스키마를 지키는가 · 덤프가 달라졌을 때 | `Schema/SchemaContract.cs`(막는 문제) · `SchemaDiff.cs`(알림 + 이름 바꾸기 따라가기) |
 | 연출 클립 | `Model/ClipAsset.cs` · `Editing/MotionEditor.Clips.cs` · `Preview/ClipPreview.cs` · `ClipBake.cs` · `Mt.App/Views/ClipTimelineView.cs` · `MainWindow.Clips.cs` |
@@ -91,7 +91,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 
 ### 4.6 기능을 지울 때
 
-소유자 방침은 "흔적 없이": 모델 필드 · 편집기 명령 · 직렬화 키 · 화면 · 테스트 · 문서를 한 커밋에서 다 뺀다. 지운 뒤 `grep`으로 식별자와 문서 언급을 한 번 더 훑는다. 그 기능을 쓴 저작본이 있을 수 있으면 **읽을 때 버리는 한 줄**만 `MotionDocumentJson`에 둔다(카메라 모션 · 상태 블록이 그렇다) — 옛 문서가 열리지 않는 것보다 낫다.
+소유자 방침은 "흔적 없이": 모델 필드 · 편집기 명령 · 직렬화 키 · 화면 · 테스트 · 문서를 한 커밋에서 다 뺀다. 지운 뒤 `grep`으로 식별자와 문서 언급을 한 번 더 훑는다. **마이그레이션은 두지 않는다** — 옛 형식 · 지운 기능을 옮겨 읽는 코드를 남기지 않는다(소유자, 2026-11-12).
 
 ### 4.7 무대 등가 견본 바꾸기
 
@@ -124,7 +124,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 | 자산 동기화 | `DocumentSession`은 편집기 Changed에서 리그·초상 지문(`rig=…\nbase=…\nportrait id=…`)이 바뀐 때만 다시 읽는다. 키 편집은 다시 읽지 않는다 |
 | 글 칸 확정 | `OnCommit`: Enter는 확정 + 포커스를 뷰포트로, LostFocus는 글이 바뀐 때만 확정. 같은 값 재확정은 기록이 아니다 |
 | 깊이 슬라이더 | 0‥40, close = 20, 그 너머는 `depth.json` 커브의 할선 연장(런타임 규칙). 놓으면 DepthScale X·Y + DepthY를 한 번에 굽는다 |
-| 옛 파일 | `motion-authoring/1`·`motions/1`은 읽힌다(채널 `mode` 무시). 쓰기는 언제나 `/2`. 걷어 낸 카메라 모션 · 카메라 줄 · 상태 블록은 읽을 때 버린다 |
+| 옛 파일 | 읽지 않는다. 저작본은 `motion-authoring/2`가 아니면 거부한다. `motions.json`은 스키마가 달라도 읽기를 시도하고 알린다. 지운 기능(카메라 모션 · 상태 블록)이 든 문서는 열리되 검증이 문제로 알린다 |
 | 안 쓰는 using | 빌드가 막지 않는다(`IDE0005`는 꺼져 있다). 훑는 법은 `PLAN-cleanup.md` §4 |
 | 설정 파일 | `%APPDATA%/ked-motion-tool-characterRig/`. 옛 자리(`ked-motion-tool`)는 형제 툴이 쓴다 — 읽기만 하고 쓰지 않는다 |
 | 커밋 메시지 | 모델 식별자를 저장소 산출물에 넣지 않는다. 한국어, "무엇을 왜" |

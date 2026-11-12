@@ -70,31 +70,6 @@ public class ClipEditorTests
     }
 
     [Fact]
-    public void 예전_판의_카메라_모션과_카메라_줄과_상태_블록은_읽을_때_버린다()
-    {
-        MotionDocument read = MotionDocumentJson.Read(
-            """
-            {
-              "schema": "motion-authoring/2",
-              "motions": [ { "name": "nod", "rig": "character", "duration": 1 }, { "name": "push_in", "rig": "camera", "duration": 1 } ],
-              "clips": [ { "name": "t", "roles": [ { "name": "a", "rig": "character" } ], "tracks": [
-                { "role": "a", "blocks": [ { "at": 0, "motion": "nod" }, { "at": 0.5, "kind": "visible", "visible": false, "duration": 0.5 } ] },
-                { "role": "@camera", "blocks": [ { "at": 0, "motion": "push_in" }, { "at": 1, "kind": "camera", "zoom": 4 } ] } ] } ]
-            }
-            """);
-
-        Assert.Equal(new[] { "nod" }, read.Motions.Select(m => m.Name));
-        ClipTrack track = Assert.Single(read.Clips[0].Tracks);
-        Assert.Equal("nod", Assert.Single(track.Blocks).Motion);
-
-        // 다시 쓴 문서에는 그 흔적이 없다.
-        string json = MotionDocumentJson.Write(read);
-        Assert.DoesNotContain("@camera", json, StringComparison.Ordinal);
-        Assert.DoesNotContain("push_in", json, StringComparison.Ordinal);
-        Assert.DoesNotContain("visible\": false", json, StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void 목록이_빠진_클립도_읽힌다()
     {
         MotionDocument read = MotionDocumentJson.Read(

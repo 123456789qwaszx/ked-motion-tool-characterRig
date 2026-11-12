@@ -88,7 +88,7 @@
 | C-2 B3 | 끝 — `EmojiLifeStripShellTests`를 주제별로: `EmojiLifeStripShellTests`(수명의 띠) · `EmojiHostShellTests`(인물 · 고르기) · `EmojiMoveShellTests` · `NewEmojiShellTests` · `EmojiKeyShellTests`(키 단추 · 종류별 칸) · `TweenShellTests`. 창을 여는 일은 `EmojiExampleWindow`가 한다. 테스트 수는 그대로(862) |
 | C-3 | 끝 — 계획서 12개와 정리 전의 README를 `docs/history/`로 옮겼다(그 폴더의 `README.md`가 무엇이 지금과 다른지 적는다). `HANDOFF.md`를 다시 썼고, `MAINTENANCE.md`를 지금 것으로 고쳤고(코드 지도 · 불변식 · 재반입 절차 · 테스트 요령 · 함정), `README.md`를 줄였고(무엇인가 · 처음 열기 · `mt` · 문서의 지도 · 빌드), `CLAUDE.md`를 맞췄다. 코드 주석의 VnTool 언급도 지웠다 |
 
-**1단계(정리) 끝 — 2026-11-12.** 테스트 862건(코어 426 · 도메인 304 · 화면 132). 다음은 2단계(설명서).
+**1단계(정리) 끝 — 2026-11-12.** 테스트 859건(코어 426 · 도메인 301 · 화면 132 — 마이그레이션을 걷은 뒤). 다음은 2단계(설명서).
 
 ### 적어 둘 것
 
@@ -97,8 +97,8 @@
 
 - **안 쓰는 using**은 보통 빌드가 막지 않는다(`IDE0005`는 꺼져 있다). 파일을 나누며 한 번 훑어 저장소 전체에서 지웠다 — 임시 `.editorconfig`(`dotnet_diagnostic.IDE0005.severity = warning`)와 `-p:EnforceCodeStyleInBuild=true -p:GenerateDocumentationFile=true`로 빌드하면 나온다.
 
-- **`PreviewSettings`는 남겼다**(조사에서는 A6에 넣었다). 편집 명령 `SetPreviewPortrait`만 지웠다 — `preview.portrait`는 씬이 없던 예전 문서를 읽을 때 기본 씬의 초상으로 옮기는 데 쓰인다(`MotionDocument.EnsureDefaultScene`).
+- **마이그레이션은 두지 않는다**(소유자, 2026-11-12 — 1단계가 끝난 뒤의 지시). 옛 형식을 옮겨 읽던 것을 전부 지웠다: `motion-authoring/1`(`defaultMode` → 재생 기준) · `motions/1`(채널 `mode` 알림) · `preview.portrait`(→ 기본 씬의 초상, `PreviewSettings`) · 카메라 모션 · 카메라 줄 · 상태 블록을 읽을 때 버리던 것. 저작본은 `motion-authoring/2`가 아니면 거부한다.
 - **씬이 여럿인 문서는 그대로 읽고 쓴다**(`scenes[]` · `activeScene`). 더하거나 바꾸는 명령만 없다. 테스트가 본다.
 - 반복 · 모션 바꾸기는 `UpdateClipBlock`(블록 인스펙터) 하나로 한다.
 
-- **예전 문서는 그대로 읽힌다.** 읽을 때 rig `camera`인 모션, 역할 `@camera`인 줄, 모션이 없는 블록(상태 블록)을 버린다(`MotionDocumentJson`) — 다시 저장하면 그 흔적이 파일에서 사라진다. 테스트가 본다.
+- 설정 파일만은 옛 자리의 것을 처음 한 번 읽어 온다(B2) — 문서가 아니라 창 배치 · 최근 문서를 잇는 것이라 남겼다.

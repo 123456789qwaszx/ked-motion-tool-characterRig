@@ -71,7 +71,7 @@ tools/    유니티 프리팹에서 무대 뼈대를 다시 뽑는 스크립트
 | `controllers.json` | `controllers/1` | 리거 | 손잡이 표. 내장본 `Defaults/controllers.json` |
 | `settings.json` | 툴 내부 | 사용자 | `%APPDATA%/ked-motion-tool-characterRig/` |
 
-예전 문서는 읽힌다: `motion-authoring/1` · `motions/1`, 그리고 걷어 낸 것들(카메라 모션 · 카메라 줄 · 상태 블록)은 읽을 때 버린다.
+읽는 것은 지금 형식뿐이다 — 옛 형식을 옮겨 읽는 길(마이그레이션)은 두지 않는다. 다른 판의 저작본은 거부하고, 지운 기능의 흔적이 든 문서는 검증이 문제로 알린다.
 
 ## 5. 연관 저장소
 

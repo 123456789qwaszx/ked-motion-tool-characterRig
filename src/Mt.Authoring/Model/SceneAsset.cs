@@ -26,10 +26,10 @@ public sealed class SceneAsset
     public IEnumerable<SceneObject> DrawOrder()
         => Objects.OrderBy(o => StageNodes.IndexOf(o.Stage)).ThenBy(o => SceneLayers.IndexOf(o.Layer)).ThenBy(o => Objects.IndexOf(o));
 
-    /// <summary>캐릭터 리그 하나(s1, stage00/mid)를 세운 기본 씬 — 씬이 없던 문서(예전 판)와 새 문서가 이것으로 시작한다.</summary>
-    public static SceneAsset Default(string? portrait = null) => new()
+    /// <summary>캐릭터 리그 하나(s1, stage00/mid)를 세운 기본 씬 — 씬을 적지 않은 문서와 새 문서가 이것으로 시작한다.</summary>
+    public static SceneAsset Default() => new()
     {
-        Objects = { new SceneObject { Id = SceneObject.DefaultId, Rig = SceneObject.DefaultRig, Portrait = portrait } },
+        Objects = { new SceneObject { Id = SceneObject.DefaultId, Rig = SceneObject.DefaultRig } },
     };
 }
 
