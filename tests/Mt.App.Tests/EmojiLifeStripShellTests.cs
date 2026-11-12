@@ -1,6 +1,4 @@
 using Avalonia;
-using Avalonia.Headless;
-using Avalonia.Media.Imaging;
 using Mt.App.Views;
 using Mt.Authoring.Editing;
 using Mt.Authoring.Model;
@@ -322,7 +320,6 @@ public class EmojiLifeStripShellTests
             window.FillNewEmojiFromForm("wow", new[] { Path.Combine(art, "star.png"), Path.Combine(art, "star.png"), Path.Combine(art, "notes.txt") }, true, EmojiMove.PopIn, EmojiMove.Pulse, null);
             Assert.Equal(new[] { "star.png" }, window.NewEmojiFormState.Images);
             Assert.Equal("만들기 → 그림 1장 · 머무는 이모지 · 등장 튀어나오기 · 머묾 두근거리기 · 길이 1초(24프레임 — 뒤에 바꾼다)", window.NewEmojiFormState.Summary);
-            Shot(window.NewEmojiWindow!, "new-emoji-form");
 
             long before = editor.Revision;
             Assert.Equal("wow", window.CreateNewEmojiFromForm());
@@ -350,56 +347,7 @@ public class EmojiLifeStripShellTests
             Assert.False(window.NewEmojiOpen);
             Assert.Equal("body", Assert.Single(editor.Document.FindEmoji(blank)!.Rigs).Name);
             Assert.Empty(editor.Document.FindEmoji(blank)!.Timeline.Channels);
-
-            window.SelectEmoji("wow");
-            window.Viewport.ScrubTo(EmojiAsset.SecondsOf(5));
-            Shot(window, "new-emoji-made");
         });
-    }
-
-    [Fact]
-    public void 띠와_인물을_그림으로_본다()
-    {
-        Run(window =>
-        {
-            window.SelectEmoji("star");
-            window.Viewport.ScrubTo(EmojiAsset.SecondsOf(9));
-            Shot(window, "life-star");
-
-            window.SetEmojiFacingLeftFromForm(true);
-            Shot(window, "life-star-left");
-            window.SetEmojiFacingLeftFromForm(false);
-
-            window.SelectEmoji("twinkle");
-            window.SelectEmojiRigFromForm("center");
-            Shot(window, "life-twinkle-one-picture");
-            window.SelectEmojiRigFromForm(null);
-            Shot(window, "life-twinkle-empty");
-            window.AddLifeSpanFromForm(EmojiLifeRole.Hold);
-            window.AddLifeSpanFromForm(EmojiLifeRole.In);
-            Shot(window, "life-twinkle-added");
-
-            // 움직임 가져오기(U8) — 빈 이모지에 등장 · 머묾 · 퇴장을 넣은 모습.
-            window.AddEmojiFromForm();
-            window.SelectEmojiRigFromForm("body");
-            window.ImportMoveFromForm(EmojiMove.PopIn);
-            window.ImportMoveFromForm(EmojiMove.Pulse);
-            window.ImportMoveFromForm(EmojiMove.ShrinkOut);
-            window.Viewport.ScrubTo(EmojiAsset.SecondsOf(12));
-            Shot(window, "move-imported");
-        });
-    }
-
-    private static void Shot(Avalonia.Controls.TopLevel window, string name)
-    {
-        if (RenderShots.Directory is not { } directory)
-        {
-            return;
-        }
-
-        Directory.CreateDirectory(directory);
-        Bitmap? frame = window.CaptureRenderedFrame();
-        frame?.Save(Path.Combine(directory, name + ".png"), new PngBitmapEncoderOptions());
     }
 
     private static string RepoRoot()

@@ -63,7 +63,64 @@ public class EmojiShots
         });
     }
 
-    private static void Shot(MainWindow window, string name)
+    /// <summary>작가의 화면(PLAN-ux.md U1 ~ U9) — 이모지 모드 · 수명의 띠 · 인물 · 그림 하나의 그래프 · 움직임 가져오기 · 새 이모지의 첫 화면.</summary>
+    [Fact]
+    public void 이모지_모드의_화면을_그림으로_본다()
+    {
+        HeadlessUi.Run(() =>
+        {
+            string settings = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", $"settings-{Guid.NewGuid():N}.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(settings)!);
+            File.WriteAllText(settings, "{}");
+            var window = new MainWindow(settings) { Width = 1600, Height = 960 };
+            window.Show();
+
+            try
+            {
+                window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
+                window.Session.Open(Path.Combine(RepoRoot(), "examples", "emoji", "emoji-examples.motion-authoring.json"));
+                window.SwitchWorkModeFromForm(Mt.Authoring.Settings.WorkMode.Emoji);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+                // 머무는 이모지 — 띠 셋과 머리에 선 이모지.
+                window.SelectEmoji("star");
+                window.Viewport.ScrubTo(EmojiAsset.SecondsOf(9));
+                Assert.Equal(3, window.LifeBands.Count);
+                Shot(window, "ux-star");
+
+                // 왼쪽 보기 — 인물까지 뒤집힌다.
+                window.SetEmojiFacingLeftFromForm(true);
+                Shot(window, "ux-star-left");
+                window.SetEmojiFacingLeftFromForm(false);
+
+                // 그림 하나를 고르면 그래프는 그 그림의 것만.
+                window.SelectEmoji("twinkle");
+                window.SelectEmojiRigFromForm("center");
+                Shot(window, "ux-twinkle-one-picture");
+                window.SelectEmojiRigFromForm(null);
+
+                // 새 이모지의 첫 화면 → 만들기.
+                window.OpenNewEmojiFromForm();
+                window.FillNewEmojiFromForm("wow", new[] { Path.Combine(RepoRoot(), "examples", "emoji", "art", "star.png") }, true, EmojiMove.PopIn, EmojiMove.Pulse, EmojiMove.ShrinkOut);
+                Shot(window.NewEmojiWindow!, "ux-new-emoji-form");
+                Assert.Equal("wow", window.CreateNewEmojiFromForm());
+                window.Viewport.ScrubTo(EmojiAsset.SecondsOf(5));
+                Shot(window, "ux-new-emoji-made");
+
+                // 움직임 가져오기 — 그림을 골라 머묾에 흔들기를 더한다.
+                window.SelectEmojiRigFromForm("star");
+                window.ImportMoveFromForm(EmojiMove.Shake);
+                window.Viewport.ScrubTo(EmojiAsset.SecondsOf(11));
+                Shot(window, "ux-move-imported");
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    private static void Shot(Avalonia.Controls.TopLevel window, string name)
     {
         if (RenderShots.Directory is not { } directory)
         {
