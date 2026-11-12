@@ -1,0 +1,44 @@
+{
+  "schema": "motion-authoring/2",
+  "motions": [],
+  "emojis": [
+    {
+      "name": "spark",
+      "offsetX": -150,
+      "offsetY": 60,
+      "rigs": [
+        { "name": "big",   "images": [ "../emoji/art/star.png" ], "placeX": 0,  "placeY": 0,  "scale": 0.4 },
+        { "name": "small", "images": [ "../emoji/art/star.png" ], "placeX": 70, "placeY": 50, "scale": 0.2, "rotation": 20 }
+      ],
+      "timeline": {
+        "duration": 1.0,
+        "channels": [
+          {
+            "node": "Emoji_Offset",
+            "kind": "scale",
+            "x": { "keys": [ { "t": 0, "v": 0, "tangent": "flat" }, { "t": 0.125, "v": 1.15, "tangent": "flat" }, { "t": 0.20833334, "v": 1, "tangent": "flat" } ] },
+            "y": { "keys": [ { "t": 0, "v": 0, "tangent": "flat" }, { "t": 0.125, "v": 1.15, "tangent": "flat" }, { "t": 0.20833334, "v": 1, "tangent": "flat" } ] }
+          },
+          {
+            "node": "small/EmojiRig_Image",
+            "kind": "euler",
+            "z": { "keys": [ { "t": 0.25, "v": 0, "tangent": "linear" }, { "t": 0.75, "v": 360, "tangent": "linear" } ] }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "alpha",
+            "x": { "keys": [ { "t": 0.79166669, "v": 1, "tangent": "flat" }, { "t": 1.0, "v": 0, "tangent": "flat" } ] }
+          }
+        ]
+      },
+      "spans": [
+        { "name": "in",   "start": 0,  "end": 5 },
+        { "name": "hold", "start": 6,  "end": 18 },
+        { "name": "out",  "start": 19, "end": 24 }
+      ],
+      "in": "in",
+      "hold": "hold",
+      "out": "out"
+    }
+  ]
+}

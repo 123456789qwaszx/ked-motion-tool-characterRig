@@ -97,6 +97,13 @@ public static class MotionDocumentJson
             foreach (ChannelAsset channel in motion.Channels)
             {
                 Normalize(channel);
+
+                // 손으로(또는 AI가) 쓴 문서는 탄젠트 값을 모른다 — 키의 탄젠트 종류(auto · flat · linear …)대로 값을 세운다.
+                // 편집기가 조작마다 하는 그 계산이라 앱이 저장한 문서는 바뀌지 않는다. free는 적힌 값 그대로다.
+                foreach (ComponentCurve curve in new[] { channel.X, channel.Y, channel.Z }.OfType<ComponentCurve>())
+                {
+                    Graph.TangentMath.Recompute(curve.Keys);
+                }
             }
         }
 

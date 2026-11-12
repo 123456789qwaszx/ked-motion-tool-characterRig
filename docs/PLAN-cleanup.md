@@ -103,3 +103,17 @@
 
 - 같은 지시로 뺀 것: 설정 파일을 옛 자리에서 읽어 오던 것 · `motions.json`의 스키마가 달라도 읽기를 시도하던 것 · "호환용"으로 남아 있던 `PlaybackClock.Loop` · `ViewportView.Loop` · `ViewportView.SetPortrait(비트맵)`.
 - **남긴 것 — 컨트롤러의 별칭**(`controllers.json`의 `aliases` — `Track_Move_X/Y` · `ActingScale_Y`). 주석은 "옛 모션"이라 하지만 런타임의 지금 견본(`nod`)이 그 노드에 키를 둔다 — 옛 파일을 위한 것이 아니라 지금 리그의 축별 노드를 한 손잡이로 보이는 것이다.
+
+## 5. 2단계 — 설명서 (2026-11-12 시작)
+
+두 권이다. 화면으로 쓰는 사람의 것과, 파일을 직접 쓰는 사람(다른 세션의 AI)의 것.
+
+| 권 | 문서 | 상태 |
+|---|---|---|
+| 파일로 만들기 | `docs/AUTHORING-FILES.md` + 예시 `examples/authoring/` | 끝 — 형식 · 규칙 · 손잡이 표 · `mt` · 자주 걸리는 문제 · 점검표. 설명서만 보고 쓴 확인용 문서(모션 둘 · 두 캐릭터의 클립 · 그림 넘기기 이모지)가 `mt validate`를 한 번에 지났다. 예시는 `AuthoringExampleTests`가 지킨다 |
+| 화면으로 만들기 | `docs/USER-GUIDE.md` | 아래 |
+
+### 쓰다가 고친 것
+
+- **손으로 쓴 문서의 탄젠트** — 키에 종류(`auto` · `flat` …)만 적은 문서를 `mt`는 읽을 때 값을 세웠지만 **앱은 세우지 않았다**: 같은 파일이 `mt pose`와 앱의 화면에서 다른 곡선이었다. 값을 세우는 일을 읽기(`MotionDocumentJson.Read`)로 옮겨 둘이 같게 했다. 앱이 저장한 문서는 바뀌지 않는다(테스트).
+

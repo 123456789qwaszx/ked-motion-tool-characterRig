@@ -1,0 +1,55 @@
+{
+  "schema": "motion-authoring/2",
+  "motions": [
+    {
+      "name": "nod_small",
+      "rig": "character",
+      "duration": 0.5,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": { "keys": [
+            { "t": 0,    "v": 0,   "tangent": "flat" },
+            { "t": 0.25, "v": -24, "tangent": "flat" },
+            { "t": 0.5,  "v": 0,   "tangent": "flat" }
+          ] }
+        }
+      ]
+    },
+    {
+      "name": "lean_in",
+      "rig": "character",
+      "duration": 0.75,
+      "end": "commit",
+      "channels": [
+        {
+          "node": "CharacterPortrait_SwayPivot",
+          "kind": "euler",
+          "z": { "keys": [
+            { "t": 0,    "v": 0,  "tangent": "auto" },
+            { "t": 0.5,  "v": -7, "tangent": "auto" },
+            { "t": 0.75, "v": -6, "tangent": "auto" }
+          ] }
+        },
+        {
+          "node": "CharacterPortrait_ActingScale",
+          "kind": "scale",
+          "x": { "keys": [ { "t": 0, "v": 1, "tangent": "auto" }, { "t": 0.75, "v": 1.04, "tangent": "auto" } ] },
+          "y": { "keys": [ { "t": 0, "v": 1, "tangent": "auto" }, { "t": 0.75, "v": 1.04, "tangent": "auto" } ] }
+        }
+      ]
+    }
+  ],
+  "clips": [
+    {
+      "name": "greet",
+      "roles": [ { "name": "a", "rig": "character", "object": "s1" } ],
+      "tracks": [
+        { "role": "a", "blocks": [ { "at": 0, "motion": "lean_in", "mode": "relative" } ] },
+        { "role": "a", "blocks": [ { "at": 0.25, "motion": "nod_small", "mode": "relative", "repeat": 2 } ] }
+      ]
+    }
+  ]
+}

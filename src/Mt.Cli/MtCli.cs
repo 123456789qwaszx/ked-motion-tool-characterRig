@@ -473,13 +473,6 @@ public static class MtCli
 
         rig = dump is null ? BuiltinTuning.RigSchemas : RigSchemaFile.Load(dump);
 
-        // 손으로(또는 AI가) 쓴 문서는 탄젠트 값을 모른다 — 키의 탄젠트 종류(auto·flat·linear…)대로 값을 세운다. 앱이 편집할 때마다 하는 그 계산이고,
-        // 앱이 저장한 문서에는 아무것도 안 바꾼다(이미 그 값이다). free는 적힌 값 그대로 둔다.
-        foreach (ComponentCurve curve in document.AllMotions.SelectMany(m => m.Channels).SelectMany(c => new[] { c.X, c.Y, c.Z }).OfType<ComponentCurve>())
-        {
-            Mt.Authoring.Graph.TangentMath.Recompute(curve.Keys);
-        }
-
         return document;
     }
 
