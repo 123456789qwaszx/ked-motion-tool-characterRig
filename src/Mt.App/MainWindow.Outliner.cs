@@ -136,6 +136,12 @@ public partial class MainWindow
             header.Children.Add(titleBlock);
             _channelRows.Children.Add(header);
 
+            // 키가 없는 컨트롤러는 이름 한 줄만 — 성분 줄은 키가 있거나 고른 것에만 편다(순서는 표 그대로다. 키가 있는 줄을 찾느라 내리지 않게).
+            if (!keyed && !isSelected)
+            {
+                continue;
+            }
+
             foreach (CurveRef curveRef in curves)
             {
                 string label = $"{ChannelKindLabel.Of(curveRef.Kind)} {curveRef.Axis.ToString().ToUpperInvariant()}" + (curveRef.Node == c.Node ? "" : $"  · {curveRef.Node}");

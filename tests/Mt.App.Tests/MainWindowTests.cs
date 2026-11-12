@@ -568,10 +568,10 @@ public class MainWindowTests
                 window.Session.Editor.SetKeys("nod", y.Node, y.Kind, y.Axis, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
 
                 // 컨트롤러 10개 전부, 표 순서 그대로(선택·키와 무관 — 순서가 바뀌면 헷갈린다).
-                // 행 수 = 컨트롤러 10 + 표가 쓰는 성분(B): 몸 2 · 자리 2 · 슬롯 기울기 1 · 자세 배율 2 · 깊이 3(배율 X·Y + 깊이 Y) · 기울기 1 · 숙임 1 · 떨림 2 · 크기 2 · 방향 1 = 17.
+                // 행 수 = 컨트롤러 10 + 키가 있는(또는 고른) 컨트롤러의 성분: 몸 2. 키가 없는 컨트롤러는 이름 한 줄이다.
                 string[] tableOrder = { "place", "slotLean", "stance", "depth", "body", "lean", "bow", "shake", "squash", "facing" };
                 Assert.Equal(tableOrder, window.OutlinerOrder);
-                Assert.Equal(27, window.OutlinerRowCount);
+                Assert.Equal(12, window.OutlinerRowCount);
                 Assert.Single(window.Graph.Curves);
 
                 // 흐린 성분(몸 X) 클릭은 성분을 만들지 않는다(A2) — 그 컨트롤러를 고를 뿐.

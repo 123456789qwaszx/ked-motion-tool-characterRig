@@ -257,6 +257,18 @@ public partial class MainWindow
                 continue;
             }
 
+            // 비어 있는 무대(stage01 · stage02)는 감춘다 — 찾는 것은 캐릭터와 그 손잡이다. 첫 무대는 비어도 둔다(세울 자리).
+            // 다른 무대로 옮기는 것은 채널 박스의 씬 탭에서 한다.
+            if (!_settings.ShowStageSkeleton)
+            {
+                string stageOf = isContent ? stage : StageNodes.Stages.First(st => StageNodes.StageRootOf(st) == node.id);
+
+                if (stageOf != SceneObject.DefaultStage && !occupied.Contains(StageNodes.StageRootOf(stageOf)))
+                {
+                    continue;
+                }
+            }
+
             TreeViewItem parentItem = root;
 
             for (string up = parentOf[node.id]; up != RigSchemaLoader.RootKey && parentOf.ContainsKey(up); up = parentOf[up])

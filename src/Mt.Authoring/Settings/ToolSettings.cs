@@ -83,9 +83,9 @@ public sealed class ToolSettings
     public double RightPanelWidth { get; set; } = 280;
 
     /// <summary>창 배치 — 뷰포트 : 그래프/도프 시트 높이 비율(별 단위).</summary>
-    public double ViewportRowStar { get; set; } = 2;
+    public double ViewportRowStar { get; set; } = 3;
 
-    public double GraphRowStar { get; set; } = 3;
+    public double GraphRowStar { get; set; } = 2;
 
     /// <summary>타임라인(그래프 위)의 높이 px — 사이의 스플리터를 끌면 남는다. 0이면 트랙 수에 맞춘다.</summary>
     public double TimelineHeight { get; set; }
@@ -137,8 +137,8 @@ public sealed class ToolSettings
             settings.AutoSaveMinutes = Math.Clamp(settings.AutoSaveMinutes, 0, 120);
             settings.LeftPanelWidth = Math.Clamp(settings.LeftPanelWidth, MinPanelWidth, 800);
             settings.RightPanelWidth = Math.Clamp(settings.RightPanelWidth, MinPanelWidth, 800);
-            settings.ViewportRowStar = settings.ViewportRowStar > 0 ? settings.ViewportRowStar : 2;
-            settings.GraphRowStar = settings.GraphRowStar > 0 ? settings.GraphRowStar : 3;
+            settings.ViewportRowStar = settings.ViewportRowStar > 0 ? settings.ViewportRowStar : 3;
+            settings.GraphRowStar = settings.GraphRowStar > 0 ? settings.GraphRowStar : 2;
             return settings;
         }
         catch (JsonException exception)

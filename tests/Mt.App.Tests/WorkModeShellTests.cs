@@ -282,7 +282,7 @@ public class WorkModeShellTests
         {
             MotionEditor editor = window.Session.Editor;
             editor.AddMotion("nod", "character", 0.6f);
-            editor.KeyComponents("nod", "CharacterPortrait_Track_Y", Mt.Authoring.Model.ChannelKind.Position, 0f,
+            editor.KeyComponents("nod", "CharacterPortrait_Track_Move_Y", Mt.Authoring.Model.ChannelKind.Position, 0f,
                 new[] { (Mt.Authoring.Model.Axis.Y, 1f) }, Mt.Authoring.Model.TangentMode.Flat);
             window.SelectMotion("nod");
 

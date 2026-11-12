@@ -380,7 +380,7 @@ public partial class MainWindow : Window
     {
         // 위: 뷰포트 + (이모지 모드의 수명의 띠) + 트랜스포트 + 레인지 줄(한 덩어리, 아래 줄들은 늘 제 높이) · 스플리터 · 아래: 그래프/도프 시트.
         // 스플리터는 덩어리와 탭의 별 높이만 바꾼다 — 레인지 줄이 늘어나지 않는다.
-        var grid = new Grid { RowDefinitions = new RowDefinitions("2*,4,3*") };
+        var grid = new Grid { RowDefinitions = new RowDefinitions("3*,4,2*") };
         grid.RowDefinitions[0].MinHeight = 200;
         grid.RowDefinitions[2].MinHeight = 160;
         _centerGrid = grid;

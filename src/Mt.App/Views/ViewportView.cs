@@ -1539,9 +1539,25 @@ public sealed partial class ViewportView : Control
         if (portrait is null)
         {
             var outline = new PolylineGeometry(new[] { topLeft, topRight, bottomRight, bottomLeft, topLeft }, true);
-            context.DrawGeometry(PlaceholderFill, PlaceholderPen, outline);
-            context.DrawLine(PlaceholderPen, topLeft, bottomRight);
-            context.DrawLine(PlaceholderPen, topRight, bottomLeft);
+            context.DrawGeometry(null, PlaceholderPen, outline);
+
+            // 초상이 없다 — 빈 사각형만으로는 무엇이 캐릭터인지 모른다. 그 자리에 사람의 꼴(머리 · 몸)을 그려 둔다.
+            // 사각형의 (u, v)로 그리므로 모션(이동 · 회전 · 크기)을 그대로 따라간다.
+            Point At(double u, double v) => new(
+                topLeft.X + (topRight.X - topLeft.X) * u + (bottomLeft.X - topLeft.X) * v,
+                topLeft.Y + (topRight.Y - topLeft.Y) * u + (bottomLeft.Y - topLeft.Y) * v);
+
+            var head = new Point[24];
+
+            for (int i = 0; i < head.Length; i++)
+            {
+                double angle = Math.PI * 2 * i / head.Length;
+                head[i] = At(0.5 + Math.Cos(angle) * 0.2, 0.17 + Math.Sin(angle) * 0.13);
+            }
+
+            Point[] body = { At(0.42, 0.3), At(0.58, 0.3), At(0.86, 0.44), At(0.9, 1), At(0.1, 1), At(0.14, 0.44) };
+            context.DrawGeometry(PlaceholderFill, null, new PolylineGeometry(head.Append(head[0]), true));
+            context.DrawGeometry(PlaceholderFill, null, new PolylineGeometry(body.Append(body[0]), true));
         }
         else
         {
