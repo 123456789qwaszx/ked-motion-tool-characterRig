@@ -1,6 +1,6 @@
 # 인수인계 — ked-motion-tool-characterRig
 
-이 저장소의 일을 이어받는 사람(세션)이 먼저 읽는다. 쓰는 법은 [`USER-GUIDE.md`](USER-GUIDE.md), 코드를 고치는 절차는
+이 저장소의 일을 이어받는 사람(세션)이 먼저 읽는다. 쓰는 법은 [`USER-GUIDE.md`](USER-GUIDE.md)(화면) · [`AUTHORING-FILES.md`](AUTHORING-FILES.md)(파일), 코드를 고치는 절차는
 [`MAINTENANCE.md`](MAINTENANCE.md), 방향은 [`PLAN-characterRig.md`](PLAN-characterRig.md), 지금 하는 일은 [`PLAN-cleanup.md`](PLAN-cleanup.md).
 문서와 코드가 다르면 코드와 테스트가 이긴다. (2026-11-12 다시 씀)
 
@@ -56,7 +56,7 @@ Ked.Presentation.Core  (런타임 코어의 사본 — netstandard2.1 · C# 9, �
    │      Services/         DocumentSession — 경로 · 덤프 · 자산 동기화 · 저장 · 내보내기 · 자동 저장
    └─► Mt.Cli          mt info · validate · export · emojis · pose · bake
 tests/    Ked.Presentation.Core.Tests(NUnit) · Mt.Authoring.Tests · Mt.App.Tests(헤드리스 — HeadlessUi.Run)
-examples/ emoji/ — 런타임의 이모지 견본 셋(빌더 tests/Mt.Authoring.Tests/EmojiExamples.cs가 쓴다)
+examples/ emoji/ — 런타임의 이모지 견본 셋(빌더 tests/Mt.Authoring.Tests/EmojiExamples.cs가 쓴다) · authoring/ — 손으로 쓴 예시(AUTHORING-FILES.md)
 tools/    유니티 프리팹에서 무대 뼈대를 다시 뽑는 스크립트
 ```
 
@@ -87,7 +87,8 @@ tools/    유니티 프리팹에서 무대 뼈대를 다시 뽑는 스크립트
 ## 6. 지금 어디인가 (2026-11-12)
 
 - 끝난 것: 이모지(새 정의, `emojis/2`) · 화면 다시 짜기(모드 · 수명의 띠 · 인물 · 움직임 가져오기 · 새 이모지) · 트윈머신 · **정리 1단계**(`PLAN-cleanup.md`).
-- 다음: **2단계 설명서** — 사람이 화면으로 쓰는 법, 파일을 직접 쓰는 사람(다른 세션의 AI)이 보는 형식과 `mt` 쓰는 법. 그 다음 **3단계** — 불편을 모아 하나씩 고친다.
+- 끝난 것(이어서): **2단계 설명서** — `USER-GUIDE.md`(화면) · `AUTHORING-FILES.md`(파일 · `mt`).
+- 다음: **3단계** — 불편을 모아 하나씩 고친다.
 - 남은 빚: 코어 사본의 전체 재반입 · Windows 패키지와 그 CI.
 - 헤드리스가 못 보는 것(사람이 확인한다): 실제 끌어다 놓기 · 파일 고르는 창 · 따로 뜨는 창이 위에 머무는가 · 한글 입력.
 

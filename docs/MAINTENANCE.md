@@ -15,7 +15,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 
 - SDK는 `global.json`(10.0.100, latestFeature). 패키지 판은 `Directory.Packages.props` 한 곳(Avalonia 12.1.1).
 - `Directory.Build.props`: ImplicitUsings·Nullable·TreatWarningsAsErrors·LangVersion latest. 반입 코어만 자기 csproj에서 LangVersion 9 · netstandard2.1 · ImplicitUsings/Nullable 끔으로 되돌린다(유니티 호환).
-- CI: `.github/workflows/test.yml` — `main`·`dev` 푸시와 PR, ubuntu-latest, restore → build → test. 테스트 프로젝트 셋(Core 426 · Authoring 301 · App 132건, 2026-11-12). Windows 패키지 스모크는 아직 없다.
+- CI: `.github/workflows/test.yml` — `main`·`dev` 푸시와 PR, ubuntu-latest, restore → build → test. 테스트 프로젝트 셋(Core 426 · Authoring 306 · App 132건, 2026-11-12). Windows 패키지 스모크는 아직 없다.
 - 로컬에 SDK를 못 깔면 CI가 유일한 검증이다. `dotnet test`의 요약 줄이 **셋**(세 프로젝트) 나오는지 세고 "전부 통과"라고 말한다 — 빌드에 실패한 프로젝트는 조용히 건너뛴다.
 
 ## 2. 코드 지도 — 어디를 열면 되나
@@ -134,7 +134,8 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 | 문서 | 내용 |
 |---|---|
 | `README.md` | 무엇인가 · 처음 열기 · `mt` · 문서의 지도 · 빌드 |
-| `docs/HANDOFF.md` · `USER-GUIDE.md` · `MAINTENANCE.md` | 인수인계 · 사용법 · 이 문서 |
+| `docs/HANDOFF.md` · `MAINTENANCE.md` | 인수인계 · 이 문서 |
+| `docs/USER-GUIDE.md` · `AUTHORING-FILES.md` | 설명서 두 권 — 화면으로 만들기 · 파일로 만들기. **화면 · 형식 · 규칙 · `mt`의 출력을 바꾸면 같이 고친다**(`AUTHORING-FILES.md`의 예시는 `AuthoringExampleTests`가 지킨다) |
 | `docs/PLAN-characterRig.md` | 이 저장소의 방향(스키마 계약 · 컨트롤러 · 산출물) |
 | `docs/PLAN-cleanup.md` | 정리 → 설명서 → 불편 고치기 |
 | `docs/history/` | 끝난 일의 계획서 — 결정의 까닭. 지금의 명세가 아니다 |
