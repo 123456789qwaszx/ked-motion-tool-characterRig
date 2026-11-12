@@ -41,6 +41,20 @@ public partial class MainWindow
     /// <summary>테스트 손잡이 — 가운데 아래 탭 번호.</summary>
     internal int EditorTab => _editorTabs.SelectedIndex;
 
+    /// <summary>테스트 손잡이 — 가운데 아래의 탭(0 그래프 · 1 도프 시트)과 오른쪽의 탭(0 채널 박스 · 1 씬 · 2 모션 · 3 클립)을 누른 것과 같다.</summary>
+    internal void ShowTabsFromForm(int? editor = null, int? inspector = null)
+    {
+        if (editor is { } e)
+        {
+            _editorTabs.SelectedIndex = e;
+        }
+
+        if (inspector is { } i)
+        {
+            _inspectorTabs.SelectedIndex = i;
+        }
+    }
+
     internal string? SelectedClip => _clipList.SelectedItem as string;
 
     /// <summary>테스트 손잡이 — 클립 목록에서 고른다(null이면 푼다).</summary>

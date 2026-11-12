@@ -13,7 +13,7 @@
 |---|---|---|
 | 캐릭터 모션 | "캐릭터 모션" 모드 — 모션 목록 · 하이어아키 · 채널 박스 · 그래프 | `motions.json` (`motions/2`) |
 | 이모지 | "이모지" 모드 — 이모지 목록 · 그림 목록 · 수명의 띠 · 그래프 | `emojis.json` (`emojis/2`) |
-| 연출 클립 | 캐릭터 모션 모드의 타임라인 탭 — 모션 블록을 배역 · 트랙에 놓아 겹쳐 본다 | 굽기로 모션 하나가 되어 `motions.json`으로 |
+| 연출 클립 | 캐릭터 모션 모드(클립을 고르면 그래프 위에 타임라인이 선다) — 모션 블록을 배역 · 트랙에 놓아 겹쳐 본다 | 굽기로 모션 하나가 되어 `motions.json`으로 |
 
 - 저장소 `123456789qwaszx/ked-motion-tool-characterRig`. 일은 **`dev`**에서 한다(`main`은 출발점 그대로). CI는 푸시와 PR에서 빌드 · 테스트(Linux).
 - .NET 10 SDK · Avalonia 12 · xunit + Avalonia.Headless(화면) · NUnit(코어 사본의 테스트).

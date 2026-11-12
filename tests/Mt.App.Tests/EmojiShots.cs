@@ -47,6 +47,7 @@ public class EmojiShots
                 window.SetEmojiLifeFromForm(false);
                 window.SelectEmoji("question");
                 window.Viewport.ScrubTo(EmojiAsset.SecondsOf(10));
+                window.Viewport.FrameEmoji();
                 Shot(window, "emoji-question-right");
                 float right = window.Viewport.EmojiRigCenter("mark")!.Value.X;
                 window.SetEmojiFacingLeftFromForm(true);

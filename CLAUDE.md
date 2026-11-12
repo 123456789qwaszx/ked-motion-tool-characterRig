@@ -3,7 +3,7 @@
 **캐릭터 리그와 이모지**를 다루는 저작 도구(.NET 10 + Avalonia 12). 구조는 유니티가 정한다 — 유니티가 덤프한 스키마를 단단하게 따르고, 캐릭터와 이모지를 전용 컨트롤러로 다룬다.
 
 - 먼저 읽을 것: `docs/HANDOFF.md`(무엇인가 · 구조 · 정해진 것) → `docs/PLAN-cleanup.md`(지금 하는 일 — 정리 → 설명서 → 불편 고치기). 단계가 끝날 때마다 하고 있는 계획서에 결정과 상태를 적는다.
-- 방향은 `docs/PLAN-characterRig.md`, 코드를 고치는 절차 · 코어 사본의 동기화는 `docs/MAINTENANCE.md`와 `src/Ked.Presentation.Core/vendoring.md`, 쓰는 법은 `docs/USER-GUIDE.md`(화면으로) · `docs/AUTHORING-FILES.md`(파일을 직접 써서 — 다른 세션의 AI가 본다).
+- 방향은 `docs/PLAN-characterRig.md`, 코드를 고치는 절차 · 코어 사본의 동기화는 `docs/MAINTENANCE.md`와 `src/Ked.Presentation.Core/vendoring.md`, 쓰는 법은 `docs/guide/README.md`(그림 설명서) · `docs/USER-GUIDE.md`(화면으로, 조작 전부) · `docs/AUTHORING-FILES.md`(파일을 직접 써서 — 다른 세션의 AI가 본다).
 - `docs/history/`는 끝난 일의 계획서다(이모지 · 화면 다시 짜기 · 트윈머신 · 클립 · 씬 …) — 지금의 명세가 아니다. 결정의 까닭을 찾을 때만 읽는다(코드 주석의 `PLAN-*.md`는 그 폴더의 것).
 - `main`은 출발점(`ked-motion-tool-extend`의 `d37c678`) 그대로다. 일은 `dev`에서 한다.
 - 형제 저장소: `ked-motion-tool-extend`(컷 — 씬 + 카메라 + 타임라인) · `ked-motion-tool-screenTransition`(화면 전환). 여기서는 그 둘의 일(세트 · 조립 · 컷 · 전환)을 하지 않는다.
@@ -30,10 +30,10 @@ dotnet test KedMotionTool.sln -c Release --no-build
 MT_WRITE_EXAMPLES=1 dotnet test tests/Mt.Authoring.Tests -c Release --filter EmojiExampleTests
 ```
 
-화면을 그림으로 뽑는다(헤드리스가 Skia로 실제 렌더 — 고친 화면은 눈으로 확인한다). `MT_RENDER_DIR`이 있을 때만 켜지고, 장면 테스트는 `RenderShots`(`tests/Mt.App.Tests/HeadlessUi.cs`)로 그림을 낸다 — 이모지 화면은 `EmojiShots`(예시 문서의 장면 `emoji-*`와 이모지 모드의 화면 `ux-*`):
+화면을 그림으로 뽑는다(헤드리스가 Skia로 실제 렌더 — 고친 화면은 눈으로 확인한다). `MT_RENDER_DIR`이 있을 때만 켜지고, 장면 테스트는 `RenderShots`(`tests/Mt.App.Tests/HeadlessUi.cs`)로 그림을 낸다 — 이모지 화면은 `EmojiShots`(예시 문서의 장면 `emoji-*`와 이모지 모드의 화면 `ux-*`), 캐릭터 모션 화면은 `GuideShots`(`guide-*`). 그림 설명서의 그림은 이 화면들에 `python3 tools/guide-figures.py <폴더> docs/guide/img`가 번호를 얹어 만든다:
 
 ```bash
-MT_RENDER_DIR=<폴더> dotnet test tests/Mt.App.Tests -c Release --filter EmojiShots
+MT_RENDER_DIR=<폴더> dotnet test tests/Mt.App.Tests -c Release --filter Shots
 ```
 
 ## 관습
