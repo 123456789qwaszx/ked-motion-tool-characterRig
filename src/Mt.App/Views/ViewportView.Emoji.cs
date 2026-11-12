@@ -55,11 +55,15 @@ public sealed partial class ViewportView
 
         public float X, Y, Sx = 1f, Sy = 1f, Rotation;
         public float NowX, NowY, NowSx = 1f, NowSy = 1f, NowRotation;
+
+        /// <summary>끌기 시작할 때 이 그림의 가운데(루트 공간) — 무리째 돌리거나 늘일 때 여기서 가운데 점까지의 팔이 돈다.</summary>
+        public Vec2 OriginRoot;
     }
 
     /// <summary>
     /// 끄는 중인 조작 하나 — 고른 그림 전부(없으면 이모지 전체)를 함께 끈다. 기본값인가 키인가, 어느 손잡이인가.
-    /// 끄는 동안은 문서를 바꾸지 않고 보이기만 한다. 이동은 화면의 같은 거리만큼, 회전 · 크기는 그림마다 제 가운데에서.
+    /// 끄는 동안은 문서를 바꾸지 않고 보이기만 한다. 이동은 화면의 같은 거리만큼. 회전 · 크기는 하나면 제 가운데에서,
+    /// 여럿이면 **무리의 가운데 점**(매니퓰레이터가 선 곳)을 축으로 — 그림마다 돌고(커지고) 자리도 그 점을 돌아(그 점에서 멀어져) 옮겨 간다.
     /// </summary>
     private sealed class EmojiManip
     {
@@ -73,8 +77,14 @@ public sealed partial class ViewportView
         public Vec2 PivotRoot;
         public Vec2 ScaleDirection;
 
+        /// <summary>그림 여럿을 함께 끄는가 — 회전 · 크기가 가운데 점을 축으로 자리까지 옮긴다.</summary>
+        public bool Group => Items.Count > 1;
+
         /// <summary>축 화살표를 끌 때 그 축의 방향(루트 공간, 길이 1) — 끈 거리를 이 방향으로만 남긴다.</summary>
         public Vec2? AxisRoot;
+
+        /// <summary>크기의 축 손잡이를 끌 때 그 팔의 방향(루트 공간, 길이 1) — 무리의 자리를 이 방향으로만 늘인다.</summary>
+        public Vec2? ScaleAxisRoot;
 
         public bool Moved;
     }
@@ -686,6 +696,24 @@ public sealed partial class ViewportView
         }
 
         (Vec2 origin, Vec2 xAxis, Vec2 yAxis) = PortraitLayout.Axes(now.Tree, key, 100f);
+
+        // 여럿을 골랐으면 매니퓰레이터는 그 그림들의 가운데 점에 선다(축의 방향은 마지막에 고른 그림의 것) — 회전 · 크기가 그 점을 축으로 한다.
+        if (_selectedEmojiRigs.Count > 1)
+        {
+            List<Vec2> origins = _selectedEmojiRigs
+                .Select(rig => EmojiTargetNode(now, rig))
+                .Where(node => node is not null)
+                .Select(node => now.Tree.TransformPoint(node!, Vec3.Zero).XY)
+                .ToList();
+
+            if (origins.Count > 1)
+            {
+                var middle = new Vec2(origins.Average(o => o.X), origins.Average(o => o.Y));
+                Vec2 shift = middle - origin;
+                (origin, xAxis, yAxis) = (middle, xAxis + shift, yAxis + shift);
+            }
+        }
+
         Point center = ToControl(origin);
         return (center, Along(center, ToControl(xAxis)), Along(center, ToControl(yAxis)));
     }
@@ -750,8 +778,11 @@ public sealed partial class ViewportView
 
         // 1. 매니퓰레이터의 손잡이 — 그 밑에 다른 그림이 있어도 고르기가 넘어가지 않는다.
         //    대상이 이모지 전체일 때 가운데 손잡이는 그림 위에 놓이기 쉽다 — 그 자리에 그림이 있으면 그림 고르기가 이긴다(팔은 늘 잡힌다).
+        //    여럿을 골랐을 때 이동의 가운데 손잡이(무리의 가운데 점)가 고른 그림 위에 놓였으면 그림을 누른 것으로 본다 —
+        //    끌면 똑같이 함께 가고, 끌지 않고 놓으면 그것만 남는다.
         if (!additive && EmojiGizmoPoints(now) is { } gizmo && GizmoDragAt(position, gizmo) is var handle && handle != Drag.None
-            && !(_selectedEmojiRigs.Count == 0 && handle is Drag.MoveFree or Drag.ScaleFree && EmojiRigsAt(now, ToRoot(position)).Count > 0))
+            && !(_selectedEmojiRigs.Count == 0 && handle is Drag.MoveFree or Drag.ScaleFree && EmojiRigsAt(now, ToRoot(position)).Count > 0)
+            && !(_selectedEmojiRigs.Count > 1 && handle == Drag.MoveFree && EmojiRigsAt(now, ToRoot(position)).Any(_selectedEmojiRigs.Contains)))
         {
             _emojiPress = BeginEmojiManip(emoji, now, handle, position, gizmo);
             return _emojiPress;
@@ -866,6 +897,7 @@ public sealed partial class ViewportView
             }
 
             (item.NowX, item.NowY, item.NowSx, item.NowSy, item.NowRotation) = (item.X, item.Y, item.Sx, item.Sy, item.Rotation);
+            item.OriginRoot = now.Tree.TransformPoint(item.Node, Vec3.Zero).XY;
             manip.Items.Add(item);
         }
 
@@ -876,6 +908,13 @@ public sealed partial class ViewportView
 
         Point arm = drag == Drag.ScaleY ? gizmo.YEnd : gizmo.XEnd;
         manip.ScaleDirection = new Vec2((float)(arm.X - gizmo.Center.X), (float)(arm.Y - gizmo.Center.Y));
+
+        if (drag is Drag.ScaleX or Drag.ScaleY)
+        {
+            Vec2 scaleAxis = ToRoot(arm) - manip.PivotRoot;
+            float scaleLength = (float)Math.Sqrt(scaleAxis.X * scaleAxis.X + scaleAxis.Y * scaleAxis.Y);
+            manip.ScaleAxisRoot = scaleLength < 1e-6f ? null : new Vec2(scaleAxis.X / scaleLength, scaleAxis.Y / scaleLength);
+        }
 
         // 축 화살표 — 그 화살표가 가리키는 방향(매니퓰레이터가 선 그림의 축)으로만 움직인다. 여럿이면 다 같은 방향으로 간다.
         if (drag is Drag.MoveX or Drag.MoveY)
@@ -943,10 +982,19 @@ public sealed partial class ViewportView
             case Drag.Rotate:
             {
                 float angle = PoseEdit.AngleDelta(manip.PivotRoot, manip.StartRoot, root);
+                double radians = angle * Math.PI / 180.0;
+                (float cos, float sin) = ((float)Math.Cos(radians), (float)Math.Sin(radians));
 
                 foreach (EmojiManipItem item in manip.Items)
                 {
                     item.NowRotation = (float)Math.Round(item.Rotation + angle, 1);
+
+                    // 여럿이면 무리째 돈다 — 가운데 점에서 이 그림까지의 팔을 같은 각만큼 돌린 곳으로 자리를 옮긴다.
+                    if (manip.Group && now.Tree.Contains(item.Node))
+                    {
+                        Vec2 arm = item.OriginRoot - manip.PivotRoot;
+                        MoveGroupItem(now.Tree, item, manip.PivotRoot + new Vec2(arm.X * cos - arm.Y * sin, arm.X * sin + arm.Y * cos));
+                    }
                 }
 
                 break;
@@ -967,6 +1015,24 @@ public sealed partial class ViewportView
                 {
                     item.NowSx = both || manip.Drag == Drag.ScaleX ? (float)Math.Round(item.Sx * factor, 3) : item.Sx;
                     item.NowSy = both || manip.Drag == Drag.ScaleY ? (float)Math.Round(item.Sy * factor, 3) : item.Sy;
+
+                    // 여럿이면 무리째 커진다 — 가운데 점에서 이 그림까지의 팔도 같은 배로(축 손잡이면 그 축의 방향으로만) 늘인다.
+                    if (manip.Group && now.Tree.Contains(item.Node))
+                    {
+                        Vec2 arm = item.OriginRoot - manip.PivotRoot;
+
+                        if (manip.Drag == Drag.ScaleFree || manip.ScaleAxisRoot is not { } axis)
+                        {
+                            arm = new Vec2(arm.X * factor, arm.Y * factor);
+                        }
+                        else
+                        {
+                            float along = arm.X * axis.X + arm.Y * axis.Y;
+                            arm = new Vec2(arm.X + axis.X * along * (factor - 1f), arm.Y + axis.Y * along * (factor - 1f));
+                        }
+
+                        MoveGroupItem(now.Tree, item, manip.PivotRoot + arm);
+                    }
                 }
 
                 break;
@@ -974,6 +1040,14 @@ public sealed partial class ViewportView
         }
 
         InvalidateVisual();
+    }
+
+    /// <summary>무리째 돌리거나 늘이는 중 — 그 그림의 가운데가 루트 공간의 <paramref name="toRoot"/>로 가도록 자리를 바꾼다(보이기만).</summary>
+    private static void MoveGroupItem(RectNodeTree tree, EmojiManipItem item, Vec2 toRoot)
+    {
+        Vec2 delta = PoseEdit.RootDeltaToLocal(tree, item.Node, item.OriginRoot, toRoot);
+        item.NowX = (float)Math.Round(item.X + delta.X, 1);
+        item.NowY = (float)Math.Round(item.Y + delta.Y, 1);
     }
 
     /// <summary>
@@ -1098,6 +1172,12 @@ public sealed partial class ViewportView
                 };
 
                 KeyEmoji(emoji, item.Rig, kind, values);
+
+                // 무리째 돌리거나 늘였으면 자리도 옮겨 갔다 — 자리의 키도 함께 놓는다.
+                if (manip.Group && kind != ChannelKind.Position)
+                {
+                    KeyEmoji(emoji, item.Rig, ChannelKind.Position, new[] { (Axis.X, item.NowX), (Axis.Y, item.NowY) });
+                }
             }
         });
         PoseKeyed?.Invoke(this, EventArgs.Empty);

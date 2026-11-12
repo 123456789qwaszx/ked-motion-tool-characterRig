@@ -336,15 +336,85 @@ public class EmojiManipulateShellTests
             Assert.Equal(150f, Rig(window, "c").PlaceX, 3);
             Assert.Equal(-150f, Rig(window, "a").PlaceX, 3);
 
-            // 회전은 그림마다 제 가운데에서 — 자리는 그대로, 각만 같이 돈다.
+            // 회전은 무리째 — 매니퓰레이터가 둘의 가운데 점에 서고, 그 점을 축으로 각도 자리도 함께 돈다.
             window.PickToolFromStrip(ManipulatorMode.Rotate);
             Point center = Gizmo(window).Center;
+            Point middle = new((CenterOf(window, "a").X + CenterOf(window, "c").X) / 2, (CenterOf(window, "a").Y + CenterOf(window, "c").Y) / 2);
+            Assert.Equal(middle.X, center.X, 1);
+            Assert.Equal(middle.Y, center.Y, 1);
             double arm = Gizmo(window).XEnd.X - center.X;
-            Assert.True(window.Viewport.DragEmojiForTest(new Point(center.X + arm, center.Y), new Point(center.X, center.Y - arm)));
+            before = editor.Revision;
+            Assert.True(window.Viewport.DragEmojiForTest(new Point(center.X + arm, center.Y), new Point(center.X, center.Y - arm))); // 오른쪽에서 위로 = 반시계 90°
+            Assert.Equal(before + 1, editor.Revision);
             Assert.Equal(90f, Rig(window, "a").Rotation, 0);
             Assert.Equal(90f, Rig(window, "c").Rotation, 0);
             Assert.Equal(0f, Rig(window, "b").Rotation, 3);
-            Assert.Equal(-150f, Rig(window, "a").PlaceX, 3);
+
+            // 오른쪽에 있던 c는 위로, 왼쪽에 있던 a는 아래로 갔다 — 가운데 점은 그대로다.
+            Assert.Equal(0f, Rig(window, "c").PlaceX, 0);
+            Assert.Equal(150f, Rig(window, "c").PlaceY, 0);
+            Assert.Equal(0f, Rig(window, "a").PlaceX, 0);
+            Assert.Equal(-150f, Rig(window, "a").PlaceY, 0);
+            Assert.Equal((0f, 0f), (Rig(window, "b").PlaceX, Rig(window, "b").PlaceY));
+            Point after = Gizmo(window).Center;
+            Assert.Equal(center.X, after.X, 1);
+            Assert.Equal(center.Y, after.Y, 1);
+
+            // 하나만 고르면 전처럼 제 가운데에서 돈다 — 자리는 그대로.
+            editor.Undo();
+            window.SelectEmojiRigFromForm("c");
+            Point own = Gizmo(window).Center;
+            Assert.True(window.Viewport.DragEmojiForTest(new Point(own.X + arm, own.Y), new Point(own.X, own.Y - arm)));
+            Assert.Equal(90f, Rig(window, "c").Rotation, 0);
+            Assert.Equal(150f, Rig(window, "c").PlaceX, 3);
+        });
+    }
+
+    [Fact]
+    public void 여럿의_크기는_가운데_점에서_멀어지며_커지고_자동_키면_자리의_키도_놓인다()
+    {
+        Run(window =>
+        {
+            MotionEditor editor = window.Session.Editor;
+            EmojiRigFrame frame = window.Session.EmojiFrame!;
+            ThreeInARow(window);
+            window.SelectEmojiRigsFromForm("a", "c");
+            window.PickToolFromStrip(ManipulatorMode.Scale);
+
+            // 가운데 손잡이를 팔 하나만큼 밖으로 = ×2. 그림도 두 배, 가운데 점까지의 거리도 두 배.
+            Point center = Gizmo(window).Center;
+            double arm = Gizmo(window).XEnd.X - center.X;
+            long before = editor.Revision;
+            Assert.True(window.Viewport.DragEmojiForTest(center, center + new Vector(arm, 0)));
+            Assert.Equal(before + 1, editor.Revision);
+            float grew = Rig(window, "c").Scale;
+            Assert.True(grew > 1.5f, $"배율 {grew}");
+            Assert.Equal(150f * grew, Rig(window, "c").PlaceX, 0);
+            Assert.Equal(-150f * grew, Rig(window, "a").PlaceX, 0);
+            Assert.Equal(1f, Rig(window, "b").Scale, 3);
+            editor.Undo();
+
+            // Auto Key — 무리째 돌리면 회전과 함께 자리의 키도 놓인다(한 칸).
+            window.SetAutoKeyFromStrip(true);
+            window.Viewport.ScrubTo(EmojiAsset.SecondsOf(6));
+            window.PickToolFromStrip(ManipulatorMode.Rotate);
+            center = Gizmo(window).Center;
+            before = editor.Revision;
+            Assert.True(window.Viewport.DragEmojiForTest(new Point(center.X + arm, center.Y), new Point(center.X, center.Y - arm)));
+            Assert.Equal(before + 1, editor.Revision);
+            MotionAsset timeline = editor.Document.Find(EmojiAsset.TimelineNameOf("emoji"))!;
+
+            foreach (string rig in new[] { "a", "c" })
+            {
+                Assert.Equal(90f, timeline.FindChannel(frame.TargetNode(rig), ChannelKind.Euler)!.Z!.Keys.Single().V, 0);
+                Assert.NotNull(timeline.FindChannel(frame.TargetNode(rig), ChannelKind.Position));
+            }
+
+            // 키의 자리는 기본 자리에 얹히는 값이다 — c는 (150, 0)에서 (0, 150)으로 가야 하니 (−150, +150).
+            ChannelAsset moved = timeline.FindChannel(frame.TargetNode("c"), ChannelKind.Position)!;
+            Assert.Equal(-150f, moved.X!.Keys.Single().V, 0);
+            Assert.Equal(150f, moved.Y!.Keys.Single().V, 0);
+            Assert.Equal(150f, Rig(window, "c").PlaceX, 3); // 기본 자리는 그대로
         });
     }
 
