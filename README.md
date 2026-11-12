@@ -38,7 +38,16 @@ dotnet run --project src/Mt.Cli -- pose     a.motion-authoring.json --emoji star
 dotnet run --project src/Mt.Cli -- bake     a.motion-authoring.json --clip greet --object s1 --name greet_s1
 ```
 
-결과는 stdout의 JSON, 종료 코드는 0 됨 · 1 막는 문제 · 2 쓰는 법. 인자 없이 부르면 전체 쓰는 법이 나온다.
+만드는 명령도 있다 — 파일을 손으로 쓰지 않고 문서를 짓는다:
+
+```
+dotnet run --project src/Mt.Cli -- new        a.motion-authoring.json
+dotnet run --project src/Mt.Cli -- add-motion a.motion-authoring.json --preset nod
+dotnet run --project src/Mt.Cli -- key        a.motion-authoring.json --motion nod --controller body --axis y --time 0.25 --value -30
+dotnet run --project src/Mt.Cli -- add-emoji  a.motion-authoring.json --name spark --images art/star.png --life stay --in pop_in --hold pulse --out float_out
+```
+
+결과는 stdout의 JSON, 종료 코드는 0 됨 · 1 막는 문제 · 2 쓰는 법. 인자 없이 부르면 전체 쓰는 법이 나온다. 자세한 것은 [`docs/AUTHORING-FILES.md`](docs/AUTHORING-FILES.md).
 
 ## 문서
 

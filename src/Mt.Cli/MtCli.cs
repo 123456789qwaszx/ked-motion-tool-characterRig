@@ -21,7 +21,7 @@ namespace Mt.Cli;
 /// 화면과 같은 함수를 지난다(<see cref="MotionValidator"/> · <see cref="MotionExport"/> · <see cref="ClipPreview"/> · <see cref="ClipBake"/>) —
 /// 여기서 통과한 것은 앱에서도 통과하고, 여기서 읽은 포즈는 뷰포트가 보이는 포즈다.
 /// </summary>
-public static class MtCli
+public static partial class MtCli
 {
     public const string Usage = """
         mt — ked-motion-tool-characterRig 명령줄 (결과는 stdout의 JSON, 종료 코드 0 됨 · 1 막는 문제 · 2 쓰는 법)
@@ -37,6 +37,22 @@ public static class MtCli
                                                                이모지는 수명(등장 → 머묾 ⟲ → --off에 내리면 퇴장) 또는 타임라인의 그 프레임
           mt bake     <문서> --clip <이름> --object <id> --name <새 모션> [--out <문서>] [--rig <덤프>]
                                                                클립에서 그 캐릭터에 얹힌 블록을 모션 하나로 구워 문서에 더한다
+
+        만들기 — 문서를 그 자리에서 고쳐 쓰고, 한 일과 쓴 뒤의 문제 목록을 낸다(화면과 같은 편집 명령을 지난다)
+
+          mt new         <문서>                                캐릭터 s1 하나가 선 빈 문서
+          mt controllers [--rig-kind character]                키를 놓을 수 있는 손잡이 — id · 노드 · 종류 · 성분 · 단위
+          mt presets                                           모션 프리셋과 이모지의 움직임 목록
+          mt add-motion  <문서> --name <이름> [--duration <초>] [--end restore|commit]
+          mt add-motion  <문서> --preset <id> [--name <이름>]  프리셋으로(끄덕 nod · 숙임 bow …)
+          mt add-emoji   <문서> --name <이름> [--images <a.png,b.png>] [--life once|stay] [--in <움직임>] [--hold <움직임>] [--out <움직임>]
+                                                               그림 한 장이 그림 하나. 경로는 문서 기준. 움직임은 mt presets의 emojiMoves
+          mt key         <문서> --motion <이름> --controller <id> --axis x|y|z (--time <초> --value <값> | --keys "초:값,초:값") [--tangent flat]
+          mt key         <문서> --motion <이름> --node <노드> --kind position|scale|euler --axis …
+          mt key         <문서> --emoji <이름> [--picture <그림>] --kind position|scale|euler|alpha|image --axis x|y|z
+                                (--frame <프레임> --value <값> | --keys "프레임:값,프레임:값") [--tangent flat]
+                                                               같은 시각에 키가 있으면 바꾼다. --picture가 없으면 이모지 전체. 탄젠트의 기본은 flat
+          mt remove      <문서> --motion <이름> | --emoji <이름> | --clip <이름>
 
           <문서>  *.motion-authoring.json        <덤프>  rig-schemas.json (없으면 문서가 적어 둔 것, 그것도 없으면 내장본)
         """;
@@ -71,6 +87,13 @@ public static class MtCli
                 "emojis" => Emojis(options, stdout),
                 "pose" => Pose(options, stdout),
                 "bake" => Bake(options, stdout),
+                "new" => New(options, stdout),
+                "controllers" => Controllers(options, stdout),
+                "presets" => Presets(stdout),
+                "add-motion" => AddMotion(options, stdout),
+                "add-emoji" => AddEmoji(options, stdout),
+                "key" => Key(options, stdout),
+                "remove" => Remove(options, stdout),
                 _ => throw new UsageException($"모르는 명령 '{args[0]}'"),
             };
         }

@@ -14,6 +14,7 @@
 ⑤ mt export / mt emojis 로 내보낸다       (런타임이 읽는 motions.json · emojis.json)
 ```
 
+- ①은 **파일을 직접 써도 되고 명령으로 지어도 된다**(§2-1) — 섞어도 된다. 명령은 화면과 같은 편집을 지나므로 규칙을 덜 틀린다.
 - **쓰는 것은 저작본 하나다.** `motions.json` · `emojis.json`은 손으로 쓰지 않는다 — 저작본에서 내보낸다.
 - 저작본은 사람이 툴에서 여는 그 파일이다. 파일로 쓴 것과 화면에서 만든 것은 같은 형식이고 서로 이어서 고칠 수 있다.
 - 한 파일에 모션 · 클립 · 이모지를 같이 담아도 되고 나눠도 된다.
@@ -49,6 +50,36 @@ dotnet run --project src/Mt.Cli -- validate a.motion-authoring.json
 
   `blocking: true`는 **막는 문제**(내보내지 못한다), `false`는 **알림**(내보내진다 — 뜻한 것이면 둔다). 걸린 것은 **한 번에 전부** 나온다(성분마다 그 성분의 첫 문제).
 - 파일이 없거나 JSON이 깨졌으면 `{ "ok": false, "error": "…" }`와 종료 코드 1.
+
+### 2-1. 명령으로 짓기
+
+파일을 손으로 쓰는 대신 명령으로 문서를 짓는다. 명령마다 문서를 **그 자리에서 고쳐 쓰고**, 한 일과 쓴 뒤의 문제 목록(`blocking` · `problems`)을 낸다 — 짓는 도중에는 문제가 있기 마련이라 종료 코드는 0이다. 화면이 거절하는 것(틀린 이름 · 없는 손잡이 · 없는 성분)은 여기서도 거절되고(종료 코드 1) 문서는 그대로다.
+
+| 명령 | 하는 일 |
+|---|---|
+| `mt new <문서>` | 캐릭터 `s1` 하나가 선 빈 문서. 있는 파일은 덮어쓰지 않는다 |
+| `mt controllers` | 키를 놓을 수 있는 손잡이 — `id` · `node` · `kind` · `axes` · `unit` · `play`(relative / absolute). §4의 표와 같은 것 |
+| `mt presets` | 모션 프리셋(`motions`)과 이모지의 움직임(`emojiMoves` — `for`가 in / hold / out) |
+| `mt add-motion <문서> --name <이름> [--duration <초>] [--end restore\|commit]` | 빈 모션(기본 1초 · restore) |
+| `mt add-motion <문서> --preset <id> [--name <이름>]` | 프리셋으로 — `nod` 끄덕 · `bow` 숙임 … |
+| `mt add-emoji <문서> --name <이름> [--images <a.png,b.png>] [--life once\|stay] [--in <움직임>] [--hold <움직임>] [--out <움직임>]` | 이모지 하나. 그림 한 장이 그림 하나(이름은 파일 이름에서 — 겹치면 `_2`). 경로는 문서 기준. 움직임을 적으면 그 키가 들어간다 |
+| `mt key <문서> --motion <이름> --controller <id> --axis x\|y\|z …` | 모션에 키. 손잡이의 `id`로(또는 `--node <노드> --kind <종류>`로). 시각은 **초** |
+| `mt key <문서> --emoji <이름> [--picture <그림>] --kind <종류> --axis x\|y\|z …` | 이모지에 키. `--picture`가 없으면 이모지 전체. 시각은 **프레임** |
+| `mt remove <문서> --motion <이름> \| --emoji <이름> \| --clip <이름>` | 지운다 |
+
+`mt key`의 `…`: 한 개는 `--time <초> --value <값>`(이모지는 `--frame <프레임>`), 여럿은 `--keys "시각:값,시각:값"`. `--tangent`의 기본은 `flat`. 같은 시각에 키가 있으면 **바꾼다**. 채널이 없으면 생긴다.
+
+```bash
+mt new a.motion-authoring.json
+mt add-motion a.motion-authoring.json --name wave --duration 0.5
+mt key a.motion-authoring.json --motion wave --controller body --axis x --keys "0:0,0.25:30,0.5:0"
+mt add-emoji a.motion-authoring.json --name spark --images art/star.png --life stay --in pop_in --hold pulse --out float_out
+mt key a.motion-authoring.json --emoji spark --picture star --kind euler --axis z --keys "8:0,16:360" --tangent linear
+mt validate a.motion-authoring.json
+```
+
+- 명령이 쓴 문서는 **툴이 저장한 꼴**이다 — 키마다 `inTangent` · `outTangent`가 적히고 기본 씬이 들어간다. 손으로 쓴 주석과 줄 맞춤은 사라진다.
+- 명령에 없는 것(클립 · 씬 · 구간 옮기기 · 키 하나 지우기 · 그림의 기본 자리)은 파일을 고친다 — 형식은 아래 §3부터.
 
 ## 3. 파일의 뼈대
 

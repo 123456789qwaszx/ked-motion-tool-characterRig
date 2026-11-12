@@ -54,7 +54,7 @@ Ked.Presentation.Core  (런타임 코어의 사본 — netstandard2.1 · C# 9, �
    │      Views/            ViewportView(+ .Emoji) · GraphEditorView · DopeSheetView · TimeSliderView · RangeSliderView ·
    │                        ClipTimelineView · EmojiLifeStripView
    │      Services/         DocumentSession — 경로 · 덤프 · 자산 동기화 · 저장 · 내보내기 · 자동 저장
-   └─► Mt.Cli          mt info · validate · export · emojis · pose · bake
+   └─► Mt.Cli          mt info · validate · export · emojis · pose · bake + 만들기(new · add-motion · add-emoji · key · remove · controllers · presets)
 tests/    Ked.Presentation.Core.Tests(NUnit) · Mt.Authoring.Tests · Mt.App.Tests(헤드리스 — HeadlessUi.Run)
 examples/ emoji/ — 런타임의 이모지 견본 셋(빌더 tests/Mt.Authoring.Tests/EmojiExamples.cs가 쓴다) · authoring/ — 손으로 쓴 예시(AUTHORING-FILES.md)
 tools/    유니티 프리팹에서 무대 뼈대를 다시 뽑는 스크립트
