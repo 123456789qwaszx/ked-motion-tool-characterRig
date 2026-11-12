@@ -15,7 +15,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 
 - SDK는 `global.json`(10.0.100, latestFeature). 패키지 판은 `Directory.Packages.props` 한 곳(Avalonia 12.1.1).
 - `Directory.Build.props`: ImplicitUsings·Nullable·TreatWarningsAsErrors·LangVersion latest. 반입 코어만 자기 csproj에서 LangVersion 9 · netstandard2.1 · ImplicitUsings/Nullable 끔으로 되돌린다(유니티 호환).
-- CI: `.github/workflows/test.yml` — `main`·`dev` 푸시와 PR, ubuntu-latest, restore → build → test. 테스트 프로젝트 셋(Core 426 · Authoring 306 · App 133건, 2026-11-12). Windows 패키지 스모크는 아직 없다.
+- CI: `.github/workflows/test.yml` — `main`·`dev` 푸시와 PR, ubuntu-latest, restore → build → test. 테스트 프로젝트 셋(Core 426 · Authoring 320 · App 134건, 2026-11-12). Windows 패키지 스모크는 아직 없다.
 - 로컬에 SDK를 못 깔면 CI가 유일한 검증이다. `dotnet test`의 요약 줄이 **셋**(세 프로젝트) 나오는지 세고 "전부 통과"라고 말한다 — 빌드에 실패한 프로젝트는 조용히 건너뛴다.
 
 ## 2. 코드 지도 — 어디를 열면 되나
@@ -31,7 +31,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 | 연출 클립 | `Model/ClipAsset.cs` · `Editing/MotionEditor.Clips.cs` · `Preview/ClipPreview.cs` · `ClipBake.cs` · `Mt.App/Views/ClipTimelineView.cs` · `MainWindow.Clips.cs` |
 | 이모지 | `Model/EmojiAsset.cs` · `EmojiLife.cs` · `EmojiMoves.cs` · `Editing/MotionEditor.Emojis.cs` · `Rig/EmojiRigFrame.cs` · `EmojiLocatorFile.cs` · `Preview/EmojiPreview.cs` · `Mt.App/Views/ViewportView.Emoji.cs` · `EmojiLifeStripView.cs` · `MainWindow.Emojis.cs` · `.Life.cs` · `.NewEmoji.cs` |
 | 트윈머신 | `Graph/TweenMath.cs` · `MotionEditor.TweenKeys` · `MainWindow.Tween.cs` |
-| 명령줄 | `Mt.Cli/MtCli.cs` |
+| 명령줄 | `Mt.Cli/MtCli.cs`(읽기 · 검증 · 내보내기 · 포즈 · 굽기) · `MtCli.Create.cs`(만들기 — `MotionEditor`를 지난다) |
 | 리그 덤프·내장본·컨트롤러 표·깊이·focus·기준 해상도 | `Rig/RigSchemaFile.cs` · `BuiltinTuning.cs` · `ControllersFile.cs`(`controllers/1`) · `DepthTuningFile.cs`(MaxLevel 40) · `FocusTuningFile.cs` · `BaseResolutionFile.cs` |
 | 씬 조립(무대 뼈대 → 오브젝트 → 깊이 → place → 오프셋 → 샷) | `Preview/ScenePreview.cs` · `StageShotResponse.cs` |
 | 시각의 포즈, 포즈 → 키 값 | `Preview/MotionPreview.cs` · `PoseEdit.cs`(`RootDeltaToLocal`·`AngleDelta`·`ScaleAlong`·`KeyValueFor`) |
