@@ -1,4 +1,3 @@
-using Ked.Presentation.Core;
 using Mt.Authoring.Model;
 
 namespace Mt.Authoring.Graph;

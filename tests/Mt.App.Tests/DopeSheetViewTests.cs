@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
-using Ked.Presentation.Core;
 using Mt.App.Views;
 using Mt.Authoring.Editing;
 using Mt.Authoring.Graph;

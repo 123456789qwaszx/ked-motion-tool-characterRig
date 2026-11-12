@@ -1,4 +1,3 @@
-using Ked.Presentation.Core;
 using Mt.Authoring.Editing;
 using Mt.Authoring.Graph;
 using Mt.Authoring.Model;

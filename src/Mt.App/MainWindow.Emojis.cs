@@ -13,7 +13,6 @@ using Mt.Authoring.Editing;
 using Mt.Authoring.Graph;
 using Mt.Authoring.Model;
 using Mt.Authoring.Preview;
-using Mt.Authoring.Rig;
 using Mt.Authoring.Settings;
 using Mt.Authoring.Validation;
 

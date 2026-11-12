@@ -84,10 +84,13 @@
 | C-1 A5 · A6 | 끝 — 화면이 부르지 않는 편집 명령을 지웠다: `AddScene` · `DuplicateScene` · `RemoveScene` · `RenameScene` · `SetActiveScene` · `SetPreviewPortrait` · `RemoveKey` · `SetClipScene` · `RenameClipRole` · `SetClipRoleRig` · `SetClipBlockRepeat` · `SetClipBlockMotion` · `CancelGesture` |
 | C-1 A7 · A8 | 끝 — 이모지 오른쪽의 "구간과 잇기"는 접힌 채로 시작한다. 타임 슬라이더는 타임라인 보기에서 구간 띠를 깔지 않는다(수명 재생의 단계 띠는 남는다) |
 | C-2 B2 | 끝 — 설정은 `%APPDATA%/ked-motion-tool-characterRig/settings.json`. 제 파일이 없으면 옛 자리(`ked-motion-tool`)의 것을 한 번 읽어 오고, 저장은 제 자리에만 한다(옛 파일은 형제 툴의 것이라 건드리지 않는다). 창 제목도 `ked-motion-tool-characterRig` |
-| C-2 B1 · B3 | 시작 전 |
+| C-2 B1 | 끝 — `MainWindow.axaml.cs` 4,292줄 → 1,409줄. 옮기기만 했다(줄을 모아 견줘 빠진 것이 없음을 확인): `MainWindow.Shortcuts.cs`(전역 단축키 · 시간 명령) · `.Settings.cs`(설정 · 창 배치 · 설정 창 · F1) · `.ChannelBox.cs` · `.Scene.cs`(하이어아키 · 씬 탭) · `.Outliner.cs`(그래프 왼쪽 채널 목록) · `.Problems.cs`(문제 칸) · `.Files.cs`(열기 · 저장 · 가져오기 · 내보내기). 남은 것은 필드 · 생성자 · 화면 짜기 · 모션 목록과 인스펙터 · 명령 · 작은 도우미 |
+| C-2 B3 | 끝 — `EmojiLifeStripShellTests`를 주제별로: `EmojiLifeStripShellTests`(수명의 띠) · `EmojiHostShellTests`(인물 · 고르기) · `EmojiMoveShellTests` · `NewEmojiShellTests` · `EmojiKeyShellTests`(키 단추 · 종류별 칸) · `TweenShellTests`. 창을 여는 일은 `EmojiExampleWindow`가 한다. 테스트 수는 그대로(862) |
 | C-3 | 시작 전 |
 
 ### 적어 둘 것
+
+- **안 쓰는 using**은 보통 빌드가 막지 않는다(`IDE0005`는 꺼져 있다). 파일을 나누며 한 번 훑어 저장소 전체에서 지웠다 — 임시 `.editorconfig`(`dotnet_diagnostic.IDE0005.severity = warning`)와 `-p:EnforceCodeStyleInBuild=true -p:GenerateDocumentationFile=true`로 빌드하면 나온다.
 
 - **`PreviewSettings`는 남겼다**(조사에서는 A6에 넣었다). 편집 명령 `SetPreviewPortrait`만 지웠다 — `preview.portrait`는 씬이 없던 예전 문서를 읽을 때 기본 씬의 초상으로 옮기는 데 쓰인다(`MotionDocument.EnsureDefaultScene`).
 - **씬이 여럿인 문서는 그대로 읽고 쓴다**(`scenes[]` · `activeScene`). 더하거나 바꾸는 명령만 없다. 테스트가 본다.

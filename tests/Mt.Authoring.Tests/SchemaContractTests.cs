@@ -1,9 +1,7 @@
-using Ked.Presentation.Core;
 using Mt.Authoring.Model;
 using Mt.Authoring.Rig;
 using Mt.Authoring.Schema;
 using Mt.Authoring.Validation;
-using Xunit;
 
 namespace Mt.Authoring.Tests;
 
