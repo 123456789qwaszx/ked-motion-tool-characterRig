@@ -868,9 +868,10 @@ public class ClipShellTests
                 Assert.Equal(-30f, MoveYOf(window, "s2"), 2);
 
                 // 한 번으로 되돌리면 안 적힌다.
-                editor.SetClipBlockRepeat("clip", 1, 0, 1);
+                ClipBlock once = editor.Document.FindClip("clip")!.Tracks[1].Blocks[0].Clone();
+                once.Repeat = 1;
+                editor.UpdateClipBlock("clip", 1, 0, once);
                 Assert.Null(editor.Document.FindClip("clip")!.Tracks[1].Blocks[0].Repeat);
-                Assert.Throws<InvalidOperationException>(() => editor.SetClipBlockRepeat("clip", 1, 0, 0));
             }
             finally
             {

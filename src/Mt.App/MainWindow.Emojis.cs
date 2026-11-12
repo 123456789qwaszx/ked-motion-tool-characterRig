@@ -225,6 +225,11 @@ public partial class MainWindow
     /// <summary>테스트 손잡이 — 타임 슬라이더의 이름 붙은 띠.</summary>
     internal IReadOnlyList<SliderMark> TimeSliderMarks => _timeSlider.Marks;
 
+    /// <summary>"구간과 잇기" 칸 — 수명의 띠와 같은 일을 숫자로 한다. 접힌 채로 시작한다.</summary>
+    private readonly Expander _emojiSpanSection = new() { Header = "구간과 잇기 (숫자로)", FontSize = 11, IsExpanded = false, HorizontalAlignment = HorizontalAlignment.Stretch };
+
+    internal bool EmojiSpanSectionOpen => _emojiSpanSection.IsExpanded;
+
     private static string? Choice(ComboBox combo) => combo.SelectedItem as string is { } s && s != NoneChoice ? s : null;
 
     // ── 짓기 ──────────────────────────────────────────────────────────
@@ -417,7 +422,8 @@ public partial class MainWindow
         _emojiRigFields.Children.Add(flips);
 
         // 구간과 잇기
-        _emojiOwnFields.Children.Add(Header("구간과 잇기"));
+        // 수명의 띠가 같은 일을 한다 — 이름과 프레임을 숫자로 적을 때만 펼친다.
+        var spanPanel = new StackPanel { Spacing = 4 };
         _emojiSpanList.SelectionChanged += (_, _) =>
         {
             if (!_refreshing)
@@ -426,10 +432,10 @@ public partial class MainWindow
             }
         };
         ToolTip.SetTip(_emojiSpanList, "이름 붙은 구간(프레임, 끝 포함) — 겹쳐도 된다. 내보낼 때 구간마다 따로 선 클립이 된다(구간의 첫 프레임이 클립의 프레임 0)");
-        _emojiOwnFields.Children.Add(_emojiSpanList);
+        spanPanel.Children.Add(_emojiSpanList);
         Button addSpan = SmallButton("구간 추가", (_, _) => AddEmojiSpanFromForm());
         ToolTip.SetTip(addSpan, "지금 프레임부터 6프레임(타임라인 안으로)의 구간을 더한다 — 이름 span, span_2…");
-        _emojiOwnFields.Children.Add(new StackPanel
+        spanPanel.Children.Add(new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = 4,
@@ -438,11 +444,14 @@ public partial class MainWindow
         _emojiSpanFields.Children.Add(Labeled("구간 이름", _emojiSpanName));
         _emojiSpanFields.Children.Add(Labeled("시작(fr)", _emojiSpanStart));
         _emojiSpanFields.Children.Add(Labeled("끝(fr)", _emojiSpanEnd));
-        _emojiOwnFields.Children.Add(_emojiSpanFields);
-        _emojiOwnFields.Children.Add(Labeled("등장", _emojiIn));
-        _emojiOwnFields.Children.Add(Labeled("머묾(되풀이)", _emojiHold));
-        _emojiOwnFields.Children.Add(Labeled("퇴장", _emojiOut));
-        _emojiOwnFields.Children.Add(_emojiKindNote);
+        spanPanel.Children.Add(_emojiSpanFields);
+        spanPanel.Children.Add(Labeled("등장", _emojiIn));
+        spanPanel.Children.Add(Labeled("머묾(되풀이)", _emojiHold));
+        spanPanel.Children.Add(Labeled("퇴장", _emojiOut));
+        spanPanel.Children.Add(_emojiKindNote);
+        _emojiSpanSection.Content = spanPanel;
+        ToolTip.SetTip(_emojiSpanSection, "구간의 이름 · 프레임과 등장 · 머묾 · 퇴장을 숫자로 적는 칸 — 보통은 뷰포트 아래 수명의 띠에서 끌어서 한다");
+        _emojiOwnFields.Children.Add(_emojiSpanSection);
         ToolTip.SetTip(_emojiHold, "머묾을 이으면 머무는 이모지(등장 한 번 → 머묾 되풀이 → emoji_off에 퇴장), 잇지 않으면 타임라인 전체(main)를 한 번 재생하고 사라진다");
 
         foreach (ComboBox combo in new[] { _emojiIn, _emojiHold, _emojiOut })
@@ -1173,11 +1182,12 @@ public partial class MainWindow
     }
 
     /// <summary>
-    /// 타임 슬라이더의 띠 — 타임라인 보기면 구간들, 수명 보기면 단계들(등장 · 머묾 × 바퀴 · 퇴장, 또는 main).
+    /// 타임 슬라이더의 띠 — 수명 보기에서만: 단계들(등장 · 머묾 × 바퀴 · 퇴장, 또는 main).
+    /// 타임라인 보기의 구간은 바로 위 수명의 띠가 보인다.
     /// </summary>
     private void RefreshEmojiMarks()
     {
-        if (CurrentEmoji is not { } emoji || _viewport.EmojiName != emoji.Name || _session.EmojiFrame is not { } frame)
+        if (CurrentEmoji is not { } emoji || _viewport.EmojiName != emoji.Name || _session.EmojiFrame is not { } frame || !_viewport.EmojiLife)
         {
             _timeSlider.Marks = Array.Empty<SliderMark>();
             return;
@@ -1185,16 +1195,7 @@ public partial class MainWindow
 
         var marks = new List<SliderMark>();
 
-        if (!_viewport.EmojiLife)
-        {
-            for (int i = 0; i < emoji.Spans.Count; i++)
-            {
-                EmojiSpan span = emoji.Spans[i];
-                string role = span.Name == emoji.In ? " · 등장" : span.Name == emoji.Hold ? " · 머묾" : span.Name == emoji.Out ? " · 퇴장" : "";
-                marks.Add(new SliderMark(span.Name + role, EmojiAsset.SecondsOf(span.Start), EmojiAsset.SecondsOf(span.End), EmojiLife.RoleOf(emoji, span.Name) is { } linked ? EmojiLifeStripView.BrushOf(linked) : SpanBrushes[3]));
-            }
-        }
-        else if (EmojiPreview.Definition(emoji, frame, out _) is { } definition)
+        if (EmojiPreview.Definition(emoji, frame, out _) is { } definition)
         {
             double fps = definition.Fps;
 

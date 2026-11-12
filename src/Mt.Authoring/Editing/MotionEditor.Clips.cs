@@ -56,14 +56,6 @@ public sealed partial class MotionEditor
         Mutate(MotionChangeKind.Clip, () => clip.Duration = seconds);
     }
 
-    /// <summary>미리보기 시작 상태인 씬. 배역의 묶임은 그대로 둔다 — 새 씬에 그 id가 없으면 검증이 알린다.</summary>
-    public void SetClipScene(string name, string sceneName)
-    {
-        ClipAsset clip = RequireClip(name);
-        string scene = RequireScene(sceneName ?? throw new ArgumentNullException(nameof(sceneName))).Name;
-        Mutate(MotionChangeKind.Clip, () => clip.Scene = scene);
-    }
-
     // ── 배역 ──────────────────────────────────────────────────────────
 
     /// <summary>배역을 더한다. 오브젝트를 주면 미리보기에서 그 오브젝트가 맡는다(없는 id도 받는다 — 검증이 알린다).</summary>
@@ -94,43 +86,6 @@ public sealed partial class MotionEditor
             clip.Roles.Remove(target);
             clip.Tracks.RemoveAll(t => string.Equals(t.Role, role, StringComparison.Ordinal));
         });
-    }
-
-    /// <summary>배역 이름 바꾸기 — 그 배역의 트랙이 따라온다.</summary>
-    public void RenameClipRole(string clipName, string role, string newRole)
-    {
-        ArgumentNullException.ThrowIfNull(newRole);
-        ClipAsset clip = RequireClip(clipName);
-        ClipRole target = RequireRole(clip, role);
-
-        if (string.Equals(role, newRole, StringComparison.Ordinal))
-        {
-            return;
-        }
-
-        RequireRoleName(clip, newRole);
-        Mutate(MotionChangeKind.Clip, () =>
-        {
-            target.Name = newRole;
-
-            foreach (ClipTrack track in clip.Tracks.Where(t => string.Equals(t.Role, role, StringComparison.Ordinal)))
-            {
-                track.Role = newRole;
-            }
-        });
-    }
-
-    public void SetClipRoleRig(string clipName, string role, string rig)
-    {
-        ArgumentNullException.ThrowIfNull(rig);
-        ClipRole target = RequireRole(RequireClip(clipName), role);
-
-        if (rig.Length == 0)
-        {
-            throw new InvalidOperationException("배역에는 리그(rigKind)가 있어야 한다.");
-        }
-
-        Mutate(MotionChangeKind.Clip, () => target.Rig = rig);
     }
 
     /// <summary>미리보기에서 이 배역을 맡을 씬 오브젝트. null이면 푼다.</summary>
@@ -223,15 +178,6 @@ public sealed partial class MotionEditor
         Mutate(MotionChangeKind.Clip, () => block.Mode = mode);
     }
 
-    /// <summary>블록의 반복 횟수(1 이상). 1이면 안 적는다. 블록의 길이가 모션 길이 × 횟수가 된다.</summary>
-    public void SetClipBlockRepeat(string clipName, int track, int index, int repeat)
-    {
-        ClipBlock block = RequireBlock(RequireTrack(RequireClip(clipName), track), index);
-
-        int? next = NormalizeRepeat(repeat);
-        Mutate(MotionChangeKind.Clip, () => block.Repeat = next);
-    }
-
     private static int? NormalizeRepeat(int? repeat)
     {
         if (repeat is < 1 or > Validation.ClipValidator.MaxRepeat)
@@ -247,15 +193,6 @@ public sealed partial class MotionEditor
     {
         ClipBlock block = RequireBlock(RequireTrack(RequireClip(clipName), track), index);
         Mutate(MotionChangeKind.Clip, () => block.Muted = muted ? true : null);
-    }
-
-    /// <summary>블록이 가리키는 모션을 바꾼다(자리는 그대로).</summary>
-    public void SetClipBlockMotion(string clipName, int track, int index, string motion)
-    {
-        ClipBlock block = RequireBlock(RequireTrack(RequireClip(clipName), track), index);
-
-        Require(motion);
-        Mutate(MotionChangeKind.Clip, () => block.Motion = motion);
     }
 
     /// <summary>
@@ -329,17 +266,6 @@ public sealed partial class MotionEditor
                 {
                     role.Object = newId;
                 }
-            }
-        }
-    }
-
-    private void RetargetClipScenes(string name, string newName)
-    {
-        foreach (ClipAsset clip in Document.Clips)
-        {
-            if (string.Equals(clip.Scene, name, StringComparison.Ordinal))
-            {
-                clip.Scene = newName;
             }
         }
     }

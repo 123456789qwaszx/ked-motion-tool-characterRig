@@ -108,7 +108,7 @@ public class TweenTests
     }
 
     [Fact]
-    public void 끄는_조작은_바뀐_것이_없으면_흔적이_없고_버리면_돌아온다()
+    public void 끄는_조작은_바뀐_것이_없으면_흔적이_없고_겹쳐_열리지_않는다()
     {
         (MotionEditor editor, CurveRef x, _) = Two();
         long before = editor.Revision;
@@ -117,12 +117,6 @@ public class TweenTests
         editor.EndGesture();
         Assert.Equal(before, editor.Revision);
         Assert.False(editor.CanUndo && editor.Revision != before);
-
-        editor.BeginGesture(MotionChangeKind.Keys);
-        editor.TweenKeys("m", new[] { x }, 0.5f, 0.5, TangentMode.Auto);
-        editor.CancelGesture();
-        Assert.False(editor.InGesture);
-        Assert.Equal(2, x.Resolve(editor.Document.Find("m")!)!.Keys.Count);
 
         // 열어 둔 채 되돌리기를 누르면 먼저 한 칸으로 닫고 그 칸을 되돌린다. 둘을 겹쳐 열지 않는다.
         editor.BeginGesture(MotionChangeKind.Keys);

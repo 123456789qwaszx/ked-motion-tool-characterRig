@@ -293,12 +293,12 @@ public class ClipPreviewTests
         MotionEditor editor = NewEditor();
         editor.AddClipBlock("greet", 0, "bow", 0f);
 
-        editor.SetClipRoleRig("greet", "a", "screenEffect");
+        Greet(editor).Roles[0].Rig = "screenEffect"; // 손으로 쓴 파일처럼
         List<ClipProblem> problems = Problems(editor);
         Assert.Contains(problems, p => p.Blocking && p.Message.Contains("안 맞는다", StringComparison.Ordinal));
         Assert.Contains(problems, p => !p.Blocking && p.Message.Contains("오브젝트 's1'는 'character'", StringComparison.Ordinal));
 
-        editor.SetClipRoleRig("greet", "a", "nope");
+        Greet(editor).Roles[0].Rig = "nope";
         Assert.Contains(Problems(editor), p => p.Blocking && p.Message.Contains("리그 'nope'가 스키마에 없다", StringComparison.Ordinal));
 
         // rigKind 이름이 달라도 채널의 노드가 전부 그 리그에 있으면 입는다(CanWear와 같은 판정).
@@ -521,9 +521,9 @@ public class ClipPreviewTests
     {
         MotionEditor editor = NewEditor();
         editor.AddClipBlock("greet", 0, "lean", 0f, MotionChannelMode.Relative); // Sway +5 (0.5초, commit)
-        editor.SetClipBlockRepeat("greet", 0, 0, 3);
+        editor.UpdateClipBlock("greet", 0, 0, new ClipBlock { Motion = "lean", Mode = MotionChannelMode.Relative, Repeat = 3 });
         editor.AddClipBlock("greet", 1, "nod", 0f);                              // s2: 복원 모션
-        editor.SetClipBlockRepeat("greet", 1, 0, 2);
+        editor.UpdateClipBlock("greet", 1, 0, new ClipBlock { Motion = "nod", Repeat = 2 });
         ClipAsset clip = Greet(editor);
 
         Assert.Equal(1.5f, ClipTiming.EndOf(editor.Document, clip.Tracks[0].Blocks[0]), 4);

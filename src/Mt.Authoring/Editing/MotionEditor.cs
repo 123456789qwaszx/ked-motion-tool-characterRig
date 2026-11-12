@@ -46,20 +46,6 @@ public sealed partial class MotionEditor
     public void SetBaseResolution(string? path)
         => Mutate(MotionChangeKind.Document, () => Document.BaseResolution = path is null ? null : new FileReference { Path = path });
 
-    /// <summary>호환용 — 활성 씬의 선택 오브젝트가 없으니 첫 오브젝트(c1)의 초상으로 둔다.</summary>
-    public void SetPreviewPortrait(string? path)
-    {
-        SceneAsset scene = RequireScene(null);
-        SceneObject? first = scene.Objects.FirstOrDefault();
-
-        if (first is null)
-        {
-            return;
-        }
-
-        SetObjectPortrait(scene.Name, first.Id, path);
-    }
-
     // ── 씬 ────────────────────────────────────────────────────────────
 
     private SceneAsset RequireScene(string? name)
@@ -345,121 +331,6 @@ public sealed partial class MotionEditor
     }
 
     // ── 씬 목록 ───────────────────────────────────────────────────────
-
-    private static void RequireSceneName(string name)
-    {
-        if (!MotionNames.IsValid(name))
-        {
-            throw new InvalidOperationException($"씬 이름은 영문 소문자·숫자·_ 만 쓸 수 있다 ('{name}')");
-        }
-    }
-
-    /// <summary>새 씬 — 캐릭터 하나짜리 기본 씬(<see cref="SceneAsset.Default"/>)으로 시작하고 활성 씬이 된다.</summary>
-    public SceneAsset AddScene(string name)
-    {
-        ArgumentNullException.ThrowIfNull(name);
-        Document.EnsureDefaultScene();
-        RequireSceneName(name);
-
-        if (Document.FindScene(name) is not null)
-        {
-            throw new InvalidOperationException($"씬 '{name}'이 이미 있다.");
-        }
-
-        SceneAsset scene = SceneAsset.Default();
-        scene.Name = name;
-        Mutate(MotionChangeKind.Scene, () =>
-        {
-            Document.Scenes.Add(scene);
-            Document.ActiveScene = name;
-        });
-        return scene;
-    }
-
-    /// <summary>씬 복제 — 오브젝트·카메라 전부, 새 이름으로. 활성 씬이 된다.</summary>
-    public SceneAsset DuplicateScene(string name, string newName)
-    {
-        ArgumentNullException.ThrowIfNull(newName);
-        SceneAsset source = RequireScene(name);
-        RequireSceneName(newName);
-
-        if (Document.FindScene(newName) is not null)
-        {
-            throw new InvalidOperationException($"씬 '{newName}'이 이미 있다.");
-        }
-
-        SceneAsset copy = MotionDocumentJson.Read(MotionDocumentJson.Write(Document)).FindScene(source.Name)!;
-        copy.Name = newName;
-        Mutate(MotionChangeKind.Scene, () =>
-        {
-            Document.Scenes.Insert(Document.Scenes.IndexOf(source) + 1, copy);
-            Document.ActiveScene = newName;
-        });
-        return copy;
-    }
-
-    /// <summary>씬 삭제 — 마지막 씬은 못 지운다. 활성 씬을 지우면 이웃이 활성이 된다.</summary>
-    public void RemoveScene(string name)
-    {
-        SceneAsset scene = RequireScene(name);
-
-        if (Document.Scenes.Count <= 1)
-        {
-            throw new InvalidOperationException("마지막 씬은 지울 수 없다.");
-        }
-
-        int index = Document.Scenes.IndexOf(scene);
-        Mutate(MotionChangeKind.Scene, () =>
-        {
-            Document.Scenes.Remove(scene);
-
-            if (Document.ActiveScene == scene.Name)
-            {
-                Document.ActiveScene = Document.Scenes[Math.Min(index, Document.Scenes.Count - 1)].Name;
-            }
-        });
-    }
-
-    public void RenameScene(string name, string newName)
-    {
-        ArgumentNullException.ThrowIfNull(newName);
-        SceneAsset scene = RequireScene(name);
-
-        if (scene.Name == newName)
-        {
-            return;
-        }
-
-        RequireSceneName(newName);
-
-        if (Document.FindScene(newName) is not null)
-        {
-            throw new InvalidOperationException($"씬 '{newName}'이 이미 있다.");
-        }
-
-        bool active = Document.ActiveScene == scene.Name;
-        Mutate(MotionChangeKind.Scene, () =>
-        {
-            RetargetClipScenes(name, newName);
-            scene.Name = newName;
-
-            if (active)
-            {
-                Document.ActiveScene = newName;
-            }
-        });
-    }
-
-    /// <summary>보여 줄 씬 바꾸기 — 문서에 남는다(되돌리기 한 번).</summary>
-    public void SetActiveScene(string name)
-    {
-        SceneAsset scene = RequireScene(name);
-
-        if (Document.ActiveScene != scene.Name)
-        {
-            Mutate(MotionChangeKind.Scene, () => Document.ActiveScene = scene.Name);
-        }
-    }
 
     /// <summary>미리보기 초상(문서 기준 상대 경로). null이면 자리표시.</summary>
     public void SetObjectPortrait(string? sceneName, string id, string? path)
@@ -1061,27 +932,6 @@ public sealed partial class MotionEditor
         return copy;
     }
 
-    public void RemoveKey(string name, string node, ChannelKind kind, Axis axis, int index)
-    {
-        MotionAsset motion = Require(name);
-        ChannelAsset channel = RequireChannel(motion, node, kind);
-        ComponentCurve curve = RequireCurve(channel, axis, index);
-
-        Mutate(MotionChangeKind.Keys, () =>
-        {
-            curve.Keys.RemoveAt(index);
-
-            if (curve.Keys.Count == 0)
-            {
-                channel.Set(axis, null);
-            }
-            else
-            {
-                TangentMath.Recompute(curve.Keys);
-            }
-        });
-    }
-
     /// <summary>키 하나의 값을 바꾼다. 시각이 바뀌면 다시 정렬하므로 index는 호출 뒤 유효하지 않을 수 있다.</summary>
     public void UpdateKey(string name, string node, ChannelKind kind, Axis axis, int index, KeyAsset value)
     {
@@ -1318,21 +1168,6 @@ public sealed partial class MotionEditor
         List<(Action Undo, Action Redo)>? sides = _batchSides;
         _batchSides = null;
         Commit(_gestureKind, before, ComposeUndo(sides), ComposeRedo(sides));
-    }
-
-    /// <summary>끄는 조작을 버린다 — 문서를 열기 전으로 되돌린다.</summary>
-    public void CancelGesture()
-    {
-        if (_gestureBefore is not { } before)
-        {
-            return;
-        }
-
-        _gestureBefore = null;
-        _batchDepth--;
-        _batchSides = null;
-        Document = MotionDocumentJson.Read(before);
-        Changed?.Invoke(this, new MotionChangedEventArgs(MotionChangeKind.Structure));
     }
 
     /// <summary>

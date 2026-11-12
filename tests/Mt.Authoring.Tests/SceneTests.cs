@@ -230,37 +230,16 @@ public class SceneTests
     }
 
     [Fact]
-    public void 씬은_여럿일_수_있고_활성_씬이_문서에_남는다()
+    public void 씬이_여럿인_문서도_읽히고_활성_씬이_남는다()
     {
-        var editor = new MotionEditor(new MotionDocument());
-        Assert.Throws<InvalidOperationException>(() => editor.RemoveScene("scene")); // 마지막 씬
-        Assert.Throws<InvalidOperationException>(() => editor.AddScene("Scene B")); // 규칙 밖
+        // 화면은 씬 하나만 쓴다 — 여럿을 만드는 명령은 없지만, 그런 문서는 그대로 읽고 그대로 쓴다.
+        MotionDocument read = MotionDocumentJson.Read(
+            """{ "schema": "motion-authoring/2", "motions": [], "scenes": [ { "name": "main" }, { "name": "scene_b" } ], "activeScene": "scene_b" }""");
+        Assert.Equal("scene_b", read.ActiveSceneAsset!.Name);
 
-        editor.AddScene("scene_b");
-        Assert.Equal("scene_b", editor.Document.ActiveScene);
-        Assert.Equal("s1", Assert.Single(editor.Document.ActiveSceneAsset!.Objects).Id);
-        editor.AddSceneObject(null, "s2", "character", SceneLayers.Front);
-
-        editor.DuplicateScene("scene_b", "scene_c");
-        Assert.Equal("scene_c", editor.Document.ActiveScene);
-        Assert.Equal(2, editor.Document.ActiveSceneAsset!.Objects.Count);
-        Assert.Equal(new[] { "scene", "scene_b", "scene_c" }, editor.Document.Scenes.Select(x => x.Name));
-
-        editor.SetActiveScene("scene");
-        Assert.Single(editor.Document.ActiveSceneAsset!.Objects);
-        editor.RenameScene("scene", "main");
-        Assert.Equal("main", editor.Document.ActiveScene);
-        Assert.Throws<InvalidOperationException>(() => editor.RenameScene("scene_b", "main"));
-
-        editor.RemoveScene("main"); // 활성 씬을 지우면 이웃이 활성
-        Assert.Equal("scene_b", editor.Document.ActiveScene);
-        editor.Undo();
-        Assert.Equal("main", editor.Document.ActiveScene);
-
-        string json = MotionDocumentJson.Write(editor.Document);
-        MotionDocument read = MotionDocumentJson.Read(json);
-        Assert.Equal("main", read.ActiveScene);
-        Assert.Equal(3, read.Scenes.Count);
+        MotionDocument again = MotionDocumentJson.Read(MotionDocumentJson.Write(read));
+        Assert.Equal("scene_b", again.ActiveScene);
+        Assert.Equal(new[] { "main", "scene_b" }, again.Scenes.Select(x => x.Name));
     }
 
     [Fact]

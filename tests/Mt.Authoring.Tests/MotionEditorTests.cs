@@ -73,8 +73,8 @@ public class MotionEditorTests
         editor.UpdateKey("a", "N", ChannelKind.Position, Axis.X, 1, Fixtures.Key(-0.5f, 9f));
         Assert.Equal(new[] { -0.5f, 0f }, editor.Document.Find("a")!.Channels[0].X!.Keys.Select(k => k.T));
 
-        editor.RemoveKey("a", "N", ChannelKind.Position, Axis.X, 0);
-        editor.RemoveKey("a", "N", ChannelKind.Position, Axis.X, 0);
+        var x = new Graph.CurveRef("N", ChannelKind.Position, Axis.X);
+        editor.RemoveKeys("a", new[] { new Graph.KeyRef(x, 0), new Graph.KeyRef(x, 1) });
         Assert.Null(editor.Document.Find("a")!.Channels[0].X);
     }
 

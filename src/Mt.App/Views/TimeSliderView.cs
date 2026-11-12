@@ -30,7 +30,7 @@ public enum KeyTickMode
 ///
 /// 시계는 뷰포트의 것이다. 편집은 <see cref="MotionEditor"/> 명령뿐이다.
 /// </summary>
-/// <summary>타임 슬라이더 위의 이름 붙은 띠 — 이모지의 구간(타임라인 보기)이나 단계(수명 보기). 시각은 초.</summary>
+/// <summary>타임 슬라이더 위의 이름 붙은 띠 — 이모지의 단계(수명 보기). 시각은 초.</summary>
 public sealed record SliderMark(string Label, double Start, double End, IBrush Brush);
 
 public sealed class TimeSliderView : Control
@@ -395,7 +395,7 @@ public sealed class TimeSliderView : Control
             DrawLabel(context, TimeText.Format(clock.Time, TimeDisplay), new Point(x + 3, 2), CurrentFrameLabel, 10);
         }
 
-        // 이름 붙은 띠(이모지의 구간 · 단계) — 눈금 아래, 키 틱 밑에 깐다. 겹치는 띠는 줄을 바꾼다.
+        // 이름 붙은 띠(이모지의 단계) — 눈금 아래, 키 틱 밑에 깐다. 겹치는 띠는 줄을 바꾼다.
         for (int m = 0; m < _marks.Count; m++)
         {
             SliderMark mark = _marks[m];

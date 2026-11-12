@@ -80,9 +80,15 @@
 |---|---|
 | 조사 | 끝 |
 | C-1 A1 · A3 | 끝 — 카메라 모션(`CameraRig` · 카메라 값 칸 · "카메라 모션 추가")과 상태 블록(`ClipStage` · `ClipBlockKind` · "상태 놓기" · 카메라 줄)을 걷었다. `ClipBlock`은 `at · motion · mode · repeat · muted`만 남는다. `mt pose --clip`은 노드 값만 낸다(카메라 · 불투명도 없음) |
-| C-1 A4 ~ A8 | 시작 전 |
+| C-1 A4 | 끝 — `clips.json`(K6)은 하지 않는다. 클립은 굽기로 모션이 되어 `motions.json`으로 나간다. `PLAN-clip.md`는 C-3에서 지난 기록으로 옮긴다 |
+| C-1 A5 · A6 | 끝 — 화면이 부르지 않는 편집 명령을 지웠다: `AddScene` · `DuplicateScene` · `RemoveScene` · `RenameScene` · `SetActiveScene` · `SetPreviewPortrait` · `RemoveKey` · `SetClipScene` · `RenameClipRole` · `SetClipRoleRig` · `SetClipBlockRepeat` · `SetClipBlockMotion` · `CancelGesture` |
+| C-1 A7 · A8 | 끝 — 이모지 오른쪽의 "구간과 잇기"는 접힌 채로 시작한다. 타임 슬라이더는 타임라인 보기에서 구간 띠를 깔지 않는다(수명 재생의 단계 띠는 남는다) |
 | C-2 · C-3 | 시작 전 |
 
 ### 적어 둘 것
+
+- **`PreviewSettings`는 남겼다**(조사에서는 A6에 넣었다). 편집 명령 `SetPreviewPortrait`만 지웠다 — `preview.portrait`는 씬이 없던 예전 문서를 읽을 때 기본 씬의 초상으로 옮기는 데 쓰인다(`MotionDocument.EnsureDefaultScene`).
+- **씬이 여럿인 문서는 그대로 읽고 쓴다**(`scenes[]` · `activeScene`). 더하거나 바꾸는 명령만 없다. 테스트가 본다.
+- 반복 · 모션 바꾸기는 `UpdateClipBlock`(블록 인스펙터) 하나로 한다.
 
 - **예전 문서는 그대로 읽힌다.** 읽을 때 rig `camera`인 모션, 역할 `@camera`인 줄, 모션이 없는 블록(상태 블록)을 버린다(`MotionDocumentJson`) — 다시 저장하면 그 흔적이 파일에서 사라진다. 테스트가 본다.

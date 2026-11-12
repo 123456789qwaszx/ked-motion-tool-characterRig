@@ -14,7 +14,7 @@ public class MotionDocumentJsonTests
         MotionDocument document = Fixtures.NodBowDocument();
         var editor = new MotionEditor(document);
         editor.SetRigSchemas("../ExportedTuning/rig-schemas.json", "abc123");
-        editor.SetPreviewPortrait("assets/harin_a_01.png");
+        editor.SetObjectPortrait(null, SceneObject.DefaultId, "assets/harin_a_01.png");
 
         string first = MotionDocumentJson.Write(editor.Document);
         MotionDocument read = MotionDocumentJson.Read(first);

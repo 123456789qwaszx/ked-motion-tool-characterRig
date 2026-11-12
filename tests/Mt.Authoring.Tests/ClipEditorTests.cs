@@ -160,7 +160,6 @@ public class ClipEditorTests
         Assert.Throws<InvalidOperationException>(() => editor.AddClipRole("greet", "a", "character"));
         Assert.Throws<InvalidOperationException>(() => editor.AddClipRole("greet", "C", "character"));
         Assert.Throws<InvalidOperationException>(() => editor.AddClipRole("greet", "c", ""));
-        Assert.Throws<InvalidOperationException>(() => editor.RenameClipRole("greet", "a", "b"));
         Assert.Throws<KeyNotFoundException>(() => editor.AddClipTrack("greet", "nobody"));
         Assert.Throws<KeyNotFoundException>(() => editor.AddClipBlock("greet", 0, "no_such_motion", 0f));
         Assert.Throws<ArgumentOutOfRangeException>(() => editor.AddClipBlock("greet", 9, "nod", 0f));
@@ -258,28 +257,15 @@ public class ClipEditorTests
 
         editor.Undo();
         Assert.Equal(new[] { "s1", "s2" }, Greet(editor).Roles.Select(r => r.Object));
-
-        // 다른 씬의 같은 id는 이 클립과 무관하다 — 그 씬이 활성이 돼도 클립의 시작 씬은 그대로다.
-        editor.AddScene("other"); // 기본 씬이라 s1이 있고, 활성 씬이 된다
-        Assert.Equal("scene", Greet(editor).Scene);
-        editor.RenameSceneObject("other", "s1", "x1");
-        Assert.Equal("s1", Greet(editor).Roles[0].Object);
-
-        editor.SetClipScene("greet", "other");
-        editor.RenameScene("other", "hall");
-        Assert.Equal("hall", Greet(editor).Scene);
     }
 
     [Fact]
-    public void 배역을_바꾸거나_지우면_트랙이_따라온다()
+    public void 배역을_지우면_트랙이_따라온다()
     {
         MotionEditor editor = NewGreet();
         editor.AddClipTrack("greet", "a"); // a: 트랙 0·2
 
-        editor.RenameClipRole("greet", "a", "host");
-        Assert.Equal(new[] { "host", "b", "host" }, Greet(editor).Tracks.Select(t => t.Role));
-
-        editor.RemoveClipRole("greet", "host");
+        editor.RemoveClipRole("greet", "a");
         Assert.Equal(new[] { "b" }, Greet(editor).Roles.Select(r => r.Name));
         Assert.Equal(new[] { "b" }, Greet(editor).Tracks.Select(t => t.Role));
 
@@ -289,8 +275,6 @@ public class ClipEditorTests
 
         editor.BindClipRole("greet", "b", null);
         Assert.Null(Greet(editor).Roles[1].Object);
-        editor.SetClipRoleRig("greet", "b", "screenEffect");
-        Assert.Equal("screenEffect", Greet(editor).Roles[1].Rig);
     }
 
     [Fact]
@@ -323,13 +307,9 @@ public class ClipEditorTests
     }
 
     [Fact]
-    public void 클립과_블록_지우기_모션_바꾸기()
+    public void 클립과_블록_지우기()
     {
         MotionEditor editor = NewGreet();
-        editor.SetClipBlockMotion("greet", 1, 0, "bow");
-        Assert.Equal("bow", Greet(editor).Tracks[1].Blocks[0].Motion);
-        Assert.Throws<KeyNotFoundException>(() => editor.SetClipBlockMotion("greet", 1, 0, "nope"));
-
         editor.RemoveClipBlock("greet", 1, 0);
         Assert.Empty(Greet(editor).Tracks[1].Blocks);
 

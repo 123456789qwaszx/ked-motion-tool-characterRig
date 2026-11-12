@@ -171,8 +171,9 @@ public class EmojiShellTests
             Assert.Equal("loop", emoji.Hold);
             Assert.Equal("enter", emoji.In);
             Assert.True(emoji.Stays);
-            Assert.Equal(new[] { "enter · 등장", "loop · 머묾" }, window.TimeSliderMarks.Select(m => m.Label));
-            Assert.Equal(EmojiAsset.SecondsOf(6), window.TimeSliderMarks[1].Start, 6);
+            // 타임라인 보기의 구간은 수명의 띠가 보인다 — 타임 슬라이더에는 깔지 않는다. 숫자 칸은 접혀 있다.
+            Assert.Empty(window.TimeSliderMarks);
+            Assert.False(window.EmojiSpanSectionOpen);
 
             // 수명 재생 — 시계는 등장 6fr + 머묾 15fr × 2바퀴, 띠는 단계.
             window.SetEmojiLifeFromForm(true);
