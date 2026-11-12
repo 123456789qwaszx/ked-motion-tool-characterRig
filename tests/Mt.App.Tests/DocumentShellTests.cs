@@ -177,4 +177,101 @@ public class DocumentShellTests
             Assert.Empty(window.Session.UnknownKeys);
         });
     }
+    /// <summary>문서 a(길이 1)를 저장하고, 길이 2로 고친 자동 저장본을 남긴 채(저장하지 못하고 끝난 것처럼) 새 문서로 간다.</summary>
+    private static string LeaveAutoSave(MainWindow window, string directory)
+    {
+        string path = Path.Combine(directory, "a.motion-authoring.json");
+        window.Session.Editor.AddMotion("a", "character", 1f);
+        window.Session.Save(path);
+        File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddMinutes(-5));
+        window.Session.Editor.SetDuration("a", 2f);
+        string autosave = window.Session.AutoSave()!;
+        window.AsksBeforeDiscard = false;
+        window.NewDocumentFromForm();
+        window.AsksBeforeDiscard = true;
+        Assert.True(File.Exists(autosave));
+        return path;
+    }
+
+    [Fact]
+    public void 문서보다_새로운_자동_저장본이_있으면_되살릴지_묻고_되살리면_저장하지_않은_상태로_열린다()
+    {
+        Run((window, directory) =>
+        {
+            string path = LeaveAutoSave(window, directory);
+            string autosave = Path.Combine(directory, "a.autosave.motion-authoring.json");
+
+            window.OpenDocument(path);
+            Assert.True(window.AutoSavePromptOpen);
+            Assert.Equal(1f, window.Session.Editor.Document.Find("a")!.Duration);
+
+            window.AnswerAutoSaveFromForm("recover");
+            Assert.False(window.AutoSavePromptOpen);
+            Assert.Equal(2f, window.Session.Editor.Document.Find("a")!.Duration);
+            Assert.Equal(path, window.Session.DocumentPath);
+            Assert.True(window.Session.IsDirty);
+            Assert.True(File.Exists(autosave)); // 저장하기 전에는 남는다
+
+            // 저장하면 자동 저장본은 할 일을 다했다.
+            window.Session.Save();
+            Assert.False(File.Exists(autosave));
+            Assert.False(window.Session.IsDirty);
+
+            window.OpenDocument(path);
+            Assert.False(window.AutoSavePromptOpen);
+            Assert.Equal(2f, window.Session.Editor.Document.Find("a")!.Duration);
+        });
+    }
+
+    [Fact]
+    public void 자동_저장본을_지우라고_하면_지우고_나중에라고_하면_남아서_다시_묻는다()
+    {
+        Run((window, directory) =>
+        {
+            string path = LeaveAutoSave(window, directory);
+            string autosave = Path.Combine(directory, "a.autosave.motion-authoring.json");
+
+            window.OpenDocument(path);
+            window.AnswerAutoSaveFromForm("later");
+            Assert.True(File.Exists(autosave));
+            Assert.Equal(1f, window.Session.Editor.Document.Find("a")!.Duration);
+
+            // 그대로 저장해도, 이 세션이 쓴 것이 아닌 자동 저장본은 건드리지 않는다.
+            window.Session.Editor.SetDuration("a", 3f);
+            window.Session.Save();
+            Assert.True(File.Exists(autosave));
+
+            File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddMinutes(-5));
+            window.OpenDocument(path);
+            Assert.True(window.AutoSavePromptOpen);
+            window.AnswerAutoSaveFromForm("discard");
+            Assert.False(File.Exists(autosave));
+            Assert.Equal(3f, window.Session.Editor.Document.Find("a")!.Duration);
+
+            window.OpenDocument(path);
+            Assert.False(window.AutoSavePromptOpen);
+        });
+    }
+
+    [Fact]
+    public void 저장하면_이_세션이_쓴_자동_저장본을_지우고_문서보다_오래된_것은_묻지_않는다()
+    {
+        Run((window, directory) =>
+        {
+            string path = Path.Combine(directory, "a.motion-authoring.json");
+            window.Session.Editor.AddMotion("a", "character", 1f);
+            window.Session.Save(path);
+            window.Session.Editor.SetDuration("a", 2f);
+            string autosave = window.Session.AutoSave()!;
+            window.Session.Save();
+            Assert.False(File.Exists(autosave));
+
+            // 전부터 있던 오래된 자동 저장본 — 묻지 않는다.
+            File.WriteAllText(autosave, File.ReadAllText(path));
+            File.SetLastWriteTimeUtc(autosave, DateTime.UtcNow.AddDays(-1));
+            window.OpenDocument(path);
+            Assert.False(window.AutoSavePromptOpen);
+            Assert.True(File.Exists(autosave));
+        });
+    }
 }

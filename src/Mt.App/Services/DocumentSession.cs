@@ -16,6 +16,7 @@ namespace Mt.App.Services;
 public sealed class DocumentSession
 {
     private long _savedRevision;
+    private bool _autoSaveMine;
 
     public DocumentSession()
     {
@@ -270,21 +271,67 @@ public sealed class DocumentSession
 
     public void Open(string path)
     {
-        string json = File.ReadAllText(path);
-        MotionDocument document = MotionDocumentJson.Read(json);
-        Replace(document, path);
-        UnknownKeys = MotionDocumentJson.UnknownKeys(json);
-        TryLoadRigFromDocument();
-        TryLoadAssetsFromDocument();
-        _assetFingerprint = AssetFingerprintOf(Editor.Document);
-        AssetsChanged?.Invoke(this, EventArgs.Empty);
+        Load(path, path);
         SchemaDiff change = SchemaChange;
         SetStatus(change.IsEmpty
             ? $"열었다: {path}"
             : $"열었다: {path} — 문서를 지을 때와 스키마가 다르다(문제 줄에 무엇이 달라졌는지 나온다).");
     }
 
-    /// <summary>자동 저장 — 문서 옆 <c>*.autosave.motion-authoring.json</c>. 저장 여부(IsDirty)는 건드리지 않는다. 경로가 없으면 안 한다.</summary>
+    /// <summary><paramref name="file"/>을 읽어 <paramref name="documentPath"/>의 문서로 든다(자동 저장본을 되살릴 때 둘이 다르다).</summary>
+    private void Load(string file, string documentPath)
+    {
+        string json = File.ReadAllText(file);
+        MotionDocument document = MotionDocumentJson.Read(json);
+        Replace(document, documentPath);
+        UnknownKeys = MotionDocumentJson.UnknownKeys(json);
+        TryLoadRigFromDocument();
+        TryLoadAssetsFromDocument();
+        _assetFingerprint = AssetFingerprintOf(Editor.Document);
+        AssetsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// 연 문서보다 새로운 자동 저장본 — 지난번에 저장하지 못하고 끝났다는 뜻이다. 없거나 더 오래됐으면 null.
+    /// </summary>
+    public string? NewerAutoSave()
+    {
+        if (DocumentPath is null || !File.Exists(DocumentPath))
+        {
+            return null;
+        }
+
+        string path = AutoSavePathFor(DocumentPath);
+        return File.Exists(path) && File.GetLastWriteTimeUtc(path) > File.GetLastWriteTimeUtc(DocumentPath) ? path : null;
+    }
+
+    /// <summary>자동 저장본을 되살린다 — 문서의 자리는 그대로고, 저장하지 않은 것이 있는 상태가 된다. 저장하면 자동 저장본은 지운다.</summary>
+    public void RecoverAutoSave()
+    {
+        string documentPath = DocumentPath ?? throw new InvalidOperationException("되살릴 문서가 없다.");
+        string path = AutoSavePathFor(documentPath);
+        Load(path, documentPath);
+        _savedRevision = -1;
+        _autoSaveMine = true;
+        SetStatus($"자동 저장본을 되살렸다: {Path.GetFileName(path)} — 저장해야 문서에 남는다.");
+    }
+
+    /// <summary>자동 저장본을 버린다(파일을 지운다) — 사람이 그러라고 했을 때만.</summary>
+    public void DiscardAutoSave()
+    {
+        if (DocumentPath is null)
+        {
+            return;
+        }
+
+        string path = AutoSavePathFor(DocumentPath);
+        File.Delete(path);
+        _autoSaveMine = false;
+        SetStatus($"자동 저장본을 지웠다: {Path.GetFileName(path)}");
+    }
+
+    /// <summary>자동 저장 — 문서 옆 <c>*.autosave.motion-authoring.json</c>. 저장 여부(IsDirty)는 건드리지 않는다. 경로가 없으면 안 한다.
+    /// 저장하면 지우고, 저장하지 못하고 끝났으면 남아서 다음에 열 때 되살릴지 묻는다(<see cref="NewerAutoSave"/>).</summary>
     public string? AutoSave()
     {
         if (DocumentPath is null || !IsDirty)
@@ -294,6 +341,7 @@ public sealed class DocumentSession
 
         string path = AutoSavePathFor(DocumentPath);
         File.WriteAllText(path, MotionDocumentJson.Write(Editor.Document));
+        _autoSaveMine = true;
         SetStatus($"자동 저장: {Path.GetFileName(path)}");
         return path;
     }
@@ -313,6 +361,14 @@ public sealed class DocumentSession
         path ??= DocumentPath ?? throw new InvalidOperationException("저장할 경로가 없다 — 다른 이름으로 저장을 쓴다.");
         RecordSchemaIfMissing();
         File.WriteAllText(path, MotionDocumentJson.Write(Editor.Document));
+
+        // 이 세션이 쓴(또는 되살린) 자동 저장본은 저장하면 할 일을 다했다. 전부터 있던 것은 건드리지 않는다.
+        if (_autoSaveMine && DocumentPath is not null)
+        {
+            File.Delete(AutoSavePathFor(DocumentPath));
+            _autoSaveMine = false;
+        }
+
         DocumentPath = path;
         _savedRevision = Editor.Revision;
         UnknownKeys = Array.Empty<string>();
@@ -519,6 +575,7 @@ public sealed class DocumentSession
     private void Replace(MotionDocument document, string? path)
     {
         UnknownKeys = Array.Empty<string>();
+        _autoSaveMine = false;
         Editor.Changed -= OnEditorChanged;
         Editor = new MotionEditor(document);
         Editor.Changed += OnEditorChanged;

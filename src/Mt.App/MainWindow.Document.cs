@@ -6,7 +6,8 @@ using Avalonia.Media;
 
 namespace Mt.App;
 
-// 문서의 얼굴 — 창 제목(문서의 이름 · 고쳤다는 표시)과, 저장하지 않은 것을 버리기 전에 묻는 일(닫기 · 새로 · 열기).
+// 문서의 얼굴 — 창 제목(문서의 이름 · 고쳤다는 표시), 저장하지 않은 것을 버리기 전에 묻는 일(닫기 · 새로 · 열기),
+// 연 문서보다 새로운 자동 저장본을 되살릴지 묻는 일.
 public partial class MainWindow
 {
     private const string AppTitle = "ked-motion-tool-characterRig";
@@ -14,6 +15,7 @@ public partial class MainWindow
     private Window? _unsavedWindow;
     private Action? _afterUnsaved;
     private bool _closeConfirmed;
+    private Window? _autoSaveWindow;
 
     /// <summary>
     /// 저장하지 않은 것을 버리기 전에 묻는가. 사람이 여는 창은 묻는다. 테스트가 여는 창은 기본으로 묻지 않는다 —
@@ -148,6 +150,88 @@ public partial class MainWindow
         return true;
     }
 
+    /// <summary>
+    /// 문서를 연 뒤 — 자동 저장본이 문서보다 새로우면(저장하지 못하고 끝났다) 되살릴지 묻는다.
+    /// 되살리기 · 지우기 · 나중에(그대로 둔다 — 다음에 열 때 또 묻는다).
+    /// </summary>
+    private void OfferAutoSave()
+    {
+        CloseAutoSavePrompt();
+
+        if (!AsksBeforeDiscard || _session.NewerAutoSave() is not { } path)
+        {
+            return;
+        }
+
+        var recover = new Button { Content = "되살리기", MinWidth = 90, HorizontalContentAlignment = HorizontalAlignment.Center };
+        var discard = new Button { Content = "자동 저장본 지우기", MinWidth = 130, HorizontalContentAlignment = HorizontalAlignment.Center };
+        var later = new Button { Content = "나중에", MinWidth = 70, HorizontalContentAlignment = HorizontalAlignment.Center };
+        recover.Click += (_, _) => AnswerAutoSave(AutoSaveAnswer.Recover);
+        discard.Click += (_, _) => AnswerAutoSave(AutoSaveAnswer.Discard);
+        later.Click += (_, _) => AnswerAutoSave(AutoSaveAnswer.Later);
+
+        var panel = new StackPanel { Margin = new Thickness(16), Spacing = 12 };
+        panel.Children.Add(new TextBlock { Text = "저장한 문서보다 새로운 자동 저장본이 있다.", FontWeight = FontWeight.SemiBold });
+        panel.Children.Add(new TextBlock
+        {
+            Text = $"{Path.GetFileName(path)} — {File.GetLastWriteTime(path):yyyy-MM-dd HH:mm}\n지난번에 저장하지 못하고 끝난 것일 수 있다. 되살리면 저장하지 않은 상태로 열린다 — 보고 나서 저장하거나 되돌린다.",
+            Opacity = 0.85,
+            TextWrapping = TextWrapping.Wrap,
+        });
+        panel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right, Children = { recover, discard, later } });
+
+        var window = new Window
+        {
+            Title = "자동 저장본이 있다",
+            Width = 460,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Content = panel,
+        };
+        window.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(_autoSaveWindow, window))
+            {
+                _autoSaveWindow = null;
+            }
+        };
+        _autoSaveWindow = window;
+        window.Show(this);
+    }
+
+    private enum AutoSaveAnswer
+    {
+        Recover,
+        Discard,
+        Later,
+    }
+
+    private void AnswerAutoSave(AutoSaveAnswer answer)
+    {
+        CloseAutoSavePrompt();
+
+        switch (answer)
+        {
+            case AutoSaveAnswer.Recover:
+                Guard("자동 저장본 되살리기", _session.RecoverAutoSave);
+                break;
+            case AutoSaveAnswer.Discard:
+                Guard("자동 저장본 지우기", _session.DiscardAutoSave);
+                break;
+            default:
+                _session.SetStatus("자동 저장본은 그대로 두었다 — 다음에 열 때 다시 묻는다.");
+                break;
+        }
+    }
+
+    private void CloseAutoSavePrompt()
+    {
+        Window? window = _autoSaveWindow;
+        _autoSaveWindow = null;
+        window?.Close();
+    }
+
     private void NewDocument() => ConfirmUnsaved("새 문서를 연다", () => Guard("새 문서", _session.New));
 
     private void OnNewClick(object? sender, RoutedEventArgs e) => NewDocument();
@@ -159,6 +243,16 @@ public partial class MainWindow
     internal void NewDocumentFromForm() => NewDocument();
 
     internal void OpenDocumentAskingFromForm(string path) => ConfirmUnsaved("다른 문서를 연다", () => Guard("열기", () => OpenDocument(path)));
+
+    internal bool AutoSavePromptOpen => _autoSaveWindow is not null;
+
+    /// <summary>자동 저장본의 물음에 답한다 — "recover" · "discard" · "later".</summary>
+    internal void AnswerAutoSaveFromForm(string answer) => AnswerAutoSave(answer switch
+    {
+        "recover" => AutoSaveAnswer.Recover,
+        "discard" => AutoSaveAnswer.Discard,
+        _ => AutoSaveAnswer.Later,
+    });
 
     /// <summary>물음에 답한다 — "save" · "discard" · "cancel".</summary>
     internal void AnswerUnsavedFromForm(string answer) => AnswerUnsaved(answer switch

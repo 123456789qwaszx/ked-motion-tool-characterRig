@@ -15,6 +15,7 @@ public partial class MainWindow
         _settings.Touch(path);
         RefreshRecentMenu();
         SaveSettings();
+        OfferAutoSave();
     }
 
     // ── 파일 ──────────────────────────────────────────────────────────

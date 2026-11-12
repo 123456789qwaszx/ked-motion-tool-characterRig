@@ -226,7 +226,11 @@ public partial class MainWindow : Window
         GraphHost.Child = BuildCenter();
         ApplyLayout();
 
-        _session.DocumentReplaced += (_, _) => OnDocumentReplaced();
+        _session.DocumentReplaced += (_, _) =>
+        {
+            CloseAutoSavePrompt(); // 다른 문서가 됐다 — 앞 문서의 물음은 거둔다
+            OnDocumentReplaced();
+        };
         _session.StatusChanged += (_, _) =>
         {
             StatusText.Text = _session.Status;
