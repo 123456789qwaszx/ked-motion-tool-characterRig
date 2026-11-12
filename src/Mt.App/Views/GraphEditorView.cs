@@ -76,6 +76,8 @@ public sealed class GraphEditorView : Control
     private static readonly IBrush SelectedKeyBrush = new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF));
     private static readonly Pen HandlePen = new(new SolidColorBrush(Color.FromRgb(0xDC, 0xDC, 0xDC)), 1);
     private static readonly IBrush HandleBrush = new SolidColorBrush(Color.FromRgb(0xE6, 0xE6, 0xE6));
+    private static readonly IBrush LaneNameBrush = new SolidColorBrush(Color.FromArgb(200, 0xD8, 0xD8, 0xD8));
+    private static readonly Pen LanePen = new(new SolidColorBrush(Color.FromRgb(0x1C, 0x1C, 0x1C)), 2);
     private static readonly IBrush ValueLabelBrush = new SolidColorBrush(Color.FromRgb(0xF5, 0xF5, 0xF5));
     private static readonly Pen BufferPen = new(new SolidColorBrush(Color.FromArgb(150, 0x9A, 0x9A, 0x9A)), 1.5, DashStyle.Dash);
     private static readonly IBrush PivotBrush = new SolidColorBrush(Color.FromRgb(0xF9, 0xD7, 0x1C));
@@ -337,8 +339,123 @@ public sealed class GraphEditorView : Control
         InvalidateVisual();
     }
 
+    // ── 종류별 칸 ─────────────────────────────────────────────────────
+    //
+    // 자리(px) · 크기(배율) · 회전(도) · 투명도(0…1)는 값의 크기가 달라 한 눈금에 그리면 작은 것이 바닥에 깔린다.
+    // 켜면 플롯을 종류마다 한 칸씩 세로로 나누고, 칸마다 제 곡선에 맞춘 세로 눈금을 쓴다. 가로(시간)는 전부 같다.
+    // 칸의 눈금은 놓인 키에서 온다 — 끄는 동안(미리보기)은 바뀌지 않고, 놓으면 다시 맞는다. 세로 이동 · 확대는 칸에 먹지 않는다.
+
+    private bool _stacked;
+
+    /// <summary>곡선을 종류별 칸에 나눠 그린다(칸마다 제 세로 눈금).</summary>
+    public bool Stacked
+    {
+        get => _stacked;
+        set
+        {
+            if (_stacked != value)
+            {
+                _stacked = value;
+                UpdateRegion();
+                InvalidateVisual();
+            }
+        }
+    }
+
+    /// <summary>칸의 이름을 적는 법(오른쪽 위의 글) — 기본은 채널 종류의 이름.</summary>
+    public Func<ChannelKind, string> LaneName { get; set; } = ChannelKindLabel.Of;
+
+    /// <summary>칸 하나 — 종류, 플롯 안의 자리, 그 칸의 카메라(시간은 공용, 값은 제 곡선에 맞춘 것).</summary>
+    public readonly record struct Lane(ChannelKind Kind, Rect Band, GraphCamera Camera);
+
+    /// <summary>지금의 칸들(위에서 아래로). 나누지 않았거나 키를 가진 보이는 곡선이 없으면 비어 있다.</summary>
+    public IReadOnlyList<Lane> Lanes()
+    {
+        if (!_stacked || Motion is not { } motion)
+        {
+            return Array.Empty<Lane>();
+        }
+
+        var ranges = new List<(ChannelKind Kind, double Min, double Max)>();
+
+        foreach (CurveSlot slot in _curves)
+        {
+            if (!slot.Visible || slot.Curve.Resolve(motion) is not { Keys.Count: > 0 } curve)
+            {
+                continue;
+            }
+
+            double min = curve.Keys.Min(k => (double)k.V);
+            double max = curve.Keys.Max(k => (double)k.V);
+            int at = ranges.FindIndex(r => r.Kind == slot.Curve.Kind);
+
+            if (at < 0)
+            {
+                ranges.Add((slot.Curve.Kind, min, max));
+            }
+            else
+            {
+                ranges[at] = (slot.Curve.Kind, Math.Min(ranges[at].Min, min), Math.Max(ranges[at].Max, max));
+            }
+        }
+
+        if (ranges.Count == 0)
+        {
+            return Array.Empty<Lane>();
+        }
+
+        ranges.Sort((a, b) => a.Kind.CompareTo(b.Kind));
+        Rect plot = Plot;
+        double height = plot.Height / ranges.Count;
+        var lanes = new List<Lane>(ranges.Count);
+
+        for (int i = 0; i < ranges.Count; i++)
+        {
+            (ChannelKind kind, double min, double max) = ranges[i];
+
+            // 값이 하나뿐인 칸(평평한 곡선)은 그 값을 가운데에 두고 위아래로 1/2씩.
+            double span = Math.Max(max - min, 1e-6) < 1e-5 ? 1 : max - min;
+            double middle = (min + max) / 2;
+            double shown = span * 1.5; // 위아래 여백 — 키와 핸들이 칸의 가장자리에 붙지 않게
+            lanes.Add(new Lane(kind, new Rect(plot.X, plot.Y + height * i, plot.Width, height),
+                _camera with { ValueOrigin = middle - shown / 2, PixelsPerValue = height / shown }));
+        }
+
+        return lanes;
+    }
+
+    /// <summary>그 곡선이 그려지는 틀 — 카메라와 자리. 칸으로 나눴으면 그 종류의 칸, 아니면 플롯 전체.</summary>
+    private (GraphCamera Camera, Rect Plot) FrameOf(CurveRef curve)
+    {
+        foreach (Lane lane in Lanes())
+        {
+            if (lane.Kind == curve.Kind)
+            {
+                return (lane.Camera, lane.Band);
+            }
+        }
+
+        return (_camera, Plot);
+    }
+
+    private GraphCamera CameraOf(CurveRef curve) => FrameOf(curve).Camera;
+
     private Point ScreenOf(CurveRef curve, double t, double v)
-        => ToScreen(new GraphPoint(t, v));
+    {
+        (GraphCamera camera, Rect plot) = FrameOf(curve);
+        Pixel px = camera.ToPixel(new GraphPoint(t, v), plot.Height);
+        return new Point(plot.X + px.X, plot.Y + px.Y);
+    }
+
+    /// <summary>화면의 점을 그 곡선의 틀에서 그래프 좌표로.</summary>
+    private GraphPoint ToGraphOf(CurveRef curve, Point screen)
+    {
+        (GraphCamera camera, Rect plot) = FrameOf(curve);
+        return camera.ToGraph(new Pixel(screen.X - plot.X, screen.Y - plot.Y), plot.Height);
+    }
+
+    /// <summary>테스트 손잡이 — 그 곡선의 (시각, 값)이 그려지는 화면 자리.</summary>
+    internal Point ScreenOfForTest(CurveRef curve, double t, double v) => ScreenOf(curve, t, v);
 
     private Drag _drag = Drag.None;
     private Point _dragStart;
@@ -382,6 +499,14 @@ public sealed class GraphEditorView : Control
             return;
         }
 
+        // 종류별 칸에서는 한 칸의 키만 상자로 묶는다 — 칸이 다르면 값의 눈금이 달라 한 상자로 잴 수 없다.
+        if (_stacked && _selection.Select(k => k.Curve.Kind).Distinct().Count() > 1)
+        {
+            _region = null;
+            return;
+        }
+
+        _regionCurve = _selection.Select(k => (CurveRef?)k.Curve).FirstOrDefault();
         double t0 = double.PositiveInfinity, t1 = double.NegativeInfinity, v0 = double.PositiveInfinity, v1 = double.NegativeInfinity;
 
         foreach (KeyRef key in _selection)
@@ -407,10 +532,15 @@ public sealed class GraphEditorView : Control
         _region = (t0, t1, v0, v1);
     }
 
+    /// <summary>상자가 선 곡선(그 칸의 눈금으로 잰다).</summary>
+    private CurveRef? _regionCurve;
+
+    private Point RegionScreen(double t, double v) => _regionCurve is { } curve ? ScreenOf(curve, t, v) : ToScreen(new GraphPoint(t, v));
+
     private Rect RegionScreenRect((double T0, double T1, double V0, double V1) region)
     {
-        Point a = ToScreen(new GraphPoint(region.T0, region.V1));
-        Point b = ToScreen(new GraphPoint(region.T1, region.V0));
+        Point a = RegionScreen(region.T0, region.V1);
+        Point b = RegionScreen(region.T1, region.V0);
         const double pad = 8;
         return new Rect(a.X - pad, a.Y - pad, Math.Max(1, b.X - a.X) + pad * 2, Math.Max(1, b.Y - a.Y) + pad * 2);
     }
@@ -623,7 +753,7 @@ public sealed class GraphEditorView : Control
                 continue;
             }
 
-            List<Pixel> polyline = CurveSampler.Sample(curve.Keys, left.T, right.T, 256).Select(p => ToPixel(ToScreen(new GraphPoint(p.T, p.V)))).ToList();
+            List<Pixel> polyline = CurveSampler.Sample(curve.Keys, left.T, right.T, 256).Select(p => ToPixel(ScreenOf(slot.Curve, p.T, p.V))).ToList();
             double d = GraphHitTest.DistanceToPolyline(polyline, at);
 
             if (d < best)
@@ -976,7 +1106,7 @@ public sealed class GraphEditorView : Control
             foreach ((CurveRef curveRef, List<KeyAsset> buffered) in _buffer)
             {
                 List<GraphPoint> bufferPoints = CurveSampler.Sample(buffered, left.T, right.T, samples);
-                context.DrawGeometry(null, BufferPen, new PolylineGeometry(bufferPoints.Select(p => ToScreen(new GraphPoint(p.T, p.V))), false));
+                context.DrawGeometry(null, BufferPen, new PolylineGeometry(bufferPoints.Select(p => ScreenOf(curveRef, p.T, p.V)), false));
             }
 
             foreach (CurveSlot slot in _curves)
@@ -1000,7 +1130,7 @@ public sealed class GraphEditorView : Control
                 {
                     var infinityPen = new Pen(new SolidColorBrush(Color.FromArgb(90, slot.Color.R, slot.Color.G, slot.Color.B)), 1, DashStyle.Dash);
                     List<GraphPoint> extended = CurveSampler.SampleInfinity(keys, pre, post, left.T, right.T, samples);
-                    context.DrawGeometry(null, infinityPen, new PolylineGeometry(extended.Select(p => ToScreen(new GraphPoint(p.T, p.V))), false));
+                    context.DrawGeometry(null, infinityPen, new PolylineGeometry(extended.Select(p => ScreenOf(slot.Curve, p.T, p.V)), false));
                 }
 
                 List<GraphPoint> points = CurveSampler.Sample(keys, left.T, right.T, samples);
@@ -1011,7 +1141,7 @@ public sealed class GraphEditorView : Control
                 var pen = curveSelected
                     ? new Pen(SelectedCurveBrush, 3, muted ? DashStyle.Dash : null)
                     : new Pen(new SolidColorBrush(color), locked ? 1 : 2, muted ? DashStyle.Dash : null);
-                var polyline = new PolylineGeometry(points.Select(p => ToScreen(new GraphPoint(p.T, p.V))), false);
+                var polyline = new PolylineGeometry(points.Select(p => ScreenOf(slot.Curve, p.T, p.V)), false);
                 context.DrawGeometry(null, pen, polyline);
             }
 
@@ -1091,14 +1221,14 @@ public sealed class GraphEditorView : Control
 
         if (index > 0)
         {
-            Point inEnd = ToPoint(HandleMath.HandleEnd(origin, key.InTangent, inward: true, _camera));
+            Point inEnd = ToPoint(HandleMath.HandleEnd(origin, key.InTangent, inward: true, CameraOf(keyRef.Curve)));
             context.DrawLine(HandlePen, center, inEnd);
             DrawHandleEnd(context, inEnd, _selectedHandles.Contains((keyRef, true)));
         }
 
         if (index < keys.Count - 1)
         {
-            Point outEnd = ToPoint(HandleMath.HandleEnd(origin, key.OutTangent, inward: false, _camera));
+            Point outEnd = ToPoint(HandleMath.HandleEnd(origin, key.OutTangent, inward: false, CameraOf(keyRef.Curve)));
             context.DrawLine(HandlePen, center, outEnd);
             DrawHandleEnd(context, outEnd, _selectedHandles.Contains((keyRef, false)));
         }
@@ -1173,19 +1303,54 @@ public sealed class GraphEditorView : Control
             }
         }
 
-        double vStep = TimeSnap.ValueTickStep(_camera.PixelsPerValue);
-        double vStart = Math.Floor(bottomLeft.V / vStep) * vStep;
+        IReadOnlyList<Lane> lanes = Lanes();
+        Point zero = ToScreen(new GraphPoint(0, 0));
 
-        for (double v = vStart; v <= topRight.V; v += vStep)
+        if (lanes.Count == 0)
         {
-            Point y = ToScreen(new GraphPoint(0, v));
-            context.DrawLine(GridPen, new Point(plot.X, y.Y), new Point(plot.Right, y.Y));
-            DrawLabel(context, $"{v:0.###}", new Point(4, y.Y - 7), LabelBrush, 10);
+            double vStep = TimeSnap.ValueTickStep(_camera.PixelsPerValue);
+            double vStart = Math.Floor(bottomLeft.V / vStep) * vStep;
+
+            for (double v = vStart; v <= topRight.V; v += vStep)
+            {
+                Point y = ToScreen(new GraphPoint(0, v));
+                context.DrawLine(GridPen, new Point(plot.X, y.Y), new Point(plot.Right, y.Y));
+                DrawLabel(context, $"{v:0.###}", new Point(4, y.Y - 7), LabelBrush, 10);
+            }
+
+            // 기준선: 값 0.
+            context.DrawLine(AxisPen, new Point(plot.X, zero.Y), new Point(plot.Right, zero.Y));
+        }
+        else
+        {
+            // 종류별 칸 — 칸마다 제 눈금 · 이름 · 값 0의 기준선, 칸 사이에 가르는 줄.
+            foreach (Lane lane in lanes)
+            {
+                Rect band = lane.Band;
+                double vStep = TimeSnap.ValueTickStep(lane.Camera.PixelsPerValue, 28);
+                double bottom = lane.Camera.ValueOrigin;
+                double top = bottom + band.Height / lane.Camera.PixelsPerValue;
+
+                using (context.PushClip(new Rect(0, band.Y, Bounds.Width, band.Height)))
+                {
+                    for (double v = Math.Ceiling(bottom / vStep) * vStep; v <= top; v += vStep)
+                    {
+                        double y = band.Y + lane.Camera.ToPixel(new GraphPoint(0, v), band.Height).Y;
+                        context.DrawLine(Math.Abs(v) < vStep / 2 ? AxisPen : GridPen, new Point(plot.X, y), new Point(plot.Right, y));
+                        DrawLabel(context, $"{(Math.Abs(v) < vStep / 2 ? 0 : v):0.###}", new Point(4, y - 7), LabelBrush, 10);
+                    }
+                }
+
+                DrawLabel(context, LaneName(lane.Kind), new Point(plot.Right - 44, band.Y + 3), LaneNameBrush, 11);
+
+                if (band.Y > plot.Y + 0.5)
+                {
+                    context.DrawLine(LanePen, new Point(0, band.Y), new Point(plot.Right, band.Y));
+                }
+            }
         }
 
-        // 기준선: 값 0 · 시각 0 · 길이 · 현재 시각(노랑, 위 눈금자에 마커).
-        Point zero = ToScreen(new GraphPoint(0, 0));
-        context.DrawLine(AxisPen, new Point(plot.X, zero.Y), new Point(plot.Right, zero.Y));
+        // 기준선: 시각 0 · 길이 · 현재 시각(노랑, 위 눈금자에 마커).
         context.DrawLine(AxisPen, new Point(zero.X, plot.Y), new Point(zero.X, plot.Bottom));
 
         if (motion is not null)
@@ -1262,12 +1427,12 @@ public sealed class GraphEditorView : Control
 
             if (keyRef.Index > 0)
             {
-                candidates.Add(((keyRef, true), HandleMath.HandleEnd(origin, k.InTangent, inward: true, _camera)));
+                candidates.Add(((keyRef, true), HandleMath.HandleEnd(origin, k.InTangent, inward: true, CameraOf(keyRef.Curve))));
             }
 
             if (keyRef.Index < curve.Keys.Count - 1)
             {
-                candidates.Add(((keyRef, false), HandleMath.HandleEnd(origin, k.OutTangent, inward: false, _camera)));
+                candidates.Add(((keyRef, false), HandleMath.HandleEnd(origin, k.OutTangent, inward: false, CameraOf(keyRef.Curve))));
             }
         }
 
@@ -1536,7 +1701,7 @@ public sealed class GraphEditorView : Control
                 continue;
             }
 
-            List<Pixel> polyline = CurveSampler.Sample(curve.Keys, left.T, right.T, 256).Select(p => ToPixel(ToScreen(new GraphPoint(p.T, p.V)))).ToList();
+            List<Pixel> polyline = CurveSampler.Sample(curve.Keys, left.T, right.T, 256).Select(p => ToPixel(ScreenOf(slot.Curve, p.T, p.V))).ToList();
 
             if (GraphHitTest.PolylineIntersectsBox(polyline, a, b))
             {
@@ -1580,7 +1745,7 @@ public sealed class GraphEditorView : Control
                 continue;
             }
 
-            List<Pixel> polyline = CurveSampler.Sample(curve.Keys, left.T, right.T, 256).Select(p => ToPixel(ToScreen(new GraphPoint(p.T, p.V)))).ToList();
+            List<Pixel> polyline = CurveSampler.Sample(curve.Keys, left.T, right.T, 256).Select(p => ToPixel(ScreenOf(slot.Curve, p.T, p.V))).ToList();
             double d = GraphHitTest.DistanceToPolyline(polyline, at);
 
             if (d < bestDistance)
@@ -1776,8 +1941,9 @@ public sealed class GraphEditorView : Control
                 continue;
             }
 
+            // 값의 변위는 그 곡선의 칸의 눈금으로 — 종류별 칸이면 칸마다 한 픽셀의 값이 다르다.
             double t = original.T + delta.T;
-            double v = original.V + delta.V;
+            double v = original.V + CameraOf(keyRef.Curve).DeltaToGraph(dx, dy).V;
 
             if (wholeSnap)
             {
@@ -1801,7 +1967,7 @@ public sealed class GraphEditorView : Control
     /// <summary>리전 모서리 드래그 — 한 축만, 반대쪽 모서리(<see cref="_scalePivot"/>, 보기값) 기준. 시간 축은 값을 안 건드린다.</summary>
     private void RegionScalePreview(MotionAsset motion, Point position)
     {
-        GraphPoint at = ToGraph(position);
+        GraphPoint at = _regionCurve is { } regionCurve ? ToGraphOf(regionCurve, position) : ToGraph(position);
         double timeFactor = 1;
         double valueFactor = 1;
 
@@ -1874,7 +2040,7 @@ public sealed class GraphEditorView : Control
             }
 
             Pixel origin = ToPixel(ScreenOf(key.Curve, k.T, k.V));
-            _handleDrag.Add(((key, inward), HandleMath.HandleEnd(origin, (inward ? k.InTangent : k.OutTangent), inward, _camera)));
+            _handleDrag.Add(((key, inward), HandleMath.HandleEnd(origin, (inward ? k.InTangent : k.OutTangent), inward, CameraOf(key.Curve))));
         }
 
         if (_handleDrag.Count == 0)
@@ -1895,7 +2061,7 @@ public sealed class GraphEditorView : Control
         }
 
         Pixel origin = ToPixel(ScreenOf(keyRef.Curve, original.T, original.V));
-        float slope = (float)HandleMath.SlopeFromHandle(origin, handleEnd, inward, _camera);
+        float slope = (float)HandleMath.SlopeFromHandle(origin, handleEnd, inward, CameraOf(keyRef.Curve));
 
         if (original.Broken)
         {

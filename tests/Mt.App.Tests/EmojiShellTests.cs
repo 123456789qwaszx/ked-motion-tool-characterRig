@@ -130,8 +130,9 @@ public class EmojiShellTests
             // 그림은 리그에만 — 이모지 전체에는 막힌다(상태 줄).
             window.KeyEmojiNowFromForm(null, ChannelKind.Image);
             Assert.Null(timeline.FindChannel("Emoji_Offset", ChannelKind.Image));
-            Assert.Contains("그림 바꾸기는 그림에만", window.Session.Status);
+            Assert.Contains("그림 바꾸기는 그림 파일이 있는 그림에만", window.Session.Status);
 
+            window.SelectEmojiRigFromForm("body"); // 키 놓기의 대상은 고른 것을 따른다 — 그림 넘기기는 그림의 칸이다
             long before = editor.Revision;
             window.LayFlipsFromForm(0, 3, 5);
             Assert.Equal(before + 1, editor.Revision);
@@ -363,7 +364,7 @@ public class EmojiShellTests
         Run(window =>
         {
             window.AddEmojiFromForm(); // 리그 body에 그림이 없다
-            Assert.Contains(window.Session.EmojiProblems, p => p.Message.Contains("그림이 없다"));
+            Assert.Contains(window.Session.EmojiProblems, p => p.Message.Contains("그림 파일이 없다"));
             Assert.False(window.Session.ExportEmojis(Path.Combine(Path.GetTempPath(), $"emojis-{Guid.NewGuid():N}.json")));
             Assert.Contains("이모지 내보내기 막힘", window.Session.Status);
         });

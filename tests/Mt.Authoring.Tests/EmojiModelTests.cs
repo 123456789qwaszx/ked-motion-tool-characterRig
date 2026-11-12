@@ -204,13 +204,13 @@ public sealed class EmojiModelTests
         string all = string.Join("\n", problems);
 
         Assert.All(problems, p => Assert.True(p.Blocking));
-        Assert.Contains("이모지 'bare': 리그가 없다", all);
-        Assert.Contains("리그 'spark'에 그림이 없다", all);
+        Assert.Contains("이모지 'bare': 그림이 없다", all);
+        Assert.Contains("그림 'spark'에 그림 파일이 없다", all);
         Assert.Contains("body/EmojiRig_Place position: 키를 받는 노드가 아니다", all);
-        Assert.Contains("그림 바꾸기는 리그에만", all);
+        Assert.Contains("그림 바꾸기는 그림에만", all);
         Assert.Contains("X 성분은 이모지에 없다", all);
-        Assert.Contains("그림 키 2가 리그 'body'의 그림(0~1번째)을 가리키지 않는다", all);
-        Assert.Contains("리그 'ghost'이 이 이모지에 없다", all);
+        Assert.Contains("그림 키 2가 그림 'body'의 장(0~1번째)을 가리키지 않는다", all);
+        Assert.Contains("그림 'ghost'이 이 이모지에 없다", all);
         Assert.Contains("구간 'leave'(18~30fr)이 타임라인(0~24fr) 밖", all);
         Assert.Contains("이모지 'lone': 등장 · 퇴장은 머묾을 이었을 때만", all);
     }

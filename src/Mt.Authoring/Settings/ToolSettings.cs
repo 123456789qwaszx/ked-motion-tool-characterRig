@@ -52,6 +52,9 @@ public sealed class ToolSettings
     /// <summary>하이어아키에 컨트롤러(자리·깊이·연기) 대신 덤프의 리그 노드 26단을 보인다. 리거용 — 기본은 끔.</summary>
     public bool ShowRigNodes { get; set; }
 
+    /// <summary>이모지의 그래프를 종류별 칸(자리 · 크기 · 회전 · 투명도 · 그림)에 나눠 그린다 — 칸마다 제 세로 눈금. 기본은 켜짐.</summary>
+    public bool StackEmojiGraph { get; set; } = true;
+
     /// <summary>마지막 작업 모드.</summary>
     public WorkMode WorkMode { get; set; }
 

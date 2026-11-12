@@ -93,6 +93,13 @@ public class EmojiShots
                 Shot(window, "ux-star-left");
                 window.SetEmojiFacingLeftFromForm(false);
 
+                // 종류별 칸 — 그림 하나의 크기와 투명도가 제 눈금으로.
+                window.SelectEmojiRigFromForm("body");
+                Assert.Equal(2, window.Graph.Lanes().Count);
+                Shot(window, "ux-star-lanes");
+                window.SelectEmojiRigFromForm(null);
+                Shot(window, "ux-star-lanes-all");
+
                 // 그림 하나를 고르면 그래프는 그 그림의 것만.
                 window.SelectEmoji("twinkle");
                 window.SelectEmojiRigFromForm("center");

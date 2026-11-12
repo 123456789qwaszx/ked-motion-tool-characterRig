@@ -109,6 +109,14 @@ public partial class MainWindow : Window
     private Button? _regionButton;
     private Button? _bufferButton;
     private readonly CheckBox _valueSnap = new() { Content = "값 스냅", FontSize = 11 };
+    private readonly CheckBox _stackGraph = new() { Content = "종류별 칸", FontSize = 11 };
+
+    /// <summary>그래프를 종류별 칸에 나누는가 — 이모지의 타임라인을 볼 때, 설정이 켜져 있으면.</summary>
+    private void SyncGraphStacked()
+        => _graph.Stacked = _settings.StackEmojiGraph && _graph.MotionName is { } bound && EmojiAsset.IsTimelineName(bound, out _);
+
+    /// <summary>테스트 손잡이 — 그래프 툴바의 "종류별 칸".</summary>
+    internal void SetStackGraphFromForm(bool on) => _stackGraph.IsChecked = on;
     private static readonly string[] InfinityTokens = { "상수", "사이클", "사이클+오프셋", "왕복", "직선" };
     private readonly ComboBox _preInfinity = new() { ItemsSource = InfinityTokens, SelectedIndex = 0, FontSize = 11 };
     private readonly ComboBox _postInfinity = new() { ItemsSource = InfinityTokens, SelectedIndex = 0, FontSize = 11 };
@@ -1071,6 +1079,15 @@ public partial class MainWindow : Window
         }), Separator());
         Add(_regionButton, Separator());
         Add(_snap, _valueSnap, Separator());
+        _stackGraph.IsChecked = _settings.StackEmojiGraph;
+        _stackGraph.IsCheckedChanged += (_, _) =>
+        {
+            _settings.StackEmojiGraph = _stackGraph.IsChecked == true;
+            SyncGraphStacked();
+        };
+        ToolTip.SetTip(_stackGraph, "곡선을 종류별 칸에 나눠 그린다 — 자리 · 크기 · 회전 · 투명도 · 그림이 한 칸씩, 칸마다 제 세로 눈금(값이 작은 곡선이 바닥에 깔리지 않는다). 칸의 눈금은 놓인 키에 저절로 맞는다. 끄면 한 눈금에 전부");
+        _graph.LaneName = EmojiWords.Kind;
+        Add(OnlyIn(WorkMode.Emoji, new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { _stackGraph, Separator() } }));
         Add(new TextBlock { Text = "무한", FontSize = 10, Opacity = 0.7 }, _preInfinity, _postInfinity, Separator());
         Add(new TextBlock { Text = "값", FontSize = 10, Opacity = 0.7 }, _keyValue);
         ToolTip.SetTip(bar, "툴 Q 선택 · W 이동 · R 스케일 · I 현재 시각에 키 끼우기 · A 전체 맞춤 · F 선택 맞춤 · 탄젠트 Ctrl+1 auto · 2 flat · 3 linear · 4 free · 5 spline · 6 plateau · step(계단 — 이모지의 타임라인만) · 버퍼 Ctrl+B 찍기 / Ctrl+Shift+B 바꾸기");
@@ -1617,6 +1634,7 @@ public partial class MainWindow : Window
         _followSelection = true; // 모션을 바꾸면 다시 따라간다
         string? graphName = GraphMotionFor(name); // 모션이 없고 이모지를 골랐으면 그 타임라인
         _graph.Bind(_session.Editor, graphName);
+        SyncGraphStacked();
         _dope.Controllers = _session.ControllersOf(graphName is null ? null : _session.Editor.Document.Find(graphName)?.Rig);
         _dope.Bind(_session.Editor, graphName);
 
@@ -2221,6 +2239,7 @@ public partial class MainWindow : Window
         "  블록을 고르고 그 블록 안의 시각이면 뷰포트 끌기·채널 박스·S가 그 블록의 모션에 키를 놓는다      아래 경계를 끌면 타임라인 높이\n\n" +
         "이모지 (툴바의 '이모지' 모드 — 그래프 · 도프 시트 · 뷰포트가 그 타임라인을 본다)\n" +
         "  '이모지 추가'  새 이모지의 첫 화면 — 그림(PNG 끌어다 놓기) · 어떻게 뜨는가 · 움직임 → 만들기(한 칸) · '빈 이모지로 시작'\n" +
+        "  오른쪽 '키 놓기'  자리 · 크기 · 회전 · 투명도 · 그림 — 고른 그림들(없으면 이모지 전체)의 지금 값을 지금 프레임에      그래프 '종류별 칸'  종류마다 제 눈금\n" +
         "  그림을 고르면 그래프는 그 그림의 것만 · 왼쪽 목록에서 이모지를 누르면 대상이 이모지 전체(머리에서의 자리를 끈다)\n" +
         "  Q / W / E / R  선택 · 이동 · 회전 · 크기(뷰포트 오른쪽 위의 띠와 같다)      그림 누르기  고르기 — 빈 곳은 맞지 않는다 · 겹친 곳을 다시 누르면 밑의 것 · 빈 데를 누르면 전부 풀린다(이모지 전체는 왼쪽 목록에서 이모지를 누른다)\n" +
         "  Shift/Ctrl+누르기  더하기 · 빼기      빈 데서 끌기  상자로 고르기      여럿을 고르면 함께 끌리고 S가 전부를 키한다(한 칸)\n" +

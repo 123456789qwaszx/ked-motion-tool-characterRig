@@ -81,7 +81,7 @@ public static class EmojiValidator
     {
         if (emoji.Rigs.Count == 0)
         {
-            block("리그가 없다 — 그림 하나에 리그 하나, 하나 이상이어야 한다");
+            block("그림이 없다 — 이모지는 그림 하나 이상으로 이뤄진다");
         }
 
         var names = new HashSet<string>(StringComparer.Ordinal);
@@ -90,25 +90,25 @@ public static class EmojiValidator
         {
             if (!MotionNames.IsValid(rig.Name))
             {
-                block($"리그: {MotionNames.RuleMessage(rig.Name)}");
+                block($"그림: {MotionNames.RuleMessage(rig.Name)}");
             }
             else if (!names.Add(rig.Name))
             {
-                block($"리그 이름 '{rig.Name}'이 두 번 나온다 — 키가 리그를 이름으로 가리킨다");
+                block($"그림 이름 '{rig.Name}'이 두 번 나온다 — 키가 그림을 이름으로 가리킨다");
             }
 
             if (rig.Images.Count == 0)
             {
-                block($"리그 '{rig.Name}'에 그림이 없다 — 첫 장이 기본 스프라이트다");
+                block($"그림 '{rig.Name}'에 그림 파일이 없다 — 그림을 고르고 '그림 더하기…'로 PNG를 넣는다(첫 장이 기본으로 보인다)");
             }
             else if (rig.Images.Any(i => string.IsNullOrWhiteSpace(EmojiRigAsset.SpriteKeyOf(i))))
             {
-                block($"리그 '{rig.Name}'의 그림에 파일 이름이 없다 — 스프라이트 키는 파일 이름이다");
+                block($"그림 '{rig.Name}'의 그림 파일에 파일 이름이 없다 — 게임이 파일 이름으로 그림을 찾는다");
             }
 
             if (!float.IsFinite(rig.Scale) || rig.Scale == 0f || !float.IsFinite(rig.Rotation) || !float.IsFinite(rig.PlaceX) || !float.IsFinite(rig.PlaceY))
             {
-                block($"리그 '{rig.Name}'의 기본 자리 · 배율 · 회전이 쓸 수 없는 값이다(배율 {rig.Scale})");
+                block($"그림 '{rig.Name}'의 기본 자리 · 크기 · 회전이 쓸 수 없는 값이다(크기 {rig.Scale})");
             }
         }
     }
@@ -137,7 +137,7 @@ public static class EmojiValidator
 
             if (!frame.TryTarget(channel.Node, out string rigName))
             {
-                block($"{where}: 키를 받는 노드가 아니다 — {frame.OffsetNode}(이모지 전체) 또는 {{리그}}{EmojiRigFrame.Separator}{frame.ImageNode}에만 키를 잡는다");
+                block($"{where}: 키를 받는 노드가 아니다 — {frame.OffsetNode}(이모지 전체) 또는 {{그림}}{EmojiRigFrame.Separator}{frame.ImageNode}에만 키를 잡는다");
                 continue;
             }
 
@@ -145,13 +145,13 @@ public static class EmojiValidator
 
             if (!string.IsNullOrEmpty(rigName) && rig is null)
             {
-                block($"{where}: 리그 '{rigName}'이 이 이모지에 없다");
+                block($"{where}: 그림 '{rigName}'이 이 이모지에 없다");
                 continue;
             }
 
             if (channel.Kind == ChannelKind.Image && rig is null)
             {
-                block($"{where}: 그림 바꾸기는 리그에만 쓴다 — 이모지 전체에는 그림이 없다");
+                block($"{where}: 그림 바꾸기는 그림에만 쓴다 — 이모지 전체에는 넘길 장이 없다");
             }
 
             foreach (Axis axis in new[] { Axis.X, Axis.Y, Axis.Z })
@@ -194,7 +194,7 @@ public static class EmojiValidator
 
                 if (Math.Abs(key.V - index) > MotionRules.Tolerance || index < 0 || index >= rig.Images.Count)
                 {
-                    block($"{where}: 그림 키 {key.V:0.###}가 리그 '{rig.Name}'의 그림(0~{rig.Images.Count - 1}번째)을 가리키지 않는다");
+                    block($"{where}: 그림 키 {key.V:0.###}가 그림 '{rig.Name}'의 장(0~{rig.Images.Count - 1}번째)을 가리키지 않는다");
                     break;
                 }
             }

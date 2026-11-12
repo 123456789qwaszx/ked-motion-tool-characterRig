@@ -75,8 +75,8 @@ public partial class MainWindow
     private readonly TextBox _flipEvery = new() { FontSize = 11, Text = "3", Width = 34 };
     private readonly TextBox _flipCount = new() { FontSize = 11, Text = "4", Width = 34 };
 
-    private readonly ComboBox _emojiKeyTarget = new() { FontSize = 11, MinWidth = 90 };
-    private readonly ComboBox _emojiKeyKind = new() { FontSize = 11, MinWidth = 70 };
+    private readonly TextBlock _emojiKeyTargetNote = new() { FontSize = 11, Opacity = 0.8, TextTrimming = TextTrimming.CharacterEllipsis };
+    private readonly Dictionary<ChannelKind, Button> _emojiKeyButtons = new();
 
     private readonly ListBox _emojiSpanList = new() { MinHeight = 40, MaxHeight = 110, FontSize = 11 };
     private readonly StackPanel _emojiSpanFields = new() { Spacing = 4 };
@@ -160,12 +160,18 @@ public partial class MainWindow
 
     internal void AddEmojiSpanFromForm() => Guard("구간 추가", () => AddEmojiSpan());
 
+    /// <summary>테스트 손잡이 — 그 그림(null = 이모지 전체)을 고르고 그 종류의 "키 놓기" 단추를 누른다.</summary>
     internal void KeyEmojiNowFromForm(string? rig, ChannelKind kind)
     {
-        _emojiKeyTarget.SelectedItem = rig ?? WholeEmojiChoice;
-        _emojiKeyKind.SelectedIndex = Array.IndexOf(EmojiKinds, kind);
-        Guard("지금 키", KeyEmojiNow);
+        SelectEmojiRigsInList(rig is null ? Array.Empty<string>() : new[] { rig });
+        KeyEmojiKindFromForm(kind);
     }
+
+    /// <summary>테스트 손잡이 — 지금 고른 것에 그 종류의 "키 놓기" 단추를 누른다.</summary>
+    internal void KeyEmojiKindFromForm(ChannelKind kind) => Guard("키 놓기", () => KeyEmojiKind(kind));
+
+    /// <summary>테스트 손잡이 — "키 놓기" 단추들 중 누를 수 있는 종류.</summary>
+    internal IReadOnlyList<ChannelKind> EmojiKeyKindsEnabled => EmojiKinds.Where(k => _emojiKeyButtons[k].IsEnabled).ToList();
 
     internal void LayFlipsFromForm(int start, int every, int count)
     {
@@ -211,7 +217,7 @@ public partial class MainWindow
     internal string EmojiRigRowNote(string rig) => EmojiRigNoteOf(rig);
 
     /// <summary>테스트 손잡이 — "지금 키"의 대상 칸(이모지 전체 또는 리그 이름).</summary>
-    internal string? EmojiKeyTargetChoice => _emojiKeyTarget.SelectedItem as string;
+    internal string? EmojiKeyTargetChoice => (_emojiKeyTargetNote.Text ?? "").Replace("대상: ", "", StringComparison.Ordinal);
 
     /// <summary>테스트 손잡이 — 왼쪽의 리그 묶음이 보이는가(이모지를 골랐을 때만).</summary>
     internal bool EmojiRigSectionVisible => _emojiRigSection.IsVisible;
@@ -262,7 +268,6 @@ public partial class MainWindow
                     _viewport.SetSelectedEmojiRigs(picked);
                 }
 
-                _emojiKeyTarget.SelectedItem = SelectedEmojiRig ?? WholeEmojiChoice;
                 RefreshEmojiInspector();
             }
         };
@@ -455,15 +460,35 @@ public partial class MainWindow
         _emojiFields.Children.Add(_emojiOwnFields);
         _emojiFields.Children.Add(_emojiRigFields);
 
-        // 키
-        _emojiFields.Children.Add(Header("키 — 지금 시각에"));
-        _emojiKeyKind.ItemsSource = EmojiKinds.Select(EmojiWords.Kind).ToList();
-        _emojiKeyKind.SelectedIndex = 0;
-        Button keyNow = SmallButton("지금 키", (_, _) => Guard("지금 키", KeyEmojiNow));
-        ToolTip.SetTip(keyNow, "고른 대상(이모지 전체 · 리그)의 그 채널을 지금 시각의 값으로 키한다 — 채널이 없으면 생긴다. 그다음은 그래프 · 도프 시트에서 고친다. 회전은 z 하나, 그림은 리그에만");
+        // 키 놓기 — 종류마다 단추 하나. 대상은 고른 그림들(없으면 이모지 전체)이다.
+        _emojiFields.Children.Add(Header("키 놓기 — 지금 프레임에"));
+        _emojiFields.Children.Add(_emojiKeyTargetNote);
+        var keyRow = new WrapPanel { ItemSpacing = 4, LineSpacing = 4 };
+
+        foreach (ChannelKind kind in EmojiKinds)
+        {
+            ChannelKind captured = kind;
+            Button key = SmallButton(EmojiWords.Kind(kind), (_, _) => Guard("키 놓기", () => KeyEmojiKind(captured)));
+            key.FontSize = 11;
+            key.Padding = new Avalonia.Thickness(9, 4);
+            ToolTip.SetTip(key, kind switch
+            {
+                ChannelKind.Position => "자리의 키 — 고른 것의 지금 자리(X · Y)를 지금 프레임에 놓는다",
+                ChannelKind.Scale => "크기의 키 — 지금 크기(X · Y)를 지금 프레임에 놓는다",
+                ChannelKind.Euler => "회전의 키 — 지금 회전을 지금 프레임에 놓는다",
+                ChannelKind.Alpha => "투명도의 키 — 지금 투명도(0 안 보임 … 1 다 보임)를 지금 프레임에 놓는다. 놓은 뒤 그래프에서 값을 바꾼다",
+                _ => "그림 바꾸기의 키 — 지금 보이는 장을 지금 프레임에 놓는다(늘 계단). 그림 파일이 있는 그림을 골랐을 때만. 놓은 뒤 그래프에서 몇 번째 장인지 바꾼다",
+            });
+            _emojiKeyButtons[kind] = key;
+            keyRow.Children.Add(key);
+        }
+
         Button step = SmallButton("계단", (_, _) => _graph.SetTangentMode(TangentMode.Step));
-        ToolTip.SetTip(step, "그래프에서 고른 키를 계단으로 — 다음 키까지 그 값으로 멈춘다(emojis/2의 step). 그림 채널의 키는 언제나 계단이다");
-        _emojiFields.Children.Add(new WrapPanel { ItemSpacing = 4, LineSpacing = 4, Children = { _emojiKeyTarget, _emojiKeyKind, keyNow, step } });
+        ToolTip.SetTip(step, "그래프에서 고른 키를 계단으로 — 다음 키까지 그 값으로 멈춘다(emojis/2의 step). 그림 바꾸기의 키는 언제나 계단이다");
+        keyRow.Children.Add(new Border { Width = 1, Margin = new Avalonia.Thickness(3, 2), Background = new SolidColorBrush(Color.FromArgb(70, 128, 128, 128)) });
+        keyRow.Children.Add(step);
+        _emojiFields.Children.Add(keyRow);
+        _emojiFields.Children.Add(new TextBlock { Text = "여러 그림을 골랐으면 전부에 놓인다(한 칸). 채널이 없으면 생긴다.", FontSize = 10, Opacity = 0.6, TextWrapping = TextWrapping.Wrap });
 
         // 보기 — 단추는 수명의 띠(게임처럼 재생 · 머묾 바퀴)와 뷰포트의 도구 띠(인물 · 왼쪽 보기 · 맞춤)에 있다.
         _emojiLifeToggle.IsCheckedChanged += (_, _) =>
@@ -725,19 +750,42 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>"지금 키" — 고른 대상 · 채널의 지금 값(그 프레임의 미리보기 값, 그림은 지금 보이는 장)을 지금 시각에 키한다. 한 칸.</summary>
-    private void KeyEmojiNow()
+    /// <summary>키를 놓을 대상 — 고른 그림들, 없으면 이모지 전체(빈 이름).</summary>
+    private IReadOnlyList<string> EmojiKeyTargets() => SelectedEmojiRigs.Count > 0 ? SelectedEmojiRigs.ToList() : new[] { "" };
+
+    /// <summary>
+    /// "키 놓기"의 단추 — 고른 것 전부의 그 종류를 지금 값(그 프레임의 미리보기 값, 그림 바꾸기는 지금 보이는 장)으로 지금 프레임에 키한다. 한 칸.
+    /// 그림 바꾸기는 그림 파일이 있는 그림에만 놓인다.
+    /// </summary>
+    private void KeyEmojiKind(ChannelKind kind)
     {
-        if (CurrentEmoji is not { } emoji || _emojiKeyKind.SelectedIndex < 0)
+        if (CurrentEmoji is not { } emoji)
         {
             return;
         }
 
-        string target = _emojiKeyTarget.SelectedItem as string ?? WholeEmojiChoice;
-        KeyEmojiAt(emoji, target == WholeEmojiChoice ? "" : target, EmojiKinds[_emojiKeyKind.SelectedIndex]);
+        IReadOnlyList<string> targets = EmojiKeyTargets();
+
+        if (kind == ChannelKind.Image)
+        {
+            targets = targets.Where(t => emoji.FindRig(t) is { Images.Count: > 0 }).ToList();
+
+            if (targets.Count == 0)
+            {
+                throw new InvalidOperationException("그림 바꾸기는 그림 파일이 있는 그림에만 쓴다 — 왼쪽에서 그림을 고른다(이모지 전체에는 넘길 장이 없다).");
+            }
+        }
+
+        _session.Editor.Batch(MotionChangeKind.Structure, () =>
+        {
+            foreach (string target in targets)
+            {
+                KeyEmojiAt(emoji, target, kind);
+            }
+        });
     }
 
-    /// <summary>지금 시각(프레임에 붙여)에 그 대상(""= 이모지 전체)의 지금 값을 키로 — "지금 키"와 그래프 목록의 "키 없음 ＋"가 같이 쓴다.</summary>
+    /// <summary>지금 시각(프레임에 붙여)에 그 대상(""= 이모지 전체)의 지금 값을 키로 — "키 놓기"의 단추와 그래프 목록의 "키 없음 ＋"가 같이 쓴다.</summary>
     private void KeyEmojiAt(EmojiAsset emoji, string rig, ChannelKind kind)
     {
         if (_session.EmojiFrame is not { } frame)
@@ -1033,11 +1081,9 @@ public partial class MainWindow
             Write(_emojiSpanStart, span?.Start.ToString(CultureInfo.InvariantCulture) ?? "");
             Write(_emojiSpanEnd, span?.End.ToString(CultureInfo.InvariantCulture) ?? "");
 
-            var targets = new List<string> { WholeEmojiChoice };
-            targets.AddRange(rigs);
-            string? targetBefore = _emojiKeyTarget.SelectedItem as string;
-            _emojiKeyTarget.ItemsSource = targets;
-            _emojiKeyTarget.SelectedItem = targetBefore is not null && targets.Contains(targetBefore) ? targetBefore : WholeEmojiChoice;
+            IReadOnlyList<string> keyTargets = EmojiKeyTargets();
+            _emojiKeyTargetNote.Text = "대상: " + string.Join(" · ", keyTargets.Select(t => t.Length == 0 ? WholeEmojiChoice : t));
+            _emojiKeyButtons[ChannelKind.Image].IsEnabled = keyTargets.Any(t => emoji?.FindRig(t) is { Images.Count: > 0 });
 
             void Fill(ComboBox combo, string? current)
             {

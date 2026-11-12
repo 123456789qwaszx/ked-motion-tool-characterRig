@@ -329,7 +329,7 @@ public sealed partial class MotionEditor
 
         if (rig.Images.Count == 0)
         {
-            throw new InvalidOperationException($"리그 '{rigName}'에 그림이 없다 — 넘길 장이 없다.");
+            throw new InvalidOperationException($"그림 '{rigName}'에 그림 파일이 없다 — 넘길 장이 없다.");
         }
 
         if (startFrame < 0 || everyFrames < 1 || count < 1)
@@ -578,7 +578,7 @@ public sealed partial class MotionEditor
     private static EmojiRigAsset RequireRig(EmojiAsset emoji, string name)
     {
         ArgumentNullException.ThrowIfNull(name);
-        return emoji.FindRig(name) ?? throw new KeyNotFoundException($"이모지 '{emoji.Name}'에 리그 '{name}'이 없다.");
+        return emoji.FindRig(name) ?? throw new KeyNotFoundException($"이모지 '{emoji.Name}'에 그림 '{name}'이 없다.");
     }
 
     private static EmojiSpan RequireSpan(EmojiAsset emoji, string name)
@@ -611,7 +611,7 @@ public sealed partial class MotionEditor
 
         if (emoji.FindRig(name) is not null)
         {
-            throw new InvalidOperationException($"이모지 '{emoji.Name}'에 리그 '{name}'이 이미 있다 — 키가 리그를 이름으로 가리킨다.");
+            throw new InvalidOperationException($"이모지 '{emoji.Name}'에 그림 '{name}'이 이미 있다 — 키가 그림을 이름으로 가리킨다.");
         }
     }
 
