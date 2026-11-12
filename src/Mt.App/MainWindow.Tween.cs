@@ -19,7 +19,8 @@ namespace Mt.App;
 //   단추 — 0 · 25 · 33 · 50 · 67 · 75 · 100(오버슈트를 켜면 −25 · 125). 누르면 바로 한 칸.
 // 대상
 //   이모지 — 고른 그림들(없으면 이모지 전체)의 자리 · 크기 · 회전 · 투명도. 그래프에서 곡선을 골랐으면 그 가운데 그것만.
-//   캐릭터 모션(T4) — 고른 모션의 곡선 전부(포즈 전체의 사이 포즈). 그래프에서 곡선을 골랐으면 그것만.
+//   캐릭터 모션(T4) — 고른 컨트롤러(뷰포트 · 하이어아키 · 아웃라이너)의 곡선. "모션 전체에"를 켜면 모션의 곡선 전부(포즈 전체).
+//     그래프에서 곡선을 골랐으면 그것만.
 //     키 없는 포즈가 있으면 버린다 — 트윈이 그 프레임에 키를 놓으니 그 키가 포즈다(되돌리면 포즈도 돌아온다).
 // 앞이나 뒤에 키가 없는 곡선은 건너뛴다. 그림 바꾸기는 계단 값이라 뺀다.
 public partial class MainWindow
@@ -31,6 +32,7 @@ public partial class MainWindow
     private readonly TextBlock _tweenValue = new() { FontSize = 12, FontWeight = FontWeight.SemiBold, Width = 46, TextAlignment = TextAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
     private readonly TextBlock _tweenNote = new() { FontSize = 11, Opacity = 0.85, TextWrapping = TextWrapping.Wrap };
     private readonly CheckBox _tweenOvershoot = new() { Content = "오버슈트 (−50 ~ 150%)", FontSize = 11 };
+    private readonly CheckBox _tweenWhole = new() { Content = "고른 컨트롤러만이 아니라 모션 전체에", FontSize = 11 };
     private readonly StackPanel _tweenButtons = new() { Orientation = Orientation.Horizontal, Spacing = 4 };
     private bool _tweenSetting; // 슬라이더를 코드로 옮기는 중 — 적용하지 않는다
 
@@ -58,6 +60,9 @@ public partial class MainWindow
     /// <summary>테스트 손잡이 — 오버슈트를 켜고 끈다 · 슬라이더의 범위.</summary>
     internal void SetTweenOvershootFromForm(bool on) => _tweenOvershoot.IsChecked = on;
 
+    /// <summary>테스트 손잡이 — "모션 전체에"를 켜고 끈다.</summary>
+    internal void SetTweenWholeFromForm(bool on) => _tweenWhole.IsChecked = on;
+
     internal (double Min, double Max, double Value) TweenSliderState => (_tweenSlider.Minimum, _tweenSlider.Maximum, _tweenSlider.Value);
 
     private void BuildTween()
@@ -84,6 +89,8 @@ public partial class MainWindow
             _settings.TweenOvershoot = _tweenOvershoot.IsChecked == true;
             ApplyTweenRange();
         };
+        _tweenWhole.IsCheckedChanged += (_, _) => RefreshTweenNote();
+        ToolTip.SetTip(_tweenWhole, "캐릭터 모션 — 끄면 고른 컨트롤러(몸 · 숙임 …)의 곡선에만(마야처럼 고른 것을 따라간다), 켜면 모션의 곡선 전부에(포즈 전체의 사이 포즈). 그래프에서 곡선을 골랐으면 어느 쪽이든 그것만");
         ToolTip.SetTip(_tweenOvershoot, "슬라이더가 앞 키 · 뒤 키의 값을 넘어간다 — 100% 위는 지나침(오버슈트), 0% 아래는 예비 동작(반대쪽으로 먼저)");
         ToolTip.SetTip(_tweenSlider, "앞 키(0%) ↔ 뒤 키(100%) 사이의 값을 지금 프레임에 키로 놓는다. 끄는 동안 뷰포트 · 그래프에 보이고, 놓으면 되돌리기 한 칸");
 
@@ -115,12 +122,12 @@ public partial class MainWindow
         ends.Children.Add(right);
         ends.Children.Add(new TextBlock { Text = "앞 키", FontSize = 10, Opacity = 0.6 });
 
-        var panel = new StackPanel { Margin = new Thickness(12, 10), Spacing = 6, Children = { _tweenNote, head, ends, _tweenButtons, _tweenOvershoot } };
+        var panel = new StackPanel { Margin = new Thickness(12, 10), Spacing = 6, Children = { _tweenNote, head, ends, _tweenButtons, _tweenOvershoot, _tweenWhole } };
         var window = new Window
         {
             Title = "트윈머신",
             Width = 380,
-            Height = 190,
+            Height = 216,
             CanResize = false,
             ShowInTaskbar = false,
             Content = panel,
@@ -144,6 +151,10 @@ public partial class MainWindow
                 OnShellKeyDown(sender, e);
             }
         }, RoutingStrategies.Tunnel);
+
+        // 고른 컨트롤러는 여러 길로 바뀐다 — 창으로 손이 올 때 한 줄을 다시 읽는다(놓을 때는 늘 그때의 대상을 다시 본다).
+        window.Activated += (_, _) => RefreshTweenNote();
+        window.PointerEntered += (_, _) => RefreshTweenNote();
 
         window.Closing += (_, _) =>
         {
@@ -223,7 +234,7 @@ public partial class MainWindow
     /// <summary>
     /// 지금 트윈이 닿는 것. 없으면 null과 그 까닭.
     ///   이모지 — 고른 그림들(없으면 이모지 전체)의 자리 · 크기 · 회전 · 투명도 가운데 키가 있는 곡선.
-    ///   캐릭터 모션 — 그래프가 보는 모션의 키가 있는 곡선 전부(그림 바꾸기는 뺀다).
+    ///   캐릭터 모션 — 그래프가 보는 모션에서, 고른 컨트롤러의 키가 있는 곡선(고른 것이 없으면 전부. 그림 바꾸기는 뺀다).
     /// 그래프에서 곡선을 골랐으면 그 가운데 그것만.
     /// </summary>
     private TweenTarget? TweenTargetNow(out string why)
@@ -269,7 +280,33 @@ public partial class MainWindow
             return null;
         }
 
-        return Make(bound, CurvesOf(bound, c => c.Kind != ChannelKind.Image).ToList(), _viewport.Time, $"모션 {name}");
+        // 마야처럼 고른 컨트롤러를 따라간다 — 뷰포트 · 하이어아키 · 아웃라이너에서 고른 컨트롤러(표가 없는 리그면 고른 노드)의 곡선만.
+        // "모션 전체에"를 켰거나 고른 것이 없으면 모션의 곡선 전부(포즈 전체).
+        List<CurveRef> all = CurvesOf(bound, c => c.Kind != ChannelKind.Image).ToList();
+
+        if (_tweenWhole.IsChecked == true)
+        {
+            return Make(bound, all, _viewport.Time, $"모션 {name} · 전체");
+        }
+
+        if (SelectedControllerOf(bound) is { } controller)
+        {
+            var own = controller.Axes.SelectMany(controller.CurvesOf).ToHashSet();
+
+            if (controller.DepthYCurve is { } depthY)
+            {
+                own.Add(depthY);
+            }
+
+            return Make(bound, all.Where(own.Contains).ToList(), _viewport.Time, $"모션 {name} · {controller.Label}");
+        }
+
+        if (_viewport.SelectedNode is { } node)
+        {
+            return Make(bound, all.Where(c => c.Node == node).ToList(), _viewport.Time, $"모션 {name} · {node}");
+        }
+
+        return Make(bound, all, _viewport.Time, $"모션 {name} · 전체");
     }
 
     /// <summary>대상의 한 줄 — 무엇에, 어느 키와 어느 키 사이에 놓이는가. 놓일 곳이 없으면 그 까닭.</summary>
@@ -308,6 +345,7 @@ public partial class MainWindow
 
         _tweenSlider.IsEnabled = ready;
         _tweenButtons.IsEnabled = ready;
+        _tweenWhole.IsVisible = _workMode != WorkMode.Emoji;
     }
 
     /// <summary>트윈을 놓는다 — 캐릭터 모션에서 키 없는 포즈가 있으면 먼저 버린다(같은 칸에 붙는다).</summary>

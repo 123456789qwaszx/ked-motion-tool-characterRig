@@ -1148,6 +1148,7 @@ public partial class MainWindow : Window
     /// </summary>
     private void RefreshChannelBox()
     {
+        RefreshTweenNote(); // 고른 컨트롤러가 바뀌면 트윈머신의 대상도 바뀐다
         _refreshDepth++;
 
         try

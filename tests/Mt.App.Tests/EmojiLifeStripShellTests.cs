@@ -532,9 +532,26 @@ public class EmojiLifeStripShellTests
                 window.SelectMotion("nod");
                 window.OpenTweenFromForm();
 
-                // 모션을 골랐다 — 그 모션의 곡선 전부가 대상이다.
+                // 대상은 마야처럼 고른 컨트롤러를 따라간다 — 몸을 고르면 몸의 곡선만이다(숙임에도 키가 있지만 세지 않는다).
+                editor.AddChannel("nod", "CharacterPortrait_Track_Sway", ChannelKind.Euler);
+                editor.SetKeys("nod", "CharacterPortrait_Track_Sway", ChannelKind.Euler, Axis.Z, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(1f, 10f) });
                 window.Viewport.ScrubTo(0.5);
-                Assert.StartsWith("모션 nod  |  12fr에 — 앞 키 0fr ↔ 뒤 키 24fr  |  곡선 1개", window.TweenNote);
+                window.Viewport.SelectedNode = moveY;
+                window.CloseTweenFromForm();
+                window.OpenTweenFromForm();
+                Assert.StartsWith("모션 nod · 몸  |  12fr에 — 앞 키 0fr ↔ 뒤 키 24fr  |  곡선 1개", window.TweenNote);
+
+                // "모션 전체에"를 켜면 모션의 곡선 전부 — 몸과 숙임 둘 다.
+                long whole = editor.Revision;
+                window.SetTweenWholeFromForm(true);
+                Assert.StartsWith("모션 nod · 전체  |  12fr에 — 앞 키 0fr ↔ 뒤 키 24fr  |  곡선 2개", window.TweenNote);
+                window.PressTweenButtonFromForm(50);
+                Assert.Equal(whole + 1, editor.Revision);
+                Assert.Equal(5f, editor.Document.Find("nod")!.Channels[1].Z!.Keys[1].V, 3);
+                editor.Undo();
+
+                // 끄면 고른 컨트롤러(몸)의 것만 — 숙임은 그대로다.
+                window.SetTweenWholeFromForm(false);
 
                 // 키 없는 포즈를 들고 있다가 트윈을 놓으면 — 포즈는 버려지고 그 프레임의 키가 포즈다. 한 칸.
                 window.Viewport.SetComponent(moveY, ChannelKind.Position, Axis.Y, -5f);
@@ -547,6 +564,7 @@ public class EmojiLifeStripShellTests
                 window.ReleaseTweenFromForm();
                 Assert.Equal(before + 1, editor.Revision);
                 Assert.Equal(new[] { (0f, 0f), (0.5f, -30f), (1f, -40f) }, editor.Document.Find("nod")!.Channels[0].Y!.Keys.Select(k => (k.T, k.V)));
+                Assert.Equal(2, editor.Document.Find("nod")!.Channels[1].Z!.Keys.Count); // 고르지 않은 숙임에는 키가 놓이지 않았다
 
                 // 되돌리면 키가 사라지고 들고 있던 포즈가 돌아온다.
                 editor.Undo();
