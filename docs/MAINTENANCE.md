@@ -31,7 +31,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 | 연출 클립 | `Model/ClipAsset.cs` · `Editing/MotionEditor.Clips.cs` · `Preview/ClipPreview.cs` · `ClipBake.cs` · `Mt.App/Views/ClipTimelineView.cs` · `MainWindow.Clips.cs` |
 | 이모지 | `Model/EmojiAsset.cs` · `EmojiLife.cs` · `EmojiMoves.cs` · `Editing/MotionEditor.Emojis.cs` · `Rig/EmojiRigFrame.cs` · `EmojiLocatorFile.cs` · `Preview/EmojiPreview.cs` · `Mt.App/Views/ViewportView.Emoji.cs` · `EmojiLifeStripView.cs` · `MainWindow.Emojis.cs` · `.Life.cs` · `.NewEmoji.cs` |
 | 트윈머신 | `Graph/TweenMath.cs` · `MotionEditor.TweenKeys` · `MainWindow.Tween.cs` |
-| 명령줄 | `Mt.Cli/MtCli.cs`(읽기 · 검증 · 내보내기 · 포즈 · 굽기) · `MtCli.Create.cs`(만들기 — `MotionEditor`를 지난다) |
+| 명령줄 | `Mt.Cli/MtCli.cs`(읽기 · 검증 · 내보내기 · 포즈 · 굽기) · `MtCli.Create.cs` · `MtCli.Build.cs`(만들기 — `MotionEditor`를 지난다). 부르는 것은 저장소 루트의 `mt` · `mt.cmd` |
 | 리그 덤프·내장본·컨트롤러 표·깊이·focus·기준 해상도 | `Rig/RigSchemaFile.cs` · `BuiltinTuning.cs` · `ControllersFile.cs`(`controllers/1`) · `DepthTuningFile.cs`(MaxLevel 40) · `FocusTuningFile.cs` · `BaseResolutionFile.cs` |
 | 씬 조립(무대 뼈대 → 오브젝트 → 깊이 → place → 오프셋 → 샷) | `Preview/ScenePreview.cs` · `StageShotResponse.cs` |
 | 시각의 포즈, 포즈 → 키 값 | `Preview/MotionPreview.cs` · `PoseEdit.cs`(`RootDeltaToLocal`·`AngleDelta`·`ScaleAlong`·`KeyValueFor`) |
@@ -40,7 +40,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 | 그래프 수학(순수) | `Graph/` — `GraphCamera`(좌표) · `GraphHitTest` · `TangentMath` · `HandleMath` · `KeyOps` · `KeySelection` · `KeyClipboard` · `TimeSnap`(DefaultStep 1/24) · `TimeText` · `TimeSliderOps` · `DopeSheetRows` · `CurveSampler` · `RelativeInput`(`+=3`) |
 | 프리셋 모션 9종 | `Presets/MotionPresets.cs` |
 | 설정 파일 | `Settings/ToolSettings.cs` |
-| 셸 | `Mt.App/MainWindow.*.cs` — 맡은 일별 partial: `axaml.cs`(필드 · 화면 짜기 · 모션 목록과 인스펙터 · 명령) · `Mode`(작업 모드) · `Tools`(뷰포트 위 도구 띠) · `Shortcuts`(전역 단축키) · `Settings`(설정 · 창 배치 · 설정 창 · F1) · `Files` · `Scene`(하이어아키 · 씬 탭) · `ChannelBox` · `Outliner`(그래프 왼쪽 채널 목록) · `Problems`(문제 칸) |
+| 셸 | `Mt.App/MainWindow.*.cs` — 맡은 일별 partial: `axaml.cs`(필드 · 화면 짜기 · 모션 목록과 인스펙터 · 명령) · `Mode`(작업 모드) · `Tools`(뷰포트 위 도구 띠) · `Shortcuts`(전역 단축키) · `Settings`(설정 · 창 배치 · 설정 창 · F1) · `Files` · `Document`(창 제목 · 저장하지 않은 것을 묻기 · 자동 저장본 되살리기) · `Scene`(하이어아키 · 씬 탭) · `ChannelBox` · `Outliner`(그래프 왼쪽 채널 목록) · `Problems`(문제 칸) |
 | 뷰포트(그리기·매니퓰레이터·키 없는 포즈·보기 이동) | `Mt.App/Views/ViewportView.cs` |
 | 그래프 에디터 | `Mt.App/Views/GraphEditorView.cs` |
 | 도프 시트 · 타임 슬라이더 · 레인지 | `Views/DopeSheetView.cs` · `TimeSliderView.cs` · `RangeSliderView.cs` |

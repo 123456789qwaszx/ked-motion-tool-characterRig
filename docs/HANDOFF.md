@@ -49,7 +49,7 @@ Ked.Presentation.Core  (런타임 코어의 사본 — netstandard2.1 · C# 9, �
           Graph/          순수 함수 — 좌표 · 히트 · 탄젠트 · 스냅 · 키 연산 · 선택 · 도프 행 · TweenMath
           Presets/ · Settings/
    ├─► Mt.App          (Avalonia — 그리기와 입력)
-   │      MainWindow.*.cs   셸. 맡은 일별 partial: Mode · Tools · Shortcuts · Settings · Files · Scene · ChannelBox · Outliner ·
+   │      MainWindow.*.cs   셸. 맡은 일별 partial: Mode · Tools · Shortcuts · Settings · Files · Document · Scene · ChannelBox · Outliner ·
    │                        Problems · Clips · Emojis · Life · NewEmoji · Tween (+ axaml.cs = 필드 · 화면 짜기 · 모션 목록 · 명령)
    │      Views/            ViewportView(+ .Emoji) · GraphEditorView · DopeSheetView · TimeSliderView · RangeSliderView ·
    │                        ClipTimelineView · EmojiLifeStripView
