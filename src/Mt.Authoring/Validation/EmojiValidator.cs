@@ -34,6 +34,35 @@ public static class EmojiValidator
         return document.Emojis.Count == 0 ? Array.Empty<EmojiProblem>() : new[] { new EmojiProblem("", why) };
     }
 
+    /// <summary>
+    /// 그림 파일이 그 경로에 없는 것 — 알림이다(막지 않는다: 게임은 파일 이름으로 그림을 찾고, 내보내기는 파일을 읽지 않는다).
+    /// 경로는 문서 기준이라 문서가 놓인 폴더를 받는다. 파일로 만든 문서의 틀린 경로가 툴에서 열어 봐야만 드러났다.
+    /// </summary>
+    public static IReadOnlyList<EmojiProblem> MissingImages(MotionDocument document, string documentDirectory)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(documentDirectory);
+        var problems = new List<EmojiProblem>();
+
+        foreach (EmojiAsset emoji in document.Emojis)
+        {
+            foreach (EmojiRigAsset rig in emoji.Rigs)
+            {
+                foreach (string image in rig.Images.Where(i => !string.IsNullOrWhiteSpace(i)).Distinct(StringComparer.Ordinal))
+                {
+                    string full = Path.IsPathRooted(image) ? image : Path.Combine(documentDirectory, image);
+
+                    if (!File.Exists(full))
+                    {
+                        problems.Add(new EmojiProblem(emoji.Name, $"그림 '{rig.Name}'의 그림 파일을 찾지 못했다: {image} (문서가 놓인 폴더 기준) — 툴에서 자리표시로 보인다", Blocking: false));
+                    }
+                }
+            }
+        }
+
+        return problems;
+    }
+
     /// <param name="frame">이모지 리그의 틀. null이면 내장 덤프의 것.</param>
     public static IReadOnlyList<EmojiProblem> Validate(MotionDocument document, EmojiRigFrame? frame = null)
     {

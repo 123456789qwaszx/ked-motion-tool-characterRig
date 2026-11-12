@@ -170,7 +170,18 @@ public sealed class DocumentSession
     /// <summary>이모지 리그의 틀 — 실은 덤프의 것, 덤프에 없으면 null(검증이 알린다).</summary>
     public EmojiRigFrame? EmojiFrame => EmojiRigFrame.TryRead(Rig ?? BuiltinTuning.RigSchemas, out EmojiRigFrame frame, out _) ? frame : null;
 
-    public IReadOnlyList<EmojiProblem> EmojiProblems => EmojiValidator.Validate(Editor.Document, Rig ?? BuiltinTuning.RigSchemas);
+    /// <summary>이모지의 문제 — 저장된 문서면 그림 파일이 그 경로에 없는 것도 알린다.</summary>
+    public IReadOnlyList<EmojiProblem> EmojiProblems
+    {
+        get
+        {
+            IReadOnlyList<EmojiProblem> problems = EmojiValidator.Validate(Editor.Document, Rig ?? BuiltinTuning.RigSchemas);
+
+            return DocumentPath is null
+                ? problems
+                : problems.Concat(EmojiValidator.MissingImages(Editor.Document, Path.GetDirectoryName(Path.GetFullPath(DocumentPath)) ?? ".")).ToList();
+        }
+    }
 
     /// <summary>문서 기준 경로 → 절대 경로(그림 파일을 읽을 때). 파일이 없으면 null.</summary>
     public string? ExistingFileOf(string documentPath)

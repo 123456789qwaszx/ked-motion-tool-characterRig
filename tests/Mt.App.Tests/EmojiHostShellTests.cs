@@ -127,4 +127,18 @@ public class EmojiHostShellTests
             Assert.NotNull(viewport.EmojiGizmoForTest());
         });
     }
+
+    [Fact]
+    public void 그림_파일이_그_경로에_없으면_문제_칸이_알린다_막지는_않는다()
+    {
+        Run(window =>
+        {
+            Assert.DoesNotContain(window.Session.EmojiProblems, p => p.Message.Contains("찾지 못했다", StringComparison.Ordinal));
+
+            window.Session.Editor.SetEmojiRigImages("star", "body", new[] { "art/nowhere.png" });
+            Mt.Authoring.Validation.EmojiProblem missing = Assert.Single(window.Session.EmojiProblems, p => p.Message.Contains("찾지 못했다", StringComparison.Ordinal));
+            Assert.False(missing.Blocking);
+            Assert.Contains("art/nowhere.png", missing.Message, StringComparison.Ordinal);
+        });
+    }
 }

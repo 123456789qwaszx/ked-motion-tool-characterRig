@@ -148,6 +148,13 @@ public static class MtCli
     {
         MotionDocument document = Load(options, out RigSchemaFile rig);
         (JsonArray problems, bool blocking) = Problems(document, rig);
+        string directory = Path.GetDirectoryName(Path.GetFullPath(options.Positional(0, "문서 경로"))) ?? ".";
+
+        foreach (EmojiProblem p in EmojiValidator.MissingImages(document, directory))
+        {
+            problems.Add(new JsonObject { ["kind"] = "emoji", ["name"] = p.EmojiName, ["message"] = p.Message, ["blocking"] = p.Blocking });
+        }
+
         Write(stdout, new JsonObject { ["ok"] = !blocking, ["problems"] = problems });
         return blocking ? 1 : 0;
     }

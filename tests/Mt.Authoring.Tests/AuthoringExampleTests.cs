@@ -76,6 +76,31 @@ public class AuthoringExampleTests
     }
 
     [Fact]
+    public void 이모지의_그림_파일이_그_경로에_없으면_알린다_막지는_않는다()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", $"authoring-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            // 예시를 그림 없는 폴더로 옮기면 "../emoji/art/star.png"가 가리키는 데가 없다.
+            string moved = Path.Combine(directory, "emojis.motion-authoring.json");
+            File.Copy(Example("emojis.motion-authoring.json"), moved);
+
+            (int code, JsonNode json) = Run("validate", moved);
+            Assert.Equal(0, code);
+            JsonArray problems = json["problems"]!.AsArray();
+            Assert.Equal(2, problems.Count); // 그림마다 한 줄 — big · small
+            Assert.All(problems, p => Assert.False(p!["blocking"]!.GetValue<bool>()));
+            Assert.Contains("../emoji/art/star.png", problems[0]!["message"]!.GetValue<string>(), StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void 탄젠트는_종류만_적어도_읽을_때_값이_서고_다시_쓴_문서는_읽어도_그대로다()
     {
         // 직선으로 가는 두 키 — 기울기를 적지 않았다.
