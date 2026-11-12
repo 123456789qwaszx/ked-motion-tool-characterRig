@@ -1,7 +1,7 @@
 # 인수인계 — ked-motion-tool-characterRig
 
-이 저장소의 일을 이어받는 사람(세션)이 먼저 읽는다. 쓰는 법은 [`USER-GUIDE.md`](USER-GUIDE.md)(화면) · [`AUTHORING-FILES.md`](AUTHORING-FILES.md)(파일), 코드를 고치는 절차는
-[`MAINTENANCE.md`](MAINTENANCE.md), 방향은 [`PLAN-characterRig.md`](PLAN-characterRig.md), 지금 하는 일은 [`PLAN-cleanup.md`](PLAN-cleanup.md).
+이 저장소의 일을 이어받는 사람(세션)이 먼저 읽는다. 쓰는 법은 [`guide/README.md`](guide/README.md)(그림 설명서) · [`USER-GUIDE.md`](USER-GUIDE.md)(화면) · [`AUTHORING-FILES.md`](AUTHORING-FILES.md)(파일), 코드를 고치는 절차는
+[`MAINTENANCE.md`](MAINTENANCE.md), 방향은 [`PLAN-characterRig.md`](PLAN-characterRig.md), 지금 하는 일은 [`PLAN-cleanup.md`](PLAN-cleanup.md), 앞 세션이 멈춘 자리는 [`SESSION-HANDOFF.md`](SESSION-HANDOFF.md).
 문서와 코드가 다르면 코드와 테스트가 이긴다. (2026-11-12 다시 씀)
 
 ## 1. 무엇인가

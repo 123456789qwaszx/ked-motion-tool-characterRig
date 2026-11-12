@@ -2,7 +2,7 @@
 
 **캐릭터 리그와 이모지**를 다루는 저작 도구(.NET 10 + Avalonia 12). 구조는 유니티가 정한다 — 유니티가 덤프한 스키마를 단단하게 따르고, 캐릭터와 이모지를 전용 컨트롤러로 다룬다.
 
-- 먼저 읽을 것: `docs/HANDOFF.md`(무엇인가 · 구조 · 정해진 것) → `docs/PLAN-cleanup.md`(지금 하는 일 — 정리 → 설명서 → 불편 고치기). 단계가 끝날 때마다 하고 있는 계획서에 결정과 상태를 적는다.
+- 먼저 읽을 것: `docs/HANDOFF.md`(무엇인가 · 구조 · 정해진 것) → `docs/PLAN-cleanup.md`(지금 하는 일 — 정리 → 설명서 → 불편 고치기) → `docs/SESSION-HANDOFF.md`(앞 세션이 어디서 멈췄고 무엇을 조심하는가 — 일을 이어받을 때). 단계가 끝날 때마다 하고 있는 계획서에 결정과 상태를 적는다.
 - 방향은 `docs/PLAN-characterRig.md`, 코드를 고치는 절차 · 코어 사본의 동기화는 `docs/MAINTENANCE.md`와 `src/Ked.Presentation.Core/vendoring.md`, 쓰는 법은 `docs/guide/README.md`(그림 설명서) · `docs/USER-GUIDE.md`(화면으로, 조작 전부) · `docs/AUTHORING-FILES.md`(파일을 직접 써서 — 다른 세션의 AI가 본다).
 - `docs/history/`는 끝난 일의 계획서다(이모지 · 화면 다시 짜기 · 트윈머신 · 클립 · 씬 …) — 지금의 명세가 아니다. 결정의 까닭을 찾을 때만 읽는다(코드 주석의 `PLAN-*.md`는 그 폴더의 것).
 - `main`은 출발점(`ked-motion-tool-extend`의 `d37c678`) 그대로다. 일은 `dev`에서 한다.
