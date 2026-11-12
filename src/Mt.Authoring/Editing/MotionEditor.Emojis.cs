@@ -5,7 +5,7 @@ using Mt.Authoring.Rig;
 
 namespace Mt.Authoring.Editing;
 
-// 이모지 명령(docs/PLAN-emoji.md E3). 각각 되돌리기 한 칸이고, 같은 값이면 흔적이 없다(Mutate가 지킨다).
+// 이모지 명령(docs/history/PLAN-emoji.md E3). 각각 되돌리기 한 칸이고, 같은 값이면 흔적이 없다(Mutate가 지킨다).
 // 구조(이름이 있는가 · 겹치지 않는가)는 여기서 지키고, 규칙(구간이 타임라인 안인가 · 그림이 있는가 · 잇기가 맞는가)은 검증(EmojiValidator)이 알린다.
 // 타임라인의 키는 모션의 명령(AddChannel · SetKeys · KeyPose …)이 그대로 맡는다 — 이름은 EmojiAsset.TimelineNameOf.
 public sealed partial class MotionEditor

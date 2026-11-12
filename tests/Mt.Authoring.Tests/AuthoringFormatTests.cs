@@ -7,7 +7,7 @@ public class AuthoringFormatTests
     [Fact]
     public void 내보내기_스키마는_무대_런타임_규약과_같다()
     {
-        // 산출물 스키마는 툴이 정하지 않는다 — ked-stage-runtime docs/motion-contract.md의
+        // 산출물 스키마는 툴이 정하지 않는다 — 런타임이 정한
         // motions/2를 그대로 따른다. 규약이 올라가면 이 글자부터 바꾼다.
         Assert.Equal("motions/2", AuthoringFormat.ExportSchema);
         Assert.Equal("motions/1", AuthoringFormat.ExportSchemaV1);

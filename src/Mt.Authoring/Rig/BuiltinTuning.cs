@@ -35,7 +35,7 @@ public static class BuiltinTuning
 
     public static Vec2 BaseResolution => BaseResolutionLazy.Value;
 
-    /// <summary>컨트롤러 표(자리·깊이·연기) — 이 툴의 것(<c>docs/PLAN-controller.md</c>). 덤프 옆 <c>presets/controllers.json</c>이 있으면 그것이 이긴다.</summary>
+    /// <summary>컨트롤러 표(자리·깊이·연기) — 이 툴의 것(<c>docs/history/PLAN-controller.md</c>). 덤프 옆 <c>presets/controllers.json</c>이 있으면 그것이 이긴다.</summary>
     public static ControllersFile Controllers => ControllersLazy.Value;
 
     /// <summary>뼈대 리그 DTO — <c>RigSchemaLoader.AddRigTo</c>에 바로 넣는다.</summary>

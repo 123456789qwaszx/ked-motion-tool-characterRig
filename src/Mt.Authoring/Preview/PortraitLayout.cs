@@ -9,8 +9,7 @@ public readonly record struct Quad(Vec2 BottomLeft, Vec2 BottomRight, Vec2 TopRi
 }
 
 /// <summary>
-/// 초상 한 장이 무대 어디에 어떻게 서는가 — VnTool <c>StageSceneComposer.PlaceCorePortraits</c>의 자리이되,
-/// 상태 폴드 대신 포즈(<see cref="MotionPreview"/>)를 먹는다.
+/// 초상 한 장이 무대 어디에 어떻게 서는가 — 포즈(<see cref="MotionPreview"/>)를 받아 계산한다.
 ///
 /// 사이징은 런타임 <c>HeightFitPreserveAspect</c>와 같다: <c>sizeDelta = (부모 rect 높이 × 종횡비, 0)</c>
 /// (코어 <see cref="PortraitSizingReduction"/>). 노드 rect는 스트레치 앵커라 그보다 넓지만, Unity Image의

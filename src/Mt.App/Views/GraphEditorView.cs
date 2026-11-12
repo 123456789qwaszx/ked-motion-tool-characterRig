@@ -37,7 +37,7 @@ public sealed class CurveSlot
 }
 
 /// <summary>
-/// 그래프 에디터 — 마야 그래프 에디터의 감각으로 모션의 키를 만진다 (VnTool <c>EaseCurveEditor</c>에서 자람).
+/// 그래프 에디터 — 마야 그래프 에디터의 감각으로 모션의 키를 만진다.
 ///
 /// - 좌표는 초 × 값. 팬(가운데 버튼·Alt+드래그) · 줌(휠, Ctrl=시간만·Shift=값만) · F(선택 맞춤) · A(전체 맞춤)
 /// - 키: 클릭 선택 · Shift 추가 · 박스 선택 · 드래그(Shift=축 잠금) · 더블클릭=그 커브 위에 키 · I=현재 시각에 키 · Delete

@@ -1,7 +1,7 @@
 namespace Mt.Authoring.Graph;
 
 /// <summary>
-/// 기울기(dv/dt) ↔ 화면 팔 벡터. VnTool <c>EaseCurveEditor</c>의 산수 그대로 — 화면 y는 값과 반대로 자라므로
+/// 기울기(dv/dt) ↔ 화면 팔 벡터 — 화면 y는 값과 반대로 자라므로
 /// 부호 반전이 두 방향 모두에 있어야 한다. 이게 빠지면 핸들이 곡선과 거울로 서고, 날개를 돌리면 반대로 굽는다.
 /// </summary>
 public static class HandleMath

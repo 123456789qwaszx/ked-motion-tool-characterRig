@@ -1,8 +1,8 @@
-# ked-motion-tool 유지보수 핸드오프
+# 유지보수 — ked-motion-tool-characterRig
 
 코드를 고치는 사람을 위한 문서. 빌드·테스트·CI, 코드 지도, 지켜야 할 불변식, 자주 하는 작업의
-절차, 테스트 작성 요령, 함정 목록. 사용법은 [`USER-GUIDE.md`](USER-GUIDE.md), 현황과 열린 항목은
-[`HANDOFF.md`](HANDOFF.md).
+절차, 테스트 작성 요령, 함정 목록. 사용법은 [`USER-GUIDE.md`](USER-GUIDE.md), 전체 그림은
+[`HANDOFF.md`](HANDOFF.md). 끝난 일의 계획서(결정의 까닭)는 [`history/`](history/README.md).
 
 ## 1. 빌드 · 테스트 · CI
 
@@ -13,9 +13,9 @@ dotnet test    KedMotionTool.sln --configuration Release --logger "console;verbo
 dotnet run     --project src/Mt.App/Mt.App.csproj
 ```
 
-- SDK는 `global.json`(10.0.100, latestFeature). 패키지 판은 `Directory.Packages.props` 한 곳(Avalonia 12.1.1 — VnTool과 같은 판).
+- SDK는 `global.json`(10.0.100, latestFeature). 패키지 판은 `Directory.Packages.props` 한 곳(Avalonia 12.1.1).
 - `Directory.Build.props`: ImplicitUsings·Nullable·TreatWarningsAsErrors·LangVersion latest. 반입 코어만 자기 csproj에서 LangVersion 9 · netstandard2.1 · ImplicitUsings/Nullable 끔으로 되돌린다(유니티 호환).
-- CI: `.github/workflows/test.yml` — `main`·`dev` 푸시와 PR, ubuntu-latest, restore → build → test. 테스트 프로젝트 셋(Core 414 · Authoring 183 · App 66건, 2026-10-29). Windows 패키지 스모크는 아직 없다.
+- CI: `.github/workflows/test.yml` — `main`·`dev` 푸시와 PR, ubuntu-latest, restore → build → test. 테스트 프로젝트 셋(Core 426 · Authoring 304 · App 132건, 2026-11-12). Windows 패키지 스모크는 아직 없다.
 - 로컬에 SDK를 못 깔면 CI가 유일한 검증이다. `dotnet test`의 요약 줄이 **셋**(세 프로젝트) 나오는지 세고 "전부 통과"라고 말한다 — 빌드에 실패한 프로젝트는 조용히 건너뛴다.
 
 ## 2. 코드 지도 — 어디를 열면 되나
@@ -23,10 +23,15 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 | 하고 싶은 것 | 자리 |
 |---|---|
 | 모션·채널·키 모델, 씬 모델 | `Mt.Authoring/Model/MotionDocument.cs` · `SceneAsset.cs` · `StageNodes.cs`(무대 뼈대 이름 규약·패럴랙스 상수) |
-| 편집 명령 전부(undo 포함) | `Mt.Authoring/Editing/MotionEditor.cs` — `Mutate`·`Batch`·`RecordExternal`·`Undo/Redo`·`Replay` |
+| 편집 명령 전부(undo 포함) | `Mt.Authoring/Editing/MotionEditor.cs`(+ `.Clips.cs` · `.Emojis.cs`) — `Mutate`·`Batch`·`RecordExternal`·`Undo/Redo`·끄는 조작(`BeginGesture`·`GestureChanged`·`EndGesture`) |
 | 저작 원본 읽고 쓰기 | `Serialization/MotionDocumentJson.cs` (`motion-authoring/2`, 옛 `/1` 읽기) |
 | `motions.json` 읽고 쓰기 | `Serialization/MotionsJson.cs` (`motions/2` 정규 직렬화·관용 읽기, 옛 `/1`) |
-| 규칙·경고·돕는 손 | `Validation/MotionValidator.cs`(코어 `MotionRules`) · `MotionFixes.cs` · `MotionExport.cs` |
+| 규칙·경고·돕는 손 | `Validation/MotionValidator.cs`(코어 `MotionRules`) · `ClipValidator.cs` · `EmojiValidator.cs` · `MotionFixes.cs` · `MotionExport.cs` · `EmojiExport.cs` |
+| 문서가 스키마를 지키는가 · 덤프가 달라졌을 때 | `Schema/SchemaContract.cs`(막는 문제) · `SchemaDiff.cs`(알림 + 이름 바꾸기 따라가기) |
+| 연출 클립 | `Model/ClipAsset.cs` · `Editing/MotionEditor.Clips.cs` · `Preview/ClipPreview.cs` · `ClipBake.cs` · `Mt.App/Views/ClipTimelineView.cs` · `MainWindow.Clips.cs` |
+| 이모지 | `Model/EmojiAsset.cs` · `EmojiLife.cs` · `EmojiMoves.cs` · `Editing/MotionEditor.Emojis.cs` · `Rig/EmojiRigFrame.cs` · `EmojiLocatorFile.cs` · `Preview/EmojiPreview.cs` · `Mt.App/Views/ViewportView.Emoji.cs` · `EmojiLifeStripView.cs` · `MainWindow.Emojis.cs` · `.Life.cs` · `.NewEmoji.cs` |
+| 트윈머신 | `Graph/TweenMath.cs` · `MotionEditor.TweenKeys` · `MainWindow.Tween.cs` |
+| 명령줄 | `Mt.Cli/MtCli.cs` |
 | 리그 덤프·내장본·컨트롤러 표·깊이·focus·기준 해상도 | `Rig/RigSchemaFile.cs` · `BuiltinTuning.cs` · `ControllersFile.cs`(`controllers/1`) · `DepthTuningFile.cs`(MaxLevel 40) · `FocusTuningFile.cs` · `BaseResolutionFile.cs` |
 | 씬 조립(무대 뼈대 → 오브젝트 → 깊이 → place → 오프셋 → 샷) | `Preview/ScenePreview.cs` · `StageShotResponse.cs` |
 | 시각의 포즈, 포즈 → 키 값 | `Preview/MotionPreview.cs` · `PoseEdit.cs`(`RootDeltaToLocal`·`AngleDelta`·`ScaleAlong`·`KeyValueFor`) |
@@ -35,7 +40,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 | 그래프 수학(순수) | `Graph/` — `GraphCamera`(좌표) · `GraphHitTest` · `TangentMath` · `HandleMath` · `KeyOps` · `KeySelection` · `KeyClipboard` · `TimeSnap`(DefaultStep 1/24) · `TimeText` · `TimeSliderOps` · `DopeSheetRows` · `CurveSampler` · `RelativeInput`(`+=3`) |
 | 프리셋 모션 9종 | `Presets/MotionPresets.cs` |
 | 설정 파일 | `Settings/ToolSettings.cs` |
-| 셸(모션 목록·하이어아키·인스펙터 탭·툴바·전역 단축키·설정/단축키 창·문제 칸) | `Mt.App/MainWindow.axaml.cs`(큰 파일 — 영역 주석으로 나뉜다) |
+| 셸 | `Mt.App/MainWindow.*.cs` — 맡은 일별 partial: `axaml.cs`(필드 · 화면 짜기 · 모션 목록과 인스펙터 · 명령) · `Mode`(작업 모드) · `Tools`(뷰포트 위 도구 띠) · `Shortcuts`(전역 단축키) · `Settings`(설정 · 창 배치 · 설정 창 · F1) · `Files` · `Scene`(하이어아키 · 씬 탭) · `ChannelBox` · `Outliner`(그래프 왼쪽 채널 목록) · `Problems`(문제 칸) |
 | 뷰포트(그리기·매니퓰레이터·키 없는 포즈·보기 이동) | `Mt.App/Views/ViewportView.cs` |
 | 그래프 에디터 | `Mt.App/Views/GraphEditorView.cs` |
 | 도프 시트 · 타임 슬라이더 · 레인지 | `Views/DopeSheetView.cs` · `TimeSliderView.cs` · `RangeSliderView.cs` |
@@ -46,20 +51,24 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 ## 3. 깨면 안 되는 불변식
 
 1. **편집은 `MotionEditor`만 지난다.** 뷰·세션은 모델을 직접 바꾸지 않는다. 새 편집 기능은 `MotionEditor`에 메서드를 더하고(`Mutate` 또는 `Batch`), 뷰는 그것을 부른다. 드래그 중간값은 렌더만(`_overrides`), 놓는 순간이 편집 하나.
-2. **조작 하나 = 되돌리기 한 칸.** 여러 명령이 한 조작이면 `Batch`로 감싼다. 문서 밖 상태(키 없는 포즈 등)의 변화는 `RecordExternal(undo, redo)`로 같은 줄에 올린다. 무변경 조작은 기록하지 않는다(`Commit`이 JSON 전후를 비교). 던지는 명령은 흔적이 없다. 자세한 정책과 테스트는 `PLAN-undo.md`.
-3. **Core 사본(`src/Ked.Presentation.Core`)은 고치지 않는다.** 소비자 쪽에서 적응한다. 동기화 절차는 `src/Ked.Presentation.Core/vendoring.md`.
+2. **조작 하나 = 되돌리기 한 칸.** 여러 명령이 한 조작이면 `Batch`로 감싼다. 문서 밖 상태(키 없는 포즈 등)의 변화는 `RecordExternal(undo, redo)`로 같은 줄에 올린다. 무변경 조작은 기록하지 않는다(`Commit`이 JSON 전후를 비교). 던지는 명령은 흔적이 없다. 끄는 동안 문서를 바꿔 보이는 조작(트윈머신의 슬라이더)은 `BeginGesture` … `EndGesture`로 묶는다 — 놓을 때 한 칸. 자세한 정책과 테스트는 `history/PLAN-undo.md`.
+3. **Core 사본(`src/Ked.Presentation.Core`)은 고치지 않는다.** 소비자 쪽에서 적응한다. 필요한 것은 런타임(`ked-presentation-runtime`)에서 먼저 정한다. 동기화 절차는 `src/Ked.Presentation.Core/vendoring.md`.
 4. **산출물 등가.** `MotionsJson` 쓰기는 정규 직렬화(§7)이고 유니티 `MotionClipExporter`와 바이트까지 같아야 한다. `MotionsJsonTests.nod_bow를_편집기로_지어_내보내면_Unity_산출물과_바이트까지_같다`가 심판이다.
 5. **보이는 것 = 재생하는 것.** 뷰포트 포즈는 코어 `MotionMath.Compose`·`StageState` 폴드 함수로만 만든다. 화면용 근사 수식을 두지 않는다.
 6. **툴은 Yarn·커맨드를 모른다.** `Mt.Authoring`에 그 타입을 들이지 않는다.
-7. **순서 규약.** 씬 조립은 런타임 대본과 같이 slot → size(깊이) → place → 오프셋 → **샷(카메라)**. 바꾸면 자리·오프셋·카메라가 서로 되감는다(2026-10-28에 두 번 겪었다).
+7. **스키마 계약.** 문서(모션 · 클립 · 이모지)는 덤프에 있는 리그와 노드만 쓴다 — 어긋나면 막는 문제다. 그 검사는 `SchemaContract` 한 곳에만 둔다.
+8. **이모지 화면의 말.** 화면은 "그림"(코드 · 파일의 `Rig`) · "이모지 전체"(`Emoji_Offset`)라고 쓴다. 검증 · 오류 문구도 화면의 말을 쓴다.
+9. **순서 규약.** 씬 조립은 런타임 대본과 같이 slot → size(깊이) → place → 오프셋 → **샷(카메라)**. 바꾸면 자리·오프셋·카메라가 서로 되감는다(2026-10-28에 두 번 겪었다).
 
 ## 4. 자주 하는 작업
 
-### 4.1 코어 재반입 (`ked-stage-runtime`이 바뀌었을 때)
+### 4.1 코어 재반입 (런타임의 코어가 바뀌었을 때)
 
-1. `vendoring.md`의 절차대로 `diff -r`로 갈래를 가르고 저쪽 본으로 교체(`Tests/`·`*.meta`·`*.asmdef` 제외).
+정본은 `ked-presentation-runtime`의 `Assets/Ked.Presentation/Core`다. 지금 사본은 옛 분리본(`ked-stage-runtime` `dc690c1`)에 이모지 파일만 정본에서 얹은 상태다 — 무엇이 어디서 왔는지는 `vendoring.md`의 표가 적는다.
+
+1. `vendoring.md`의 절차대로 `diff -r`로 갈래를 가르고 저쪽 본으로 교체(`Tests/`·`*.meta`·`*.asmdef` 제외). 일부만 가져올 때는 가져온 파일과 원본 커밋을 표에 적는다.
 2. 순수 테스트만 `tests/Ked.Presentation.Core.Tests/EditMode/`로 복사(유니티·DOTween·Newtonsoft 참조는 제외).
-3. 컴파일 적응은 `Mt.Authoring`·`Mt.App`에서. 규약이 바뀌었으면 `MotionsJson`·`MotionDocumentJson`·`AuthoringFormat`의 스키마 문자열과 골든 픽스처(`tests/Mt.Authoring.Tests/Fixtures/`)를 갱신한다.
+3. 컴파일 적응은 `Mt.Authoring`·`Mt.App`에서. 형식이 바뀌었으면 `MotionsJson`·`MotionDocumentJson`·`AuthoringFormat`·`EmojiExport`와 골든 픽스처(`tests/Mt.Authoring.Tests/Fixtures/`)를 갱신한다. 덤프가 바뀌었으면 내장본(`Defaults/ExportedTuning`)과 픽스처도.
 4. 전체 빌드·테스트. `vendoring.md` 표의 원본 커밋·반입일 갱신.
 
 ### 4.2 컨트롤러 표 바꾸기 (손잡이 추가·이름·성분 라벨)
@@ -74,28 +83,31 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 
 ### 4.4 라벨·문구 바꾸기
 
-채널 종류 표시는 `Model/ChannelKindLabel.cs`, 재생 기준은 `MotionModeLabel.cs`, 컨트롤러 성분은 `controllers.json`의 `axisLabels`. 종료 처리·재생 기준 콤보는 `MainWindow`의 모션 탭. 바꾸면 README·USER-GUIDE의 표도 같이.
+채널 종류 표시는 `Model/ChannelKindLabel.cs`, 재생 기준은 `MotionModeLabel.cs`, 컨트롤러 성분은 `controllers.json`의 `axisLabels`. 종료 처리·재생 기준 콤보는 `MainWindow`의 모션 탭. 바꾸면 USER-GUIDE의 표도 같이.
 
 ### 4.5 전역 단축키 추가
 
-`MainWindow.OnShellKeyDown`(tunnel 핸들러, `PhysicalKey` 기준). 글 입력 칸(`e.Source is TextBox`)은 건너뛴다. 그래프 안에서 그래프 도구가 먼저인 키(Q/W/R)는 `InsideGraph` 검사. 단축키 창(`OpenShortcuts`)의 표와 README·USER-GUIDE를 같이 고친다.
+`MainWindow.Shortcuts.cs`의 `OnShellKeyDown`(tunnel 핸들러, `PhysicalKey` 기준). 글 입력 칸(`e.Source is TextBox`)은 건너뛴다. 그래프 안에서 그래프 도구가 먼저인 키(Q/W/R)는 `InsideGraph` 검사. 단축키 창(`MainWindow.Settings.cs`의 `OpenShortcuts`)의 표와 USER-GUIDE를 같이 고친다.
 
 ### 4.6 기능을 지울 때
 
-소유자 방침은 "흔적 없이": 모델 필드 · 편집기 명령 · 직렬화 키 · 화면 · 테스트 · 문서를 한 커밋에서 다 뺀다. 마이그레이션은 두지 않는다(옛 저작본이 없다). 지운 뒤 `grep`으로 식별자와 문서 언급을 한 번 더 훑는다.
+소유자 방침은 "흔적 없이": 모델 필드 · 편집기 명령 · 직렬화 키 · 화면 · 테스트 · 문서를 한 커밋에서 다 뺀다. 지운 뒤 `grep`으로 식별자와 문서 언급을 한 번 더 훑는다. 그 기능을 쓴 저작본이 있을 수 있으면 **읽을 때 버리는 한 줄**만 `MotionDocumentJson`에 둔다(카메라 모션 · 상태 블록이 그렇다) — 옛 문서가 열리지 않는 것보다 낫다.
 
 ### 4.7 무대 등가 견본 바꾸기
 
 `tests/Mt.Authoring.Tests/Fixtures/stage-parity/`의 `motions.json`(툴 산출물)·`poses.json`(포즈 표)은 **이쪽이 원본**이고
-무대 저장소 `Assets/Ked.Presentation/Core/Tests/EditMode/UnityParity/ToolExport~/`가 사본이다(코어와 반대 방향).
-고치면 `StageParityTests`를 녹색으로 만든 뒤 두 파일을 그대로 무대 쪽에 복사하고, 그쪽 테스트 머리 주석의 출처 커밋을 고친다.
+런타임 저장소(`ked-presentation-runtime`) `Assets/Ked.Presentation/Tests/EditMode/UnityParity/ToolExport~/`가 사본이다(코어와 반대 방향).
+고치면 `StageParityTests`를 녹색으로 만든 뒤 두 파일을 그대로 런타임 쪽에 복사하고(런타임은 소유자가 커밋한다), 그쪽 테스트 머리 주석의 출처 커밋을 고친다.
 `motions.json`은 바이트 비교 대상이라 손으로 고치지 않는다 — `StageParityTests.ParityDocument()`를 고치고 내보낸 결과로 바꾼다.
 
 ## 5. 테스트 작성 요령
 
 - **Authoring**: xunit. 편집기 테스트는 `TestDocuments.Nod()` 같은 견본으로 시작한다 — 견본은 편집기로 지어서 `CanUndo`가 이미 참이다(처음 기록이 비어 있다고 가정하지 말 것). 새 문서는 기본 씬에 `s1`이 이미 있다.
+- **화면의 기능에는 테스트 손잡이를 붙인다** — `internal … FromForm()`(화면과 같은 명령 경로를 지난다)과 상태를 읽는 `internal` 속성. 이모지 셸 테스트는 `EmojiExampleWindow.Run`으로 예시 문서를 연 창에서 시작한다.
+- **화면을 그림으로 뽑아 눈으로 본다** — `MT_RENDER_DIR=<폴더> dotnet test tests/Mt.App.Tests -c Release --filter EmojiShots`(헤드리스가 Skia로 실제 렌더). 전체 테스트를 `MT_RENDER_DIR`과 같이 돌리지 않는다.
+- **예시 문서**는 빌더(`tests/Mt.Authoring.Tests/EmojiExamples.cs`)가 쓴다 — 고친 뒤 `MT_WRITE_EXAMPLES=1 dotnet test tests/Mt.Authoring.Tests -c Release --filter EmojiExampleTests`.
 - **App(Avalonia.Headless)**: `HeadlessUi.Run(() => …)`, 입력은 `window.MouseDown/Move/Up`·`KeyPressQwerty`·`KeyTextInput`, 좌표는 `view.TranslatePoint(local, window)`. 포즈·기즈모는 `view.GizmoCenter()`·`ObjectQuad()`·`CurrentPose()` 손잡이로 읽는다.
-- 헤드리스의 한계: PNG를 디코딩·인코딩하지 못한다(초상은 자리표시 사각형으로 검증) · 접힌 Expander·안 고른 탭 안의 컨트롤은 포커스를 못 받는다(늘 보이는 `RangeStartBox` 같은 칸을 쓴다) · 두 번째 창(설정·단축키)은 세션이 멈춘다(열지 않는다, 08df523) · 재생 시계는 실제 시간이라 `Assert.InRange`로 느슨하게.
+- 헤드리스의 한계: PNG를 디코딩·인코딩하지 못한다(초상은 자리표시 사각형으로 검증) · 접힌 Expander·안 고른 탭 안의 컨트롤은 포커스를 못 받는다(늘 보이는 `RangeStartBox` 같은 칸을 쓴다) · 두 번째 창은 `ShowDialog`면 세션이 멈춘다(설정·단축키 창은 열지 않는다, 08df523 — 새 이모지 · 트윈머신 창은 `Show`라 테스트한다) · 모드를 바꾼 뒤에는 `Dispatcher.UIThread.RunJobs()`로 자리를 잡게 한다 · 되돌리기는 문서 객체를 바꾸니 `Undo()` 뒤에는 자산을 다시 찾는다 · 재생 시계는 실제 시간이라 `Assert.InRange`로 느슨하게.
 - 되돌리기 테스트는 `editor.Revision`·`CanUndo`·`HasPending`로 칸 수를 센다. "조작 하나 = 한 칸"을 깨는 변경은 `MainWindowTests.복합_조작은_되돌리기_한_칸이다`가 잡는다.
 - 무대 등가(`StageParityTests`)는 포즈 표를 `1e-3` 안에서 비교한다. 시작값은 표의 `start`(0이 아닌 값 — relative와 absolute가 갈리게)이고, 길이를 지난 표본이 리듀서의 끝 상태다.
 - 산출물 테스트는 바이트 비교다. 직렬화 순서·소수 표기(`R`, 정수는 소수점 없이)·`-0 → 0`·LF·끝 개행 하나를 지킨다.
@@ -112,16 +124,19 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 | 자산 동기화 | `DocumentSession`은 편집기 Changed에서 리그·초상 지문(`rig=…\nbase=…\nportrait id=…`)이 바뀐 때만 다시 읽는다. 키 편집은 다시 읽지 않는다 |
 | 글 칸 확정 | `OnCommit`: Enter는 확정 + 포커스를 뷰포트로, LostFocus는 글이 바뀐 때만 확정. 같은 값 재확정은 기록이 아니다 |
 | 깊이 슬라이더 | 0‥40, close = 20, 그 너머는 `depth.json` 커브의 할선 연장(런타임 규칙). 놓으면 DepthScale X·Y + DepthY를 한 번에 굽는다 |
-| 옛 파일 | `motion-authoring/1`·`motions/1`은 읽힌다(채널 `mode` 무시). 쓰기는 언제나 `/2` |
+| 옛 파일 | `motion-authoring/1`·`motions/1`은 읽힌다(채널 `mode` 무시). 쓰기는 언제나 `/2`. 걷어 낸 카메라 모션 · 카메라 줄 · 상태 블록은 읽을 때 버린다 |
+| 안 쓰는 using | 빌드가 막지 않는다(`IDE0005`는 꺼져 있다). 훑는 법은 `PLAN-cleanup.md` §4 |
+| 설정 파일 | `%APPDATA%/ked-motion-tool-characterRig/`. 옛 자리(`ked-motion-tool`)는 형제 툴이 쓴다 — 읽기만 하고 쓰지 않는다 |
 | 커밋 메시지 | 모델 식별자를 저장소 산출물에 넣지 않는다. 한국어, "무엇을 왜" |
 
 ## 7. 문서 지도
 
 | 문서 | 내용 |
 |---|---|
-| `README.md` | 기능 전부의 정본 요약(화면별 조작 표) |
+| `README.md` | 무엇인가 · 처음 열기 · `mt` · 문서의 지도 · 빌드 |
 | `docs/HANDOFF.md` · `USER-GUIDE.md` · `MAINTENANCE.md` | 인수인계 · 사용법 · 이 문서 |
-| `docs/PLAN.md` | 결정·범위·아키텍처·데이터·마일스톤·v2·위험 |
-| `docs/PLAN-M5.md` · `PLAN-maya.md` · `maya-comparison.md` | 사용감 단계, 마야 관습 대조 |
-| `docs/PLAN-controller.md` · `PLAN-scene.md` · `PLAN-inspector.md` · `PLAN-undo.md` | 컨트롤러 · 씬/무대 · 인스펙터 · 되돌리기 결정판 |
-| `src/Ked.Presentation.Core/vendoring.md` | 코어 반입 절차 |
+| `docs/PLAN-characterRig.md` | 이 저장소의 방향(스키마 계약 · 컨트롤러 · 산출물) |
+| `docs/PLAN-cleanup.md` | 정리 → 설명서 → 불편 고치기 |
+| `docs/history/` | 끝난 일의 계획서 — 결정의 까닭. 지금의 명세가 아니다 |
+| `src/Ked.Presentation.Core/vendoring.md` | 코어 반입 절차와 출처 |
+| `examples/emoji/README.md` | 이모지 예시 |

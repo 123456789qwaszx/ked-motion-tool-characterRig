@@ -9,7 +9,7 @@ public enum EmojiLifeRole
 }
 
 /// <summary>
-/// 수명의 띠(<c>docs/PLAN-ux.md</c> U5)가 쓰는 말과 셈 — 자리의 이름, 그 자리에 이은 구간, 새 구간이 놓일 프레임.
+/// 수명의 띠(<c>docs/history/PLAN-ux.md</c> U5)가 쓰는 말과 셈 — 자리의 이름, 그 자리에 이은 구간, 새 구간이 놓일 프레임.
 /// 문서를 바꾸지 않는다(바꾸는 것은 <c>MotionEditor.AddEmojiLifeSpan</c>).
 /// </summary>
 public static class EmojiLife

@@ -4,7 +4,7 @@ using Ked.Presentation.Core;
 namespace Mt.Authoring.Model;
 
 /// <summary>
-/// 이모지 하나의 저작본(<c>docs/PLAN-emoji.md</c> §1 · §2 · §4). 런타임 정의(<c>docs/emoji-rig.md</c>)에서 **툴이 정하는 것** 전부다:
+/// 이모지 하나의 저작본(<c>docs/history/PLAN-emoji.md</c> §1 · §2 · §4). 런타임 정의(<c>docs/emoji-rig.md</c>)에서 **툴이 정하는 것** 전부다:
 /// 오프셋 · 리그들(이름 · 그림 · 기본 자리 · 배율 · 회전) · 자기 타임라인 하나 · 이름 붙은 구간 · 구간을 등장/머묾/퇴장에 잇기.
 ///
 /// 리그의 **틀**(노드와 채널)은 런타임 덤프의 것이다(<see cref="Rig.EmojiRigFrame"/>). 툴은 틀에 맞는 리그를 몇 개 놓을지만 정한다.

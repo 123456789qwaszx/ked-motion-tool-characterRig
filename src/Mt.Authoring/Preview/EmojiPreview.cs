@@ -15,7 +15,7 @@ public sealed record EmojiPose(RectNodeTree Tree, float Alpha, IReadOnlyList<Emo
 public readonly record struct EmojiMoment(EmojiPhase Phase, EmojiClip? Clip, float Frame);
 
 /// <summary>
-/// 이모지의 미리보기(<c>docs/PLAN-emoji.md</c> E5) — **내보낸 정의를 코어로 돌린다.** 그래서 툴이 보이는 것 = 게임이 재생하는 것이다.
+/// 이모지의 미리보기(<c>docs/history/PLAN-emoji.md</c> E5) — **내보낸 정의를 코어로 돌린다.** 그래서 툴이 보이는 것 = 게임이 재생하는 것이다.
 ///
 /// - 정의: <see cref="EmojiExport"/>가 낸 글자를 코어 로더(<see cref="EmojiDefinitionLoader"/>)로 읽은 것 — 구간 자르기 · 초 → 프레임까지 같은 길.
 /// - 그 프레임의 값: 코어 <see cref="EmojiClipMath.SampleNode"/>. 노드에 옮기는 법은 런타임 <c>EmojiPlaybackSystem.Apply</c>와 같다 —

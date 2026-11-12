@@ -4,7 +4,7 @@ using Mt.Authoring.Settings;
 
 namespace Mt.App;
 
-// 작업 모드(docs/PLAN-ux.md U1) — 캐릭터 모션 / 이모지. 화면이 그 일에 쓰는 것만 보인다.
+// 작업 모드(docs/history/PLAN-ux.md U1) — 캐릭터 모션 / 이모지. 화면이 그 일에 쓰는 것만 보인다.
 //
 //   캐릭터 모션: 왼쪽 = 씬 · 모션 · 클립,          오른쪽 = 채널 박스 · 씬 · 모션 · 클립 탭, 툴바 = motions.json 가져오기 · 내보내기
 //   이모지:     왼쪽 = 이모지 · 그 이모지의 그림, 오른쪽 = 고른 것의 값(탭이 아니다),        툴바 = emojis.json 내보내기

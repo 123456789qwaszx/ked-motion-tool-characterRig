@@ -9,7 +9,7 @@ namespace Mt.Authoring.Model;
 /// 함께 든다. 내보내기는 그것을 벗기고 <see cref="MotionAsset"/>을 코어 <see cref="MotionClip"/>으로 바꾼다.
 ///
 /// 전부 가변 클래스다. 편집은 <see cref="Editing.MotionEditor"/>만 하고, 되돌리기는 문서 전체 스냅샷이다
-/// (VnTool <c>ProjectEditor</c>의 방식) — 명령마다 역연산을 짓지 않는다.
+/// — 명령마다 역연산을 짓지 않는다.
 /// </summary>
 public sealed class MotionDocument
 {
@@ -76,7 +76,7 @@ public sealed class MotionDocument
         => name is null ? null : Clips.FirstOrDefault(c => string.Equals(c.Name, name, StringComparison.Ordinal));
 
     /// <summary>
-    /// 이모지들(<c>docs/PLAN-emoji.md</c>). <c>motions.json</c>에는 안 나가고 <c>emojis.json</c>으로 나간다.
+    /// 이모지들(<c>docs/history/PLAN-emoji.md</c>). <c>motions.json</c>에는 안 나가고 <c>emojis.json</c>으로 나간다.
     /// 저작본에는 <see cref="EmojisOrNull"/>로 실린다: 이모지가 없는 문서는 전과 같은 글자다.
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]

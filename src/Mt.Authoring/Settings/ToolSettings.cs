@@ -6,7 +6,7 @@ using Mt.Authoring.Model;
 namespace Mt.Authoring.Settings;
 
 /// <summary>
-/// 작업 모드 — 화면이 그 일에 쓰는 것만 보인다(docs/PLAN-ux.md U1).
+/// 작업 모드 — 화면이 그 일에 쓰는 것만 보인다(docs/history/PLAN-ux.md U1).
 /// </summary>
 public enum WorkMode
 {

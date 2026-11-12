@@ -13,11 +13,11 @@ namespace Mt.App.Views;
 /// <summary>뷰포트가 그리는 이모지의 한 순간 — 씬의 트리(캐릭터 + 그 밑에 선 이모지) · 이모지 전체의 불투명도 · 리그마다 · 글.</summary>
 internal sealed record EmojiFrameView(RectNodeTree Tree, float Alpha, IReadOnlyList<EmojiRigPose> Rigs, string Label, bool Visible);
 
-// 이모지의 미리보기(docs/PLAN-emoji.md E6). 이모지를 고르면 뷰포트의 시간은 그 이모지의 것이다:
+// 이모지의 미리보기(docs/history/PLAN-emoji.md E6). 이모지를 고르면 뷰포트의 시간은 그 이모지의 것이다:
 //   타임라인 보기 — 시계 = 타임라인(초). 그래프 · 도프 시트와 같은 시각이다. 그 프레임을 내보내는 길 그대로 읽어(EmojiPreview.Timeline) 보인다.
 //   수명 보기     — 시계 = 등장 → 머묾 × 바퀴 → 퇴장(머묾이 없으면 main 한 번). 코어 재생(EmojiPlayback)을 그대로 돌린다.
 // 이모지는 런타임처럼 캐릭터의 CharSlot_Scale 밑(로케이터 자리 — 발)에 선다. 씬에 캐릭터가 없으면 무대 가운데.
-// 타임라인 보기에서는 뷰포트에서 직접 만진다(docs/PLAN-ux.md U4) — 그림을 눌러 고르고, 매니퓰레이터(W 이동 · E 회전 · R 크기)로 끈다.
+// 타임라인 보기에서는 뷰포트에서 직접 만진다(docs/history/PLAN-ux.md U4) — 그림을 눌러 고르고, 매니퓰레이터(W 이동 · E 회전 · R 크기)로 끈다.
 //   Auto Key가 꺼져 있으면 기본값(그림의 자리 · 크기 · 회전 = EmojiRig_Place, 이모지 전체는 머리에서의 자리)이 바뀐다 — 키가 아니다.
 //   Auto Key가 켜져 있으면 지금 프레임에 키가 놓인다(그림의 키 = EmojiRig_Image, 이모지 전체의 키 = Emoji_Offset).
 // 끄는 동안은 보이기만 하고 놓을 때 한 칸. 그림을 고르지 않았으면 대상은 이모지 전체다.

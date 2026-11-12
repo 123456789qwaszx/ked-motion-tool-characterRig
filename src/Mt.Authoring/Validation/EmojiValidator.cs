@@ -12,7 +12,7 @@ public sealed record EmojiProblem(string EmojiName, string Message, bool Blockin
 }
 
 /// <summary>
-/// 편집 중 계속 돌리는 이모지 검증(<c>docs/PLAN-emoji.md</c> E3). 막는 문제가 있으면 <c>emojis.json</c>을 내지 않는다.
+/// 편집 중 계속 돌리는 이모지 검증(<c>docs/history/PLAN-emoji.md</c> E3). 막는 문제가 있으면 <c>emojis.json</c>을 내지 않는다.
 ///
 /// 보는 것: 이름 · 리그(이름 · 그림 · 기본 배율) · 타임라인의 채널(대상이 틀의 키 받는 노드인가 · 종류와 성분이 맞는가 · 키가 타임라인 안인가 ·
 /// 그림 키가 그 리그의 그림을 가리키는가) · 구간(타임라인 안인가) · 잇기(있는 구간인가 · 등장/퇴장은 머묾이 있을 때만).

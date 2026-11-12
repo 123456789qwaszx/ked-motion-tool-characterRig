@@ -1,7 +1,7 @@
 namespace Mt.Authoring.Model;
 
 /// <summary>
-/// 이모지의 타임라인을 화면에 적는 말(docs/PLAN-ux.md U3) — 리그 덤프의 노드 이름과 파일의 채널 이름 대신 만드는 사람의 말로.
+/// 이모지의 타임라인을 화면에 적는 말(docs/history/PLAN-ux.md U3) — 리그 덤프의 노드 이름과 파일의 채널 이름 대신 만드는 사람의 말로.
 /// 화면에만 쓴다: 저작본 · 산출물의 이름(<c>Emoji_Offset</c> · <c>body/EmojiRig_Image</c> · <c>alpha</c>)은 그대로다.
 ///
 /// 이모지의 타임라인에서 키를 받는 노드는 둘뿐이다 — 이모지 전체(오프셋 노드)와 리그마다의 그림 노드(<c>리그/노드</c>).

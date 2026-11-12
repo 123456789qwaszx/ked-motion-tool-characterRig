@@ -15,7 +15,7 @@ namespace Mt.Authoring.Tests;
 ///
 /// 견본 둘(<c>Fixtures/stage-parity/</c>)이 두 저장소를 잇는다. <c>motions.json</c>은 이 툴의 내보내기 산출물,
 /// <c>poses.json</c>은 0이 아닌 시작값 위에 그 모션을 relative·absolute로 얹은 포즈 표다(길이를 지난 뒤 = 끝 상태 포함).
-/// 무대 저장소(<c>ked-stage-runtime</c>)의 <c>UnityParity/ToolExportMotionParityTests</c>가 같은 두 파일을
+/// 런타임 저장소(<c>ked-presentation-runtime</c>)의 <c>UnityParity/ToolExportMotionParityTests</c>가 같은 두 파일을
 /// 런타임 로더(<c>MotionLibrary</c>, Unity JsonUtility)와 리듀서로 읽어 같은 표를 확인한다 — 견본을 바꾸면 그쪽 사본도 같이.
 ///
 /// 모션 셋은 규약의 갈래를 하나씩 덮는다: sway(restore · 회전 z만 · 탄젠트 있음), step(commit · 위치 x만 · 첫 키가

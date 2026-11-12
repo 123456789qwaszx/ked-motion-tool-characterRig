@@ -86,9 +86,14 @@
 | C-2 B2 | 끝 — 설정은 `%APPDATA%/ked-motion-tool-characterRig/settings.json`. 제 파일이 없으면 옛 자리(`ked-motion-tool`)의 것을 한 번 읽어 오고, 저장은 제 자리에만 한다(옛 파일은 형제 툴의 것이라 건드리지 않는다). 창 제목도 `ked-motion-tool-characterRig` |
 | C-2 B1 | 끝 — `MainWindow.axaml.cs` 4,292줄 → 1,409줄. 옮기기만 했다(줄을 모아 견줘 빠진 것이 없음을 확인): `MainWindow.Shortcuts.cs`(전역 단축키 · 시간 명령) · `.Settings.cs`(설정 · 창 배치 · 설정 창 · F1) · `.ChannelBox.cs` · `.Scene.cs`(하이어아키 · 씬 탭) · `.Outliner.cs`(그래프 왼쪽 채널 목록) · `.Problems.cs`(문제 칸) · `.Files.cs`(열기 · 저장 · 가져오기 · 내보내기). 남은 것은 필드 · 생성자 · 화면 짜기 · 모션 목록과 인스펙터 · 명령 · 작은 도우미 |
 | C-2 B3 | 끝 — `EmojiLifeStripShellTests`를 주제별로: `EmojiLifeStripShellTests`(수명의 띠) · `EmojiHostShellTests`(인물 · 고르기) · `EmojiMoveShellTests` · `NewEmojiShellTests` · `EmojiKeyShellTests`(키 단추 · 종류별 칸) · `TweenShellTests`. 창을 여는 일은 `EmojiExampleWindow`가 한다. 테스트 수는 그대로(862) |
-| C-3 | 시작 전 |
+| C-3 | 끝 — 계획서 12개와 정리 전의 README를 `docs/history/`로 옮겼다(그 폴더의 `README.md`가 무엇이 지금과 다른지 적는다). `HANDOFF.md`를 다시 썼고, `MAINTENANCE.md`를 지금 것으로 고쳤고(코드 지도 · 불변식 · 재반입 절차 · 테스트 요령 · 함정), `README.md`를 줄였고(무엇인가 · 처음 열기 · `mt` · 문서의 지도 · 빌드), `CLAUDE.md`를 맞췄다. 코드 주석의 VnTool 언급도 지웠다 |
+
+**1단계(정리) 끝 — 2026-11-12.** 테스트 862건(코어 426 · 도메인 304 · 화면 132). 다음은 2단계(설명서).
 
 ### 적어 둘 것
+
+- **정리 전 README의 기능 설명**은 `docs/history/README-2026-11.md`에 있다 — 2단계의 설명서를 쓸 때 재료로 쓰고, 설명서가 서면 필요 없다. `USER-GUIDE.md`는 2단계에서 다시 쓴다(지금은 지운 기능의 대목만 뺐다).
+- **`vendoring.md`의 본문**은 그대로 두었다(반입한 그때의 사실을 적은 표다). 코어의 전체 재반입은 남은 빚이다.
 
 - **안 쓰는 using**은 보통 빌드가 막지 않는다(`IDE0005`는 꺼져 있다). 파일을 나누며 한 번 훑어 저장소 전체에서 지웠다 — 임시 `.editorconfig`(`dotnet_diagnostic.IDE0005.severity = warning`)와 `-p:EnforceCodeStyleInBuild=true -p:GenerateDocumentationFile=true`로 빌드하면 나온다.
 

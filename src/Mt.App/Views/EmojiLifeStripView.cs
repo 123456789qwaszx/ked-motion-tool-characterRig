@@ -19,7 +19,7 @@ public enum LifeGrip
 }
 
 /// <summary>
-/// 수명의 띠(<c>docs/PLAN-ux.md</c> U5) — 타임 슬라이더 위에 등장 · 머묾 · 퇴장을 색 띠로 보이고, 끌어서 고친다.
+/// 수명의 띠(<c>docs/history/PLAN-ux.md</c> U5) — 타임 슬라이더 위에 등장 · 머묾 · 퇴장을 색 띠로 보이고, 끌어서 고친다.
 ///
 /// - 가로는 타임 슬라이더와 같은 눈금이다(<see cref="RangeStart"/> … <see cref="RangeEnd"/>, 초) — 띠의 끝이 아래 눈금의 프레임과 맞는다.
 /// - 띠의 끝을 끌면 시작 · 끝이, 몸통을 끌면 통째로 옮겨진다. 프레임에 붙는다. 놓을 때 한 번 알린다(<see cref="SpanCommitted"/> — 되돌리기 한 칸).

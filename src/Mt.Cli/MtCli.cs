@@ -33,7 +33,7 @@ public static class MtCli
           mt pose     <문서> --motion <이름> --time <초> [--object <id>] [--mode relative|absolute] [--rig <덤프>]
           mt pose     <문서> --clip <이름> --time <초> [--rig <덤프>]
           mt pose     <문서> --emoji <이름> --time <초> [--off <초>] [--view life|timeline] [--facing right|left] [--rig <덤프>]
-                                                               그 시각의 포즈 — 모션·클립이 건드리는 노드의 값과 오브젝트의 불투명도,
+                                                               그 시각의 포즈 — 모션·클립이 건드리는 노드의 값,
                                                                이모지는 수명(등장 → 머묾 ⟲ → --off에 내리면 퇴장) 또는 타임라인의 그 프레임
           mt bake     <문서> --clip <이름> --object <id> --name <새 모션> [--out <문서>] [--rig <덤프>]
                                                                클립에서 그 캐릭터에 얹힌 블록을 모션 하나로 구워 문서에 더한다

@@ -71,7 +71,7 @@
 4. **도프 시트** 탭에서 블록을 끌면 시간만 옮겨진다.
 5. **다른 이름으로…** → `*.motion-authoring.json`(저작 원본). **motions.json 내보내기…** → 런타임이 읽는 산출물. 문제 칸이 비어 있을 때만 나간다.
 
-실제 리그·초상으로 보고 싶으면 **리그 덤프…**로 `ked-stage-runtime/ExportedTuning/rig-schemas.json`을, **초상 PNG…**로 `ked-presentation-runtime/Assets/Samples/Portraits/harin/b/01.png` 같은 파일을 싣는다. 덤프 옆의 `base-resolution.json`·`presets/depth.json`·`presets/focus-tuning.json`·`presets/controllers.json`은 자동으로 같이 실린다.
+실제 리그·초상으로 보고 싶으면 **리그 덤프…**로 `ked-presentation-runtime/ExportedTuning/rig-schemas.json`을, **초상 PNG…**로 `ked-presentation-runtime/Assets/Samples/Portraits/harin/b/01.png` 같은 파일을 싣는다. 덤프 옆의 `base-resolution.json`·`presets/depth.json`·`presets/focus-tuning.json`·`presets/controllers.json`은 자동으로 같이 실린다.
 
 **유니티 쪽 리그가 바뀌었을 때.** 문서는 지을 때의 스키마를 적어 둔다(덤프를 싣거나 저장할 때). 바뀐 덤프로 열면 아래 문제 줄에 "문서를 지을 때와 스키마가 다르다"와 함께 무엇이 달라졌고 무엇이 그것을 쓰는지 나온다.
 이름만 바뀐 노드는 **이름 바꾸기를 따라간다**로 한 번에 고치고, 다 확인했으면 **이 스키마로 맞춘다**를 누른다. 사라진 노드를 쓰는 모션은 그 채널을 지우거나 다른 노드로 옮길 때까지 내보내지 못한다.

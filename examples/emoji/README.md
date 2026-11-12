@@ -1,6 +1,6 @@
 # 이모지 예시
 
-런타임의 견본 셋(`ked-presentation-runtime` `Assets/Dialogue/emojis.json`, 런타임 `32858197`)을 툴 문서로 다시 지은 것이다(`docs/PLAN-emoji.md` E7 · E8).
+런타임의 견본 셋(`ked-presentation-runtime` `Assets/Dialogue/emojis.json`, 런타임 `32858197`)을 툴 문서로 다시 지은 것이다(`docs/history/PLAN-emoji.md` E7 · E8).
 툴이 낸 `emojis.json`을 코어 로더로 읽으면 런타임의 파일과 모든 클립 · 모든 프레임(¼ 프레임 사이까지)에서 같은 값이 나온다 — `EmojiExampleTests`가 지킨다.
 
 - `emoji-examples.motion-authoring.json` — 앱에서 **열기…**로 연다. 그림은 `art/`(문서 기준 상대 경로).

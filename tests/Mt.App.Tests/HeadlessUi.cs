@@ -4,7 +4,7 @@ using Avalonia.Headless;
 namespace Mt.App.Tests;
 
 /// <summary>
-/// 화면 없는 UI 검증의 실행 자리 (VnTool <c>HeadlessUi</c>와 같은 꼴).
+/// 화면 없는 UI 검증의 실행 자리.
 ///
 /// <b>왜 Avalonia.Headless.XUnit을 쓰지 않는가</b> — 그 어댑터(12.1.1)는 xunit v3를 끌고 오는데
 /// 이 저장소는 xunit 2.9.2다. 한 어셈블리에 두 xunit이 들어오면 <c>FactAttribute</c>가 중복돼

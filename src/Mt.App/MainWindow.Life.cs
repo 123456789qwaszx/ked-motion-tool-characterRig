@@ -9,7 +9,7 @@ using Mt.Authoring.Settings;
 
 namespace Mt.App;
 
-// 수명의 띠(docs/PLAN-ux.md U5) — 뷰포트와 타임 슬라이더 사이, 이모지 모드에서만.
+// 수명의 띠(docs/history/PLAN-ux.md U5) — 뷰포트와 타임 슬라이더 사이, 이모지 모드에서만.
 //   윗줄: 이 이모지가 어떻게 사는가 한 줄 · [움직임 가져오기 ▾] · [+ 등장] [+ 머묾] [+ 퇴장](아직 없는 것만) · [게임처럼 재생] 머묾 n 바퀴
 //   아랫줄: 등장 · 머묾 · 퇴장의 색 띠 — 타임 슬라이더와 같은 눈금. 끝을 끌어 길이를, 몸통을 끌어 자리를 고친다.
 // 이름과 프레임을 숫자로 적는 칸(오른쪽 "구간과 잇기")은 그대로다 — 띠는 그 위의 빠른 길이다.
@@ -125,7 +125,7 @@ public partial class MainWindow
         return OnlyIn(WorkMode.Emoji, rows);
     }
 
-    // ── 움직임 가져오기 (docs/PLAN-ux.md U8) ─────────────────────────
+    // ── 움직임 가져오기 (docs/history/PLAN-ux.md U8) ─────────────────────────
 
     private Button? _moveButton;
 

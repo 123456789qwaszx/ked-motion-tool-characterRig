@@ -6,7 +6,7 @@ using Mt.Authoring.Serialization;
 namespace Mt.Authoring.Editing;
 
 /// <summary>
-/// 문서를 바꾸는 유일한 통로 (VnTool <c>ProjectEditor</c>의 자리).
+/// 문서를 바꾸는 유일한 통로.
 ///
 /// 화면들은 서로 이야기하지 않는다 — 전부 여기에 의도를 전달하고 <see cref="Changed"/>를 듣고 다시 그린다.
 /// 되돌리기는 문서 전체 스냅샷(<see cref="MotionDocumentJson"/>)이다: 되돌리기 한 번 = 조작 하나이고,

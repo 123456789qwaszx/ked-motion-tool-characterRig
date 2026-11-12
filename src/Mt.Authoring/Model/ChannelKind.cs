@@ -3,7 +3,7 @@ using Ked.Presentation.Core;
 namespace Mt.Authoring.Model;
 
 /// <summary>
-/// 툴이 저작하는 채널 종류(<c>docs/PLAN-emoji.md</c> §3). 코어의 <see cref="MotionChannelKind"/> 셋(자리 · 배율 · 회전)에
+/// 툴이 저작하는 채널 종류(<c>docs/history/PLAN-emoji.md</c> §3). 코어의 <see cref="MotionChannelKind"/> 셋(자리 · 배율 · 회전)에
 /// 이모지의 타임라인만 쓰는 둘(불투명도 · 그림)을 더한 것이다. 코어 사본은 고치지 않는다 — 넷째 · 다섯째는 툴의 것이고,
 /// <c>motions/2</c>로 나갈 때는 <see cref="ChannelKinds.ToCore"/>로 앞의 셋만 건너간다.
 /// 이름이 곧 저작 원본의 글자(소문자)다 — 앞의 셋은 코어와 같은 이름이라 옛 저작본이 그대로 읽힌다.

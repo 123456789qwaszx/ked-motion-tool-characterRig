@@ -9,7 +9,7 @@ using Mt.Authoring.Rig;
 namespace Mt.Authoring.Validation;
 
 /// <summary>
-/// 문서의 이모지 → <c>emojis.json</c>(<c>emojis/2</c>, 런타임 <c>docs/emoji-format.md</c>). 막는 문제가 0건일 때만 나간다(<c>docs/PLAN-emoji.md</c> E4).
+/// 문서의 이모지 → <c>emojis.json</c>(<c>emojis/2</c>, 런타임 <c>docs/emoji-format.md</c>). 막는 문제가 0건일 때만 나간다(<c>docs/history/PLAN-emoji.md</c> E4).
 ///
 /// - **구간 자르기** — 구간마다 따로 선 클립이다(구간의 첫 프레임이 클립의 프레임 0). 구간의 양 끝에 키가 없으면 그 프레임의 값과 기울기로
 ///   키를 세운다 — 잘라도 모양이 같다. 머묾을 잇지 않은 이모지는 타임라인 전체가 <see cref="EmojiAsset.MainClip"/> 하나다.

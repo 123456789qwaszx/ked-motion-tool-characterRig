@@ -1,6 +1,6 @@
 namespace Mt.Authoring.Model;
 
-/// <summary>가져올 수 있는 움직임(<c>docs/PLAN-ux.md</c> U8) — 등장 둘 · 머묾 둘 · 퇴장 둘.</summary>
+/// <summary>가져올 수 있는 움직임(<c>docs/history/PLAN-ux.md</c> U8) — 등장 둘 · 머묾 둘 · 퇴장 둘.</summary>
 public enum EmojiMove
 {
     PopIn,
@@ -113,7 +113,7 @@ public static class EmojiMoves
 }
 
 /// <summary>
-/// 새 이모지의 첫 화면(<c>docs/PLAN-ux.md</c> U9)이 정하는 것 — 이름 · 그림들(문서 기준 경로, 한 장에 그림 하나) ·
+/// 새 이모지의 첫 화면(<c>docs/history/PLAN-ux.md</c> U9)이 정하는 것 — 이름 · 그림들(문서 기준 경로, 한 장에 그림 하나) ·
 /// 머무는가 · 어떻게 움직이는가(없으면 null). <c>MotionEditor.StartEmoji</c>가 이것으로 이모지를 한 칸에 짓는다.
 /// </summary>
 public sealed record EmojiStart(string Name, IReadOnlyList<string> Images, bool Stays, EmojiMove? In, EmojiMove? Hold, EmojiMove? Out);

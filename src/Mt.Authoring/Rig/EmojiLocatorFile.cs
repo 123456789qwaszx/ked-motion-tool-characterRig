@@ -5,7 +5,7 @@ namespace Mt.Authoring.Rig;
 
 /// <summary>
 /// <c>presets/emoji-locator.json</c>(ExportedTuning) — 런타임의 이모지 로케이터 표(<c>EmojiLocatorTuningDBSO</c>): 캐릭터(+ 포즈)별 머리의 자리.
-/// **보기에만 쓴다**(<c>docs/PLAN-ux.md</c> U7) — 뷰포트가 이모지를 인물의 머리 위에 세워 보이려고 읽는다. 툴은 이 표를 고치지도 내보내지도 않는다
+/// **보기에만 쓴다**(<c>docs/history/PLAN-ux.md</c> U7) — 뷰포트가 이모지를 인물의 머리 위에 세워 보이려고 읽는다. 툴은 이 표를 고치지도 내보내지도 않는다
 /// (이모지는 캐릭터를 모른다 — 머리의 자리는 런타임의 표가 든다).
 /// 찾는 순서는 런타임과 같다: 캐릭터 + 포즈 → 캐릭터(포즈 칸이 빈 항목) → 없다(<see cref="DefaultPosition"/>).
 /// </summary>

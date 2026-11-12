@@ -13,7 +13,7 @@
 | 테스트 | 순수 테스트(유니티·런타임·DOTween 참조 없는 것)만 `tests/Ked.Presentation.Core.Tests/EditMode/`로 |
 | 이쪽 살림 | `Ked.Presentation.Core.csproj`·`vendoring.md` (동기화 때 유지) |
 
-## 부분 반입 — 이모지 (2026-11-11, `docs/PLAN-emoji.md` E1)
+## 부분 반입 — 이모지 (2026-11-11, `docs/history/PLAN-emoji.md` E1)
 
 정본이 `ked-presentation-runtime`으로 옮겨 가는 중이라 전체 동기화 대신 **이모지에 필요한 파일만** 그쪽에서 가져왔다. 나머지는 위 표의 원본 그대로다 —
 그래서 지금 `ked-presentation-runtime`과의 `diff -r`는 0줄이 아니다(전체 동기화는 따로 한다).
