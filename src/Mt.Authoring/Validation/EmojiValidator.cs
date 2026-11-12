@@ -110,7 +110,43 @@ public static class EmojiValidator
             problems.AddRange(HoldSeams(emoji).Select(message => new EmojiProblem(emoji.Name, message, Blocking: false)));
         }
 
+        if (OffFrameKeys(emoji) is { } offFrame)
+        {
+            problems.Add(new EmojiProblem(emoji.Name, offFrame, Blocking: false));
+        }
+
         return problems;
+    }
+
+    /// <summary>
+    /// 프레임에 안 맞는 키 — 이모지는 프레임(1/24초)으로 센다. 화면에서 놓은 키는 늘 프레임에 맞지만, 파일로 쓴 초(0.26)는
+    /// 프레임 사이(6.24)에 놓일 수 있다. 그대로 나가고 그대로 재생된다(막지 않는다) — 다만 구간의 경계와 어긋나고, 화면에서 그 키를 프레임으로 잡기 어렵다.
+    /// </summary>
+    private static string? OffFrameKeys(EmojiAsset emoji)
+    {
+        int count = 0;
+        string? first = null;
+
+        foreach (ChannelAsset channel in emoji.Timeline.Channels)
+        {
+            foreach (Axis axis in ChannelKinds.Axes(channel.Kind))
+            {
+                foreach (KeyAsset key in channel.Get(axis)?.Keys ?? (IReadOnlyList<KeyAsset>)Array.Empty<KeyAsset>())
+                {
+                    float frame = key.T * EmojiAsset.Fps;
+
+                    if (float.IsFinite(frame) && Math.Abs(frame - MathF.Round(frame)) > 1e-3f)
+                    {
+                        count++;
+                        first ??= FormattableString.Invariant($"{channel.Node} {ChannelKindLabel.File(channel.Kind)}의 {key.T:0.####}초 = {frame:0.##}프레임");
+                    }
+                }
+            }
+        }
+
+        return count == 0
+            ? null
+            : FormattableString.Invariant($"프레임에 안 맞는 키가 {count}개다(처음: {first}) — 이모지는 1/{EmojiAsset.Fps:0}초 단위로 센다. 초 = 프레임 ÷ {EmojiAsset.Fps:0}로 적는다");
     }
 
     /// <summary>
@@ -225,7 +261,7 @@ public static class EmojiValidator
         for (int i = 0; i < timeline.Channels.Count; i++)
         {
             ChannelAsset channel = timeline.Channels[i];
-            string where = $"채널 {channel.Node} {ChannelKindLabel.Of(channel.Kind)}";
+            string where = $"채널 {channel.Node} {ChannelKindLabel.File(channel.Kind)}";
 
             if (!targets.Add((channel.Node, channel.Kind)))
             {

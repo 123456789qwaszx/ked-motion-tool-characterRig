@@ -127,7 +127,7 @@ public static partial class MtCli
                 ["rig"] = m.Rig,
                 ["duration"] = m.Duration,
                 ["end"] = m.End == MotionEnd.Restore ? "restore" : "commit",
-                ["channels"] = new JsonArray(m.Channels.Select(c => (JsonNode)$"{c.Node} {ChannelKindLabel.Of(c.Kind)}").ToArray()),
+                ["channels"] = new JsonArray(m.Channels.Select(c => (JsonNode)$"{c.Node} {ChannelKindLabel.File(c.Kind)}").ToArray()),
             });
         }
 
@@ -341,7 +341,7 @@ public static partial class MtCli
             ["motion"] = baked.Name,
             ["duration"] = baked.Duration,
             ["end"] = baked.End == MotionEnd.Restore ? "restore" : "commit",
-            ["channels"] = new JsonArray(baked.Channels.Select(c => (JsonNode)$"{c.Node} {ChannelKindLabel.Of(c.Kind)}").ToArray()),
+            ["channels"] = new JsonArray(baked.Channels.Select(c => (JsonNode)$"{c.Node} {ChannelKindLabel.File(c.Kind)}").ToArray()),
             ["keys"] = baked.Channels.Sum(c => (c.X?.Keys.Count ?? 0) + (c.Y?.Keys.Count ?? 0) + (c.Z?.Keys.Count ?? 0)),
         });
         return 0;

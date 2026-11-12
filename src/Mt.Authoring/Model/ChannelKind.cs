@@ -58,7 +58,7 @@ public static class ChannelKinds
     /// <summary>코어 종류로. 불투명도 · 그림은 코어에 없다 — 검증이 앞에서 막으므로 여기 오면 잘못 부른 것이다.</summary>
     public static MotionChannelKind ToCore(ChannelKind kind) => TryToCore(kind, out MotionChannelKind core)
         ? core
-        : throw new InvalidOperationException($"채널 종류 {ChannelKindLabel.Of(kind)}는 motions/2에 없다 — 이모지의 타임라인에만 쓴다.");
+        : throw new InvalidOperationException($"채널 종류 {ChannelKindLabel.File(kind)}는 motions/2에 없다 — 이모지의 타임라인에만 쓴다.");
 
     public static bool TryToCore(ChannelKind kind, out MotionChannelKind core)
     {

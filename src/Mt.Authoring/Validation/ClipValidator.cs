@@ -200,7 +200,7 @@ public static class ClipValidator
                     if (block.At < otherEnd - Tolerance && start < end - Tolerance)
                     {
                         Block(
-                            $"{where}: 배역 '{track.Role}'의 {channel.Node} {ChannelKindLabel.Of(channel.Kind)}를 " +
+                            $"{where}: 배역 '{track.Role}'의 {channel.Node} {ChannelKindLabel.File(channel.Kind)}를 " +
                             $"트랙 {other.Track + 1} 블록 {other.Index + 1}('{other.Block.Motion}' @ {other.Block.At:0.###}s)과 같은 때에 쓴다 — 겹칠 수 없다");
                         break;
                     }

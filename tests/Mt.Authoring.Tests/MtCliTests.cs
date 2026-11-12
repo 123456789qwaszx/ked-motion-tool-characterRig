@@ -78,6 +78,8 @@ public class MtCliTests
         (int code, JsonNode? json, _, _) = Run("info", WriteDocument());
         Assert.Equal(0, code);
         Assert.Equal(new[] { "nod", "bow" }, json!["motions"]!.AsArray().Select(m => m!["name"]!.GetValue<string>()));
+        // 채널의 종류는 파일의 말로(euler) — 화면의 말(rotate)로 내면 그대로 파일에 적게 된다.
+        Assert.DoesNotContain("rotate", json["motions"]!.ToJsonString(), StringComparison.Ordinal);
         Assert.Equal("greet", json["clips"]![0]!["name"]!.GetValue<string>());
         Assert.Equal(1.1, json["clips"]![0]!["duration"]!.GetValue<double>(), 3);
         Assert.Equal(new[] { "s1", "s2" }, json["scenes"]![0]!["objects"]!.AsArray().Select(o => o!["id"]!.GetValue<string>()));

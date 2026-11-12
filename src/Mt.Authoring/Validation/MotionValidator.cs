@@ -127,11 +127,11 @@ public static class MotionValidator
         for (int i = 0; i < motion.Channels.Count; i++)
         {
             ChannelAsset channel = motion.Channels[i];
-            string where = $"채널 {i}({channel.Node} {ChannelKindLabel.Of(channel.Kind)})";
+            string where = $"채널 {i}({channel.Node} {ChannelKindLabel.File(channel.Kind)})";
 
             if (ChannelKinds.IsEmojiOnly(channel.Kind))
             {
-                yield return $"{where}: {ChannelKindLabel.Of(channel.Kind)}은 이모지의 타임라인에만 쓴다 — motions/2는 받지 않는다";
+                yield return $"{where}: {ChannelKindLabel.File(channel.Kind)}은 이모지의 타임라인에만 쓴다 — motions/2는 받지 않는다";
                 continue;
             }
 

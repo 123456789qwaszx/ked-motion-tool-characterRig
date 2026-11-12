@@ -101,4 +101,25 @@ public class ShapeProblemsTests
 
         Assert.Empty(EmojiValidator.Validate(MotionDocumentJson.Read(emoji.Replace("SCALE_END", "1", StringComparison.Ordinal))));
     }
+
+    [Fact]
+    public void 이모지의_키가_프레임에_안_맞으면_알린다_막지는_않는다()
+    {
+        const string emoji = """
+            { "schema": "motion-authoring/2", "motions": [], "emojis": [ { "name": "e",
+              "rigs": [ { "name": "a", "images": [ "x.png" ] } ],
+              "timeline": { "duration": 1, "channels": [
+                { "node": "Emoji_Offset", "kind": "scale",
+                  "x": { "keys": [ { "t": 0, "v": 1, "tangent": "flat" }, { "t": SECOND, "v": 1, "tangent": "flat" }, { "t": 1, "v": 1, "tangent": "flat" } ] } } ] },
+              "spans": [ { "name": "hold", "start": 0, "end": 24 } ], "hold": "hold" } ] }
+            """;
+
+        EmojiProblem off = Assert.Single(EmojiValidator.Validate(MotionDocumentJson.Read(emoji.Replace("SECOND", "0.26", StringComparison.Ordinal))));
+        Assert.False(off.Blocking);
+        Assert.Contains("프레임에 안 맞는 키가 1개다", off.Message, StringComparison.Ordinal);
+        Assert.Contains("0.26초 = 6.24프레임", off.Message, StringComparison.Ordinal);
+
+        // 6프레임 = 0.25초 — 맞는다.
+        Assert.Empty(EmojiValidator.Validate(MotionDocumentJson.Read(emoji.Replace("SECOND", "0.25", StringComparison.Ordinal))));
+    }
 }
