@@ -1,0 +1,70 @@
+{
+  "schema": "motions/2",
+  "motions": [
+    { "name": "g01_hop", "rig": "character", "duration": 0.3333, "end": "restore",
+      "channels": [
+        { "node": "CharacterPortrait_Track_Move", "kind": "position",
+          "y": [ { "t": 0, "v": 0, "inTangent": 305.6, "outTangent": 305.6 }, { "t": 0.16666667, "v": 60.85, "inTangent": 0, "outTangent": 0 }, { "t": 0.3333, "v": 0, "inTangent": -285.3, "outTangent": -285.3 } ] }
+      ] },
+    { "name": "g02_nod", "rig": "character", "duration": 0.5333, "end": "restore",
+      "channels": [
+        { "node": "CharacterPortrait_Track_Move", "kind": "position",
+          "y": [ { "t": 0, "v": 0, "inTangent": -206.8, "outTangent": -206.8 }, { "t": 0.16666667, "v": -75.25, "inTangent": -315.80573, "outTangent": -315.80573 }, { "t": 0.29166666, "v": -92.11, "inTangent": 0, "outTangent": 0 }, { "t": 0.5333, "v": 0, "inTangent": 336.9, "outTangent": 336.9 } ] }
+      ] },
+    { "name": "g03_shake", "rig": "character", "duration": 0.3333, "end": "restore",
+      "channels": [
+        { "node": "CharacterPortrait_Track_Move", "kind": "position",
+          "x": [ { "t": 0, "v": 0, "inTangent": -395.1, "outTangent": -395.1 }, { "t": 0.075, "v": -14.88, "inTangent": 0, "outTangent": 0 }, { "t": 0.11666667, "v": 16.45, "inTangent": 0, "outTangent": 0 }, { "t": 0.20833333, "v": -10.27, "inTangent": 0, "outTangent": 0 }, { "t": 0.26666668, "v": 12.27, "inTangent": 0, "outTangent": 0 }, { "t": 0.3333, "v": 0, "inTangent": -120.1, "outTangent": -120.1 } ] }
+      ] },
+    { "name": "g04_sway", "rig": "character", "duration": 1.4, "end": "restore",
+      "channels": [
+        { "node": "CharacterPortrait_Track_Move", "kind": "position",
+          "x": [ { "t": 0, "v": 0, "inTangent": -153, "outTangent": -153 }, { "t": 0.16666667, "v": -16.71, "inTangent": 0, "outTangent": 0 }, { "t": 0.5416667, "v": 17.14, "inTangent": 0, "outTangent": 0 }, { "t": 0.875, "v": -17.77, "inTangent": 0, "outTangent": 0 }, { "t": 1.2083333, "v": 16.67, "inTangent": 0, "outTangent": 0 }, { "t": 1.4, "v": 0, "inTangent": -178.9, "outTangent": -178.9 } ] }
+      ] },
+    { "name": "g05_flinch", "rig": "character", "duration": 0.2333, "end": "restore",
+      "channels": [
+        { "node": "CharacterPortrait_Track_Move", "kind": "position",
+          "x": [ { "t": 0, "v": 0, "inTangent": 0, "outTangent": 0 }, { "t": 0.05, "v": 4.56, "inTangent": 0, "outTangent": 0 }, { "t": 0.1, "v": -5.14, "inTangent": 0, "outTangent": 0 }, { "t": 0.15, "v": 5.02, "inTangent": 0, "outTangent": 0 }, { "t": 0.20833333, "v": -6.01, "inTangent": 0, "outTangent": 0 }, { "t": 0.2333, "v": 0, "inTangent": 0, "outTangent": 0 } ] }
+      ] },
+    { "name": "g06_nod2", "rig": "character", "duration": 0.6333, "end": "restore",
+      "channels": [
+        { "node": "CharacterPortrait_Track_Move", "kind": "position",
+          "y": [ { "t": 0, "v": 0, "inTangent": -58.9, "outTangent": -58.9 }, { "t": 0.15833333, "v": -36.25, "inTangent": 0, "outTangent": 0 }, { "t": 0.24166667, "v": -27.6, "inTangent": 195.36002, "outTangent": 195.36002 }, { "t": 0.325, "v": -3.69, "inTangent": 0, "outTangent": 0 }, { "t": 0.45833334, "v": -18.69, "inTangent": 0, "outTangent": 0 }, { "t": 0.6333, "v": 0, "inTangent": 137.4, "outTangent": 137.4 } ] }
+      ] },
+    { "name": "g07_bounce", "rig": "character", "duration": 0.6333, "end": "restore",
+      "channels": [
+        { "node": "CharacterPortrait_Track_Move", "kind": "position",
+          "y": [ { "t": 0, "v": 0, "inTangent": 251.1, "outTangent": 251.1 }, { "t": 0.09166667, "v": 48.09, "inTangent": 0, "outTangent": 0 }, { "t": 0.24166667, "v": -48.35, "inTangent": 0, "outTangent": 0 }, { "t": 0.33333334, "v": 7.58, "inTangent": 480.33334, "outTangent": 480.33334 }, { "t": 0.39166668, "v": 23.7, "inTangent": 0, "outTangent": 0 }, { "t": 0.5416667, "v": -24.08, "inTangent": 0, "outTangent": 0 }, { "t": 0.6333, "v": 0, "inTangent": 60.5, "outTangent": 60.5 } ] }
+      ] },
+    { "name": "g08_bow", "rig": "character", "duration": 0.7333, "end": "restore",
+      "channels": [
+        { "node": "CharacterPortrait_Track_Move", "kind": "position",
+          "y": [ { "t": 0, "v": 0, "inTangent": -160.8, "outTangent": -160.8 }, { "t": 0.33333334, "v": -60.72, "inTangent": 0, "outTangent": 0 }, { "t": 0.5416667, "v": -44.44, "inTangent": 151.81267, "outTangent": 151.81267 }, { "t": 0.7333, "v": 0, "inTangent": 105.3, "outTangent": 105.3 } ] }
+      ] },
+    { "name": "g09_dip", "rig": "character", "duration": 0.3667, "end": "restore",
+      "channels": [
+        { "node": "CharacterPortrait_Track_Move", "kind": "position",
+          "y": [ { "t": 0, "v": 0, "inTangent": -493.6, "outTangent": -493.6 }, { "t": 0.18333334, "v": -54.01, "inTangent": 0, "outTangent": 0 }, { "t": 0.3667, "v": 0, "inTangent": 268.4, "outTangent": 268.4 } ] }
+      ] },
+    { "name": "g10_bob", "rig": "character", "duration": 0.3, "end": "restore",
+      "channels": [
+        { "node": "CharacterPortrait_Track_Move", "kind": "position",
+          "y": [ { "t": 0, "v": 0, "inTangent": -307.9, "outTangent": -307.9 }, { "t": 0.16666667, "v": -24.28, "inTangent": 0, "outTangent": 0 }, { "t": 0.3, "v": 0, "inTangent": 223.2, "outTangent": 223.2 } ] }
+      ] },
+    { "name": "g11_lift", "rig": "character", "duration": 0.8, "end": "restore",
+      "channels": [
+        { "node": "CharacterPortrait_Track_Move", "kind": "position",
+          "y": [ { "t": 0, "v": 0, "inTangent": 242.5, "outTangent": 242.5 }, { "t": 0.23333333, "v": 24.36, "inTangent": 0, "outTangent": 0 }, { "t": 0.4, "v": 3.74, "inTangent": 0, "outTangent": 0 }, { "t": 0.56666666, "v": 24.72, "inTangent": 0, "outTangent": 0 }, { "t": 0.8, "v": 0, "inTangent": -212.4, "outTangent": -212.4 } ] }
+      ] },
+    { "name": "g12_lean", "rig": "character", "duration": 0.5333, "end": "restore",
+      "channels": [
+        { "node": "CharacterPortrait_Track_Move", "kind": "position",
+          "x": [ { "t": 0, "v": 0, "inTangent": -427.2, "outTangent": -427.2 }, { "t": 0.14166667, "v": -48.76, "inTangent": 0, "outTangent": 0 }, { "t": 0.25833333, "v": -4.54, "inTangent": 379.02856, "outTangent": -329.02493 }, { "t": 0.39166668, "v": -48.41, "inTangent": 0, "outTangent": 0 }, { "t": 0.5333, "v": 0, "inTangent": 228.9, "outTangent": 228.9 } ] }
+      ] },
+    { "name": "g12_lean_m", "rig": "character", "duration": 0.5333, "end": "restore",
+      "channels": [
+        { "node": "CharacterPortrait_Track_Move", "kind": "position",
+          "x": [ { "t": 0, "v": 0, "inTangent": 427.2, "outTangent": 427.2 }, { "t": 0.14166667, "v": 48.76, "inTangent": 0, "outTangent": 0 }, { "t": 0.25833333, "v": 4.54, "inTangent": -379.02856, "outTangent": 329.02493 }, { "t": 0.39166668, "v": 48.41, "inTangent": 0, "outTangent": 0 }, { "t": 0.5333, "v": 0, "inTangent": -228.9, "outTangent": -228.9 } ] }
+      ] }
+  ]
+}

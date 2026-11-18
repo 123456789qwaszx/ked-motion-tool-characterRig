@@ -57,6 +57,7 @@ Ked.Presentation.Core  (런타임 코어의 사본 — netstandard2.1 · C# 9, �
    └─► Mt.Cli          mt info · validate · export · emojis · pose · bake + 만들기(new · add-motion · add-emoji · key · remove · controllers · presets)
 tests/    Ked.Presentation.Core.Tests(NUnit) · Mt.Authoring.Tests · Mt.App.Tests(헤드리스 — HeadlessUi.Run)
 examples/ emoji/ — 런타임의 이모지 견본 셋(빌더 tests/Mt.Authoring.Tests/EmojiExamples.cs가 쓴다) · authoring/ — 손으로 쓴 예시(AUTHORING-FILES.md)
+library/  실제로 쓸 세트 — 캐릭터 모션 · 이모지(원본 5장에서 잰 것). 그림(art/)은 git 밖, LibraryTests가 저작본과 export/를 맞춘다
 tools/    유니티 프리팹에서 무대 뼈대를 다시 뽑는 스크립트
 ```
 

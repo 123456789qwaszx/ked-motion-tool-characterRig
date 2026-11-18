@@ -1,0 +1,661 @@
+{
+  "schema": "motion-authoring/2",
+  "motions": [
+    {
+      "name": "g01_hop",
+      "rig": "character",
+      "duration": 0.3333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": 305.6,
+                "outTangent": 305.6
+              },
+              {
+                "t": 0.16666667,
+                "v": 60.85,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.3333,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": -285.3,
+                "outTangent": -285.3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g02_nod",
+      "rig": "character",
+      "duration": 0.5333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": -206.8,
+                "outTangent": -206.8
+              },
+              {
+                "t": 0.16666667,
+                "v": -75.25,
+                "tangent": "auto"
+              },
+              {
+                "t": 0.29166667,
+                "v": -92.11,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.5333,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": 336.9,
+                "outTangent": 336.9
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g03_shake",
+      "rig": "character",
+      "duration": 0.3333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": -395.1,
+                "outTangent": -395.1
+              },
+              {
+                "t": 0.075,
+                "v": -14.88,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.11666667,
+                "v": 16.45,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.20833333,
+                "v": -10.27,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.26666667,
+                "v": 12.27,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.3333,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": -120.1,
+                "outTangent": -120.1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g04_sway",
+      "rig": "character",
+      "duration": 1.4,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": -153.0,
+                "outTangent": -153.0
+              },
+              {
+                "t": 0.16666667,
+                "v": -16.71,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.54166667,
+                "v": 17.14,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.875,
+                "v": -17.77,
+                "tangent": "flat"
+              },
+              {
+                "t": 1.2083333,
+                "v": 16.67,
+                "tangent": "flat"
+              },
+              {
+                "t": 1.4,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": -178.9,
+                "outTangent": -178.9
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g05_flinch",
+      "rig": "character",
+      "duration": 0.2333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.05,
+                "v": 4.56,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.1,
+                "v": -5.14,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.15,
+                "v": 5.02,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.20833333,
+                "v": -6.01,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.2333,
+                "v": 0,
+                "tangent": "flat"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g06_nod2",
+      "rig": "character",
+      "duration": 0.6333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": -58.9,
+                "outTangent": -58.9
+              },
+              {
+                "t": 0.15833333,
+                "v": -36.25,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.24166667,
+                "v": -27.6,
+                "tangent": "auto"
+              },
+              {
+                "t": 0.325,
+                "v": -3.69,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.45833333,
+                "v": -18.69,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.6333,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": 137.4,
+                "outTangent": 137.4
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g07_bounce",
+      "rig": "character",
+      "duration": 0.6333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": 251.1,
+                "outTangent": 251.1
+              },
+              {
+                "t": 0.091666667,
+                "v": 48.09,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.24166667,
+                "v": -48.35,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.33333333,
+                "v": 7.58,
+                "tangent": "auto"
+              },
+              {
+                "t": 0.39166667,
+                "v": 23.7,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.54166667,
+                "v": -24.08,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.6333,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": 60.5,
+                "outTangent": 60.5
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g08_bow",
+      "rig": "character",
+      "duration": 0.7333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": -160.8,
+                "outTangent": -160.8
+              },
+              {
+                "t": 0.33333333,
+                "v": -60.72,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.54166667,
+                "v": -44.44,
+                "tangent": "auto"
+              },
+              {
+                "t": 0.7333,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": 105.3,
+                "outTangent": 105.3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g09_dip",
+      "rig": "character",
+      "duration": 0.3667,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": -493.6,
+                "outTangent": -493.6
+              },
+              {
+                "t": 0.18333333,
+                "v": -54.01,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.3667,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": 268.4,
+                "outTangent": 268.4
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g10_bob",
+      "rig": "character",
+      "duration": 0.3,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": -307.9,
+                "outTangent": -307.9
+              },
+              {
+                "t": 0.16666667,
+                "v": -24.28,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.3,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": 223.2,
+                "outTangent": 223.2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g11_lift",
+      "rig": "character",
+      "duration": 0.8,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": 242.5,
+                "outTangent": 242.5
+              },
+              {
+                "t": 0.23333333,
+                "v": 24.36,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.4,
+                "v": 3.74,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.56666667,
+                "v": 24.72,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.8,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": -212.4,
+                "outTangent": -212.4
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g12_lean",
+      "rig": "character",
+      "duration": 0.5333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": -427.2,
+                "outTangent": -427.2
+              },
+              {
+                "t": 0.14166667,
+                "v": -48.76,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.25833333,
+                "v": -4.54,
+                "tangent": "linear"
+              },
+              {
+                "t": 0.39166667,
+                "v": -48.41,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.5333,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": 228.9,
+                "outTangent": 228.9
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g12_lean_m",
+      "rig": "character",
+      "duration": 0.5333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": 427.2,
+                "outTangent": 427.2
+              },
+              {
+                "t": 0.14166667,
+                "v": 48.76,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.25833333,
+                "v": 4.54,
+                "tangent": "linear"
+              },
+              {
+                "t": 0.39166667,
+                "v": 48.41,
+                "tangent": "flat"
+              },
+              {
+                "t": 0.5333,
+                "v": 0,
+                "tangent": "free",
+                "inTangent": -228.9,
+                "outTangent": -228.9
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "scene",
+      "objects": [
+        {
+          "id": "s1",
+          "rig": "character",
+          "place": "center",
+          "portrait": "art/Karin_a_02.png"
+        }
+      ]
+    }
+  ],
+  "activeScene": "scene",
+  "clips": [
+    {
+      "name": "review",
+      "roles": [
+        {
+          "name": "a",
+          "rig": "character",
+          "object": "s1"
+        }
+      ],
+      "tracks": [
+        {
+          "role": "a",
+          "blocks": [
+            {
+              "at": 0.0,
+              "motion": "g01_hop"
+            },
+            {
+              "at": 0.7333,
+              "motion": "g02_nod"
+            },
+            {
+              "at": 1.6666,
+              "motion": "g03_shake"
+            },
+            {
+              "at": 2.3999,
+              "motion": "g04_sway"
+            },
+            {
+              "at": 4.1999,
+              "motion": "g05_flinch"
+            },
+            {
+              "at": 4.8332,
+              "motion": "g06_nod2"
+            },
+            {
+              "at": 5.8665,
+              "motion": "g07_bounce"
+            },
+            {
+              "at": 6.8998,
+              "motion": "g08_bow"
+            },
+            {
+              "at": 8.0331,
+              "motion": "g09_dip"
+            },
+            {
+              "at": 8.7998,
+              "motion": "g10_bob"
+            },
+            {
+              "at": 9.4998,
+              "motion": "g11_lift"
+            },
+            {
+              "at": 10.6998,
+              "motion": "g12_lean"
+            },
+            {
+              "at": 11.6331,
+              "motion": "g12_lean_m"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

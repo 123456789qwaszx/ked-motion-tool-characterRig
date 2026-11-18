@@ -10,3 +10,6 @@ TestResults/
 ### IDE ###
 .idea/
 .vscode/
+
+### 실제 쓸 세트(library) — 그림은 원본이라 git 밖
+library/art/
