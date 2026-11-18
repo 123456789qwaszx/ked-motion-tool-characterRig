@@ -35,7 +35,7 @@
 | `mt validate <문서>` | 문제 목록. `blocking: true`가 하나라도 있으면 종료 코드 1 |
 | `mt pose <문서> --motion <이름> --time <초> [--object <id>] [--mode relative\|absolute]` | 그 시각에 모션이 건드리는 노드의 값 |
 | `mt pose <문서> --clip <이름> --time <초>` | 그 시각의 클립 — 오브젝트마다 노드의 값 |
-| `mt pose <문서> --emoji <이름> --time <초> [--off <초>] [--view life\|timeline] [--facing right\|left]` | 그 시각의 이모지 — 이모지 전체와 그림마다의 자리 · 크기 · 회전 · 투명도 · 그림 |
+| `mt pose <문서> --emoji <이름> --time <초> [--off <초>] [--view life\|timeline] [--facing right\|left] [--side default\|flip]` | 그 시각의 이모지 — 이모지 전체와 그림마다의 자리 · 크기 · 회전 · 투명도 · 그림 |
 | `mt export <문서> <motions.json>` | `motions.json`(`motions/2`)으로 내보낸다. 막는 문제가 있으면 쓰지 않는다 |
 | `mt emojis <문서> <emojis.json>` | `emojis.json`(`emojis/2`)으로 내보낸다. 막는 문제가 있으면 쓰지 않는다 |
 | `mt bake <문서> --clip <이름> --object <id> --name <새 모션> [--out <문서>]` | 클립에서 그 캐릭터에 얹힌 블록 전부를 모션 하나로 구워 문서에 더한다 |
@@ -103,7 +103,7 @@ mt pose     a.motion-authoring.json --clip greet --time 0.5
 
 ```json
 {
-  "schema": "motion-authoring/2",
+  "schema": "motion-authoring/3",
   "motions": [ … ],
   "clips":   [ … ],
   "emojis":  [ … ]
@@ -112,7 +112,7 @@ mt pose     a.motion-authoring.json --clip greet --time 0.5
 
 | 키 | 뜻 |
 |---|---|
-| `schema` | **반드시 `"motion-authoring/2"`.** 다르면 읽지 않는다 |
+| `schema` | **반드시 `"motion-authoring/3"`.** 다르면 읽지 않는다 — 옛 판 `/2`는 이모지의 프레임을 24fps로 셌다. 옛 문서는 `python3 tools/authoring-24to30.py <문서>`로 한 번 옮긴다 |
 | `motions` | 캐릭터 모션들(§4). 없으면 `[]` |
 | `clips` | 연출 클립들(§5). 없으면 적지 않는다 |
 | `emojis` | 이모지들(§6). 없으면 적지 않는다 |
@@ -121,7 +121,7 @@ mt pose     a.motion-authoring.json --clip greet --time 0.5
 공통 규칙:
 
 - **이름**(모션 · 클립 · 배역 · 이모지 · 그림 · 구간)은 영문 소문자 · 숫자 · `_`만 쓴다(`[a-z0-9_]+`). 같은 종류 안에서 겹치지 않는다. 내보낸 뒤에는 바꾸지 않는다 — 대본이 이름으로 부른다.
-- **시각은 초**다(`t` · `duration` · `at`). 툴과 게임은 초당 24프레임으로 본다 — 프레임 n은 `n / 24`초다(6프레임 = 0.25, 12프레임 = 0.5).
+- **시각은 초**다(`t` · `duration` · `at`). 툴과 게임은 초당 30프레임으로 본다 — 프레임 n은 `n / 30`초다(6프레임 = 0.2, 15프레임 = 0.5).
 - 키 이름은 camelCase, 값의 낱말(`restore` · `position` · `flat` …)은 소문자다. JSON 주석과 끝의 쉼표는 읽어 준다. 모르는 키는 읽지 않는다 — 키 이름의 오타는 뜻한 값을 빼먹는다. `mt validate`가 **알림**으로 그 자리(`motions[0].ednn`)를 말하니 알림도 읽는다. 대소문자는 가리지 않는다.
 
 ## 4. 캐릭터 모션
@@ -274,16 +274,16 @@ mt pose     a.motion-authoring.json --clip greet --time 0.5
     "duration": 1.0,
     "channels": [
       { "node": "Emoji_Offset", "kind": "scale",
-        "x": { "keys": [ { "t": 0, "v": 0, "tangent": "flat" }, { "t": 0.125, "v": 1.15, "tangent": "flat" }, { "t": 0.20833334, "v": 1, "tangent": "flat" } ] },
-        "y": { "keys": [ { "t": 0, "v": 0, "tangent": "flat" }, { "t": 0.125, "v": 1.15, "tangent": "flat" }, { "t": 0.20833334, "v": 1, "tangent": "flat" } ] } },
+        "x": { "keys": [ { "t": 0, "v": 0, "tangent": "flat" }, { "t": 0.13333334, "v": 1.15, "tangent": "flat" }, { "t": 0.2, "v": 1, "tangent": "flat" } ] },
+        "y": { "keys": [ { "t": 0, "v": 0, "tangent": "flat" }, { "t": 0.13333334, "v": 1.15, "tangent": "flat" }, { "t": 0.2, "v": 1, "tangent": "flat" } ] } },
       { "node": "small/EmojiRig_Image", "kind": "euler",
-        "z": { "keys": [ { "t": 0.25, "v": 0, "tangent": "linear" }, { "t": 0.75, "v": 360, "tangent": "linear" } ] } }
+        "z": { "keys": [ { "t": 0.26666668, "v": 0, "tangent": "linear" }, { "t": 0.76666665, "v": 360, "tangent": "linear" } ] } }
     ]
   },
   "spans": [
-    { "name": "in",   "start": 0,  "end": 5 },
-    { "name": "hold", "start": 6,  "end": 18 },
-    { "name": "out",  "start": 19, "end": 24 }
+    { "name": "in",   "start": 0,  "end": 6 },
+    { "name": "hold", "start": 8,  "end": 23 },
+    { "name": "out",  "start": 24, "end": 30 }
   ],
   "in": "in", "hold": "hold", "out": "out"
 }
@@ -331,8 +331,8 @@ mt pose     a.motion-authoring.json --clip greet --time 0.5
 
 이모지의 타임라인은 모션보다 **느슨하다**: 키가 하나여도 되고, 첫 키가 0이 아니어도, 마지막 키가 끝이 아니어도 된다. 키는 타임라인(0~`duration`) 안에만 있으면 된다. 첫 키 앞은 첫 키의 값, 마지막 키 뒤는 마지막 키의 값이다. `step`을 쓸 수 있다.
 
-- **키의 시각은 프레임에 맞춘다** — `t = 프레임 / 24`. (1프레임 0.041666668 · 3프레임 0.125 · 5프레임 0.20833334 · 6프레임 0.25 · 12프레임 0.5 · 18프레임 0.75 · 24프레임 1.0)
-- 타임라인의 프레임은 0부터 `duration × 24`까지다(1초면 0~24, 25프레임).
+- **키의 시각은 프레임에 맞춘다** — `t = 프레임 / 30`. (1프레임 0.033333335 · 3프레임 0.1 · 4프레임 0.13333334 · 6프레임 0.2 · 8프레임 0.26666668 · 15프레임 0.5 · 24프레임 0.8 · 30프레임 1.0)
+- 타임라인의 프레임은 0부터 `duration × 30`까지다(1초면 0~30, 31프레임).
 
 ### 수명 — 한 번 뜨고 사라지는가, 머무는가
 
@@ -349,13 +349,15 @@ mt pose     a.motion-authoring.json --clip greet --time 0.5
 
 이모지는 **오른쪽을 보는 인물**을 기준으로 만든다. 인물이 왼쪽을 보면 게임이 이모지를 통째로 거울에 비춘다 — 따로 만들지 않는다. 뒤집히면 안 되는 그림(글자 · 물음표)에만 `upright: true`, 아예 방향을 따르지 않게 하려면 이모지에 `fixedSide: true`.
 
+**반대쪽에 띄우는 것도 따로 만들지 않는다** — 대본이 고른다: `<<emoji 누구 이름 flip>>`이 정의의 반대쪽에 띄운다(오프셋 · 그림의 자리 · 이모지 전체의 움직임이 거울에 비치고, `upright` 그림은 바로 선다. `fixedSide` 이모지도 이것은 따른다). 좌우 사본(`<이름>_l`)을 두지 않는다.
+
 ### `mt pose --emoji`
 
 ```bash
 ./mt pose a.motion-authoring.json --emoji spark --time 0.1
 ```
 
-수명대로 읽는다(등장 → 머묾 되풀이 → `--off <초>`에 내리면 퇴장). `phase` · `clip` · `frame`이 지금 어느 구간의 몇 프레임인지 말하고, `offset`(이모지 전체)과 `rigs[]`(그림마다의 `at` 화면 자리 · `position` · `scale` · `rotation` · `alpha` · `sprite`)가 그때의 모습이다. 구간과 상관없이 타임라인의 그 프레임을 보려면 `--view timeline`, 왼쪽을 보는 인물에게 뜬 모습은 `--facing left`.
+수명대로 읽는다(등장 → 머묾 되풀이 → `--off <초>`에 내리면 퇴장). `phase` · `clip` · `frame`이 지금 어느 구간의 몇 프레임인지 말하고, `offset`(이모지 전체)과 `rigs[]`(그림마다의 `at` 화면 자리 · `position` · `scale` · `rotation` · `alpha` · `sprite`)가 그때의 모습이다. 구간과 상관없이 타임라인의 그 프레임을 보려면 `--view timeline`, 왼쪽을 보는 인물에게 뜬 모습은 `--facing left`, 대본이 반대쪽을 고른 모습(`flip`)은 `--side flip`.
 
 ## 7. 씬 — 미리보기의 자리 (적지 않아도 된다)
 
@@ -375,7 +377,7 @@ mt pose     a.motion-authoring.json --clip greet --time 0.5
 | `message` | 까닭 · 고치는 법 |
 |---|---|
 | `모르는 키 'motions[0].ednn' — 읽지 않았다`(알림) | 키 이름의 오타다 — 그 값은 들어가지 않았다. 이 문서의 이름으로 고친다 |
-| `schema '…'는 읽을 수 없다` | `schema`가 `motion-authoring/2`가 아니다 |
+| `schema '…'는 읽을 수 없다` | `schema`가 `motion-authoring/3`이 아니다 — 옛 판 `/2`(24fps)는 `python3 tools/authoring-24to30.py <문서>`로 옮긴다 |
 | `이름은 [a-z0-9_]+ 여야 한다` · `이름은 영문 소문자·숫자·_ 만 쓸 수 있다` | 대문자 · 빈칸 · 한글 · `-`를 썼다 |
 | `노드 '…'가 리그 'character'의 스키마에 없다` | 노드 이름이 틀렸다 — §4의 표에서 그대로 옮긴다 |
 | `키가 2개 이상이어야 한다` | 모션의 성분에 키가 하나다 |
@@ -388,14 +390,14 @@ mt pose     a.motion-authoring.json --clip greet --time 0.5
 | `…과 같은 때에 쓴다 — 겹칠 수 없다` | 같은 노드를 쓰는 두 블록의 시간이 겹친다 — `at`을 옮기거나 다른 노드를 쓰는 모션으로 |
 | `머묾 '…'이 되풀이할 때 튄다 — …`(알림) | 머묾의 끝에서 처음으로 넘어가는 한 걸음이 구간 안의 걸음보다 훨씬 크다 — 머묾의 처음과 끝의 값을 맞춘다 |
 | `그림 '…'의 그림 파일이 문서의 폴더 밖에 있다: …`(알림) | 절대 경로이거나 `../`로 나간다 — 저작본을 옮기면 그림을 잃는다. 그림을 문서 옆(그 아래 폴더)에 두고 그 경로로 적는다 |
-| `프레임에 안 맞는 키가 …개다`(알림) | 이모지의 키 시각이 1/24초의 배수가 아니다(0.26초 = 6.24프레임). 그대로 나가고 재생되지만 구간의 경계와 어긋난다 — `t`를 프레임 ÷ 24로 적는다(6프레임 = 0.25) |
+| `프레임에 안 맞는 키가 …개다`(알림) | 이모지의 키 시각이 1/30초의 배수가 아니다(0.21초 = 6.3프레임). 그대로 나가고 재생되지만 구간의 경계와 어긋난다 — `t`를 프레임 ÷ 30으로 적는다(6프레임 = 0.2) |
 | `그림 '…'의 그림 파일을 찾지 못했다: …`(알림) | `images`의 경로가 틀렸다 — 경로는 **문서 파일이 놓인 폴더** 기준이다 |
 | `그림이 없다` · `그림 '…'에 그림 파일이 없다` | 이모지에 `rigs`가 없다 · 그림에 `images`가 없다 |
 | `키를 받는 노드가 아니다` | 이모지의 `node`는 `Emoji_Offset` 또는 `{그림}/EmojiRig_Image`뿐이다 |
 | `그림 '…'이 이 이모지에 없다` | `node`의 그림 이름이 `rigs[].name`에 없다 |
 | `… 성분은 이모지에 없다` | 이모지의 회전은 `z`만, `alpha` · `image`는 `x`만 |
 | `키 …초가 타임라인(0~…초) 밖이다` | 키가 `duration`을 넘었다 |
-| `구간 '…'이 타임라인 밖이거나 거꾸로다` | 구간의 프레임이 `0 ~ duration×24`를 벗어났다 |
+| `구간 '…'이 타임라인 밖이거나 거꾸로다` | 구간의 프레임이 `0 ~ duration×30`을 벗어났다 |
 | `…에 이은 구간 '…'이 없다` | `in` · `hold` · `out`이 없는 구간을 가리킨다 |
 
 ## 9. 보내기 전에
@@ -403,7 +405,7 @@ mt pose     a.motion-authoring.json --clip greet --time 0.5
 - [ ] `mt validate`의 `ok`가 `true`다. 알림(`blocking: false`)은 읽고, 뜻한 것만 남겼다.
 - [ ] `mt pose`로 가장 큰 순간(가장 깊이 숙인 때 · 가장 커진 때)의 값을 읽어 뜻한 값인지 봤다.
 - [ ] 모션: 연기의 노드만 썼고 0(배율 1)에서 시작한다. `restore`면 0으로 끝난다.
-- [ ] 이모지: 키가 프레임에 맞고(`n/24`), 머묾이 되풀이할 때 튀지 않고, 등장의 끝 · 퇴장의 처음이 머묾과 이어진다.
+- [ ] 이모지: 키가 프레임에 맞고(`n/30`), 머묾이 되풀이할 때 튀지 않고, 등장의 끝 · 퇴장의 처음이 머묾과 이어진다.
 - [ ] 이름은 소문자 · 숫자 · `_`.
 
 ## 10. 예시

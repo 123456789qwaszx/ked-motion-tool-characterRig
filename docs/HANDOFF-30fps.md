@@ -1,8 +1,29 @@
 # 30fps로 — 런타임이 프레임의 기준을 바꿨다 (2026-11-18)
 
-> 상태: **할 일**. 아직 아무것도 고치지 않았다 — 이 툴은 지금 24fps다.
+> 상태: **끝(11-18)** — 아래 §0. 남은 것은 런타임 쪽의 견본 바꾸기 하나(§0 표의 끝 줄).
 > 근거: 공개 런타임 `ked-presentation-runtime` `fix/progressionScene` `0faca847`(한 커밋), 그쪽 `docs/PLAN_frames-30fps.md`.
-> 단계는 소유자가 "진행"이라고 할 때 시작한다(`SESSION-HANDOFF.md` §2). 아래 "정할 것"은 먼저 묻는다.
+> §1 ~ §4는 일을 시작할 때 쓴 계획 그대로 두었다.
+
+## 0. 정한 것 · 한 것 (11-18)
+
+정한 것(소유자 — "추천대로", `_l`은 걷는다):
+
+| | 정한 것 |
+|---|---|
+| ① 반입 기준 | `0faca847`에서 지금 들인다 — 그 가지의 다른 커밋은 진행 · 문서뿐이라 Presentation Core는 `dev` + 30fps와 같다. 세 파일만 부분 반입(전체 재반입은 남은 빚) |
+| ② 저작본의 키 | 판을 `motion-authoring/3`으로 올려 옛 문서(/2)는 읽지 않는다. 옮기는 것은 툴 밖의 한 번 쓰는 `tools/authoring-24to30.py`(프레임 n → round(n × 1.25), 0.5는 올림 — 초를 지키고 차이 ≤ 1/60초. 파일의 꼴은 그대로 두고 숫자만). 툴에 옮겨 읽는 코드는 두지 않는다(마이그레이션을 두지 않는다는 결정 그대로) |
+| ③ 예시 · 견본 | 툴이 예시를 30fps로 옮겨 짓고, 그 `emojis.json`(fps 30)을 런타임이 새 견본으로 받는다. 시험의 비교 기준(`Fixtures/runtime-emojis.json`)도 그것 |
+| ④ `flip` | 툴에 "⇄ 반대쪽 보기"와 `mt pose --side flip`을 둔다. library의 좌우 사본 `_l` 22개를 걷는다 |
+
+한 것:
+
+| 커밋 | 무엇 |
+|---|---|
+| `040bd40` | 코어 사본 세 파일 · 순수 시험(`EmojiSideTests` 새로) · 툴의 24 → 30(스냅 · 눈금 · 화면 글자) · 판 /3 · 옮기는 스크립트 · `examples` · `library` 옮김 · 예시 빌더 · 견본 픽스처 · 시험 |
+| `c614bb0` | `flip` 미리보기(`EmojiPreview` · 뷰포트 · "⇄ 반대쪽 보기" · `mt pose --side`) · library `_l` 걷기(남은 22종의 꼴은 그대로) · README |
+| (다음 커밋) | 문서(`AUTHORING-FILES` · `USER-GUIDE` · 그림 설명서 · `MAINTENANCE` · `HANDOFF` · 예시 README) · 그림 다시 뽑기 |
+| **남은 것 — 런타임** | 런타임의 견본 `Assets/Dialogue/emojis.json`을 `examples/emoji/emojis.json`(fps 30)으로 바꾼다. 그쪽 `docs/emoji-format.md`의 "견본은 24로 적어 두었다"와 `PLAN_frames-30fps.md` §3도 함께. 런타임은 소유자가 커밋한다 |
+| 소유자 PC | 자동 저장본(`examples/emoji/emoji-examples.autosave.motion-authoring.json` 등)은 /2라 열리지 않는다 — 필요하면 `python3 tools/authoring-24to30.py <파일>` |
 
 ## 1. 런타임에서 바뀐 것
 

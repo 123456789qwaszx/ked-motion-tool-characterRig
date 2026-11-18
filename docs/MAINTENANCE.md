@@ -24,7 +24,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 |---|---|
 | 모션·채널·키 모델, 씬 모델 | `Mt.Authoring/Model/MotionDocument.cs` · `SceneAsset.cs` · `StageNodes.cs`(무대 뼈대 이름 규약·패럴랙스 상수) |
 | 편집 명령 전부(undo 포함) | `Mt.Authoring/Editing/MotionEditor.cs`(+ `.Clips.cs` · `.Emojis.cs`) — `Mutate`·`Batch`·`RecordExternal`·`Undo/Redo`·끄는 조작(`BeginGesture`·`GestureChanged`·`EndGesture`) |
-| 저작 원본 읽고 쓰기 | `Serialization/MotionDocumentJson.cs` (`motion-authoring/2`만 읽는다) |
+| 저작 원본 읽고 쓰기 | `Serialization/MotionDocumentJson.cs` (`motion-authoring/3`만 읽는다) |
 | `motions.json` 읽고 쓰기 | `Serialization/MotionsJson.cs` (`motions/2` 정규 직렬화·관용 읽기) |
 | 규칙·경고·돕는 손 | `Validation/MotionValidator.cs`(코어 `MotionRules`) · `ClipValidator.cs` · `EmojiValidator.cs` · `MotionFixes.cs` · `MotionExport.cs` · `EmojiExport.cs` |
 | 문서가 스키마를 지키는가 · 덤프가 달라졌을 때 | `Schema/SchemaContract.cs`(막는 문제) · `SchemaDiff.cs`(알림 + 이름 바꾸기 따라가기) |
@@ -37,7 +37,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 | 시각의 포즈, 포즈 → 키 값 | `Preview/MotionPreview.cs` · `PoseEdit.cs`(`RootDeltaToLocal`·`AngleDelta`·`ScaleAlong`·`KeyValueFor`) |
 | 초상 배치·사각형 | `Preview/PortraitLayout.cs`(런타임 HeightFitPreserveAspect와 같다) |
 | 재생 시계 | `Preview/PlaybackClock.cs` |
-| 그래프 수학(순수) | `Graph/` — `GraphCamera`(좌표) · `GraphHitTest` · `TangentMath` · `HandleMath` · `KeyOps` · `KeySelection` · `KeyClipboard` · `TimeSnap`(DefaultStep 1/24) · `TimeText` · `TimeSliderOps` · `DopeSheetRows` · `CurveSampler` · `RelativeInput`(`+=3`) |
+| 그래프 수학(순수) | `Graph/` — `GraphCamera`(좌표) · `GraphHitTest` · `TangentMath` · `HandleMath` · `KeyOps` · `KeySelection` · `KeyClipboard` · `TimeSnap`(DefaultStep 1/30) · `TimeText` · `TimeSliderOps` · `DopeSheetRows` · `CurveSampler` · `RelativeInput`(`+=3`) |
 | 프리셋 모션 9종 | `Presets/MotionPresets.cs` |
 | 설정 파일 | `Settings/ToolSettings.cs` |
 | 셸 | `Mt.App/MainWindow.*.cs` — 맡은 일별 partial: `axaml.cs`(필드 · 화면 짜기 · 모션 목록과 인스펙터 · 명령) · `Mode`(작업 모드) · `Tools`(뷰포트 위 도구 띠) · `Shortcuts`(전역 단축키) · `Settings`(설정 · 창 배치 · 설정 창 · F1) · `Files` · `Document`(창 제목 · 저장하지 않은 것을 묻기 · 자동 저장본 되살리기) · `Scene`(하이어아키 · 씬 탭) · `ChannelBox` · `Outliner`(그래프 왼쪽 채널 목록) · `Problems`(문제 칸) |
@@ -119,12 +119,12 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 | `ScenePreview.Build` 순서 | 깊이 → place → 오프셋 → 샷. place 폴드는 월드 좌표로 되감기 때문에 뒤에 넣은 것만 살아남는다 |
 | SwayPivot 같은 스트레치 노드 | 원점이 화면 크기 rect의 아래 끝이라 그림 밖이다. 뷰포트 `GizmoAnchor`가 그림 가운데로 옮긴다 |
 | 그래프 팬은 RMB만 | MMB 드래그는 선택 키 이동(마야). 뷰포트는 MMB·RMB 둘 다 팬 |
-| 시간 스냅 기본 1/24 | 테스트는 기대값을 1/60으로 쓰는 곳이 있어 `Show()`에서 `SnapStep = 1.0 / 60`을 둔다 |
+| 시간 스냅 기본 1/30(1프레임, 30fps) | 테스트는 기대값을 1/60으로 쓰는 곳이 있어 `Show()`에서 `SnapStep = 1.0 / 60`을 둔다 |
 | 재생 기준 자동 변경 | 채널이 없는 모션의 **첫 키**를 자리·깊이 컨트롤러에 놓을 때만 절대값으로 바뀐다(`EnsurePreviewModeForGroup`) |
 | 자산 동기화 | `DocumentSession`은 편집기 Changed에서 리그·초상 지문(`rig=…\nbase=…\nportrait id=…`)이 바뀐 때만 다시 읽는다. 키 편집은 다시 읽지 않는다 |
 | 글 칸 확정 | `OnCommit`: Enter는 확정 + 포커스를 뷰포트로, LostFocus는 글이 바뀐 때만 확정. 같은 값 재확정은 기록이 아니다 |
 | 깊이 슬라이더 | 0‥40, close = 20, 그 너머는 `depth.json` 커브의 할선 연장(런타임 규칙). 놓으면 DepthScale X·Y + DepthY를 한 번에 굽는다 |
-| 옛 파일 | 읽지 않는다. 저작본은 `motion-authoring/2`가 아니면 거부한다. `motions.json`도 `motions/2`가 아니면 읽지 않는다. 지운 기능(카메라 모션 · 상태 블록)이 든 문서는 열리되 검증이 문제로 알린다 |
+| 옛 파일 | 읽지 않는다. 저작본은 `motion-authoring/3`이 아니면 거부한다(/2는 이모지의 프레임이 24fps — 툴 밖의 한 번 쓰는 `tools/authoring-24to30.py`로 옮긴다, 11-18). `motions.json`도 `motions/2`가 아니면 읽지 않는다. 지운 기능(카메라 모션 · 상태 블록)이 든 문서는 열리되 검증이 문제로 알린다 |
 | 안 쓰는 using | 빌드가 막지 않는다(`IDE0005`는 꺼져 있다). 훑는 법은 `PLAN-cleanup.md` §4 |
 | 설정 파일 | `%APPDATA%/ked-motion-tool-characterRig/`. 옛 자리(`ked-motion-tool`)는 형제 툴의 것이다 — 읽지도 쓰지도 않는다 |
 | 커밋 메시지 | 모델 식별자를 저장소 산출물에 넣지 않는다. 한국어, "무엇을 왜" |

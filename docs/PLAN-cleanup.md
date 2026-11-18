@@ -97,7 +97,7 @@
 
 - **안 쓰는 using**은 보통 빌드가 막지 않는다(`IDE0005`는 꺼져 있다). 파일을 나누며 한 번 훑어 저장소 전체에서 지웠다 — 임시 `.editorconfig`(`dotnet_diagnostic.IDE0005.severity = warning`)와 `-p:EnforceCodeStyleInBuild=true -p:GenerateDocumentationFile=true`로 빌드하면 나온다.
 
-- **마이그레이션은 두지 않는다**(소유자, 2026-11-12 — 1단계가 끝난 뒤의 지시). 옛 형식을 옮겨 읽던 것을 전부 지웠다: `motion-authoring/1`(`defaultMode` → 재생 기준) · `motions/1`(채널 `mode` 알림) · `preview.portrait`(→ 기본 씬의 초상, `PreviewSettings`) · 카메라 모션 · 카메라 줄 · 상태 블록을 읽을 때 버리던 것. 저작본은 `motion-authoring/2`가 아니면 거부한다.
+- **마이그레이션은 두지 않는다**(소유자, 2026-11-12 — 1단계가 끝난 뒤의 지시). 옛 형식을 옮겨 읽던 것을 전부 지웠다: `motion-authoring/1`(`defaultMode` → 재생 기준) · `motions/1`(채널 `mode` 알림) · `preview.portrait`(→ 기본 씬의 초상, `PreviewSettings`) · 카메라 모션 · 카메라 줄 · 상태 블록을 읽을 때 버리던 것. 저작본은 지금 판이 아니면 거부한다(그때 `motion-authoring/2`, 11-18부터 `/3` — 30fps).
 - **씬이 여럿인 문서는 그대로 읽고 쓴다**(`scenes[]` · `activeScene`). 더하거나 바꾸는 명령만 없다. 테스트가 본다.
 - 반복 · 모션 바꾸기는 `UpdateClipBlock`(블록 인스펙터) 하나로 한다.
 

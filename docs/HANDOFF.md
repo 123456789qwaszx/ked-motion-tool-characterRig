@@ -27,7 +27,7 @@
 | **코어 사본은 고치지 않는다** | `src/Ked.Presentation.Core`는 런타임 코어의 사본. 흐름은 한 방향(런타임 → 사본). 필요한 것은 런타임에서 먼저 정한다 — `vendoring.md` |
 | **형식을 이끌지 않는다** | `motions/2` · `emojis/2`는 런타임의 형식이다. 툴이 먼저 바꾸지 않는다 |
 | **보이는 것 = 재생하는 것** | 미리보기의 포즈는 코어의 함수(`MotionMath` · `EmojiPlayback` · 리듀서)로만 만든다. 화면용 근사식을 두지 않는다 |
-| **진실은 저작 원본** | `*.motion-authoring.json`(`motion-authoring/2`)이 주인이고 `motions.json` · `emojis.json`은 산출물이다 |
+| **진실은 저작 원본** | `*.motion-authoring.json`(`motion-authoring/3`)이 주인이고 `motions.json` · `emojis.json`은 산출물이다 |
 | **편집은 `MotionEditor`만 지난다** | 조작 하나 = 되돌리기 한 칸. 같은 값은 기록하지 않는다. 테스트가 `editor.Revision`으로 본다 |
 | **재생 기준은 파일에 없다** | 상대값/절대값은 대본의 `<<motion>>`이 정한다. 툴의 "재생 기준"은 키 값을 읽는 렌즈다 |
 | **조작은 마야** | 단축키 · 그래프 · 타임 슬라이더 · 트윈머신. 표는 F1 |
@@ -65,7 +65,7 @@ tools/    유니티 프리팹에서 무대 뼈대를 다시 뽑는 스크립트
 
 | 파일 | 형식 | 주인 | 비고 |
 |---|---|---|---|
-| `*.motion-authoring.json` | `motion-authoring/2` | 이 툴 | 모션 · 씬 · 클립 · 이모지 · 덤프 참조 · 지을 때의 스키마(`builtOn`). 손으로(또는 AI가) 써도 된다 — 키에는 값과 탄젠트 **종류**만 적으면 읽을 때 값이 선다 |
+| `*.motion-authoring.json` | `motion-authoring/3`(11-18 — 이모지의 프레임이 30fps) | 이 툴 | 모션 · 씬 · 클립 · 이모지 · 덤프 참조 · 지을 때의 스키마(`builtOn`). 손으로(또는 AI가) 써도 된다 — 키에는 값과 탄젠트 **종류**만 적으면 읽을 때 값이 선다 |
 | `motions.json` | `motions/2` | 런타임 | 정규 직렬화 — 유니티 내보내기와 바이트까지 같다(골든 테스트) |
 | `emojis.json` | `emojis/2` | 런타임 | 구간마다 따로 선 클립. 내보낸 것을 런타임 로더로 다시 읽어 본다 |
 | `ExportedTuning/rig-schemas.json` 외 | 유니티 덤프 | 런타임 | 내장본 `Mt.Authoring/Defaults/ExportedTuning`. 덤프 옆의 깊이 · focus · 기준 해상도 · 컨트롤러 표 · 이모지 자리 표도 읽는다 |
