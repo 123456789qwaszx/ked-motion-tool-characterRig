@@ -5,7 +5,7 @@ namespace Ked.Presentation.Core
 {
     /// <summary>
     /// 시간 토큰 규약.
-    ///   Nfr : N 프레임 (24fps 기준)
+    ///   Nfr : N 프레임 (30fps 기준 — 2026-11-18 24fps에서 바꿈)
     ///   Ns  : N 초
     ///   N   : N 초 (단위 없음 — 하위호환)
     /// 결과는 0으로 클램프한다(음수는 즉시 적용을 뜻한다).
@@ -15,7 +15,7 @@ namespace Ked.Presentation.Core
     /// </summary>
     public static class DurationToken
     {
-        public const float FramesPerSecond = 24f;
+        public const float FramesPerSecond = 30f;
 
         public static float FramesToSeconds(float frames)
             => Math.Max(0f, frames / FramesPerSecond);

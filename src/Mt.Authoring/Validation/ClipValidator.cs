@@ -20,7 +20,7 @@ public sealed record ClipProblem(string ClipName, string Message, bool Blocking 
 /// </summary>
 public static class ClipValidator
 {
-    /// <summary>시각 비교의 여유 — 프레임(1/24초)보다 훨씬 작다.</summary>
+    /// <summary>시각 비교의 여유 — 프레임(1/30초)보다 훨씬 작다.</summary>
     public const float Tolerance = 1e-4f;
 
     /// <summary>블록 하나의 반복 횟수 상한 — 손으로 쓴 파일의 터무니없는 값이 미리보기를 멈추지 않게.</summary>

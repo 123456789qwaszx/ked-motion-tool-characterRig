@@ -15,7 +15,7 @@ public class EmojiMovesTests
     private static MotionEditor Blank()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddEmoji("pop", 1f); // 0~24fr
+        editor.AddEmoji("pop", 1f); // 0~30fr
         editor.AddEmojiRig("pop", "body", new[] { "a.png" });
         editor.AddEmojiRig("pop", "spark", new[] { "b.png" });
         return editor;
@@ -84,7 +84,7 @@ public class EmojiMovesTests
         editor.LayEmojiMove("pop", new[] { "body" }, EmojiMove.Pulse, 12, 20);
         EmojiAsset pop = editor.Document.FindEmoji("pop")!;
 
-        Assert.Equal(new[] { 0f, 12f, 16f, 20f, 24f }, FramesOf(pop, node, ChannelKind.Scale, Axis.X)); // 14fr의 키는 범위 안이라 바뀌었다
+        Assert.Equal(new[] { 0f, 12f, 16f, 20f, 30f }, FramesOf(pop, node, ChannelKind.Scale, Axis.X)); // 14fr의 키는 범위 안이라 바뀌었다
         Assert.Equal(new[] { 14f }, FramesOf(pop, node, ChannelKind.Position, Axis.X));                   // 움직임이 쓰지 않는 성분
     }
 
@@ -126,7 +126,7 @@ public class EmojiMovesTests
         long before = editor.Revision;
 
         Assert.ThrowsAny<Exception>(() => editor.LayEmojiMove("pop", new[] { "ghost" }, EmojiMove.Shake, 0, 5));
-        Assert.Throws<InvalidOperationException>(() => editor.LayEmojiMove("pop", new[] { "body" }, EmojiMove.Shake, 20, 30));
+        Assert.Throws<InvalidOperationException>(() => editor.LayEmojiMove("pop", new[] { "body" }, EmojiMove.Shake, 25, 31));
         Assert.Throws<InvalidOperationException>(() => editor.LayEmojiMove("pop", Array.Empty<string>(), EmojiMove.Shake, 0, 5));
         Assert.Equal(before, editor.Revision);
     }
@@ -145,11 +145,11 @@ public class EmojiMovesTests
         Assert.Equal(new[] { "heart_big", "spark", "spark_2" }, made.Rigs.Select(r => r.Name)); // 파일 이름에서 — 규칙에 맞게, 겹치면 번호
         Assert.Equal(new[] { "art/Heart Big.png" }, made.Rigs[0].Images);
         Assert.Equal(("in", "hold", "out"), (made.In, made.Hold, made.Out));
-        Assert.Equal(new[] { (0, 7), (8, 16), (17, 24) }, made.Spans.Select(s => (s.Start, s.End)));
+        Assert.Equal(new[] { (0, 9), (10, 20), (21, 30) }, made.Spans.Select(s => (s.Start, s.End)));
         Assert.Empty(EmojiValidator.Validate(editor.Document));
 
         // 움직임은 이모지 전체에 — 그림이 여럿이어도 함께 움직인다.
-        Assert.Equal(new[] { 0f, 4f, 7f, 8f, 12f, 16f, 17f, 24f }, FramesOf(made, Frame.OffsetNode, ChannelKind.Scale, Axis.X));
+        Assert.Equal(new[] { 0f, 5f, 9f, 10f, 15f, 20f, 21f, 30f }, FramesOf(made, Frame.OffsetNode, ChannelKind.Scale, Axis.X));
         Assert.DoesNotContain(made.Timeline.Channels, c => c.Node != Frame.OffsetNode);
 
         // 내보낸 정의가 코어로 읽힌다 — 머무는 이모지이고 세 클립이 있다.
@@ -170,9 +170,9 @@ public class EmojiMovesTests
         EmojiAsset made = editor.StartEmoji(new EmojiStart("idle", new[] { "a.png" }, true, null, EmojiMove.Shake, null));
 
         EmojiSpan hold = Assert.Single(made.Spans);
-        Assert.Equal((0, 24), (hold.Start, hold.End));
+        Assert.Equal((0, 30), (hold.Start, hold.End));
         Assert.Equal((null, "hold", null), (made.In, made.Hold, made.Out));
-        Assert.Equal(new[] { 0f, 6f, 18f, 24f }, FramesOf(made, Frame.OffsetNode, ChannelKind.Euler, Axis.Z));
+        Assert.Equal(new[] { 0f, 8f, 23f, 30f }, FramesOf(made, Frame.OffsetNode, ChannelKind.Euler, Axis.Z));
         Assert.Empty(EmojiValidator.Validate(editor.Document));
     }
 
@@ -184,7 +184,7 @@ public class EmojiMovesTests
 
         Assert.False(made.Stays);
         Assert.Empty(made.Spans);
-        Assert.Equal(new[] { 0f, 7f, 17f, 24f }, FramesOf(made, Frame.OffsetNode, ChannelKind.Alpha, Axis.X));
+        Assert.Equal(new[] { 0f, 9f, 21f, 30f }, FramesOf(made, Frame.OffsetNode, ChannelKind.Alpha, Axis.X));
         Assert.Empty(EmojiValidator.Validate(editor.Document));
     }
 

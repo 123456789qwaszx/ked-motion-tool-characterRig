@@ -8,7 +8,7 @@ namespace Ked.Presentation.Core
     //
     //   {
     //     "schema": "emojis/2",
-    //     "fps": 24,
+    //     "fps": 30,
     //     "emojis": [
     //       { "name": "star", "offset": { "x": 170, "y": 60 },
     //         "rigs":  [ { "name": "body", "sprite": "star", "place": { "x": 0, "y": 0 }, "scale": 0.45 } ],
@@ -29,7 +29,7 @@ namespace Ked.Presentation.Core
     {
         public string schema;
 
-        /// <summary>초당 프레임 수. 0이거나 없으면 24.</summary>
+        /// <summary>초당 프레임 수. 0이거나 없으면 30(EmojiDefinition.DefaultFps — 2026-11-18 전에는 24).</summary>
         public float fps;
 
         public List<EmojiDto> emojis;

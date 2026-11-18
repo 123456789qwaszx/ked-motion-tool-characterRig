@@ -27,11 +27,11 @@ public sealed class EmojiExportTests
         JsonObject file = ExportOk(EmojiModelTests.StarEditor().Document);
 
         Assert.Equal("emojis/2", file["schema"]!.GetValue<string>());
-        Assert.Equal(24, file["fps"]!.GetValue<double>());
+        Assert.Equal(30, file["fps"]!.GetValue<double>());
         JsonObject star = file["emojis"]![0]!.AsObject();
 
         Assert.Equal(new[] { "enter", "loop", "leave" }, star["clips"]!.AsArray().Select(c => c!["name"]!.GetValue<string>()));
-        Assert.Equal(new[] { 5, 16, 7 }, star["clips"]!.AsArray().Select(c => c!["length"]!.GetValue<int>()));
+        Assert.Equal(new[] { 6, 20, 8 }, star["clips"]!.AsArray().Select(c => c!["length"]!.GetValue<int>()));
         Assert.Equal("enter", star["in"]!.GetValue<string>());
         Assert.Equal("loop", star["hold"]!.GetValue<string>());
         Assert.Equal("leave", star["out"]!.GetValue<string>());
@@ -48,7 +48,7 @@ public sealed class EmojiExportTests
         // 런타임 로더가 받는다.
         EmojiDefinition definition = EmojiExport.ToDefinitions(EmojiModelTests.StarEditor().Document)["star"];
         Assert.True(definition.Stays);
-        Assert.Equal(16, definition.Hold.Length);
+        Assert.Equal(20, definition.Hold.Length);
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public sealed class EmojiExportTests
         Assert.Equal("main", star["main"]!.GetValue<string>());
         JsonObject main = star["clips"]![0]!.AsObject();
         Assert.Equal("main", main["name"]!.GetValue<string>());
-        Assert.Equal(25, main["length"]!.GetValue<int>()); // 0 … 24fr
+        Assert.Equal(31, main["length"]!.GetValue<int>()); // 0 … 30fr
         Assert.Null(star["hold"]);
         Assert.False(EmojiExport.ToDefinitions(editor.Document)["star"].Stays);
     }
@@ -82,8 +82,8 @@ public sealed class EmojiExportTests
             new KeyAsset { T = 0.8f, V = -20f, Tangent = TangentMode.Auto },
             new KeyAsset { T = 1f, V = 0f, Tangent = TangentMode.Flat },
         });
-        editor.SetEmojiSpan("star", "loop", 9, 20); // 스플라인 한가운데서 시작해 계단 안에서 끝나지 않게 — 계단 구간(13.2~19.2fr)을 지난다
-        editor.AddEmojiSpan("star", "inside", 14, 18); // 계단 안에서 시작한다
+        editor.SetEmojiSpan("star", "loop", 11, 25); // 스플라인 한가운데서 시작해 계단 안에서 끝나지 않게 — 계단 구간(16.5~24fr)을 지난다
+        editor.AddEmojiSpan("star", "inside", 18, 23); // 계단 안에서 시작한다
 
         EmojiAsset star = editor.Document.FindEmoji("star")!;
         EmojiDefinition definition = EmojiExport.ToDefinitions(editor.Document)[star.Name];
@@ -116,16 +116,16 @@ public sealed class EmojiExportTests
         string timeline = EmojiAsset.TimelineNameOf("star");
         string body = Frame.ImageNodeOf("body");
         editor.AddChannel(timeline, body, ChannelKind.Image);
-        editor.SetKeys(timeline, body, ChannelKind.Image, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.25f, 1f), Fixtures.Key(0.5f, 0f) });
+        editor.SetKeys(timeline, body, ChannelKind.Image, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(EmojiAsset.SecondsOf(8), 1f), Fixtures.Key(0.5f, 0f) });
         editor.SetTangentMode(timeline, new[] { new KeyRef(new CurveRef(Frame.OffsetNode, ChannelKind.Alpha, Axis.X), 0) }, TangentMode.Step);
-        editor.SetEmojiSpan("star", "loop", 8, 20); // 프레임 6에 넘긴 둘째 그림이 보이는 채 시작한다
+        editor.SetEmojiSpan("star", "loop", 10, 25); // 프레임 8에 넘긴 둘째 그림이 보이는 채 시작한다
 
         JsonObject star = ExportOk(editor.Document)["emojis"]![0]!.AsObject();
         JsonObject loop = star["clips"]!.AsArray().Single(c => c!["name"]!.GetValue<string>() == "loop")!.AsObject();
         JsonArray sprite = loop["tracks"]!.AsArray().Single(t => t!["channel"]!.GetValue<string>() == "sprite")!["keys"]!.AsArray();
 
         Assert.Equal("{\"f\":0,\"s\":\"star_2\"}", sprite[0]!.ToJsonString());
-        Assert.Equal("{\"f\":4,\"s\":\"star\"}", sprite[1]!.ToJsonString());
+        Assert.Equal("{\"f\":5,\"s\":\"star\"}", sprite[1]!.ToJsonString());
 
         JsonArray alpha = star["clips"]![0]!["tracks"]!.AsArray().Single(t => t!["rig"]!.GetValue<string>() == "")!["keys"]!.AsArray();
         Assert.True(alpha[0]!["step"]!.GetValue<bool>());
@@ -139,15 +139,15 @@ public sealed class EmojiExportTests
         editor.AddChannel(timeline, Frame.OffsetNode, ChannelKind.Position);
         editor.SetKeys(timeline, Frame.OffsetNode, ChannelKind.Position, Axis.X, new[]
         {
-            new KeyAsset { T = 0f, V = 0f, OutTangent = 48f, InTangent = 48f, Tangent = TangentMode.Free },
-            new KeyAsset { T = 1f, V = 48f, OutTangent = 48f, InTangent = 48f, Tangent = TangentMode.Free },
+            new KeyAsset { T = 0f, V = 0f, OutTangent = 60f, InTangent = 60f, Tangent = TangentMode.Free },
+            new KeyAsset { T = 1f, V = 60f, OutTangent = 60f, InTangent = 60f, Tangent = TangentMode.Free },
         });
         editor.SetEmojiLinks("star", null, null, null);
 
         JsonObject star = ExportOk(editor.Document)["emojis"]![0]!.AsObject();
         JsonObject first = star["clips"]![0]!["tracks"]!.AsArray().Single(t => t!["channel"]!.GetValue<string>() == "x")!["keys"]![0]!.AsObject();
 
-        Assert.Equal(2.0, first["o"]!.GetValue<double>(), 4); // 초당 48 = 프레임당 2
+        Assert.Equal(2.0, first["o"]!.GetValue<double>(), 4); // 초당 60 = 프레임당 2
     }
 
     [Fact]
@@ -179,7 +179,7 @@ public sealed class EmojiExportTests
         Assert.Equal(0, MtCli.Run(new[] { "info", path }, stdout, new StringWriter()));
         JsonNode info = JsonNode.Parse(stdout.ToString())!;
         Assert.Equal("star", info["emojis"]![0]!["name"]!.GetValue<string>());
-        Assert.Equal("loop 5~20", info["emojis"]![0]!["clips"]![1]!.GetValue<string>());
+        Assert.Equal("loop 6~25", info["emojis"]![0]!["clips"]![1]!.GetValue<string>());
 
         var broken = new MotionEditor(MotionDocumentJson.Read(File.ReadAllText(path)));
         broken.AddEmoji("bare");

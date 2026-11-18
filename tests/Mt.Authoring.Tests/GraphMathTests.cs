@@ -133,10 +133,10 @@ public class TimeSnapTests
         double dense = TimeSnap.TickStep(2000);
         double sparse = TimeSnap.TickStep(60);
 
-        Assert.Equal(1 / 24.0, dense, 9);
+        Assert.Equal(1 / 30.0, dense, 9);
         Assert.True(sparse > dense);
-        Assert.Equal(0, (sparse * 24) % 1, 6);
-        Assert.Equal(24, TimeSnap.FramesPerSecond);
+        Assert.Equal(0, (sparse * 30) % 1, 6);
+        Assert.Equal(30, TimeSnap.FramesPerSecond);
     }
 
     [Theory]
@@ -347,8 +347,8 @@ public class TimeTextTests
     [Fact]
     public void 프레임_표시는_정수면_정수로_아니면_소수_둘로_초는_s_꼬리다()
     {
-        Assert.Equal("12", TimeText.Format(0.5, TimeDisplay.Frames));
-        Assert.Equal("7.2", TimeText.Format(0.3, TimeDisplay.Frames));
+        Assert.Equal("15", TimeText.Format(0.5, TimeDisplay.Frames));
+        Assert.Equal("9.3", TimeText.Format(0.31, TimeDisplay.Frames));
         Assert.Equal("0.3s", TimeText.Format(0.3, TimeDisplay.Seconds));
         Assert.Equal("0", TimeText.Format(0, TimeDisplay.Frames));
     }
@@ -356,13 +356,13 @@ public class TimeTextTests
     [Fact]
     public void 읽기는_꼬리_단위가_우선이고_없으면_표시_단위다()
     {
-        Assert.True(TimeText.TryParse("12", TimeDisplay.Frames, out double a));
+        Assert.True(TimeText.TryParse("15", TimeDisplay.Frames, out double a));
         Assert.Equal(0.5, a, 9);
         Assert.True(TimeText.TryParse("12", TimeDisplay.Seconds, out double b));
         Assert.Equal(12, b, 9);
         Assert.True(TimeText.TryParse("0.5s", TimeDisplay.Frames, out double c));
         Assert.Equal(0.5, c, 9);
-        Assert.True(TimeText.TryParse(" 24f ", TimeDisplay.Seconds, out double d));
+        Assert.True(TimeText.TryParse(" 30f ", TimeDisplay.Seconds, out double d));
         Assert.Equal(1, d, 9);
         Assert.False(TimeText.TryParse("", TimeDisplay.Frames, out _));
         Assert.False(TimeText.TryParse("abc", TimeDisplay.Frames, out _));
@@ -381,7 +381,7 @@ public class TimeTextTests
     [Fact]
     public void 기본_시간_스냅은_한_프레임이고_설정_기본값도_같다()
     {
-        Assert.Equal(1.0 / 24, TimeSnap.DefaultStep, 9);
+        Assert.Equal(1.0 / 30, TimeSnap.DefaultStep, 9);
         Assert.Equal(TimeSnap.DefaultStep, new Mt.Authoring.Settings.ToolSettings().SnapStep, 9);
     }
 }

@@ -9,8 +9,11 @@ namespace Mt.Authoring;
 /// </summary>
 public static class AuthoringFormat
 {
-    /// <summary>저작 원본 파일의 스키마 — 채널에 mode가 없고 모션에 previewMode가 있다.</summary>
-    public const string AuthoringSchema = "motion-authoring/2";
+    /// <summary>
+    /// 저작 원본 파일의 스키마 — 채널에 mode가 없고 모션에 previewMode가 있다. /3(2026-11-18): 이모지의 프레임(구간 · 타임라인)을 30fps로 센다 —
+    /// /2는 24fps라 같은 숫자가 다른 시각이어서 읽지 않는다(옮기는 것은 툴 밖의 <c>tools/authoring-24to30.py</c>).
+    /// </summary>
+    public const string AuthoringSchema = "motion-authoring/3";
 
     /// <summary>내보내기 산출물의 스키마 — 무대 런타임 <c>MotionLibrary</c>가 읽는 그것. 채널에 mode가 없다.</summary>
     public const string ExportSchema = "motions/2";

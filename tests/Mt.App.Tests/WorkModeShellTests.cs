@@ -177,7 +177,7 @@ public class WorkModeShellTests
             Assert.True(state.EmojiFields);
             Assert.False(state.RigFields);
             Assert.False(state.Back);
-            Assert.Equal("emoji — 그림 1장 · 25프레임 · 한 번 재생하고 사라진다", state.Title);
+            Assert.Equal("emoji — 그림 1장 · 31프레임 · 한 번 재생하고 사라진다", state.Title);
             Assert.Null(window.Viewport.SelectedEmojiRig);
             Assert.Equal("이모지 전체", window.EmojiKeyTargetChoice);
 

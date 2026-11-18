@@ -10,7 +10,7 @@ namespace Mt.Authoring.Editing;
 // 타임라인의 키는 모션의 명령(AddChannel · SetKeys · KeyPose …)이 그대로 맡는다 — 이름은 EmojiAsset.TimelineNameOf.
 public sealed partial class MotionEditor
 {
-    /// <summary>새 이모지의 타임라인 길이(초) — 24프레임.</summary>
+    /// <summary>새 이모지의 타임라인 길이(초) — 30프레임.</summary>
     public const float DefaultEmojiSeconds = 1f;
 
     // ── 이모지 ────────────────────────────────────────────────────────

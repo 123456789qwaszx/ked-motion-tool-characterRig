@@ -24,13 +24,13 @@ public sealed class EmojiModelTests
         string timeline = EmojiAsset.TimelineNameOf("star");
         string body = Frame.ImageNodeOf("body");
         editor.AddChannel(timeline, body, ChannelKind.Scale);
-        editor.SetKeys(timeline, body, ChannelKind.Scale, Axis.X, new[] { Fixtures.Key(0f, 0.45f), Fixtures.Key(0.125f, 1.27f), Fixtures.Key(1f, 1f) });
+        editor.SetKeys(timeline, body, ChannelKind.Scale, Axis.X, new[] { Fixtures.Key(0f, 0.45f), Fixtures.Key(EmojiAsset.SecondsOf(4), 1.27f), Fixtures.Key(1f, 1f) });
         editor.AddChannel(timeline, Frame.OffsetNode, ChannelKind.Alpha);
         editor.SetKeys(timeline, Frame.OffsetNode, ChannelKind.Alpha, Axis.X, new[] { Fixtures.Key(0f, 1f), Fixtures.Key(1f, 0f) });
 
-        editor.AddEmojiSpan("star", "enter", 0, 4);
-        editor.AddEmojiSpan("star", "loop", 5, 20);
-        editor.AddEmojiSpan("star", "leave", 18, 24);
+        editor.AddEmojiSpan("star", "enter", 0, 5);
+        editor.AddEmojiSpan("star", "loop", 6, 25);
+        editor.AddEmojiSpan("star", "leave", 23, 30);
         editor.SetEmojiLinks("star", "enter", "loop", "leave");
         return editor;
     }
@@ -83,7 +83,7 @@ public sealed class EmojiModelTests
         MotionAsset timeline = Assert.IsType<MotionAsset>(document.Find("emoji:star"));
         Assert.Same(document.FindEmoji("star")!.Timeline, timeline);
         Assert.Contains(timeline, document.AllMotions);
-        Assert.Equal(24, document.FindEmoji("star")!.LastFrame);
+        Assert.Equal(30, document.FindEmoji("star")!.LastFrame);
 
         // 모션의 이름 · 지우기 명령은 타임라인을 건드리지 않는다 — 이모지와 함께다.
         Assert.Throws<InvalidOperationException>(() => editor.RemoveMotion("emoji:star"));
@@ -195,7 +195,7 @@ public sealed class EmojiModelTests
         editor.AddChannel(timeline, Frame.ImageNodeOf("body"), ChannelKind.Image);
         editor.SetKeys(timeline, Frame.ImageNodeOf("body"), ChannelKind.Image, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, 2f) }); // 그림은 둘(0 · 1)
         editor.AddChannel(timeline, Frame.ImageNodeOf("ghost"), ChannelKind.Alpha); // 없는 리그
-        editor.SetEmojiSpan("star", "leave", 18, 30); // 타임라인(0~24fr) 밖
+        editor.SetEmojiSpan("star", "leave", 23, 36); // 타임라인(0~30fr) 밖
         editor.AddEmoji("lone");
         editor.AddEmojiRig("lone", "body", new[] { "a.png" });
         editor.AddEmojiSpan("lone", "a", 0, 3);
@@ -212,7 +212,7 @@ public sealed class EmojiModelTests
         Assert.Contains("X 성분은 이모지에 없다", all);
         Assert.Contains("그림 키 2가 그림 'body'의 장(0~1번째)을 가리키지 않는다", all);
         Assert.Contains("그림 'ghost'이 이 이모지에 없다", all);
-        Assert.Contains("구간 'leave'(18~30fr)이 타임라인(0~24fr) 밖", all);
+        Assert.Contains("구간 'leave'(23~36fr)이 타임라인(0~30fr) 밖", all);
         Assert.Contains("이모지 'lone': 등장 · 퇴장은 머묾을 이었을 때만", all);
     }
 

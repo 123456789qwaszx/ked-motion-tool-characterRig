@@ -8,7 +8,7 @@ namespace Ked.Presentation.Tests
     /// <summary>
     /// 이모지의 움직임(docs/emoji-format.md) — 형식의 규칙 · 그 프레임의 모습 · 재생의 단계.
     /// 런타임 Tests/EditMode/EmojiPlaybackTests.cs에서 유니티를 쓰지 않는 절만 반입했다(접기 · 재생 시스템 · 뒤집힌 로케이터 밑의 노드는 저쪽에 남는다).
-    /// 좌우의 둘(형식의 표시 · 부호의 표)은 런타임 32858197에서.
+    /// 좌우의 둘(형식의 표시 · 부호의 표)은 런타임 32858197에서, fps 30(파일 fps 30 · fps가 없으면 30)은 0faca847에서. 대본의 쪽(flip)은 EmojiSideTests.
     /// </summary>
     public sealed class EmojiPlaybackTests
     {
@@ -65,7 +65,7 @@ namespace Ked.Presentation.Tests
 
         private static Dictionary<string, EmojiDefinition> Build(List<string> warned, params EmojiDto[] emojis)
         {
-            EmojisFileDto file = new() { schema = EmojiDefinitionLoader.Schema, fps = 24f, emojis = emojis.ToList() };
+            EmojisFileDto file = new() { schema = EmojiDefinitionLoader.Schema, fps = 30f, emojis = emojis.ToList() };
             return EmojiDefinitionLoader.Build(file, (name, why) => warned?.Add($"{name}: {why}"));
         }
 
@@ -78,6 +78,19 @@ namespace Ked.Presentation.Tests
         }
 
         // ── 형식의 규칙 ──────────────────────────────────────────────
+
+        [Test]
+        public void fps가_없으면_대본의_프레임과_같은_30이다()
+        {
+            List<string> warned = new();
+            EmojisFileDto file = new() { schema = EmojiDefinitionLoader.Schema, emojis = new List<EmojiDto> { Static() } };
+
+            Dictionary<string, EmojiDefinition> emojis = EmojiDefinitionLoader.Build(file, (name, why) => warned.Add($"{name}: {why}"));
+
+            Assert.That(warned, Is.Empty);
+            Assert.That(emojis.Values.Single().Fps, Is.EqualTo(30f));
+            Assert.That(EmojiDefinition.DefaultFps, Is.EqualTo(DurationToken.FramesPerSecond), "이모지와 대본의 프레임은 같은 기준이다");
+        }
 
         [Test]
         public void 머묾이_있는가가_종류를_정한다()
@@ -173,14 +186,14 @@ namespace Ked.Presentation.Tests
 
             Assert.That(playback.Phase, Is.EqualTo(EmojiPhase.Main));
 
-            playback.Advance(6f / 24f);
+            playback.Advance(6f / 30f);
             Assert.That(playback.Frame, Is.EqualTo(6f).Within(1e-3f));
 
             // 마지막 프레임(12)도 한 프레임만큼 보인다 — 13프레임짜리다.
-            playback.Advance(6.9f / 24f);
+            playback.Advance(6.9f / 30f);
             Assert.That(playback.IsDone, Is.False);
 
-            playback.Advance(0.2f / 24f);
+            playback.Advance(0.2f / 30f);
             Assert.That(playback.IsDone, Is.True);
         }
 
@@ -192,12 +205,12 @@ namespace Ked.Presentation.Tests
             Assert.That(playback.Phase, Is.EqualTo(EmojiPhase.In));
 
             // 등장(4프레임)을 넘으면 머묾의 프레임 0에서 잇는다 — 넘친 한 프레임만큼 앞서서.
-            playback.Advance(5f / 24f);
+            playback.Advance(5f / 30f);
             Assert.That(playback.Phase, Is.EqualTo(EmojiPhase.Hold));
             Assert.That(playback.Frame, Is.EqualTo(1f).Within(1e-3f));
 
             // 머묾의 주기는 12프레임이다.
-            playback.Advance(12f / 24f);
+            playback.Advance(12f / 30f);
             Assert.That(playback.Phase, Is.EqualTo(EmojiPhase.Hold));
             Assert.That(playback.Frame, Is.EqualTo(1f).Within(1e-2f));
 
@@ -210,7 +223,7 @@ namespace Ked.Presentation.Tests
         public void 내리면_퇴장을_재생하고_끝난다_등장_도중이어도_바로_넘어간다()
         {
             EmojiPlayback playback = new(One(Hold()));
-            playback.Advance(1f / 24f);
+            playback.Advance(1f / 30f);
             Assert.That(playback.Phase, Is.EqualTo(EmojiPhase.In));
 
             playback.RequestOff();
@@ -218,11 +231,11 @@ namespace Ked.Presentation.Tests
             Assert.That(playback.Frame, Is.EqualTo(0f));
 
             // 퇴장 중에 다시 내려도 처음으로 돌아가지 않는다.
-            playback.Advance(3f / 24f);
+            playback.Advance(3f / 30f);
             playback.RequestOff();
             Assert.That(playback.Frame, Is.EqualTo(3f).Within(1e-3f));
 
-            playback.Advance(3f / 24f);
+            playback.Advance(3f / 30f);
             Assert.That(playback.IsDone, Is.True);
         }
 

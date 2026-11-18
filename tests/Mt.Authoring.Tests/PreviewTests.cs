@@ -41,7 +41,7 @@ public class MotionPreviewTests
         MotionAsset step = editor.Document.Find("step")!;
 
         Assert.Equal(320f, MotionPreview.Pose(template, step, 0.5).GetState("CharSlot_Track").AnchoredPosition.X, 3);
-        Assert.Equal(0f, MotionPreview.Pose(template, step, 0.5 + 1 / 24.0).GetState("CharSlot_Track").AnchoredPosition.X, 3);
+        Assert.Equal(0f, MotionPreview.Pose(template, step, 0.5 + 1 / 30.0).GetState("CharSlot_Track").AnchoredPosition.X, 3);
     }
 
     [Fact]
@@ -319,16 +319,16 @@ public class WholeFramePlaybackTests
         clock.SetDuration(1);
         clock.Play();
 
-        Assert.False(clock.Advance(0.02)); // 0.48프레임 → 0프레임, 안 바뀜
+        Assert.False(clock.Advance(0.015)); // 0.45프레임 → 0프레임, 안 바뀜
         Assert.Equal(0, clock.Time, 9);
-        Assert.True(clock.Advance(0.02)); // 0.96프레임 → 1프레임
-        Assert.Equal(1.0 / 24.0, clock.Time, 9);
-        clock.Advance(0.5); // 실제 0.54초 = 12.96프레임 → 13프레임 (0.04초가 사라지지 않는다)
-        Assert.Equal(13.0 / 24.0, clock.Time, 9);
+        Assert.True(clock.Advance(0.015)); // 0.9프레임 → 1프레임
+        Assert.Equal(1.0 / 30.0, clock.Time, 9);
+        clock.Advance(0.5); // 실제 0.53초 = 15.9프레임 → 16프레임 (0.03초가 사라지지 않는다)
+        Assert.Equal(16.0 / 30.0, clock.Time, 9);
 
         clock.WholeFrames = false;
         clock.Advance(0.01);
-        Assert.Equal(13.0 / 24.0 + 0.01, clock.Time, 9); // 연속으로 돌아가면 보이던 시각에서 흐른 시간 그대로
+        Assert.Equal(16.0 / 30.0 + 0.01, clock.Time, 9); // 연속으로 돌아가면 보이던 시각에서 흐른 시간 그대로
 
         clock.ScrubTo(0.3);
         Assert.Equal(0.3, clock.Time, 9); // 스크럽은 프레임에 안 맞춘다(슬라이더가 스냅한다)

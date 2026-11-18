@@ -13,7 +13,7 @@ namespace Mt.Authoring.Serialization;
 /// "바뀌었나" 비교가 선다(System.Text.Json은 결정적이다).
 ///
 /// 산출물(<c>motions/2</c>)은 <see cref="MotionsJson"/>이 따로 쓴다 — 두 포맷을 섞지 않는다.
-/// 읽는 것은 지금 판(<c>motion-authoring/2</c>)뿐이다 — 옛 판을 옮겨 읽는 길은 두지 않는다.
+/// 읽는 것은 지금 판(<c>motion-authoring/3</c>)뿐이다 — 옛 판을 옮겨 읽는 길은 두지 않는다.
 /// </summary>
 public static class MotionDocumentJson
 {

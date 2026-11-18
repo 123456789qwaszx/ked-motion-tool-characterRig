@@ -142,7 +142,7 @@ public sealed class EmojiPreviewTests
         Assert.Equal(body.Rotation, image.LocalEulerAngles.Z, 3);
 
         EmojiRigPose bodyPose = pose.Rigs[0];
-        Assert.Equal("star_2", bodyPose.Sprite); // 프레임 2.4에 둘째 장, 16.8에 첫 장으로 돌아간다
+        Assert.Equal("star_2", bodyPose.Sprite); // 프레임 3에 둘째 장, 21에 첫 장으로 돌아간다
         Assert.Equal("art/star_2.png", bodyPose.ImagePath);
         Assert.Equal(EmojiClipMath.Sample(timeline, "spark", EmojiChannel.Alpha, 12f), pose.Rigs[1].Alpha, 4);
         Assert.Equal("spark", pose.Rigs[1].Sprite); // 그림 채널이 없으면 기본 그림
@@ -154,16 +154,16 @@ public sealed class EmojiPreviewTests
         EmojiDefinition definition = EmojiPreview.Definition(EmojiModelTests.StarEditor().Document.FindEmoji("star")!, Frame, out string? why)!;
         Assert.Null(why);
 
-        // 등장 5fr → 머묾 16fr ⟲ → 내리면 퇴장 7fr.
+        // 등장 6fr → 머묾 20fr ⟲ → 내리면 퇴장 8fr.
         Assert.Equal(EmojiPhase.In, EmojiPreview.Moment(definition, 0).Phase);
-        EmojiMoment hold = EmojiPreview.Moment(definition, 6 / 24.0);
+        EmojiMoment hold = EmojiPreview.Moment(definition, 7 / 30.0);
         Assert.Equal(EmojiPhase.Hold, hold.Phase);
         Assert.Equal(1f, hold.Frame, 3);
         Assert.Equal(EmojiPhase.Hold, EmojiPreview.Moment(definition, 100).Phase); // 내리지 않으면 머문다
 
         double off = EmojiPreview.OffAt(definition, 2)!.Value;
-        Assert.Equal((5 + 32) / 24.0, off, 6);
-        EmojiMoment leaving = EmojiPreview.Moment(definition, off + 3 / 24.0, off);
+        Assert.Equal((6 + 40) / 30.0, off, 6);
+        EmojiMoment leaving = EmojiPreview.Moment(definition, off + 3 / 30.0, off);
         Assert.Equal(EmojiPhase.Out, leaving.Phase);
         Assert.Equal(3f, leaving.Frame, 3);
         Assert.Equal(EmojiPhase.Done, EmojiPreview.Moment(definition, EmojiPreview.LifeSeconds(definition, 2) + 0.01, off).Phase);
@@ -173,7 +173,7 @@ public sealed class EmojiPreviewTests
         once.SetEmojiLinks("star", null, null, null);
         EmojiDefinition main = EmojiPreview.Definition(once.Document.FindEmoji("star")!, Frame, out _)!;
         Assert.Null(EmojiPreview.OffAt(main, 2));
-        Assert.Equal(25 / 24.0, EmojiPreview.LifeSeconds(main, 2), 6);
+        Assert.Equal(31 / 30.0, EmojiPreview.LifeSeconds(main, 2), 6);
         Assert.Equal(EmojiPhase.Main, EmojiPreview.Moment(main, 0.5).Phase);
         Assert.Equal(EmojiPhase.Done, EmojiPreview.Moment(main, 1.1).Phase);
     }
@@ -196,7 +196,7 @@ public sealed class EmojiPreviewTests
         stdout = new StringWriter();
         Assert.Equal(0, MtCli.Run(new[] { "pose", path, "--emoji", "star", "--time", "0.5", "--view", "timeline" }, stdout, new StringWriter()));
         JsonNode timeline = JsonNode.Parse(stdout.ToString())!;
-        Assert.Equal(12, timeline["frame"]!.GetValue<double>(), 4);
+        Assert.Equal(15, timeline["frame"]!.GetValue<double>(), 4);
         Assert.Equal(170, timeline["offset"]!["position"]![0]!.GetValue<double>(), 3);
         Assert.Equal("star_2", timeline["rigs"]![0]!["sprite"]!.GetValue<string>());
     }

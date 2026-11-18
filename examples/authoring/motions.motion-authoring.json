@@ -1,5 +1,5 @@
 {
-  "schema": "motion-authoring/2",
+  "schema": "motion-authoring/3",
   "motions": [
     {
       "name": "nod_small",

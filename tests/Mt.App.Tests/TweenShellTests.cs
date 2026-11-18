@@ -101,12 +101,12 @@ public class TweenShellTests
                 window.Viewport.SelectedNode = moveY;
                 window.CloseTweenFromForm();
                 window.OpenTweenFromForm();
-                Assert.StartsWith("모션 nod · 몸  |  12fr에 — 앞 키 0fr ↔ 뒤 키 24fr  |  곡선 1개", window.TweenNote);
+                Assert.StartsWith("모션 nod · 몸  |  15fr에 — 앞 키 0fr ↔ 뒤 키 30fr  |  곡선 1개", window.TweenNote);
 
                 // "모션 전체에"를 켜면 모션의 곡선 전부 — 몸과 숙임 둘 다.
                 long whole = editor.Revision;
                 window.SetTweenWholeFromForm(true);
-                Assert.StartsWith("모션 nod · 전체  |  12fr에 — 앞 키 0fr ↔ 뒤 키 24fr  |  곡선 2개", window.TweenNote);
+                Assert.StartsWith("모션 nod · 전체  |  15fr에 — 앞 키 0fr ↔ 뒤 키 30fr  |  곡선 2개", window.TweenNote);
                 window.PressTweenButtonFromForm(50);
                 Assert.Equal(whole + 1, editor.Revision);
                 Assert.Equal(5f, editor.Document.Find("nod")!.Channels[1].Z!.Keys[1].V, 3);

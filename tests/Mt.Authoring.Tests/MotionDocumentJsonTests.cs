@@ -44,7 +44,7 @@ public class MotionDocumentJsonTests
 
         Assert.Contains("\"end\": \"commit\"", json, StringComparison.Ordinal);
         Assert.Contains("\"previewMode\": \"absolute\"", json, StringComparison.Ordinal);
-        Assert.Contains("\"schema\": \"motion-authoring/2\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"schema\": \"motion-authoring/3\"", json, StringComparison.Ordinal);
         Assert.Contains("\"kind\": \"euler\"", json, StringComparison.Ordinal);
         Assert.Contains("\"tangent\": \"auto\"", json, StringComparison.Ordinal);
         Assert.Contains("\"broken\": true", json, StringComparison.Ordinal);
@@ -89,7 +89,7 @@ public class MotionDocumentJsonTests
     public void 빈_성분_목록은_없음으로_읽는다()
     {
         string json = """
-            { "schema": "motion-authoring/2",
+            { "schema": "motion-authoring/3",
               "motions": [ { "name": "a", "rig": "character", "duration": 1, "end": "restore",
                              "channels": [ { "node": "N", "kind": "position", "x": { "keys": [] } } ] } ] }
             """;

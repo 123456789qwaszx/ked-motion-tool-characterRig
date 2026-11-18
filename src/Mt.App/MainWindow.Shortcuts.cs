@@ -193,7 +193,7 @@ public partial class MainWindow
     /// <summary>테스트 손잡이.</summary>
     internal ManipulatorMode Manipulator => _viewport.Manipulator;
 
-    /// <summary>한 프레임(24fps) — 뷰포트 ←/→와 같은 규약.</summary>
+    /// <summary>한 프레임(30fps) — 뷰포트 ←/→와 같은 규약.</summary>
     internal static float FrameSeconds => (float)(1.0 / TimeSnap.FramesPerSecond);
 
     /// <summary>재생 표시 콤보의 항목 — 항목마다 툴팁. 차례 = 연속(0) · 프레임 맞춤(1) = ToolSettings.PlayWholeFrames.</summary>

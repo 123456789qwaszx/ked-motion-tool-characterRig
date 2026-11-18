@@ -1,5 +1,5 @@
 {
-  "schema": "motion-authoring/2",
+  "schema": "motion-authoring/3",
   "motions": [],
   "scenes": [
     {
@@ -46,7 +46,7 @@
       "timeline": {
         "name": "emoji:star",
         "rig": "emoji",
-        "duration": 1.0833334,
+        "duration": 1.1,
         "end": "restore",
         "previewMode": "relative",
         "channels": [
@@ -64,7 +64,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.125,
+                  "t": 0.13333334,
                   "v": 1.27,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -80,7 +80,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.20833333,
+                  "t": 0.2,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -88,7 +88,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.375,
+                  "t": 0.36666667,
                   "v": 1.08,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -96,7 +96,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.5416667,
+                  "t": 0.53333336,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -112,7 +112,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.875,
+                  "t": 0.8666667,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -120,7 +120,7 @@
                   "broken": false
                 },
                 {
-                  "t": 1.0833334,
+                  "t": 1.1,
                   "v": 0.67,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -140,7 +140,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.125,
+                  "t": 0.13333334,
                   "v": 1.27,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -156,7 +156,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.20833333,
+                  "t": 0.2,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -164,7 +164,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.375,
+                  "t": 0.36666667,
                   "v": 1.08,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -172,7 +172,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.5416667,
+                  "t": 0.53333336,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -188,7 +188,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.875,
+                  "t": 0.8666667,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -196,7 +196,7 @@
                   "broken": false
                 },
                 {
-                  "t": 1.0833334,
+                  "t": 1.1,
                   "v": 0.67,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -220,7 +220,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.083333336,
+                  "t": 0.1,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -236,7 +236,7 @@
             "x": {
               "keys": [
                 {
-                  "t": 0.875,
+                  "t": 0.8666667,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -244,7 +244,7 @@
                   "broken": false
                 },
                 {
-                  "t": 1.0833334,
+                  "t": 1.1,
                   "v": 0,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -260,17 +260,17 @@
         {
           "name": "in",
           "start": 0,
-          "end": 4
+          "end": 5
         },
         {
           "name": "hold",
-          "start": 5,
-          "end": 20
+          "start": 6,
+          "end": 25
         },
         {
           "name": "out",
-          "start": 21,
-          "end": 26
+          "start": 26,
+          "end": 33
         }
       ],
       "in": "in",
@@ -297,7 +297,7 @@
       "timeline": {
         "name": "emoji:question",
         "rig": "emoji",
-        "duration": 0.875,
+        "duration": 0.8666667,
         "end": "restore",
         "previewMode": "relative",
         "channels": [
@@ -315,7 +315,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.125,
+                  "t": 0.13333334,
                   "v": 1.12,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -323,7 +323,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.20833333,
+                  "t": 0.2,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -331,7 +331,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.875,
+                  "t": 0.8666667,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -351,7 +351,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.125,
+                  "t": 0.13333334,
                   "v": 1.12,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -359,7 +359,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.20833333,
+                  "t": 0.2,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -367,7 +367,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.875,
+                  "t": 0.8666667,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -431,7 +431,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.083333336,
+                  "t": 0.1,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -439,7 +439,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.7083333,
+                  "t": 0.7,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -447,7 +447,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.875,
+                  "t": 0.8666667,
                   "v": 0,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -471,7 +471,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.875,
+                  "t": 0.8666667,
                   "v": 20,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -524,7 +524,7 @@
       "timeline": {
         "name": "emoji:twinkle",
         "rig": "emoji",
-        "duration": 0.9583333,
+        "duration": 0.96666664,
         "end": "restore",
         "previewMode": "relative",
         "channels": [
@@ -542,7 +542,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.125,
+                  "t": 0.13333334,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -550,7 +550,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.9583333,
+                  "t": 0.96666664,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -570,7 +570,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.125,
+                  "t": 0.13333334,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -578,7 +578,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.9583333,
+                  "t": 0.96666664,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -602,7 +602,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.125,
+                  "t": 0.13333334,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -610,7 +610,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.5416667,
+                  "t": 0.53333336,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -618,7 +618,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.75,
+                  "t": 0.76666665,
                   "v": 0,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -642,7 +642,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.125,
+                  "t": 0.13333334,
                   "v": 0.35,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -650,7 +650,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.25,
+                  "t": 0.26666668,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -658,7 +658,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.9583333,
+                  "t": 0.96666664,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -678,7 +678,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.125,
+                  "t": 0.13333334,
                   "v": 0.35,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -686,7 +686,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.25,
+                  "t": 0.26666668,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -694,7 +694,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.9583333,
+                  "t": 0.96666664,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -718,7 +718,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.125,
+                  "t": 0.13333334,
                   "v": 0,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -726,7 +726,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.25,
+                  "t": 0.26666668,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -742,7 +742,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.875,
+                  "t": 0.8666667,
                   "v": 0,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -766,7 +766,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.25,
+                  "t": 0.26666668,
                   "v": 0.35,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -774,7 +774,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.375,
+                  "t": 0.36666667,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -782,7 +782,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.9583333,
+                  "t": 0.96666664,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -802,7 +802,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.25,
+                  "t": 0.26666668,
                   "v": 0.35,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -810,7 +810,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.375,
+                  "t": 0.36666667,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -818,7 +818,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.9583333,
+                  "t": 0.96666664,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -842,7 +842,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.25,
+                  "t": 0.26666668,
                   "v": 0,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -850,7 +850,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.375,
+                  "t": 0.36666667,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -858,7 +858,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.7916667,
+                  "t": 0.8,
                   "v": 1,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -866,7 +866,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.9583333,
+                  "t": 0.96666664,
                   "v": 0,
                   "inTangent": 0,
                   "outTangent": 0,
@@ -890,7 +890,7 @@
                   "broken": false
                 },
                 {
-                  "t": 0.9583333,
+                  "t": 0.96666664,
                   "v": 30,
                   "inTangent": 0,
                   "outTangent": 0,

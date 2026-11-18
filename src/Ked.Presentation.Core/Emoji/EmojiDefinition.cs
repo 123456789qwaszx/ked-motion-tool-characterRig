@@ -20,6 +20,7 @@ namespace Ked.Presentation.Core
     //
     // **좌우**: 이모지는 뒤집히지 않은(오른쪽을 보는) 인물을 기준으로 만든다. 인물이 뒤집히면 로케이터가 뒤집혀
     // 이모지 전체가 거울에 비친다 — 이모지의 값과 키는 그대로다. 예외 둘(FixedSide · Upright)의 부호는 EmojiSide가 낸다.
+    // 대본은 그 위에서 반대쪽을 고를 수 있다(<<emoji 누구 이름 flip>>) — 쪽은 정의가 아니라 부르는 줄의 선택이다.
     // ─────────────────────────────────────────────────────────────────
 
     /// <summary>이모지 안의 리그 하나.</summary>
@@ -64,7 +65,8 @@ namespace Ked.Presentation.Core
     /// <summary>이모지 하나.</summary>
     public sealed class EmojiDefinition
     {
-        public const float DefaultFps = 24f;
+        /// <summary>파일에 fps가 없을 때 — 대본의 프레임(DurationToken.FramesPerSecond)과 같은 30. 2026-11-18 전에는 24였다.</summary>
+        public const float DefaultFps = 30f;
 
         /// <summary>대본이 부르는 이름.</summary>
         public string Name { get; }
@@ -124,29 +126,61 @@ namespace Ked.Presentation.Core
     }
 
     /// <summary>
-    /// 좌우의 부호 — 인물이 뒤집혀 로케이터가 뒤집혔을 때(Emoji_Locator의 가로 배율 −1) 누가 한 번 더 뒤집는가.
-    /// 런타임(EmojiPlaybackSystem)과 툴의 미리보기가 같은 것을 쓴다.
+    /// 좌우의 부호 — 인물이 뒤집혀 로케이터가 뒤집혔을 때(Emoji_Locator의 가로 배율 −1), 그리고 대본이 반대쪽을 골랐을 때(flip)
+    /// 누가 한 번 더 뒤집는가. 런타임(EmojiPlaybackSystem)과 툴의 미리보기가 같은 것을 쓴다.
     ///
     ///   보통의 이모지   — 로케이터를 따라 통째로 거울에 비친다. 아무도 더 뒤집지 않는다.
     ///   FixedSide 이모지 — Emoji_Offset이 한 번 더 뒤집어 만든 쪽 그대로 선다(로케이터의 자리만 인물을 따라간다).
     ///   Upright 리그    — 거울에 비친 이모지 안에서 EmojiRig_Place가 한 번 더 뒤집어 그림이 바로 선다.
+    ///   flip            — Emoji_Offset에서 거울을 한 번 더 비춘다. 머리의 자리(로케이터)는 그대로이고, 오프셋 · 리그의 기본 자리 ·
+    ///                     이모지 전체의 키가 반대쪽으로 간다. 위의 규칙과 겹친다(⊕) — 뒤집힌 인물에 flip이면 두 번 뒤집혀 제 쪽이다.
     ///
+    ///   거울에 비치는가    = (로케이터가 뒤집혔는가 그리고 FixedSide가 아닌가) ⊕ flip
+    ///   Emoji_Offset의 부호 = −1 ⇔ (로케이터가 뒤집혔는가 그리고 FixedSide인가) ⊕ flip
+    ///   EmojiRig_Place의 부호 = −1 ⇔ 거울에 비치는가 그리고 Upright 리그인가
+    ///
+    /// flip이 거짓이면 셋 다 flip을 몰랐던 때와 같다.
     /// 부호가 −1인 노드는 자리의 x · 가로 배율 · 회전에 그 부호를 곱한다(Emoji_Offset),
     /// 또는 가로 배율 · 회전에 곱한다(EmojiRig_Place — 자리는 부모를 따라 거울 쪽으로 간다).
     /// </summary>
     public static class EmojiSide
     {
-        /// <summary>이 이모지가 실제로 거울에 비치는가.</summary>
-        public static bool IsMirrored(EmojiDefinition emoji, bool locatorFlipped)
-            => locatorFlipped && !emoji.FixedSide;
+        /// <summary>이 이모지가 실제로 거울에 비치는가 — 만든 모습에 견주어.</summary>
+        public static bool IsMirrored(EmojiDefinition emoji, bool locatorFlipped, bool flip = false)
+            => (locatorFlipped && !emoji.FixedSide) != flip;
 
-        /// <summary>Emoji_Offset의 부호 — 뒤집힌 로케이터 밑의 FixedSide 이모지만 −1.</summary>
-        public static float OffsetSign(EmojiDefinition emoji, bool locatorFlipped)
-            => locatorFlipped && emoji.FixedSide ? -1f : 1f;
+        /// <summary>Emoji_Offset의 부호 — 뒤집힌 로케이터 밑의 FixedSide 이모지와 flip이 저마다 한 번씩 뒤집는다.</summary>
+        public static float OffsetSign(EmojiDefinition emoji, bool locatorFlipped, bool flip = false)
+            => (locatorFlipped && emoji.FixedSide) != flip ? -1f : 1f;
 
         /// <summary>EmojiRig_Place의 부호 — 거울에 비친 이모지의 Upright 리그만 −1.</summary>
-        public static float PlaceSign(EmojiDefinition emoji, EmojiRigEntry rig, bool locatorFlipped)
-            => IsMirrored(emoji, locatorFlipped) && rig.Upright ? -1f : 1f;
+        public static float PlaceSign(EmojiDefinition emoji, EmojiRigEntry rig, bool locatorFlipped, bool flip = false)
+            => IsMirrored(emoji, locatorFlipped, flip) && rig.Upright ? -1f : 1f;
+    }
+
+    /// <summary>
+    /// emoji 커맨드의 셋째 인자 — 쪽. 생략하면 정의의 쪽, <c>flip</c>이면 반대쪽(EmojiSide).
+    /// 파서(재생)와 리듀서(정지 프레임)가 같은 낱말을 같은 뜻으로 읽는다. 모르는 낱말은 false — 호출부가 소리 낸다.
+    /// </summary>
+    public static class EmojiSideToken
+    {
+        public const string Flip = "flip";
+
+        public static bool TryParse(string token, out bool flip)
+        {
+            switch ((token ?? "").Trim().ToLowerInvariant())
+            {
+                case "":
+                    flip = false;
+                    return true;
+                case Flip:
+                    flip = true;
+                    return true;
+                default:
+                    flip = false;
+                    return false;
+            }
+        }
     }
 
     /// <summary>

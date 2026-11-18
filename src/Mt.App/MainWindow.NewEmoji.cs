@@ -291,7 +291,7 @@ public partial class MainWindow
             }
         }
 
-        _newEmojiSummary.Text = $"만들기 → {pictures} · {life} · " + (moves.Count == 0 ? "움직임 없음(키 없이)" : string.Join(" · ", moves)) + " · 길이 1초(24프레임 — 뒤에 바꾼다)";
+        _newEmojiSummary.Text = $"만들기 → {pictures} · {life} · " + (moves.Count == 0 ? "움직임 없음(키 없이)" : string.Join(" · ", moves)) + " · 길이 1초(30프레임 — 뒤에 바꾼다)";
     }
 
     /// <summary>"만들기" — 칸의 것으로 이모지를 한 칸에 짓고 고른다. 못 지었으면(이름이 겹친다 등) 창은 그대로이고 null.</summary>

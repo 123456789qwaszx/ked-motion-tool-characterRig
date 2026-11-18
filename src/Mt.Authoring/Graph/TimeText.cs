@@ -10,7 +10,7 @@ public enum TimeDisplay
 }
 
 /// <summary>
-/// 초 ↔ 화면 글자. 프레임은 24fps(<see cref="TimeSnap.FramesPerSecond"/>). 읽을 때는 꼬리 글자로 단위를 고를 수 있다:
+/// 초 ↔ 화면 글자. 프레임은 30fps(<see cref="TimeSnap.FramesPerSecond"/>). 읽을 때는 꼬리 글자로 단위를 고를 수 있다:
 /// <c>12</c>(표시 단위) · <c>12f</c>(프레임) · <c>0.5s</c>(초).
 /// </summary>
 public static class TimeText

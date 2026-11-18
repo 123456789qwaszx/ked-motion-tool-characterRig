@@ -167,7 +167,7 @@ public class DocumentShellTests
         Run((window, directory) =>
         {
             string path = Path.Combine(directory, "typo.motion-authoring.json");
-            File.WriteAllText(path, """{ "schema": "motion-authoring/2", "motions": [ { "name": "m", "rig": "character", "duration": 1, "end": "restore", "ednn": "commit" } ] }""");
+            File.WriteAllText(path, """{ "schema": "motion-authoring/3", "motions": [ { "name": "m", "rig": "character", "duration": 1, "end": "restore", "ednn": "commit" } ] }""");
 
             window.OpenDocument(path);
             Assert.Equal(new[] { "motions[0].ednn" }, window.Session.UnknownKeys);

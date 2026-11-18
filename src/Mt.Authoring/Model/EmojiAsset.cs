@@ -43,7 +43,7 @@ public sealed class EmojiAsset
 
     /// <summary>
     /// 이모지의 타임라인 — 이 이모지가 소유한 모션 하나. 이름은 <see cref="TimelineNameOf"/>로 이모지 이름을 따라간다.
-    /// 채널의 대상은 <c>Emoji_Offset</c>(이모지 전체)과 리그마다의 그림 노드다(<see cref="Rig.EmojiRigFrame"/>). 시각은 초(24fps).
+    /// 채널의 대상은 <c>Emoji_Offset</c>(이모지 전체)과 리그마다의 그림 노드다(<see cref="Rig.EmojiRigFrame"/>). 시각은 초(프레임은 30fps).
     /// </summary>
     public MotionAsset Timeline { get; set; } = new();
 

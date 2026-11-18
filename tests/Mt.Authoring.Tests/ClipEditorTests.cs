@@ -52,7 +52,7 @@ public class ClipEditorTests
         string json = MotionDocumentJson.Write(editor.Document);
         MotionDocument read = MotionDocumentJson.Read(json);
         Assert.Equal(json, MotionDocumentJson.Write(read));
-        Assert.Contains("\"schema\": \"motion-authoring/2\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"schema\": \"motion-authoring/3\"", json, StringComparison.Ordinal);
 
         ClipAsset clip = Assert.Single(read.Clips);
         Assert.Equal("greet", clip.Name);
@@ -73,7 +73,7 @@ public class ClipEditorTests
     public void 목록이_빠진_클립도_읽힌다()
     {
         MotionDocument read = MotionDocumentJson.Read(
-            """{ "schema": "motion-authoring/2", "motions": [], "clips": [ { "name": "empty" }, { "name": "t", "tracks": [ { "role": "a" } ] } ] }""");
+            """{ "schema": "motion-authoring/3", "motions": [], "clips": [ { "name": "empty" }, { "name": "t", "tracks": [ { "role": "a" } ] } ] }""");
         Assert.Equal(2, read.Clips.Count);
         Assert.Empty(read.Clips[0].Roles);
         Assert.Empty(read.Clips[0].Tracks);

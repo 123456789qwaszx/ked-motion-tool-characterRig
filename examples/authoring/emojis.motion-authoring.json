@@ -1,5 +1,5 @@
 {
-  "schema": "motion-authoring/2",
+  "schema": "motion-authoring/3",
   "motions": [],
   "emojis": [
     {
@@ -16,25 +16,25 @@
           {
             "node": "Emoji_Offset",
             "kind": "scale",
-            "x": { "keys": [ { "t": 0, "v": 0, "tangent": "flat" }, { "t": 0.125, "v": 1.15, "tangent": "flat" }, { "t": 0.20833334, "v": 1, "tangent": "flat" } ] },
-            "y": { "keys": [ { "t": 0, "v": 0, "tangent": "flat" }, { "t": 0.125, "v": 1.15, "tangent": "flat" }, { "t": 0.20833334, "v": 1, "tangent": "flat" } ] }
+            "x": { "keys": [ { "t": 0, "v": 0, "tangent": "flat" }, { "t": 0.13333334, "v": 1.15, "tangent": "flat" }, { "t": 0.2, "v": 1, "tangent": "flat" } ] },
+            "y": { "keys": [ { "t": 0, "v": 0, "tangent": "flat" }, { "t": 0.13333334, "v": 1.15, "tangent": "flat" }, { "t": 0.2, "v": 1, "tangent": "flat" } ] }
           },
           {
             "node": "small/EmojiRig_Image",
             "kind": "euler",
-            "z": { "keys": [ { "t": 0.25, "v": 0, "tangent": "linear" }, { "t": 0.75, "v": 360, "tangent": "linear" } ] }
+            "z": { "keys": [ { "t": 0.26666668, "v": 0, "tangent": "linear" }, { "t": 0.76666665, "v": 360, "tangent": "linear" } ] }
           },
           {
             "node": "Emoji_Offset",
             "kind": "alpha",
-            "x": { "keys": [ { "t": 0.79166669, "v": 1, "tangent": "flat" }, { "t": 1.0, "v": 0, "tangent": "flat" } ] }
+            "x": { "keys": [ { "t": 0.8, "v": 1, "tangent": "flat" }, { "t": 1.0, "v": 0, "tangent": "flat" } ] }
           }
         ]
       },
       "spans": [
-        { "name": "in",   "start": 0,  "end": 5 },
-        { "name": "hold", "start": 6,  "end": 18 },
-        { "name": "out",  "start": 19, "end": 24 }
+        { "name": "in",   "start": 0,  "end": 6 },
+        { "name": "hold", "start": 8,  "end": 23 },
+        { "name": "out",  "start": 24, "end": 30 }
       ],
       "in": "in",
       "hold": "hold",

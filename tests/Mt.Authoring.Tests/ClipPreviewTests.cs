@@ -392,15 +392,15 @@ public class ClipPreviewTests
         Assert.NotNull(baked.Channels[0].Z);
         Assert.DoesNotContain(MotionValidator.ValidateMotion(baked, RigFile.NodeIds), p => p.Blocking);
 
-        // 키는 덜어 냈다 — 프레임(32개)보다 훨씬 적다.
+        // 키는 덜어 냈다 — 프레임(40개)보다 훨씬 적다.
         Assert.InRange(baked.Channels[0].Z!.Keys.Count, 3, 28);
 
         // 프레임마다: 구운 모션 하나를 s1에 얹은 포즈 = 클립의 포즈.
         ClipAsset clip = Greet(editor);
 
-        for (int k = 0; k <= 31; k++)
+        for (int k = 0; k <= 39; k++)
         {
-            double t = k / 24.0;
+            double t = k / 30.0;
             RectNodeTree expected = ClipPreview.Pose(template, editor.Document, clip, t);
             RectNodeTree actual = MotionPreview.Pose(template, baked, t, null, "s1/");
             Assert.InRange(SwayZ(actual, "s1"), SwayZ(expected, "s1") - 0.01f, SwayZ(expected, "s1") + 0.01f);
@@ -548,9 +548,9 @@ public class ClipPreviewTests
             chained.AddClipBlock("greet", 0, "lean", 0.5f * i, MotionChannelMode.Relative);
         }
 
-        for (int k = 0; k <= 40; k++)
+        for (int k = 0; k <= 50; k++)
         {
-            double t = k / 24.0;
+            double t = k / 30.0;
             Near(SwayZ(ClipPreview.Pose(Template(chained), chained.Document, Greet(chained), t), "s1"), SwayZ(Pose(editor, t), "s1"));
         }
 

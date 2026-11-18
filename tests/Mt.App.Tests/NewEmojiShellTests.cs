@@ -26,7 +26,7 @@ public class NewEmojiShellTests
             // PNG만 받는다 — 같은 파일은 한 번.
             window.FillNewEmojiFromForm("wow", new[] { Path.Combine(art, "star.png"), Path.Combine(art, "star.png"), Path.Combine(art, "notes.txt") }, true, EmojiMove.PopIn, EmojiMove.Pulse, null);
             Assert.Equal(new[] { "star.png" }, window.NewEmojiFormState.Images);
-            Assert.Equal("만들기 → 그림 1장 · 머무는 이모지 · 등장 튀어나오기 · 머묾 두근거리기 · 길이 1초(24프레임 — 뒤에 바꾼다)", window.NewEmojiFormState.Summary);
+            Assert.Equal("만들기 → 그림 1장 · 머무는 이모지 · 등장 튀어나오기 · 머묾 두근거리기 · 길이 1초(30프레임 — 뒤에 바꾼다)", window.NewEmojiFormState.Summary);
 
             long before = editor.Revision;
             Assert.Equal("wow", window.CreateNewEmojiFromForm());
@@ -37,7 +37,7 @@ public class NewEmojiShellTests
             Assert.Equal("wow", window.SelectedEmoji);
             EmojiAsset wow = editor.Document.FindEmoji("wow")!;
             Assert.Equal("art/star.png", Assert.Single(Assert.Single(wow.Rigs).Images)); // 문서 기준 경로
-            Assert.Equal(new[] { new LifeBand("in", 0, 7, EmojiLifeRole.In), new LifeBand("hold", 8, 24, EmojiLifeRole.Hold) }, window.LifeBands);
+            Assert.Equal(new[] { new LifeBand("in", 0, 9, EmojiLifeRole.In), new LifeBand("hold", 10, 30, EmojiLifeRole.Hold) }, window.LifeBands);
             Assert.Equal("머무는 이모지", window.EmojiRowNote("wow"));
             Assert.True(window.EmojiRowHasThumb("wow"));
             Assert.DoesNotContain(Mt.Authoring.Validation.EmojiValidator.Validate(editor.Document), p => p.ToString().Contains("wow"));

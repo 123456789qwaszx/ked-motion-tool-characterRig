@@ -10,7 +10,7 @@ namespace Mt.App.Tests;
 
 public class RangeSliderViewTests
 {
-    private const double Frame = 1.0 / 24.0;
+    private const double Frame = 1.0 / 30.0;
 
     private static (Window Window, RangeSliderView Slider, ViewportView Viewport) Show()
     {
@@ -43,7 +43,7 @@ public class RangeSliderViewTests
             window.MouseMove(target, RawInputModifiers.LeftMouseButton);
             window.MouseUp(target, MouseButton.Left);
 
-            Assert.Equal(7 * Frame, viewport.Clock.RangeEnd, 3);
+            Assert.Equal(9 * Frame, viewport.Clock.RangeEnd, 3); // 0.3초 = 9프레임
             Assert.True(changes > 0);
 
             viewport.Mode = PlaybackMode.Oscillate;
@@ -73,15 +73,15 @@ public class RangeSliderViewTests
             window.MouseMove(drop, RawInputModifiers.LeftMouseButton);
             window.MouseUp(drop, MouseButton.Left);
 
-            Assert.Equal(5 * Frame, viewport.Clock.RangeStart, 3);
-            Assert.Equal(5 * Frame + 0.2, viewport.Clock.RangeEnd, 3);
+            Assert.Equal(6 * Frame, viewport.Clock.RangeStart, 3); // 0.2초 = 6프레임
+            Assert.Equal(6 * Frame + 0.2, viewport.Clock.RangeEnd, 3);
 
             slider.ToggleFullRange();
             Assert.Equal(0, viewport.Clock.RangeStart, 6);
             Assert.Equal(viewport.Clock.Duration, viewport.Clock.RangeEnd, 6);
 
             slider.ToggleFullRange();
-            Assert.Equal(5 * Frame, viewport.Clock.RangeStart, 3);
+            Assert.Equal(6 * Frame, viewport.Clock.RangeStart, 3);
         }
         finally
         {

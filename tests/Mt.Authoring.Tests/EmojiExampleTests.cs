@@ -8,7 +8,8 @@ namespace Mt.Authoring.Tests;
 
 /// <summary>
 /// 예시(PLAN-emoji.md E7) — 런타임의 견본 셋을 툴 문서로 다시 지었다. 툴이 낸 <c>emojis.json</c>을 코어 로더로 읽으면
-/// 런타임의 파일(<c>Fixtures/runtime-emojis.json</c>, 런타임 <c>32858197</c>의 <c>Assets/Dialogue/emojis.json</c>)과 프레임마다 같은 값이 나온다 — 좌우의 두 칸까지.
+/// 런타임의 견본(<c>Fixtures/runtime-emojis.json</c> — 런타임 <c>Assets/Dialogue/emojis.json</c>)과 프레임마다 같은 값이 나온다 — 좌우의 두 칸까지.
+/// 2026-11-18 30fps로 옮기며 견본은 이 빌더가 낸 것(fps 30)이 되었다 — 런타임이 새 견본으로 받는다(전에는 런타임 <c>32858197</c>의 24fps 견본).
 /// <c>examples/emoji</c>의 파일은 빌더(<see cref="EmojiExamples"/>)가 낸 바이트와 같다 — <c>MT_WRITE_EXAMPLES=1</c>이면 다시 쓴다.
 /// </summary>
 public sealed class EmojiExampleTests

@@ -207,7 +207,7 @@ public class ClipShellTests
 
     // ── K4 — 타임라인 ─────────────────────────────────────────────────
 
-    private const float Frame = 1f / 24f;
+    private const float Frame = 1f / 30f;
 
     /// <summary>clip: 배역 a(s1)·b(s2), 트랙 하나씩. 타임라인 탭이 보이는 채로 돌려준다.</summary>
     private static ClipTimelineView PrepareTimeline(MainWindow window)
@@ -253,7 +253,7 @@ public class ClipShellTests
                 timeline.PlaceMotion(0, "bow", 0.01);
                 timeline.PlaceMotion(1, "nod", 0.51);
                 Assert.Equal(new[] { ("bow", 0f) }, Blocks(window, 0));
-                Assert.Equal(new[] { ("nod", 12 * Frame) }, Blocks(window, 1));
+                Assert.Equal(new[] { ("nod", 15f / 30f) }, Blocks(window, 1));
                 Assert.Equal((1, 0), timeline.SelectedBlock);
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
 
@@ -272,7 +272,7 @@ public class ClipShellTests
                 // MMB 드래그 = 이동. 끄는 동안은 문서가 그대로, 놓으면 명령 하나.
                 long revision = editor.Revision;
                 Point grab = Center(window, timeline, 0, 0);
-                double dx = timeline.XAtTime(0.25) - timeline.XAtTime(0);
+                double dx = timeline.XAtTime(0.2) - timeline.XAtTime(0);
                 var mid = new Point(grab.X + dx / 2, grab.Y);
                 var drop = new Point(grab.X + dx, grab.Y + ClipTimelineView.RowHeight); // 아래 트랙(b)으로
                 window.MouseDown(grab, MouseButton.Middle);
@@ -283,12 +283,12 @@ public class ClipShellTests
 
                 Assert.Equal(revision + 1, editor.Revision);
                 Assert.Empty(Blocks(window, 0));
-                Assert.Equal(new[] { ("bow", 6 * Frame), ("nod", 12 * Frame) }, Blocks(window, 1));
+                Assert.Equal(new[] { ("bow", 6f / 30f), ("nod", 15f / 30f) }, Blocks(window, 1));
                 Assert.Equal((1, 0), timeline.SelectedBlock); // 선택이 옮긴 블록을 따라간다
 
                 editor.Undo();
                 Assert.Equal(new[] { ("bow", 0f) }, Blocks(window, 0));
-                Assert.Equal(new[] { ("nod", 12 * Frame) }, Blocks(window, 1));
+                Assert.Equal(new[] { ("nod", 15f / 30f) }, Blocks(window, 1));
 
                 // LMB로 끌어도 옮겨진다(도프 시트와 같다) — 이것도 한 칸.
                 grab = Center(window, timeline, 1, 0);
@@ -296,9 +296,9 @@ public class ClipShellTests
                 window.MouseDown(grab, MouseButton.Left);
                 window.MouseMove(drop, RawInputModifiers.LeftMouseButton);
                 window.MouseUp(drop, MouseButton.Left);
-                Assert.Equal(new[] { ("nod", 18 * Frame) }, Blocks(window, 1));
+                Assert.Equal(new[] { ("nod", 21f / 30f) }, Blocks(window, 1));
                 editor.Undo();
-                Assert.Equal(new[] { ("nod", 12 * Frame) }, Blocks(window, 1));
+                Assert.Equal(new[] { ("nod", 15f / 30f) }, Blocks(window, 1));
 
                 // 제자리에서 놓으면 아무 일도 없다.
                 revision = editor.Revision;
@@ -333,7 +333,7 @@ public class ClipShellTests
                 Point ruler = At(window, timeline, timeline.XAtTime(0.8), 5);
                 window.MouseDown(ruler, MouseButton.Left);
                 window.MouseUp(ruler, MouseButton.Left);
-                Assert.Equal(19 * Frame, window.Viewport.Time, 4);
+                Assert.Equal(24 * Frame, window.Viewport.Time, 4);
                 Assert.Equal((1, 0), timeline.SelectedBlock);
                 Assert.Equal(8f, SwayZOf(window, "s1"), 3);
 
@@ -342,7 +342,7 @@ public class ClipShellTests
                 window.MouseDown(empty, MouseButton.Left);
                 window.MouseUp(empty, MouseButton.Left);
                 Assert.Null(timeline.SelectedBlock);
-                Assert.Equal(5 * Frame, window.Viewport.Time, 4);
+                Assert.Equal(6 * Frame, window.Viewport.Time, 4);
 
                 // Ctrl+D = 끝에 이어서 한 번 더(같은 mode), 새 블록이 골라진다.
                 timeline.Select((0, 0));

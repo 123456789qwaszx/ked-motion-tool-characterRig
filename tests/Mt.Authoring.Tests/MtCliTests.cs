@@ -202,7 +202,7 @@ public class MtCliTests
         Directory.CreateDirectory(directory);
         string path = Path.Combine(directory, "hand.motion-authoring.json");
         File.WriteAllText(path, """
-            { "schema": "motion-authoring/2", "motions": [ { "name": "slide", "rig": "character", "duration": 1, "end": "commit",
+            { "schema": "motion-authoring/3", "motions": [ { "name": "slide", "rig": "character", "duration": 1, "end": "commit",
               "channels": [ { "node": "CharSlot_Track_X", "kind": "position",
                 "x": { "keys": [ { "t": 0, "v": 0, "tangent": "linear" }, { "t": 1, "v": 100, "tangent": "linear" } ] } } ] } ] }
             """);

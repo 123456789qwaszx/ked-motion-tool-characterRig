@@ -105,7 +105,7 @@ public class AuthoringExampleTests
     {
         // 직선으로 가는 두 키 — 기울기를 적지 않았다.
         const string json = """
-            { "schema": "motion-authoring/2",
+            { "schema": "motion-authoring/3",
               "motions": [ { "name": "a", "rig": "character", "duration": 1, "end": "commit",
                 "channels": [ { "node": "CharacterPortrait_Track_Move", "kind": "position",
                   "x": { "keys": [ { "t": 0, "v": 0, "tangent": "linear" }, { "t": 1, "v": 10, "tangent": "linear" } ] } } ] } ] }

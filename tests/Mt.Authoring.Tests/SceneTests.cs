@@ -234,7 +234,7 @@ public class SceneTests
     {
         // 화면은 씬 하나만 쓴다 — 여럿을 만드는 명령은 없지만, 그런 문서는 그대로 읽고 그대로 쓴다.
         MotionDocument read = MotionDocumentJson.Read(
-            """{ "schema": "motion-authoring/2", "motions": [], "scenes": [ { "name": "main" }, { "name": "scene_b" } ], "activeScene": "scene_b" }""");
+            """{ "schema": "motion-authoring/3", "motions": [], "scenes": [ { "name": "main" }, { "name": "scene_b" } ], "activeScene": "scene_b" }""");
         Assert.Equal("scene_b", read.ActiveSceneAsset!.Name);
 
         MotionDocument again = MotionDocumentJson.Read(MotionDocumentJson.Write(read));

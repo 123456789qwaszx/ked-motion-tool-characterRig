@@ -73,7 +73,7 @@ public sealed class ClipTimelineView : Control
 
     public bool SnapEnabled { get; set; } = true;
 
-    public double SnapStep { get; set; } = 1.0 / 24.0;
+    public double SnapStep { get; set; } = 1.0 / 30.0;
 
     public TimeDisplay TimeDisplay { get; set; } = TimeDisplay.Frames;
 

@@ -15,12 +15,12 @@ public class TimeSliderViewTests
 {
     private const string Node = "CharacterPortrait_Track_Move_Y";
     private static readonly CurveRef Y = new(Node, ChannelKind.Position, Axis.Y);
-    private const double Frame = 1.0 / 24.0;
+    private const double Frame = 1.0 / 30.0;
 
     private static (Window Window, TimeSliderView Slider, ViewportView Viewport, MotionEditor Editor) Show()
     {
         MotionEditor editor = TestDocuments.Nod();
-        var viewport = new ViewportView { Height = 200, SnapStep = 1.0 / 60 }; // 기대값은 1/60 스냅 기준(기본값은 1/24)
+        var viewport = new ViewportView { Height = 200, SnapStep = 1.0 / 60 }; // 기대값은 1/60 스냅 기준(기본값은 1/30)
         var slider = new TimeSliderView { SnapStep = 1.0 / 60 };
         var panel = new StackPanel { Children = { viewport, slider } };
         var window = new Window { Width = 900, Height = 400, Content = panel };
@@ -87,7 +87,7 @@ public class TimeSliderViewTests
             window.MouseUp(drop, MouseButton.Middle);
 
             Assert.Equal(before + 1, editor.Revision);
-            Assert.Equal(0.3f + 2f / 24f, Keys(editor)[1].T, 3);
+            Assert.Equal(0.3f + 2f / 30f, Keys(editor)[1].T, 3);
             Assert.Equal(7 * Frame, slider.SelectedRange!.Value.Start, 6);
         }
         finally
@@ -177,15 +177,14 @@ public class TimeSliderViewTests
             Assert.Equal(4, Keys(editor).Count);
             Assert.Equal(-18f, Keys(editor)[2].V);
 
-            slider.SelectedRange = (0.45, 0.45);
+            slider.SelectedRange = (0.4, 0.5); // 붙인 키 0.45초 = 13.5프레임 → 13프레임(1/60 스냅이라 반 프레임이다)
+            Assert.True(slider.SnapScopeKeysToFrames());
+            Assert.Equal(13f / 30f, Keys(editor)[2].T, 4);
+            Assert.False(slider.SnapScopeKeysToFrames());
+
             Assert.True(slider.DeleteScopeKeys());
             Assert.Equal(3, Keys(editor).Count);
             Assert.False(slider.DeleteScopeKeys());
-
-            slider.SelectedRange = (0.25, 0.35); // 0.3초 = 7.2프레임 → 7프레임
-            Assert.True(slider.SnapScopeKeysToFrames());
-            Assert.Equal(7f / 24f, Keys(editor)[1].T, 4);
-            Assert.False(slider.SnapScopeKeysToFrames());
 
             slider.SelectedRange = (0.1, 0.5);
             Assert.True(slider.SetPlaybackRangeToSelection());
@@ -193,7 +192,7 @@ public class TimeSliderViewTests
             Assert.Equal(0.5, viewport.Clock.RangeEnd, 6);
 
             slider.SelectedRange = null;
-            viewport.ScrubTo(7f / 24f);
+            viewport.ScrubTo(0.3);
             Assert.True(slider.CutScopeKeys()); // 범위가 없으면 현재 프레임
             Assert.Equal(2, Keys(editor).Count);
         }

@@ -47,9 +47,9 @@ public partial class MainWindow : Window
     private readonly string _settingsPath;
     private readonly DispatcherTimer _autoSaveTimer = new();
     private readonly Button _recentButton = new() { Content = "최근…", FontSize = 11, Padding = new Avalonia.Thickness(8, 3) };
-    private readonly ComboBox _snapStepCombo = new() { ItemsSource = new[] { "1/24초 (1프레임)", "1/60초", "1/120초" }, SelectedIndex = 0, FontSize = 11 };
+    private readonly ComboBox _snapStepCombo = new() { ItemsSource = new[] { "1/30초 (1프레임)", "1/60초", "1/120초" }, SelectedIndex = 0, FontSize = 11 };
     private readonly ComboBox _autoSaveCombo = new() { ItemsSource = new[] { "끔", "1분", "5분", "10분" }, SelectedIndex = 2, FontSize = 11 };
-    private static readonly double[] SnapSteps = { 1.0 / 24.0, 1.0 / 60.0, 1.0 / 120.0 }; // 차례 = _snapStepCombo 항목
+    private static readonly double[] SnapSteps = { 1.0 / 30.0, 1.0 / 60.0, 1.0 / 120.0 }; // 차례 = _snapStepCombo 항목
     private static readonly int[] AutoSaveMinutes = { 0, 1, 5, 10 };
 
     // 트랜스포트
@@ -171,7 +171,7 @@ public partial class MainWindow : Window
     private readonly TextBox _outlinerSearch = new() { PlaceholderText = "검색…", FontSize = 11, Margin = new Avalonia.Thickness(2) };
     private static readonly IBrush OutlinerBackground = new SolidColorBrush(Color.FromRgb(0x2B, 0x2B, 0x2B));
     private static readonly IBrush OutlinerRowSelected = new SolidColorBrush(Color.FromArgb(170, 0x4B, 0x6E, 0xAF));
-    private readonly ComboBox _timeDisplayCombo = new() { ItemsSource = new[] { "프레임 (24fps)", "초" }, SelectedIndex = 0, FontSize = 11 };
+    private readonly ComboBox _timeDisplayCombo = new() { ItemsSource = new[] { "프레임 (30fps)", "초" }, SelectedIndex = 0, FontSize = 11 };
 
     /// <summary>시간 글자 단위(설정) — 마야처럼 프레임이 기본.</summary>
     private TimeDisplay Display => _settings.TimeDisplay;
@@ -517,7 +517,7 @@ public partial class MainWindow : Window
                 _playMode,
                 _playSpeed,
                 _playStep,
-                new TextBlock { Text = "24 fps", FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Opacity = 0.7 },
+                new TextBlock { Text = "30 fps", FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Opacity = 0.7 },
                 _autoKeyToggle,
             },
         };

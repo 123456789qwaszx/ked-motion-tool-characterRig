@@ -3,7 +3,7 @@ using NUnit.Framework;
 namespace Ked.Presentation.Core.Tests
 {
     /// <summary>
-    /// Nfr = N/24초, Ns = N초, 단위 없는 N = N초(하위호환). 결과는 0으로 클램프.
+    /// Nfr = N/30초(30fps — 2026-11-18 24fps에서 바꿈), Ns = N초, 단위 없는 N = N초(하위호환). 결과는 0으로 클램프.
     /// </summary>
     public sealed class DurationTokenTests
     {
@@ -11,13 +11,13 @@ namespace Ked.Presentation.Core.Tests
 
         // ── 초 ────────────────────────────────────────────────────────
 
-        [TestCase("12fr", 0.5f)]
-        [TestCase("24fr", 1f)]
+        [TestCase("15fr", 0.5f)]
+        [TestCase("30fr", 1f)]
         [TestCase("0fr", 0f)]
         [TestCase("1.2s", 1.2f)]
         [TestCase("0.4", 0.4f)]        // 단위 없는 숫자는 초
         [TestCase("2", 2f)]
-        [TestCase("12FR", 0.5f)]       // 대소문자
+        [TestCase("15FR", 0.5f)]       // 대소문자
         [TestCase("1S", 1f)]
         [TestCase("  1s  ", 1f)]       // 앞뒤 공백
         public void TryParseSeconds_읽는다(string token, float expected)
@@ -95,14 +95,14 @@ namespace Ked.Presentation.Core.Tests
 
         // ── 환산 ──────────────────────────────────────────────────────
 
-        [TestCase(24f, 1f)]
-        [TestCase(12f, 0.5f)]
+        [TestCase(30f, 1f)]
+        [TestCase(15f, 0.5f)]
         [TestCase(0f, 0f)]
-        [TestCase(-12f, 0f)]           // 음수는 0
-        public void FramesToSeconds_는_24fps_기준이다(float frames, float expected)
+        [TestCase(-15f, 0f)]           // 음수는 0
+        public void FramesToSeconds_는_30fps_기준이다(float frames, float expected)
         {
             Assert.That(DurationToken.FramesToSeconds(frames), Is.EqualTo(expected).Within(Eps));
-            Assert.That(DurationToken.FramesPerSecond, Is.EqualTo(24f));
+            Assert.That(DurationToken.FramesPerSecond, Is.EqualTo(30f));
         }
     }
 }

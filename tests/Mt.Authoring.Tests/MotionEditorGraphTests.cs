@@ -96,7 +96,7 @@ public class MotionEditorGraphTests
 public class TimeSliderOpsTests
 {
     private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
-    private const float Frame = 1f / 24f;
+    private const float Frame = 1f / 30f;
 
     [Fact]
     public void 현재_시각의_키를_모든_커브에서_모은다()

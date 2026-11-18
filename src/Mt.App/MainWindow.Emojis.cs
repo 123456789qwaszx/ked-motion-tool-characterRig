@@ -370,7 +370,7 @@ public partial class MainWindow
         _emojiOwnFields.Children.Add(Labeled("길이(프레임)", _emojiFrames));
         ToolTip.SetTip(_emojiName, "대본이 부르는 이름(<<emoji 누구 이름>>) — 영문 소문자 · 숫자 · _. 한 번 내보낸 이름은 바꾸지 않는다(대본이 가리킨다)");
         ToolTip.SetTip(_emojiOffsetX, "머리 기준점에서 이모지가 뜨는 자리(px) — 런타임의 말로는 이모지별 오프셋(Emoji_Offset, 로케이터 기준). 이모지 전체를 움직이는 키는 이 값에 더해진다");
-        ToolTip.SetTip(_emojiFrames, "타임라인의 마지막 프레임(24fps) — 프레임 0 … 이것까지. 키는 옮기지 않는다");
+        ToolTip.SetTip(_emojiFrames, "타임라인의 마지막 프레임(30fps) — 프레임 0 … 이것까지. 키는 옮기지 않는다");
         _emojiOwnFields.Children.Add(_emojiFixedSide);
         ToolTip.SetTip(_emojiFixedSide, "이모지는 오른쪽을 보는 인물을 기준으로 만들고, 인물이 뒤집히면 런타임이 통째로 거울에 비춘다. 켜면 인물의 방향을 따르지 않고 만든 쪽 그대로 선다(로케이터의 자리만 인물을 따라간다) — 머리 위 한가운데에 뜨는 것, 화면 기준으로 흐르는 것. emojis.json의 fixedSide");
         _emojiFixedSide.IsCheckedChanged += (_, _) =>

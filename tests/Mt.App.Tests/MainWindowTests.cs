@@ -20,7 +20,7 @@ public class MainWindowTests
     {
         string path = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", $"settings-{Guid.NewGuid():N}.json");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, "{ \"snapStep\": 0.016666666666666666 }"); // 이 테스트들의 기대값은 1/60 스냅 기준 — 기본값은 1/24(GraphMathTests)
+        File.WriteAllText(path, "{ \"snapStep\": 0.016666666666666666 }"); // 이 테스트들의 기대값은 1/60 스냅 기준 — 기본값은 1/30(GraphMathTests)
         return new(path);
     }
 
@@ -632,9 +632,9 @@ public class MainWindowTests
                 Assert.Equal(-580.56, nod.FindChannel("CharSlot_DepthY", ChannelKind.Position)!.Y!.Keys.Single().V, 1);
                 Assert.Equal(tableOrder, window.OutlinerOrder);
 
-                // 시간 표시는 프레임이 기본: 0.5초 = 12프레임.
+                // 시간 표시는 프레임이 기본: 0.5초 = 15프레임.
                 window.Viewport.ScrubTo(0.5);
-                Assert.Equal("12", window.CurrentTimeText);
+                Assert.Equal("15", window.CurrentTimeText);
             }
             finally
             {
@@ -668,9 +668,9 @@ public class MainWindowTests
                 window.KeyPressQwerty(PhysicalKey.Digit1, RawInputModifiers.None);
                 Assert.Equal(0.3, window.Viewport.Time, 4);
 
-                // Alt+2 / Alt+1 한 프레임(24fps)
+                // Alt+2 / Alt+1 한 프레임(30fps)
                 window.StepFrame(+1);
-                Assert.Equal(0.3 + 1.0 / 24.0, window.Viewport.Time, 4);
+                Assert.Equal(0.3 + 1.0 / 30.0, window.Viewport.Time, 4);
                 window.StepFrame(-1);
                 Assert.Equal(0.3, window.Viewport.Time, 4);
 
@@ -688,7 +688,7 @@ public class MainWindowTests
                 // Shift+2 인비트윈 넣기 / Shift+1 빼기 — 0.3 뒤의 키만 움직인다
                 window.Viewport.ScrubTo(0.3);
                 window.AddInbetween();
-                Assert.Equal(0.6f + 1f / 24f, y.Resolve(Nod())!.Keys[2].T, 4);
+                Assert.Equal(0.6f + 1f / 30f, y.Resolve(Nod())!.Keys[2].T, 4);
                 window.RemoveInbetween();
                 Assert.Equal(0.6f, y.Resolve(Nod())!.Keys[2].T, 4);
                 Assert.Equal(0.3f, y.Resolve(Nod())!.Keys[1].T, 4);

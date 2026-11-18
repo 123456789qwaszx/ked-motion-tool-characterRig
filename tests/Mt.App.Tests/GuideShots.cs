@@ -40,7 +40,7 @@ public class GuideShots
                 window.SelectMotion("nod");
                 window.SelectControllerInHierarchy("s1", "body");
                 window.PickToolFromStrip(Mt.Authoring.Preview.ManipulatorMode.Move);
-                window.Viewport.ScrubTo(6 / 24.0);
+                window.Viewport.ScrubTo(8 / 30.0);
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Assert.Equal("nod", window.Viewport.MotionName);
                 Shot(window, "guide-motion");
@@ -52,7 +52,7 @@ public class GuideShots
                 window.ShowTabsFromForm(editor: 0, inspector: 0);
 
                 // 트윈머신 — 두 키 사이에서 30%.
-                window.Viewport.ScrubTo(3 / 24.0);
+                window.Viewport.ScrubTo(4 / 30.0);
                 window.OpenTweenFromForm();
                 window.DragTweenFromForm(30);
                 Shot(window.TweenWindow!, "guide-tween-window");

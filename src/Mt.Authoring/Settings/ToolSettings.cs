@@ -46,7 +46,7 @@ public sealed class ToolSettings
 
     public bool AutoKey { get; set; }
 
-    /// <summary>1프레임 단위 재생(마야 Real-time 24fps 표시). 꺼지면 연속.</summary>
+    /// <summary>1프레임 단위 재생(마야 Real-time처럼 30fps 표시). 꺼지면 연속.</summary>
     public bool PlayWholeFrames { get; set; }
 
     /// <summary>하이어아키에 컨트롤러(자리·깊이·연기) 대신 덤프의 리그 노드 26단을 보인다. 리거용 — 기본은 끔.</summary>

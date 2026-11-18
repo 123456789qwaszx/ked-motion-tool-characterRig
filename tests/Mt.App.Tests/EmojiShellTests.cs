@@ -54,7 +54,7 @@ public class EmojiShellTests
             Assert.Equal("emoji:emoji", window.Graph.MotionName);
             Assert.Equal(1.0, window.Viewport.Clock.Duration, 6);
             Assert.True(window.EmojiFormState.Enabled);
-            Assert.Equal("24", window.EmojiFormState.Frames);
+            Assert.Equal("30", window.EmojiFormState.Frames);
 
             // 이모지 추가는 한 칸이다(이모지 + 리그 body).
             editor.Undo();
@@ -116,13 +116,13 @@ public class EmojiShellTests
             window.SelectEmojiRigFromForm("body");
             window.CommitEmojiField("rigImages", "a.png\nb.png\nc.png");
 
-            window.Viewport.ScrubTo(0.25);
+            window.Viewport.ScrubTo(0.2);
             window.KeyEmojiNowFromForm("body", ChannelKind.Scale);
             window.KeyEmojiNowFromForm(null, ChannelKind.Alpha);
 
             MotionAsset timeline = editor.Document.Find("emoji:emoji")!;
             ChannelAsset scale = timeline.FindChannel("body/EmojiRig_Image", ChannelKind.Scale)!;
-            Assert.Equal(0.25f, scale.X!.Keys.Single().T, 4);
+            Assert.Equal(0.2f, scale.X!.Keys.Single().T, 4);
             Assert.Equal(1f, scale.X.Keys.Single().V); // 지금 값 = 중립
             Assert.NotNull(timeline.FindChannel("Emoji_Offset", ChannelKind.Alpha));
 
@@ -177,7 +177,7 @@ public class EmojiShellTests
             // 수명 재생 — 시계는 등장 6fr + 머묾 15fr × 2바퀴, 띠는 단계.
             window.SetEmojiLifeFromForm(true);
             Assert.True(window.Viewport.EmojiLife);
-            Assert.Equal((6 + 15 * 2) / 24.0, window.Viewport.Clock.Duration, 6);
+            Assert.Equal((6 + 15 * 2) / 30.0, window.Viewport.Clock.Duration, 6);
             Assert.Equal(new[] { "등장", "머묾 × 2" }, window.TimeSliderMarks.Select(m => m.Label));
 
             // 머묾 안의 한 순간 — 그래프는 그 프레임이 잘려 나온 타임라인의 자리를 따라간다.

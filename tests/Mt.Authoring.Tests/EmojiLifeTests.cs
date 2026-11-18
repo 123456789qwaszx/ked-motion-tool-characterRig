@@ -10,7 +10,7 @@ public class EmojiLifeTests
     private static MotionEditor Blank(float seconds = 1f)
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddEmoji("pop", seconds); // 0~24fr
+        editor.AddEmoji("pop", seconds); // 0~30fr
         editor.AddEmojiRig("pop", "body", new[] { "a.png" });
         return editor;
     }
@@ -20,27 +20,27 @@ public class EmojiLifeTests
     {
         EmojiAsset pop = Blank().Document.FindEmoji("pop")!;
 
-        Assert.Equal(24, pop.LastFrame);
-        Assert.Equal((0, 7), EmojiLife.Suggest(pop, EmojiLifeRole.In));
-        Assert.Equal((8, 16), EmojiLife.Suggest(pop, EmojiLifeRole.Hold));
-        Assert.Equal((17, 24), EmojiLife.Suggest(pop, EmojiLifeRole.Out));
+        Assert.Equal(30, pop.LastFrame);
+        Assert.Equal((0, 9), EmojiLife.Suggest(pop, EmojiLifeRole.In));
+        Assert.Equal((10, 20), EmojiLife.Suggest(pop, EmojiLifeRole.Hold));
+        Assert.Equal((21, 30), EmojiLife.Suggest(pop, EmojiLifeRole.Out));
     }
 
     [Fact]
     public void 이웃이_있으면_그_사이의_빈_곳을_채운다()
     {
         MotionEditor editor = Blank();
-        editor.AddEmojiSpan("pop", "loop", 6, 15);
+        editor.AddEmojiSpan("pop", "loop", 8, 19);
         editor.SetEmojiLinks("pop", null, "loop", null);
         EmojiAsset pop = editor.Document.FindEmoji("pop")!;
 
-        Assert.Equal((0, 5), EmojiLife.Suggest(pop, EmojiLifeRole.In));
-        Assert.Equal((16, 24), EmojiLife.Suggest(pop, EmojiLifeRole.Out));
+        Assert.Equal((0, 7), EmojiLife.Suggest(pop, EmojiLifeRole.In));
+        Assert.Equal((20, 30), EmojiLife.Suggest(pop, EmojiLifeRole.Out));
 
         // 빈 곳이 없으면 타임라인 안의 한 프레임 — 막지 않는다(끌어서 고친다).
-        editor.SetEmojiSpan("pop", "loop", 0, 24);
+        editor.SetEmojiSpan("pop", "loop", 0, 30);
         Assert.Equal((0, 0), EmojiLife.Suggest(pop, EmojiLifeRole.In));
-        Assert.Equal((24, 24), EmojiLife.Suggest(pop, EmojiLifeRole.Out));
+        Assert.Equal((30, 30), EmojiLife.Suggest(pop, EmojiLifeRole.Out));
     }
 
     [Fact]
@@ -60,8 +60,8 @@ public class EmojiLifeTests
 
         editor.AddEmojiLifeSpan("pop", EmojiLifeRole.In);
         editor.AddEmojiLifeSpan("pop", EmojiLifeRole.Out);
-        Assert.Equal((0, 7), (pop.FindSpan(pop.In)!.Start, pop.FindSpan(pop.In)!.End));
-        Assert.Equal((17, 24), (pop.FindSpan(pop.Out)!.Start, pop.FindSpan(pop.Out)!.End));
+        Assert.Equal((0, 9), (pop.FindSpan(pop.In)!.Start, pop.FindSpan(pop.In)!.End));
+        Assert.Equal((21, 30), (pop.FindSpan(pop.Out)!.Start, pop.FindSpan(pop.Out)!.End));
         Assert.Empty(Mt.Authoring.Validation.EmojiValidator.Validate(editor.Document));
 
         editor.Undo();
@@ -88,7 +88,7 @@ public class EmojiLifeTests
     {
         MotionEditor editor = Blank();
         EmojiAsset pop = editor.Document.FindEmoji("pop")!;
-        Assert.StartsWith("한 번 재생하고 사라진다 — 0~24fr", EmojiLife.Describe(pop));
+        Assert.StartsWith("한 번 재생하고 사라진다 — 0~30fr", EmojiLife.Describe(pop));
 
         editor.AddEmojiLifeSpan("pop", EmojiLifeRole.Hold);
         Assert.Equal("머무는 이모지 — 등장 없이 바로 머묾 되풀이 → 내리면 바로 사라진다", EmojiLife.Describe(pop));

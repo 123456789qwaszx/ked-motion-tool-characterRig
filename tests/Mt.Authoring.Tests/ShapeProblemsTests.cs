@@ -11,7 +11,7 @@ namespace Mt.Authoring.Tests;
 /// </summary>
 public class ShapeProblemsTests
 {
-    private static MotionDocument Read(string motions) => MotionDocumentJson.Read("{ \"schema\": \"motion-authoring/2\", \"motions\": [" + motions + "] }");
+    private static MotionDocument Read(string motions) => MotionDocumentJson.Read("{ \"schema\": \"motion-authoring/3\", \"motions\": [" + motions + "] }");
 
     private const string Broken = """
         { "name": "Bad Name", "rig": "character", "duration": 1, "end": "restore", "channels": [
@@ -62,7 +62,7 @@ public class ShapeProblemsTests
     public void 모르는_키는_자리와_함께_알린다()
     {
         const string json = """
-            { "schema": "motion-authoring/2", // 주석은 읽어 준다
+            { "schema": "motion-authoring/3", // 주석은 읽어 준다
               "motions": [ { "name": "m", "rig": "character", "duration": 0.5, "end": "restore", "ednn": "commit",
                 "channels": [ { "node": "N", "kind": "position",
                   "y": { "keyz": [], "keys": [ { "t": 0, "v": 0, "tangent": "flat", "tangnt": "x" }, { "T": 0.5, "v": 0 } ] } } ] } ],
@@ -84,20 +84,20 @@ public class ShapeProblemsTests
     public void 머묾이_되풀이할_때_튀면_알린다_막지는_않는다()
     {
         const string emoji = """
-            { "schema": "motion-authoring/2", "motions": [], "emojis": [ { "name": "e",
+            { "schema": "motion-authoring/3", "motions": [], "emojis": [ { "name": "e",
               "rigs": [ { "name": "a", "images": [ "x.png", "y.png" ] } ],
               "timeline": { "duration": 1, "channels": [
                 { "node": "Emoji_Offset", "kind": "scale",
-                  "x": { "keys": [ { "t": 0.25, "v": 1, "tangent": "flat" }, { "t": 0.75, "v": SCALE_END, "tangent": "flat" } ] } },
+                  "x": { "keys": [ { "t": 0.2, "v": 1, "tangent": "flat" }, { "t": 0.8, "v": SCALE_END, "tangent": "flat" } ] } },
                 { "node": "a/EmojiRig_Image", "kind": "image",
-                  "x": { "keys": [ { "t": 0.25, "v": 0, "tangent": "step" }, { "t": 0.5, "v": 1, "tangent": "step" } ] } } ] },
-              "spans": [ { "name": "hold", "start": 6, "end": 18 } ], "hold": "hold" } ] }
+                  "x": { "keys": [ { "t": 0.2, "v": 0, "tangent": "step" }, { "t": 0.5, "v": 1, "tangent": "step" } ] } } ] },
+              "spans": [ { "name": "hold", "start": 6, "end": 24 } ], "hold": "hold" } ] }
             """;
 
         IReadOnlyList<EmojiProblem> popping = EmojiValidator.Validate(MotionDocumentJson.Read(emoji.Replace("SCALE_END", "2", StringComparison.Ordinal)));
         EmojiProblem seam = Assert.Single(popping); // 그림 바꾸기는 보지 않는다
         Assert.False(seam.Blocking);
-        Assert.Contains("이모지 전체의 크기 X이 끝(18프레임) 2에서 처음(6프레임) 1으로", seam.Message, StringComparison.Ordinal);
+        Assert.Contains("이모지 전체의 크기 X이 끝(24프레임) 2에서 처음(6프레임) 1으로", seam.Message, StringComparison.Ordinal);
 
         Assert.Empty(EmojiValidator.Validate(MotionDocumentJson.Read(emoji.Replace("SCALE_END", "1", StringComparison.Ordinal))));
     }
@@ -106,21 +106,21 @@ public class ShapeProblemsTests
     public void 이모지의_키가_프레임에_안_맞으면_알린다_막지는_않는다()
     {
         const string emoji = """
-            { "schema": "motion-authoring/2", "motions": [], "emojis": [ { "name": "e",
+            { "schema": "motion-authoring/3", "motions": [], "emojis": [ { "name": "e",
               "rigs": [ { "name": "a", "images": [ "x.png" ] } ],
               "timeline": { "duration": 1, "channels": [
                 { "node": "Emoji_Offset", "kind": "scale",
                   "x": { "keys": [ { "t": 0, "v": 1, "tangent": "flat" }, { "t": SECOND, "v": 1, "tangent": "flat" }, { "t": 1, "v": 1, "tangent": "flat" } ] } } ] },
-              "spans": [ { "name": "hold", "start": 0, "end": 24 } ], "hold": "hold" } ] }
+              "spans": [ { "name": "hold", "start": 0, "end": 30 } ], "hold": "hold" } ] }
             """;
 
-        EmojiProblem off = Assert.Single(EmojiValidator.Validate(MotionDocumentJson.Read(emoji.Replace("SECOND", "0.26", StringComparison.Ordinal))));
+        EmojiProblem off = Assert.Single(EmojiValidator.Validate(MotionDocumentJson.Read(emoji.Replace("SECOND", "0.21", StringComparison.Ordinal))));
         Assert.False(off.Blocking);
         Assert.Contains("프레임에 안 맞는 키가 1개다", off.Message, StringComparison.Ordinal);
-        Assert.Contains("0.26초 = 6.24프레임", off.Message, StringComparison.Ordinal);
+        Assert.Contains("0.21초 = 6.3프레임", off.Message, StringComparison.Ordinal);
 
-        // 6프레임 = 0.25초 — 맞는다.
-        Assert.Empty(EmojiValidator.Validate(MotionDocumentJson.Read(emoji.Replace("SECOND", "0.25", StringComparison.Ordinal))));
+        // 6프레임 = 0.2초 — 맞는다.
+        Assert.Empty(EmojiValidator.Validate(MotionDocumentJson.Read(emoji.Replace("SECOND", "0.2", StringComparison.Ordinal))));
     }
 
     [Fact]
