@@ -119,11 +119,11 @@ public sealed class EmojiSideTests
         return editor;
     }
 
-    private static EmojiPose PoseOf(MotionEditor editor, bool facingLeft)
+    private static EmojiPose PoseOf(MotionEditor editor, bool facingLeft, bool flip = false)
     {
         EmojiAsset emoji = editor.Document.FindEmoji("sided")!;
         EmojiDefinition definition = EmojiPreview.Definition(emoji, Frame, out _)!;
-        return EmojiPreview.Pose(emoji, Frame, EmojiPreview.Timeline(emoji, Frame), 0f, null, definition, facingLeft);
+        return EmojiPreview.Pose(emoji, Frame, EmojiPreview.Timeline(emoji, Frame), 0f, null, definition, facingLeft, flip);
     }
 
     private static Vec2 At(RectNodeTree tree, string node, float x = 0f, float y = 0f) => tree.TransformPoint(node, new Vec3(x, y, 0f)).XY;
@@ -246,5 +246,84 @@ public sealed class EmojiSideTests
         }
 
         Assert.Equal(2, Mt.Cli.MtCli.Run(new[] { "pose", path, "--emoji", "sided", "--time", "0", "--facing", "up" }, new StringWriter(), new StringWriter()));
+    }
+
+    // ── 대본의 반대쪽으로 보기 — flip(런타임 docs/PLAN_emoji-side.md) ─────────────
+
+    [Fact]
+    public void 반대쪽은_인물을_두고_이모지만_거울에_비치고_바로_서야_하는_리그는_바로_선다()
+    {
+        MotionEditor editor = Sided(fixedSide: false);
+        RectNodeTree right = PoseOf(editor, false).Tree;
+        RectNodeTree flip = PoseOf(editor, false, flip: true).Tree;
+
+        // 로케이터(인물)는 그대로, Emoji_Offset에서 거울에 비친다 — 오프셋이 반대쪽이다.
+        Assert.Equal(1f, flip.GetState(flip.GetParentKey(Frame.OffsetNode)).LocalScale.X, 4);
+        Assert.Equal(new Vec2(-100f, 50f), flip.GetState(Frame.OffsetNode).AnchoredPosition);
+        Assert.Equal(-1f, flip.GetState(Frame.OffsetNode).LocalScale.X, 4);
+        Assert.Equal(-0.5f, flip.GetState(Frame.PlaceNodeOf("q")).LocalScale.X, 4);
+        Assert.Equal(0.5f, flip.GetState(Frame.PlaceNodeOf("a")).LocalScale.X, 4);
+
+        // 화면에서: 그림의 자리는 거울 쪽, 보통 그림은 거울에 비치고 바로 서야 하는 그림은 만든 그대로 선다.
+        foreach (string rig in new[] { "a", "q" })
+        {
+            string image = Frame.ImageNodeOf(rig);
+            Assert.Equal(-At(right, image).X, At(flip, image).X, 2);
+            Assert.Equal(At(right, image).Y, At(flip, image).Y, 2);
+        }
+
+        string upright = Frame.ImageNodeOf("q");
+        Assert.Equal((At(right, upright, 1f) - At(right, upright)).X, (At(flip, upright, 1f) - At(flip, upright)).X, 3);
+        string plain = Frame.ImageNodeOf("a");
+        Assert.Equal(-(At(right, plain, 1f) - At(right, plain)).X, (At(flip, plain, 1f) - At(flip, plain)).X, 3);
+    }
+
+    [Fact]
+    public void 반대쪽과_왼쪽_보기를_함께_켜면_두_번_뒤집혀_제_쪽이고_방향을_따르지_않는_이모지도_반대쪽은_따른다()
+    {
+        RectNodeTree right = PoseOf(Sided(fixedSide: false), false).Tree;
+        RectNodeTree both = PoseOf(Sided(fixedSide: false), true, flip: true).Tree;
+
+        foreach (string rig in new[] { "a", "q" })
+        {
+            string image = Frame.ImageNodeOf(rig);
+            Assert.Equal(At(right, image).X, At(both, image).X, 2);
+            Assert.Equal((At(right, image, 1f) - At(right, image)).X, (At(both, image, 1f) - At(both, image)).X, 3);
+        }
+
+        // fixedSide — 인물의 방향은 따르지 않지만 대본의 반대쪽은 따른다.
+        RectNodeTree fixedRight = PoseOf(Sided(fixedSide: true), false).Tree;
+        RectNodeTree fixedFlip = PoseOf(Sided(fixedSide: true), false, flip: true).Tree;
+        Assert.Equal(-At(fixedRight, Frame.ImageNodeOf("a")).X, At(fixedFlip, Frame.ImageNodeOf("a")).X, 2);
+    }
+
+    [Fact]
+    public void mt_pose의_side_flip은_대본의_반대쪽이다()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", $"emoji-flip-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        string path = Path.Combine(directory, "e.motion-authoring.json");
+        File.WriteAllText(path, MotionDocumentJson.Write(Sided(fixedSide: false).Document));
+
+        JsonNode Pose(params string[] extra)
+        {
+            var stdout = new StringWriter();
+            Assert.Equal(0, Mt.Cli.MtCli.Run(new[] { "pose", path, "--emoji", "sided", "--time", "0", "--view", "timeline" }.Concat(extra).ToArray(), stdout, new StringWriter()));
+            return JsonNode.Parse(stdout.ToString())!;
+        }
+
+        JsonNode same = Pose();
+        JsonNode flip = Pose("--side", "flip");
+        Assert.Equal("default", same["side"]!.GetValue<string>());
+        Assert.Equal("flip", flip["side"]!.GetValue<string>());
+        Assert.Equal(-100, flip["offset"]!["position"]![0]!.GetValue<double>(), 2);
+
+        for (int i = 0; i < 2; i++)
+        {
+            double x = same["rigs"]![i]!["at"]![0]!.GetValue<double>();
+            Assert.Equal(-x, flip["rigs"]![i]!["at"]![0]!.GetValue<double>(), 2);
+        }
+
+        Assert.Equal(2, Mt.Cli.MtCli.Run(new[] { "pose", path, "--emoji", "sided", "--time", "0", "--side", "left" }, new StringWriter(), new StringWriter()));
     }
 }

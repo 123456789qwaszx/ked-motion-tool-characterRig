@@ -34,6 +34,7 @@ public sealed partial class ViewportView
     private string? _emojiName;
     private bool _emojiLife;
     private bool _emojiFacingLeft;
+    private bool _emojiFlip;
     private int _emojiHoldCycles = 2;
     private readonly List<string> _selectedEmojiRigs = new();
     private bool _emojiWholeSelected;
@@ -166,6 +167,26 @@ public sealed partial class ViewportView
             if (_emojiFacingLeft != value)
             {
                 _emojiFacingLeft = value;
+                CancelEmojiPress();
+                InvalidateVisual();
+            }
+        }
+    }
+
+    /// <summary>
+    /// 대본의 반대쪽으로 보기(<c>&lt;&lt;emoji 누구 이름 flip&gt;&gt;</c>) — 보기의 상태다(문서에 적지 않고 되돌리기에 들지 않는다).
+    /// 켜면 <c>Emoji_Offset</c>에서 한 번 더 거울에 비춘다 — 오프셋 · 그림의 기본 자리 · 이모지 전체의 키가 반대쪽으로 가고,
+    /// <c>upright</c> 그림은 바로 선다(코어 <see cref="EmojiSide"/>). 왼쪽 보기와 겹친다 — 둘 다 켜면 두 번 뒤집혀 제 쪽이다.
+    /// 켠 동안 그림을 끌어 기본 자리를 옮기지 않는다(거울 속에서 끄는 값이 헷갈린다 — 끄고 옮긴다).
+    /// </summary>
+    public bool EmojiFlip
+    {
+        get => _emojiFlip;
+        set
+        {
+            if (_emojiFlip != value)
+            {
+                _emojiFlip = value;
                 CancelEmojiPress();
                 InvalidateVisual();
             }
@@ -481,7 +502,7 @@ public sealed partial class ViewportView
                 : $"이모지 {emoji.Name} · 타임라인 {frame:0.#}/{emoji.LastFrame}fr";
         }
 
-        (float alpha, IReadOnlyList<EmojiRigPose> rigs) = EmojiPreview.Apply(tree, EmojiKeyPrefix, emoji, source.Frame, clip, frame, source.Definition, _emojiFacingLeft);
+        (float alpha, IReadOnlyList<EmojiRigPose> rigs) = EmojiPreview.Apply(tree, EmojiKeyPrefix, emoji, source.Frame, clip, frame, source.Definition, _emojiFacingLeft, _emojiFlip);
 
         // 키를 끄는 중이면 그 노드들의 지금 값만 덮는다(키는 놓을 때 들어간다). 이모지 전체의 자리는 머리에서의 자리에 더한 것이다.
         if (_emojiManip is { Key: true, Moved: true } keying)
@@ -502,7 +523,8 @@ public sealed partial class ViewportView
             }
         }
 
-        string side = !_emojiFacingLeft ? "" : emoji.FixedSide ? " · 왼쪽을 보는 인물(방향을 따르지 않는다)" : " · 왼쪽을 보는 인물 — 거울";
+        string side = (!_emojiFacingLeft ? "" : emoji.FixedSide ? " · 왼쪽을 보는 인물(방향을 따르지 않는다)" : " · 왼쪽을 보는 인물 — 거울")
+                      + (_emojiFlip ? " · 반대쪽(flip)" : "");
         return new EmojiFrameView(tree, alpha, rigs, label + (host is null ? " · 캐릭터가 없어 무대 가운데" : $" · {host.Id}의 발") + side, visible);
     }
 
@@ -626,7 +648,7 @@ public sealed partial class ViewportView
             return "";
         }
 
-        if (_emojiFacingLeft)
+        if (_emojiFacingLeft || _emojiFlip)
         {
             return "거울 속에서는 고르기만 한다(보기를 되돌리고 끈다)";
         }
@@ -672,7 +694,7 @@ public sealed partial class ViewportView
 
     /// <summary>지금 대상을 지금 도구로 끌 수 있는가 — 수명 보기 · 거울 보기 · 선택 도구가 아니고, 기본값에 없는 것(이모지 전체의 회전 · 크기)이 아니다.</summary>
     private bool EmojiCanManipulate()
-        => !_emojiLife && !_emojiFacingLeft && Manipulator != ManipulatorMode.Select && ShownEmoji is not null
+        => !_emojiLife && !_emojiFacingLeft && !_emojiFlip && Manipulator != ManipulatorMode.Select && ShownEmoji is not null
            && (_selectedEmojiRigs.Count > 0 || (_emojiWholeSelected && (AutoKey || Manipulator == ManipulatorMode.Move)));
 
     /// <summary>대상이 보이는 노드(트리의 키) — 그림이면 그 그림 노드, 이모지 전체면 오프셋 노드. 매니퓰레이터가 여기에 선다.</summary>

@@ -65,9 +65,10 @@ public static class EmojiPreview
     /// </summary>
     /// <remarks>
     /// <paramref name="locatorFlipped"/>면 왼쪽을 보는 인물 밑으로 본다 — 로케이터를 뒤집고 <paramref name="definition"/>(코어 정의)로 예외의 부호를 곱한다.
+    /// <paramref name="flip"/>이면 대본이 고른 반대쪽(<c>&lt;&lt;emoji 누구 이름 flip&gt;&gt;</c>)으로 본다 — <c>Emoji_Offset</c>에서 한 번 더 거울(코어 <see cref="EmojiSide"/>).
     /// 정의가 없으면(런타임이 거르는 이모지) 로케이터만 뒤집는다.
     /// </remarks>
-    public static EmojiPose Pose(EmojiAsset emoji, EmojiRigFrame frame, EmojiClip? clip, float clipFrame, RectSpace? space = null, EmojiDefinition? definition = null, bool locatorFlipped = false)
+    public static EmojiPose Pose(EmojiAsset emoji, EmojiRigFrame frame, EmojiClip? clip, float clipFrame, RectSpace? space = null, EmojiDefinition? definition = null, bool locatorFlipped = false, bool flip = false)
     {
         ArgumentNullException.ThrowIfNull(emoji);
         ArgumentNullException.ThrowIfNull(frame);
@@ -79,7 +80,7 @@ public static class EmojiPreview
             FlipLocator(tree, "", frame);
         }
 
-        (float alpha, IReadOnlyList<EmojiRigPose> rigs) = Apply(tree, "", emoji, frame, clip, clipFrame, definition, locatorFlipped);
+        (float alpha, IReadOnlyList<EmojiRigPose> rigs) = Apply(tree, "", emoji, frame, clip, clipFrame, definition, locatorFlipped, flip);
         return new EmojiPose(tree, alpha, rigs);
     }
 
@@ -131,17 +132,17 @@ public static class EmojiPreview
     /// 이모지 전체의 불투명도와 리그마다(그리는 순서)의 불투명도 · 그림을 돌려준다.
     /// </summary>
     /// <remarks>
-    /// 좌우 — <paramref name="locatorFlipped"/>(로케이터가 뒤집혔는가)와 <paramref name="definition"/>(코어 정의)으로 예외 둘만 한 번 더 뒤집는다:
+    /// 좌우 — <paramref name="locatorFlipped"/>(로케이터가 뒤집혔는가) · <paramref name="flip"/>(대본이 고른 반대쪽)과 <paramref name="definition"/>(코어 정의)으로 부호를 정한다:
     /// <see cref="EmojiSide.OffsetSign"/>은 <c>Emoji_Offset</c>의 자리 x · 가로 배율 · 회전에, <see cref="EmojiSide.PlaceSign"/>은 <c>upright</c> 리그의
     /// <c>EmojiRig_Place</c> 가로 배율 · 회전에 곱한다(자리는 부모를 따라 거울 쪽). 리그는 런타임처럼 순번으로 맞춘다. 정의가 없으면 부호는 1이다.
     /// </remarks>
-    public static (float Alpha, IReadOnlyList<EmojiRigPose> Rigs) Apply(RectNodeTree tree, string keyPrefix, EmojiAsset emoji, EmojiRigFrame frame, EmojiClip? clip, float clipFrame, EmojiDefinition? definition = null, bool locatorFlipped = false)
+    public static (float Alpha, IReadOnlyList<EmojiRigPose> Rigs) Apply(RectNodeTree tree, string keyPrefix, EmojiAsset emoji, EmojiRigFrame frame, EmojiClip? clip, float clipFrame, EmojiDefinition? definition = null, bool locatorFlipped = false, bool flip = false)
     {
         ArgumentNullException.ThrowIfNull(tree);
         ArgumentNullException.ThrowIfNull(emoji);
         ArgumentNullException.ThrowIfNull(frame);
         keyPrefix ??= "";
-        float offsetSign = definition is null ? 1f : EmojiSide.OffsetSign(definition, locatorFlipped);
+        float offsetSign = definition is null ? 1f : EmojiSide.OffsetSign(definition, locatorFlipped, flip);
 
         // 이모지 전체 — 자리의 키는 오프셋 값에 더한다.
         EmojiNodePose whole = EmojiClipMath.SampleNode(clip, "", clipFrame);
@@ -160,7 +161,7 @@ public static class EmojiPreview
             // 바로 서야 하는 그림 — 기본 자리의 가로 배율과 회전에 부호를 곱한다(런타임처럼 Upright인 리그만 다시 쓴다).
             if (definition is not null && i < definition.Rigs.Count && definition.Rigs[i] is { Upright: true } entry)
             {
-                float placeSign = EmojiSide.PlaceSign(definition, entry, locatorFlipped);
+                float placeSign = EmojiSide.PlaceSign(definition, entry, locatorFlipped, flip);
                 string place = keyPrefix + frame.PlaceNodeOf(rig.Name);
                 tree.SetState(place, tree.GetState(place)
                     .WithLocalScale(new Vec3(placeSign * entry.Scale, entry.Scale, 1f))

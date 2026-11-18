@@ -90,6 +90,7 @@ public partial class MainWindow
     private readonly ToggleButton _emojiLifeToggle = new() { Content = "게임처럼 재생", FontSize = 10, Padding = new Avalonia.Thickness(6, 2) };
     private readonly TextBox _emojiHoldCycles = new() { FontSize = 11, Text = "2", Width = 34 };
     private readonly ToggleButton _emojiFacingLeft = new() { Content = "◀ 왼쪽 보기", FontSize = 11, Padding = new Avalonia.Thickness(8, 3) };
+    private readonly ToggleButton _emojiFlip = new() { Content = "⇄ 반대쪽 보기", FontSize = 11, Padding = new Avalonia.Thickness(8, 3) };
     private readonly ToggleButton _emojiShowHost = new() { Content = "인물", FontSize = 11, Padding = new Avalonia.Thickness(8, 3), IsChecked = true };
 
     internal string? SelectedEmoji => _emojiList.SelectedItem as string;
@@ -198,6 +199,9 @@ public partial class MainWindow
 
     /// <summary>테스트 손잡이 — "왼쪽을 보는 인물로" 보기를 켜고 끈다.</summary>
     internal void SetEmojiFacingLeftFromForm(bool left) => _emojiFacingLeft.IsChecked = left;
+
+    /// <summary>테스트 손잡이 — "반대쪽 보기"(대본의 <c>flip</c>)를 켜고 끈다.</summary>
+    internal void SetEmojiFlipFromForm(bool flip) => _emojiFlip.IsChecked = flip;
 
     /// <summary>테스트 손잡이 — 도구 띠의 "인물"을 켜고 끈다.</summary>
     internal void SetEmojiShowHostFromForm(bool show) => _emojiShowHost.IsChecked = show;

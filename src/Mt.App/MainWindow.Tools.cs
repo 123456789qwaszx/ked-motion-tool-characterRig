@@ -87,11 +87,13 @@ public partial class MainWindow
         };
         strip.Children.Add(_toolAutoKey);
 
-        // 이모지 모드 — 보기의 단추들: 인물을 보이는가 · 왼쪽을 보는 인물로 · 보기 맞춤.
+        // 이모지 모드 — 보기의 단추들: 인물을 보이는가 · 왼쪽을 보는 인물로 · 대본의 반대쪽으로 · 보기 맞춤.
         _emojiShowHost.IsCheckedChanged += (_, _) => _viewport.EmojiShowHost = _emojiShowHost.IsChecked == true;
         ToolTip.SetTip(_emojiShowHost, "이모지가 뜨는 인물을 보인다 — 초상(씬 탭에서 넣은 PNG)이 있으면 그것, 없으면 실루엣. 십자가 머리의 자리(이모지의 '머리에서'가 재는 곳)다. 덤프 옆 presets/emoji-locator.json이 있으면 그 캐릭터의 자리를 읽는다(보기만 — 게임의 값은 런타임의 표가 정한다)");
         _emojiFacingLeft.IsCheckedChanged += (_, _) => _viewport.EmojiFacingLeft = _emojiFacingLeft.IsChecked == true;
         ToolTip.SetTip(_emojiFacingLeft, "켜면 왼쪽을 보는(뒤집힌) 인물에게 뜨는 모습으로 본다 — 인물과 이모지가 거울에 비치고, '인물의 방향을 따르지 않기' · '뒤집지 않기'를 켠 것만 그대로 남는다(런타임과 같은 계산). 보기만 바뀐다. 켠 동안 그림을 끌어 기본 자리를 옮기지 않는다");
+        _emojiFlip.IsCheckedChanged += (_, _) => _viewport.EmojiFlip = _emojiFlip.IsChecked == true;
+        ToolTip.SetTip(_emojiFlip, "켜면 대본이 반대쪽을 고른 모습(<<emoji 누구 이름 flip>>)으로 본다 — 인물은 그대로, 이모지만 거울에 비쳐 반대쪽에 뜬다(오프셋 · 그림의 자리 · 이모지 전체의 움직임). '뒤집지 않기'를 켠 그림은 바로 선다(런타임과 같은 계산). 왼쪽 보기와 함께 켜면 두 번 뒤집혀 제 쪽이다. 보기만 바뀐다. 켠 동안 그림을 끌어 기본 자리를 옮기지 않는다");
         Button fit = SmallButton("맞춤 F", (_, _) => _viewport.FrameEmoji());
         fit.FontSize = 11;
         fit.Padding = new Avalonia.Thickness(8, 3);
@@ -107,7 +109,7 @@ public partial class MainWindow
             Children =
             {
                 new Border { Width = 1, Margin = new Avalonia.Thickness(4, 2), Background = new SolidColorBrush(Color.FromArgb(70, 128, 128, 128)) },
-                _emojiShowHost, _emojiFacingLeft, fit, fitHost,
+                _emojiShowHost, _emojiFacingLeft, _emojiFlip, fit, fitHost,
             },
         };
         strip.Children.Add(OnlyIn(WorkMode.Emoji, emojiView));

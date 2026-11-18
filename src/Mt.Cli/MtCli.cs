@@ -32,7 +32,7 @@ public static partial class MtCli
           mt emojis   <문서> <emojis.json> [--rig <덤프>]      emojis.json(emojis/2) 내보내기 — 구간마다 따로 선 클립, 런타임 로더로 다시 읽어 본다
           mt pose     <문서> --motion <이름> --time <초> [--object <id>] [--mode relative|absolute] [--rig <덤프>]
           mt pose     <문서> --clip <이름> --time <초> [--rig <덤프>]
-          mt pose     <문서> --emoji <이름> --time <초> [--off <초>] [--view life|timeline] [--facing right|left] [--rig <덤프>]
+          mt pose     <문서> --emoji <이름> --time <초> [--off <초>] [--view life|timeline] [--facing right|left] [--side default|flip] [--rig <덤프>]
                                                                그 시각의 포즈 — 모션·클립이 건드리는 노드의 값,
                                                                이모지는 수명(등장 → 머묾 ⟲ → --off에 내리면 퇴장) 또는 타임라인의 그 프레임
           mt bake     <문서> --clip <이름> --object <id> --name <새 모션> [--out <문서>] [--rig <덤프>]
@@ -449,9 +449,18 @@ public static partial class MtCli
             throw new UsageException($"--facing은 right|left ('{facing}')");
         }
 
+        // 쪽 — 대본의 셋째 칸(<<emoji 누구 이름 flip>>). default면 정의의 쪽, flip이면 반대쪽(코어 EmojiSide — 앱의 "반대쪽 보기"와 같다).
+        string side = options.Value("side") ?? "default";
+
+        if (!EmojiSideToken.TryParse(side == "default" ? "" : side, out bool flip) || side == "")
+        {
+            throw new UsageException($"--side는 default|flip ('{side}')");
+        }
+
         result["facing"] = facing;
+        result["side"] = side;
         EmojiDefinition? sides = EmojiPreview.Definition(emoji, frame, out _);
-        EmojiPose pose = EmojiPreview.Pose(emoji, frame, clip, clipFrame, null, sides, facing == "left");
+        EmojiPose pose = EmojiPreview.Pose(emoji, frame, clip, clipFrame, null, sides, facing == "left", flip);
         RectNodeState whole = pose.Tree.GetState(frame.OffsetNode);
         result["offset"] = new JsonObject
         {

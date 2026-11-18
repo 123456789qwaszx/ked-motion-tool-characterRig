@@ -355,6 +355,14 @@ public class EmojiShellTests
             Assert.Equal(revision, editor.Revision);
             window.SetEmojiFacingLeftFromForm(false);
             Assert.False(window.Viewport.EmojiFacingLeft);
+
+            // 대본의 반대쪽(flip)으로 보기 — 이것도 뷰포트만, 켠 동안은 고르기만 한다.
+            window.SetEmojiFlipFromForm(true);
+            Assert.True(window.Viewport.EmojiFlip);
+            Assert.Equal(revision, editor.Revision);
+            Assert.Equal("거울 속에서는 고르기만 한다(보기를 되돌리고 끈다)", window.Viewport.EmojiEditNoteForTest());
+            window.SetEmojiFlipFromForm(false);
+            Assert.False(window.Viewport.EmojiFlip);
         });
     }
 
