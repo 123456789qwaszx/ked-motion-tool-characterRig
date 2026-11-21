@@ -98,7 +98,7 @@
 `motions.json`(`motions/2`) · `emojis.json` — 런타임이 정한 형식이다. **이 저장소는 형식을 이끌지 않는다**(형식을 툴이 정하는 것은 `extend` · `screenTransition`의 일이다).
 
 - 코어 사본(`src/Ked.Presentation.Core`)의 **선반영**(`vendoring.md` — 런타임보다 사본이 앞선 것)은 갚아야 할 빚이다. 불투명도 채널 · 이벤트 키는 런타임이 받지 않아 걷어 냈고(R3), 남은 `hasImage`는 `PLAN-emoji.md` E1의 반입으로 사라졌다(런타임은 `repeatsPerRig`로 바꿨다) — 이제 선반영은 없다.
-- **사본의 출처가 낡았다.** 사본은 분리본 `ked-stage-runtime`의 `dc690c1`에서 왔는데, 정본은 `ked-presentation-runtime`이고(분리본이 따라간다) 그 사이 코어의 이름이 여럿 바뀌었다(`StageNodeClaim` → `NodeTarget`, 리덕션 → `NodeTargets` 등). 정본에서 다시 반입하는 것은 R6.
+- **사본의 출처가 낡았다.** 사본은 분리본 `ked-stage-runtime`의 `dc690c1`에서 왔는데, 정본은 `ked-presentation-runtime`이고(분리본이 따라간다) 그 사이 코어의 이름이 여럿 바뀌었다(`StageNodeClaim` → `NodeTarget`, 리덕션 → `NodeTargets` 등). 정본에서 다시 반입하는 것은 R6. → **2026-11-22에 했다**(`b56a2ebc`, 리그 20노드와 함께 — `PLAN-rig-layers.md`).
 - 새로 필요한 것이 생기면 런타임에서 먼저 정하고 사본을 동기화한다(`MAINTENANCE.md`의 절차). "런타임은 완성됐다고 가정하고 사본에 먼저 넣는다"는 이 저장소에서는 그만둔다.
 - **복원(restore)이 중립값이 아닌 데서 끝난다는 경고는 이 저장소에 남는다** — 캐릭터는 끝에서 튄다. (`extend`에서는 컷·세트에 뜻이 없어 걷어 냈다.)
 
@@ -120,7 +120,7 @@
 
 1. **이모지 리그를 누가 정하나 — 정했다(소유자, 2026-11-10): 런타임이 정한다.** `PLAN-parts.md` §9("붙는 리그는 툴이 원본")는 버린다.
    - 런타임에서 리그의 주인은 프리팹이 아니라 **코드의 스키마**다(`CharacterRigSchema` — 런타임 `rig-axis-order.md`). 이모지 리그도 그 길로 들어가고(`rigKind: "emoji"`), 툴은 덤프로 받는다. 설계는 런타임 `docs/PLAN_emoji.md` — 이 툴의 규약 가운데 그 문서와 다른 것은 **툴이 맞춘다**(§5 "형식을 이끌지 않는다").
-   - 리그의 모양: `Emoji_Anchor › Emoji_Body › Emoji_Part1…6`, 조각마다 `Emoji_PartN › Emoji_PartN_Image` 두 단 — 모션은 `Part`를 움직이고 스킨의 놓임은 `_Image`에 들어간다. `CharSlot_Scale` 밑에 붙고(초상의 연기는 따라가지 않는다), 자리는 뜨는 순간 기준점 표로 한 번 푼다.
+   - 리그의 모양: `Emoji_Anchor › Emoji_Body › Emoji_Part1…6`, 조각마다 `Emoji_PartN › Emoji_PartN_Image` 두 단 — 모션은 `Part`를 움직이고 스킨의 놓임은 `_Image`에 들어간다. `CharacterPortrait_DepthScale` 밑에 붙고(초상의 연기는 따라가지 않는다 — 2026-11-22까지는 `CharSlot_Scale`이었다), 자리는 뜨는 순간 기준점 표로 한 번 푼다.
    - R3에서 할 일:
      - ~~리그 편집기 · `RigAsset` · `MotionDocument.Rigs` · `rigs.json` 내보내기 · `RigAssets.Compose`를 걷어 낸다. 내장 덤프는 런타임의 새 덤프로 통째 교체한다.~~ **했다(R3-2)**:
        내장 덤프와 시험 픽스처는 런타임 `465f5d43`의 것(캐릭터 · 화면 효과는 `hasImage` 말고 같다). 조각은 덤프의 `hasImage`로만 가린다(이름 규칙은 버렸다, 캐릭터 리그의 그림 노드는 초상이 맡으니 빼고).

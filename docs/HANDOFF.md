@@ -79,7 +79,7 @@ tools/    유니티 프리팹에서 무대 뼈대를 다시 뽑는 스크립트
 | 저장소 | 관계 |
 |---|---|
 | `ked-presentation-runtime` | **정본.** 코어 · 리그 스키마 · 덤프 · 이모지의 정의와 재생. 소유자가 직접 커밋한다 |
-| `ked-stage-runtime` | 코어 사본의 옛 출처(분리본). 사본의 대부분은 아직 그 `dc690c1` 기준이고 이모지만 정본에서 왔다 — 전체 재반입은 남은 빚이다(`vendoring.md`) |
+| `ked-stage-runtime` | 코어 사본의 옛 출처(분리본). 사본은 2026-11-22에 정본(`ked-presentation-runtime` `b56a2ebc`)에서 통째로 다시 들였다 — 이제 이 저장소와는 닿는 것이 없다(`vendoring.md`) |
 | `ked-motion-tool-extend` | 형제 — 컷(씬 + 카메라 + 타임라인) |
 | `ked-motion-tool-screenTransition` | 형제 — 화면 전환 |
 

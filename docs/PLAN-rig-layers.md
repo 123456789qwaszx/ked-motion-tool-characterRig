@@ -17,7 +17,7 @@
 | 새 덤프 | character 26 → 21항목(`__root` 포함). `camera` 리그(7항목)와 `screenEffect`의 `Cover_Image`가 새로 들어 있다. 런타임 코어는 카메라 리그의 모션(흔들림 — `Camera_Shake`만, restore만)도 받는다 |
 | 컨트롤러 표 | 옛 노드를 가리키는 손잡이: `stance`(`CharSlot_Scale`) · `depth`(`CharSlot_DepthScale`, 굽기 `CharSlot_DepthY`) · `facing`(`CharacterPortrait_ActingScale_X`) · `body`의 별칭(`Track_Move_X` · `_Y`) · `squash`의 별칭(`ActingScale_Y`) |
 | 저작본 | 저장소 안의 5개(`library/` · `examples/`)에는 걷힌 노드의 키가 없다 — 모션은 `CharacterPortrait_Track_Move` · `SwayPivot` · `ActingScale`만 쓴다. `examples/emoji`의 씬에 `scaleX` · `scaleY`(1)가 적혀 있다 |
-| 견본 | `Fixtures/stage-parity/motions.json`의 `step`(`CharSlot_Track_X`) · `grow`(`CharSlot_Scale`)와 `motions.nod-bow.json`의 `nod`(`Track_Move_Y`)에 걷힌 노드의 키가 있다. 런타임 `ToolExport~`의 사본은 지금 이쪽 원본과 이미 다르다(30fps 전의 것) |
+| 견본 | `Fixtures/stage-parity/motions.json`의 `step`(`CharSlot_Track_X`) · `grow`(`CharSlot_Scale`)와 `motions.nod-bow.json`의 `nod`(`Track_Move_Y`)에 걷힌 노드의 키가 있다. 런타임 `ToolExport~`의 사본은 `b56a2ebc`에서 **이미 남는 노드로 손으로 옮겨져 있었다**(`step` → `CharSlot_Track`, `grow` → `CharacterPortrait_ActingScale`) — 처음 조사에서 "30fps 전의 것이라 다르다"고 적은 것은 틀렸다 |
 
 ## 2. 정한 것 (소유자, 2026-11-22)
 
@@ -44,7 +44,7 @@
 | S1 | `stance` 컨트롤러와 씬의 배율을 걷는다 — 모델 · 편집 명령 · 직렬화 · 화면 · `mt` · 시험 · `AUTHORING-FILES.md` · 예시 | 끝 — Windows에서 기준선과 같다(Core 438 · App 144 · Authoring 332/334, §4의 둘만 실패). 예시 파일은 손으로 두 줄을 지웠다 — 빌더와 바이트가 같은지는 줄바꿈 실패에 가려 Windows에서 확인되지 않는다 |
 | S2 | 시험과 견본의 키를 남는 노드로 — `Track_Move_X` · `_Y` → `CharacterPortrait_Track_Move`의 x · y, `CharSlot_Track_X` · `_Y` → `CharSlot_Track`. `stage-parity` 견본을 다시 낸다 | 끝 — 기준선과 같다. `grow`는 `CharacterPortrait_ActingScale`로 옮겼다(값은 그대로, 노드 이름만). `nod` · `bow`는 런타임 `Assets/Dialogue/motions.json`의 것과 글자가 같다 |
 | S3 | 코어 전체 동기화 + 덤프 교체 + 소비자 적응 + 이름이 바뀐 노드 — 한 커밋(나누면 중간이 통과하지 않는다) | 끝 — Core 580/580 · App 144/144 · Authoring 332/334(§4의 둘만). `diff -r` 0줄 |
-| S4 | 문서 · `vendoring.md` · 그림 다시 뽑기 · 런타임에 넘길 견본(`motions.json` · `poses.json`) | 아직 |
+| S4 | 문서 · `vendoring.md` · 그림 다시 뽑기 · 런타임에 넘길 견본 | 문서 끝. **견본은 넘길 것이 없다** — S2에서 툴이 다시 낸 `stage-parity/motions.json` · `poses.json`이 런타임 `b56a2ebc`의 `ToolExport~` 사본과 바이트까지 같다(런타임이 손으로 옮긴 것과 툴이 낸 것이 일치). 런타임 쪽은 시험 머리 주석의 "손으로 옮겼다"를 출처 커밋 `f3b2858`로 고치면 된다. 그림은 아직 — 소유자 PC에서 `MT_RENDER_DIR`로 뽑아야 한다 |
 
 ## 4. 테스트를 돌리는 길
 
@@ -61,8 +61,8 @@ Authoring의 둘은 이 일과 무관하게 Windows에서만 실패한다 — `L
 
 ## 5. 이어받을 때 (2026-11-22 01:30에 멈췄다)
 
-**어디서 멈췄나.** 조사와 결정까지다. 코드 · 시험 · 예시 · 덤프는 하나도 고치지 않았다 — `dev`는 `538a99e` 위에 이 계획서의 커밋만 있다(푸시하지 않았다).
-다음은 S1이고, 소유자가 "진행"이라고 할 때 시작한다. §2 아래의 두 가지(`grow`가 갈 노드 · 카메라 리그)와 §4의 줄바꿈 실패를 고칠지는 그때 다시 묻는다.
+**어디서 멈췄나(11-22 02:00 고침).** S1~S3을 커밋했다(`6859998` · `f3b2858` · `9988f28`) — 아래 "S1에서 고칠 자리" · "S3에서 바꿔 부를 것"은 끝난 일의 기록이다.
+남은 것: 그림 다시 뽑기(S4) · §6의 P2~P4를 소유자가 확인 · §4의 줄바꿈 실패를 고칠지.
 
 **S1에서 고칠 자리**(`stance` · 씬의 배율 — `grep`으로 센 것, `bin` · `obj` 제외):
 

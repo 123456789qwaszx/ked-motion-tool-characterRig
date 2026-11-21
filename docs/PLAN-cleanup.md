@@ -102,7 +102,7 @@
 - 반복 · 모션 바꾸기는 `UpdateClipBlock`(블록 인스펙터) 하나로 한다.
 
 - 같은 지시로 뺀 것: 설정 파일을 옛 자리에서 읽어 오던 것 · `motions.json`의 스키마가 달라도 읽기를 시도하던 것 · "호환용"으로 남아 있던 `PlaybackClock.Loop` · `ViewportView.Loop` · `ViewportView.SetPortrait(비트맵)`.
-- **남긴 것 — 컨트롤러의 별칭**(`controllers.json`의 `aliases` — `Track_Move_X/Y` · `ActingScale_Y`). 주석은 "옛 모션"이라 하지만 런타임의 지금 견본(`nod`)이 그 노드에 키를 둔다 — 옛 파일을 위한 것이 아니라 지금 리그의 축별 노드를 한 손잡이로 보이는 것이다.
+- **남긴 것 — 컨트롤러의 별칭**(`controllers.json`의 `aliases` — `Track_Move_X/Y` · `ActingScale_Y`). 주석은 "옛 모션"이라 하지만 런타임의 지금 견본(`nod`)이 그 노드에 키를 둔다 — 옛 파일을 위한 것이 아니라 지금 리그의 축별 노드를 한 손잡이로 보이는 것이다. → **2026-11-22: 그 축별 노드가 리그에서 걷혔다.** 내장 표의 별칭은 뺐고, 기능을 걷을지는 소유자가 정한다(`PLAN-rig-layers.md` §6 P4).
 
 ## 5. 2단계 — 설명서 (2026-11-12 시작)
 

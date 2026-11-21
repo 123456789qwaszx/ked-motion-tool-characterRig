@@ -35,7 +35,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 | 리그 덤프·내장본·컨트롤러 표·깊이·focus·기준 해상도 | `Rig/RigSchemaFile.cs` · `BuiltinTuning.cs` · `ControllersFile.cs`(`controllers/1`) · `DepthTuningFile.cs`(MaxLevel 40) · `FocusTuningFile.cs` · `BaseResolutionFile.cs` |
 | 씬 조립(무대 뼈대 → 오브젝트 → 깊이 → place → 오프셋 → 샷) | `Preview/ScenePreview.cs` · `StageShotResponse.cs` |
 | 시각의 포즈, 포즈 → 키 값 | `Preview/MotionPreview.cs` · `PoseEdit.cs`(`RootDeltaToLocal`·`AngleDelta`·`ScaleAlong`·`KeyValueFor`) |
-| 초상 배치·사각형 | `Preview/PortraitLayout.cs`(런타임 HeightFitPreserveAspect와 같다) |
+| 초상 배치·사각형 | `Preview/PortraitLayout.cs`(높이 맞춤 — 런타임은 2026-11-09에 원본 픽셀 크기로 바꿨고 이 툴은 아직 따라가지 않았다, `PLAN-rig-layers.md` §6 P3) |
 | 재생 시계 | `Preview/PlaybackClock.cs` |
 | 그래프 수학(순수) | `Graph/` — `GraphCamera`(좌표) · `GraphHitTest` · `TangentMath` · `HandleMath` · `KeyOps` · `KeySelection` · `KeyClipboard` · `TimeSnap`(DefaultStep 1/30) · `TimeText` · `TimeSliderOps` · `DopeSheetRows` · `CurveSampler` · `RelativeInput`(`+=3`) |
 | 프리셋 모션 9종 | `Presets/MotionPresets.cs` |
@@ -64,7 +64,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 
 ### 4.1 코어 재반입 (런타임의 코어가 바뀌었을 때)
 
-정본은 `ked-presentation-runtime`의 `Assets/Ked.Presentation/Core`다. 지금 사본은 옛 분리본(`ked-stage-runtime` `dc690c1`)에 이모지 파일만 정본에서 얹은 상태다 — 무엇이 어디서 왔는지는 `vendoring.md`의 표가 적는다.
+정본은 `ked-presentation-runtime`의 `Assets/Ked.Presentation/Core`다. 지금 사본은 `b56a2ebc`(2026-11-22)와 통째로 같다 — 어느 커밋에서 어떻게 떴는지는 `vendoring.md`의 표가 적는다.
 
 1. `vendoring.md`의 절차대로 `diff -r`로 갈래를 가르고 저쪽 본으로 교체(`Tests/`·`*.meta`·`*.asmdef` 제외). 일부만 가져올 때는 가져온 파일과 원본 커밋을 표에 적는다.
 2. 순수 테스트만 `tests/Ked.Presentation.Core.Tests/EditMode/`로 복사(유니티·DOTween·Newtonsoft 참조는 제외).
@@ -116,7 +116,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 
 | 함정 | 메모 |
 |---|---|
-| `ScenePreview.Build` 순서 | 깊이 → place → 오프셋 → 샷. place 폴드는 월드 좌표로 되감기 때문에 뒤에 넣은 것만 살아남는다 |
+| `ScenePreview.Build` 순서 | 깊이 → place → 오프셋 → 샷. place는 그 순간의 무대를 재서 `CharFocus_Track`의 값을 푸는 것이라 뒤에 넣은 것만 살아남는다 |
 | SwayPivot 같은 스트레치 노드 | 원점이 화면 크기 rect의 아래 끝이라 그림 밖이다. 뷰포트 `GizmoAnchor`가 그림 가운데로 옮긴다 |
 | 그래프 팬은 RMB만 | MMB 드래그는 선택 키 이동(마야). 뷰포트는 MMB·RMB 둘 다 팬 |
 | 시간 스냅 기본 1/30(1프레임, 30fps) | 테스트는 기대값을 1/60으로 쓰는 곳이 있어 `Show()`에서 `SnapStep = 1.0 / 60`을 둔다 |
