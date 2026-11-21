@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Mt.Authoring\Mt.Authoring.csproj" />
+    <ProjectReference Include="..\Mt.Graph.Avalonia\Mt.Graph.Avalonia.csproj" />
   </ItemGroup>
 
   <ItemGroup>

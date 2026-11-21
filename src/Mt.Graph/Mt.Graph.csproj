@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 커브의 모델과 그래프의 산수 — 모션 하나의 키 · 탄젠트, 히트 테스트 · 솎기 · 붙이기. Avalonia를 모른다.
+       이 툴의 것이지만 다른 툴(ked-story-tools)이 사본으로 들여 같은 그래프를 쓴다 — 그래서 저작본 · 리그 · 편집기를 모른다:
+       그래프가 편집기에 바라는 것은 IGraphEditor 하나다. 네임스페이스는 옮기기 전 그대로다(Mt.Authoring.Model · Mt.Authoring.Graph). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Mt.Authoring</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Ked.Presentation.Core\Ked.Presentation.Core.csproj" />
+  </ItemGroup>
+</Project>

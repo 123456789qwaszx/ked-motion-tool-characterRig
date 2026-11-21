@@ -38,20 +38,24 @@
 
 ```
 Ked.Presentation.Core  (런타임 코어의 사본 — netstandard2.1 · C# 9, 고치지 않는다)
+   └─► Mt.Graph        (커브의 모델과 그래프의 산수 — Avalonia · 저작본 · 리그를 모른다. ked-story-tools가 사본으로 들인다)
+          Model/          MotionAsset · ChannelAsset · KeyAsset · ChannelKind (네임스페이스는 Mt.Authoring.Model 그대로)
+          Graph/          순수 함수 — 좌표 · 히트 · 탄젠트 · 스냅 · 키 연산 · 선택 · TweenMath, IGraphEditor(그래프가 편집기에 바라는 것)
    └─► Mt.Authoring    (도메인 — Avalonia를 모른다)
-          Model/          MotionDocument · MotionAsset · SceneAsset · ClipAsset · EmojiAsset · EmojiLife · EmojiMoves
+          Model/          MotionDocument · SceneAsset · ClipAsset · EmojiAsset · EmojiLife · EmojiMoves
           Editing/        MotionEditor(+ .Clips · .Emojis) — 모든 편집의 통로, 스냅샷 되돌리기, 끄는 조작(BeginGesture…)
           Serialization/  MotionDocumentJson(저작 원본) · MotionsJson(motions/2)
           Schema/         SchemaContract(문서가 스키마를 지키는가 — 막는 문제) · SchemaDiff(덤프가 달라졌을 때)
           Validation/     Motion · Clip · Emoji 검증, MotionFixes(돕는 손), MotionExport · EmojiExport
           Rig/            RigSchemaFile · BuiltinTuning(내장 덤프) · ControllersFile · EmojiRigFrame · EmojiLocatorFile · 깊이 · focus · 기준 해상도
           Preview/        ScenePreview · MotionPreview · ClipPreview · ClipBake · EmojiPreview · PoseEdit · PlaybackClock
-          Graph/          순수 함수 — 좌표 · 히트 · 탄젠트 · 스냅 · 키 연산 · 선택 · 도프 행 · TweenMath
+          Graph/          도프 행(리그를 안다 — 나머지 그래프의 산수는 Mt.Graph로 갔다)
           Presets/ · Settings/
+   ├─► Mt.Graph.Avalonia   GraphEditorView — 그래프 에디터의 화면. IGraphEditor만 안다(ked-story-tools가 사본으로 들인다)
    ├─► Mt.App          (Avalonia — 그리기와 입력)
    │      MainWindow.*.cs   셸. 맡은 일별 partial: Mode · Tools · Shortcuts · Settings · Files · Document · Scene · ChannelBox · Outliner ·
    │                        Problems · Clips · Emojis · Life · NewEmoji · Tween (+ axaml.cs = 필드 · 화면 짜기 · 모션 목록 · 명령)
-   │      Views/            ViewportView(+ .Emoji) · GraphEditorView · DopeSheetView · TimeSliderView · RangeSliderView ·
+   │      Views/            ViewportView(+ .Emoji) · DopeSheetView · TimeSliderView · RangeSliderView ·
    │                        ClipTimelineView · EmojiLifeStripView
    │      Services/         DocumentSession — 경로 · 덤프 · 자산 동기화 · 저장 · 내보내기 · 자동 저장
    └─► Mt.Cli          mt info · validate · export · emojis · pose · bake + 만들기(new · add-motion · add-emoji · key · remove · controllers · presets)

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 그래프 에디터의 화면 — 그리기와 입력뿐이다. 산수는 Mt.Graph의 순수 함수, 고치는 일은 IGraphEditor가 한다.
+       다른 툴(ked-story-tools)이 사본으로 들인다. 네임스페이스는 옮기기 전 그대로다(Mt.App.Views). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Mt.App</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mt.Graph\Mt.Graph.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Mt.App.Tests" />
+  </ItemGroup>
+</Project>

@@ -4,7 +4,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Ked.Presentation.Core;
-using Mt.Authoring.Editing;
 using Mt.Authoring.Graph;
 using Mt.Authoring.Model;
 
@@ -45,7 +44,7 @@ public sealed class CurveSlot
 /// - 시간 스냅 1/60초(끌 수 있다). 값 스냅 없음.
 ///
 /// <b>드래그 중간값은 렌더만이고, 놓는 순간이 편집 하나다</b>(되돌리기 한 번 = 조작 하나). 문서에 닿는 길은
-/// <see cref="MotionEditor"/>뿐이다. 좌표 변환·히트 테스트·탄젠트 산수는 전부 <c>Mt.Authoring.Graph</c>의 순수 함수다 —
+/// <see cref="IGraphEditor"/>뿐이다(이 툴에서는 <c>MotionEditor</c>가 그것이다). 좌표 변환·히트 테스트·탄젠트 산수는 전부 <c>Mt.Authoring.Graph</c>의 순수 함수다 —
 /// 여기에는 그리기와 입력만 있다.
 /// </summary>
 public sealed class GraphEditorView : Control
@@ -86,7 +85,7 @@ public sealed class GraphEditorView : Control
     private readonly List<CurveSlot> _curves = new();
     private KeySelection _selection = new();
 
-    private MotionEditor? _editor;
+    private IGraphEditor? _editor;
     private string? _motionName;
     private GraphCamera _camera = new(-0.1, -1, 400, 100);
     private bool _cameraFitted;
@@ -551,11 +550,11 @@ public sealed class GraphEditorView : Control
 
     public event EventHandler? CurvesChanged;
 
-    public MotionEditor? Editor => _editor;
+    public IGraphEditor? Editor => _editor;
 
     public string? MotionName => _motionName;
 
-    public MotionAsset? Motion => _editor is not null && _motionName is not null ? _editor.Document.Find(_motionName) : null;
+    public MotionAsset? Motion => _editor is not null && _motionName is not null ? _editor.FindMotion(_motionName) : null;
 
     public IReadOnlyList<CurveSlot> Curves => _curves;
 
@@ -613,11 +612,11 @@ public sealed class GraphEditorView : Control
     // ── 바인딩 ────────────────────────────────────────────────────────
 
     /// <summary>편집기와 모션을 싣는다. 모션이 null이면 빈 그래프다. 커브 목록·선택이 새로 선다.</summary>
-    public void Bind(MotionEditor? editor, string? motionName)
+    public void Bind(IGraphEditor? editor, string? motionName)
     {
         if (_editor is not null)
         {
-            _editor.Changed -= OnEditorChanged;
+            _editor.GraphChanged -= OnEditorChanged;
         }
 
         _editor = editor;
@@ -625,7 +624,7 @@ public sealed class GraphEditorView : Control
 
         if (_editor is not null)
         {
-            _editor.Changed += OnEditorChanged;
+            _editor.GraphChanged += OnEditorChanged;
         }
 
         _selection.Clear();
@@ -679,7 +678,7 @@ public sealed class GraphEditorView : Control
         InvalidateVisual();
     }
 
-    private void OnEditorChanged(object? sender, MotionChangedEventArgs e)
+    private void OnEditorChanged(object? sender, EventArgs e)
     {
         ReloadCurves();
         PruneSelection();
@@ -2158,7 +2157,7 @@ public sealed class GraphEditorView : Control
                         var keep = _selectedHandles.ToList();
                         List<(KeyRef Key, KeyAsset Preview)> edits = _handleDrag.Select(h => h.Handle.Key).Distinct()
                             .Where(k => _previewKeys.ContainsKey(k)).Select(k => (k, _previewKeys[k])).ToList();
-                        _editor.Batch(MotionChangeKind.Keys, () =>
+                        _editor.Batch(() =>
                         {
                             foreach ((KeyRef key, KeyAsset p) in edits)
                             {

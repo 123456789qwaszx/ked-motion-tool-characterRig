@@ -10,7 +10,8 @@
 
 ## 구조
 
-`Ked.Presentation.Core`(런타임 코어의 사본 — 정본은 런타임. 순수 C#, netstandard2.1 · C# 9) → `Mt.Authoring`(도메인) → `Mt.App`(Avalonia 화면) + `Mt.Cli`.
+`Ked.Presentation.Core`(런타임 코어의 사본 — 정본은 런타임. 순수 C#, netstandard2.1 · C# 9) → `Mt.Graph`(커브의 모델 · 그래프의 산수) → `Mt.Authoring`(도메인) → `Mt.App`(Avalonia 화면) + `Mt.Cli`. 그래프 에디터의 화면은 `Mt.Graph.Avalonia`다.
+`Mt.Graph` · `Mt.Graph.Avalonia`는 **다른 툴(`ked-story-tools`)이 사본으로 들여 같은 그래프를 쓴다** — 저작본 · 리그 · `MotionEditor`를 모르게 둔다(그래프가 편집기에 바라는 것은 `IGraphEditor` 하나). 정본은 여기다.
 셸은 `src/Mt.App/MainWindow.*.cs` — 맡은 일별 partial이다(새 기능은 맞는 파일에, 없으면 새 partial로).
 테스트: `tests/Mt.Authoring.Tests` · `tests/Mt.App.Tests`(xunit — 화면은 `HeadlessUi.Run`) · `tests/Ked.Presentation.Core.Tests`(NUnit).
 

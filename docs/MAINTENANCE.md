@@ -22,7 +22,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 
 | 하고 싶은 것 | 자리 |
 |---|---|
-| 모션·채널·키 모델, 씬 모델 | `Mt.Authoring/Model/MotionDocument.cs` · `SceneAsset.cs` · `StageNodes.cs`(무대 뼈대 이름 규약·패럴랙스 상수) |
+| 모션·채널·키 모델, 씬 모델 | `Mt.Graph/Model/MotionAsset.cs`(모션 · 채널 · 키) · `Mt.Authoring/Model/MotionDocument.cs`(문서) · `SceneAsset.cs` · `StageNodes.cs`(무대 뼈대 이름 규약·패럴랙스 상수) |
 | 편집 명령 전부(undo 포함) | `Mt.Authoring/Editing/MotionEditor.cs`(+ `.Clips.cs` · `.Emojis.cs`) — `Mutate`·`Batch`·`RecordExternal`·`Undo/Redo`·끄는 조작(`BeginGesture`·`GestureChanged`·`EndGesture`) |
 | 저작 원본 읽고 쓰기 | `Serialization/MotionDocumentJson.cs` (`motion-authoring/3`만 읽는다) |
 | `motions.json` 읽고 쓰기 | `Serialization/MotionsJson.cs` (`motions/2` 정규 직렬화·관용 읽기) |

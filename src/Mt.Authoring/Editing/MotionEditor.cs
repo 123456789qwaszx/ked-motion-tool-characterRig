@@ -16,7 +16,7 @@ namespace Mt.Authoring.Editing;
 /// 편집 중 자연스러운 중간 상태다. 어긋남은 <c>MotionValidator</c>가 계속 알리고, 내보내기만 막는다.
 /// 단 하나, 키 목록의 시각 오름차순은 편집기가 지킨다(그래프가 그것을 전제한다).
 /// </summary>
-public sealed partial class MotionEditor
+public sealed partial class MotionEditor : IGraphEditor
 {
     private const int MaxHistory = 200;
 
@@ -30,6 +30,20 @@ public sealed partial class MotionEditor
 
     /// <summary>무엇이든 바뀌었을 때. 듣는 쪽은 현재 상태를 다시 읽는다.</summary>
     public event EventHandler<MotionChangedEventArgs>? Changed;
+
+    // ── 그래프가 바라는 것(IGraphEditor) — 키를 고치는 명령은 이 클래스의 것 그대로다 ──────────
+
+    private EventHandler? _graphChanged;
+
+    event EventHandler? IGraphEditor.GraphChanged
+    {
+        add => _graphChanged += value;
+        remove => _graphChanged -= value;
+    }
+
+    MotionAsset? IGraphEditor.FindMotion(string name) => Document.Find(name);
+
+    void IGraphEditor.Batch(Action change) => Batch(MotionChangeKind.Keys, change);
 
     /// <summary>실제로 바뀐 횟수. 두 시점의 값이 같으면 그 사이에 아무 일도 없었다.</summary>
     public long Revision { get; private set; }
@@ -1146,6 +1160,7 @@ public sealed partial class MotionEditor
         if (InGesture)
         {
             Changed?.Invoke(this, new MotionChangedEventArgs(_gestureKind));
+            _graphChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -1338,6 +1353,7 @@ public sealed partial class MotionEditor
     {
         Revision++;
         Changed?.Invoke(this, new MotionChangedEventArgs(kind));
+        _graphChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private MotionAsset Require(string name)
