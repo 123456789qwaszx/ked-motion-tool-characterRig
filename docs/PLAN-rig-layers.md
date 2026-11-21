@@ -58,3 +58,45 @@ dotnet build KedMotionTool.sln -c Release *> artifacts\r7-build.log; dotnet test
 Authoring의 둘은 이 일과 무관하게 Windows에서만 실패한다 — `LibraryTests.내보낸_것이_export에_둔_산출물과_같다`(emojis)와
 `EmojiExampleTests.예시_파일은_빌더가_낸_것과_같다`. 툴이 쓴 JSON의 줄바꿈이 `\r\n`이고 저장소의 파일은 `\n`이다
 (`EmojiExport` · `MotionDocumentJson`의 `WriteIndented`가 그 OS의 줄바꿈을 쓴다). CI(ubuntu)에서는 드러나지 않는다. 고칠지는 소유자가 정한다.
+
+## 5. 이어받을 때 (2026-11-22 01:30에 멈췄다)
+
+**어디서 멈췄나.** 조사와 결정까지다. 코드 · 시험 · 예시 · 덤프는 하나도 고치지 않았다 — `dev`는 `538a99e` 위에 이 계획서의 커밋만 있다(푸시하지 않았다).
+다음은 S1이고, 소유자가 "진행"이라고 할 때 시작한다. §2 아래의 두 가지(`grow`가 갈 노드 · 카메라 리그)와 §4의 줄바꿈 실패를 고칠지는 그때 다시 묻는다.
+
+**S1에서 고칠 자리**(`stance` · 씬의 배율 — `grep`으로 센 것, `bin` · `obj` 제외):
+
+| 자리 | 무엇 |
+|---|---|
+| `Mt.Authoring/Defaults/controllers.json` | `stance` 줄 |
+| `Model/SceneAsset.cs` | `SceneObject.ScaleX` · `ScaleY`, `PlacementNodes.Scale`, 머리 주석의 "배율 → `CharSlot_Scale`" |
+| `Editing/MotionEditor.cs` | 오브젝트 복제(161~162) · `SetObjectPlacement`의 `scaleX` · `scaleY` 인자(212~228) |
+| `Preview/ScenePreview.cs` | 배율을 트리에 넣는 줄(122 · 138) |
+| `Serialization/MotionDocumentJson.cs` | 씬 오브젝트의 `scaleX` · `scaleY` 읽고 쓰기 |
+| `Mt.Cli/MtCli.Build.cs` | `--scale` · `--scale-x` · `--scale-y`와 출력의 `scaleX` · `scaleY`(83~99) |
+| `Mt.App/MainWindow.axaml.cs` · `MainWindow.Scene.cs` | `_objSx` · `_objSy` 칸, `CommitObjectPlacementFromForm`의 인자, 배치 칸을 펴는 조건 |
+| 시험 | `MainWindowTests`(511 · 572의 컨트롤러 순서) · `SceneTests`(39 · 74) · `MtCliCreateTests`(153) |
+| 예시 · 문서 | `examples/emoji/emoji-examples.motion-authoring.json`(빌더 `EmojiExamples.cs`를 고치고 `MT_WRITE_EXAMPLES=1`로 다시 쓴다) · `AUTHORING-FILES.md` · `USER-GUIDE.md` · `guide/README.md` |
+
+이모지의 `scaleX` · `scaleY`(`EmojiExport` · `emojis.json`의 채널 이름)는 다른 것이다 — 손대지 않는다.
+
+**S3에서 소비자가 바꿔 부를 것**(런타임 코어의 새 이름):
+
+| 지금 | 새 코어 |
+|---|---|
+| `StageNodeClaim` · `MotionMath.ClaimFor` | `NodeTarget` · `MotionMath.TargetFor` |
+| `PlaceFocusStageReduction.TryReduce` | `NodeTargets.TrySolveFocusPlacement`(`Reduce/NodeTargets.Placement.cs`) — 푼 값은 `CharSlot_Track`(`place x y`)이나 `CharFocus_Track`(`focus_move`)에 놓는다. 씬의 자리가 어느 쪽인지는 그때 정한다 |
+| `SetDepthStageReduction.TryReduce` · `DepthYNodeId` · `DepthScaleNodeId` | `NodeTargets.TrySetDepth` · `DepthOffsetNodeId` · `DepthScaleNodeId` |
+| `PortraitSizingReduction.Reduce` · `PortraitSizingStageReduction.ImageNodeId` · `ParentNodeId` | `NodeTargets.TryPortraitSizing` · `SourcePixelsSizing` · `PortraitImageNodeId` · `PortraitParentNodeId` |
+| `ViewportView.Emoji.cs`의 `HostNode`(`CharSlot_Scale`) · `EmojiPreview` | `CharacterPortrait_DepthScale` |
+
+사본의 순수 시험 가운데 런타임에 없는 형식을 보는 것(`OscillationFunctionsTests` · `PlacementBundleReductionTests` · `ReductionTests` …)은 런타임의 순수 시험 30개로 통째 바꾼다(`vendoring.md` 절차 2).
+
+**조심할 것.**
+
+- **git은 세션의 리눅스 VM에서 돈다.** 작업 트리의 `tools/authoring-24to30.py` · `guide-figures.py`가 고친 것으로 보이지만 줄바꿈(CRLF)뿐이다 — 소유자 PC의 것이니 `git add -A`를 쓰지 않고 고친 파일만 올린다. VM에는 git 사용자 설정이 없어 커밋할 때 `-c user.name=Claude -c user.email=noreply@anthropic.com`을 준다(앞선 커밋들과 같다).
+- **런타임에서 들이는 파일은 CRLF다**(그쪽 작업 트리). 사본에 넣을 때 `\r`을 걷는다 — 견줄 때는 `diff --strip-trailing-cr`.
+- **기록 파일은 UTF-16이고 한글이 깨져 있다.** 숫자와 영문(`.dll` 이름 · `Expected` · `Actual`)으로 읽는다. 요약 줄이 셋(Core · Authoring · App)인지 센다.
+- **세션은 PC의 터미널에 글자를 넣지 못한다**(컴퓨터 사용에서 터미널 · 탐색기는 보기와 클릭만). 테스트는 §4의 한 줄을 소유자가 돌린다.
+- **런타임 저장소는 읽기만 한다.** 견본(`stage-parity/motions.json` · `poses.json`)은 이쪽이 원본이다 — S4에서 두 파일을 넘기고 커밋은 소유자가 한다(`MAINTENANCE.md` §4.7).
+- 그림 설명서의 그림은 화면이 바뀌면 다시 뽑는다(S1에서 Scale X · Y 칸이 빠진다) — `MT_RENDER_DIR`도 소유자 PC에서 돌려야 한다.
