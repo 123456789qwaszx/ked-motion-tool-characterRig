@@ -54,7 +54,7 @@ public static partial class MtCli
                                                                같은 시각에 키가 있으면 바꾼다. --picture가 없으면 이모지 전체. 탄젠트의 기본은 flat
           mt unkey       <문서> (key와 같은 자리) (--time <초> | --frame <프레임>)
                                                                그 시각의 키 하나를 지운다
-          mt object      <문서> --id <id> [--scene <씬>] [--rig-kind character] [--x <px>] [--y <px>] [--rotation <도>] [--scale <배>] [--scale-x …] [--scale-y …]
+          mt object      <문서> --id <id> [--scene <씬>] [--rig-kind character] [--x <px>] [--y <px>] [--rotation <도>]
                                                                씬의 캐릭터 — 없으면 세우고, 있으면 적은 값만 바꾼다
           mt add-clip    <문서> --name <이름> [--scene <씬>] [--duration <초>]
           mt block       <문서> --clip <이름> --motion <이름> --at <초> --object <id> [--role <배역>] [--mode relative|absolute] [--track <번호>|new]

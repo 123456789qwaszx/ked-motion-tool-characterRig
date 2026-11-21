@@ -327,7 +327,7 @@ public class ViewportViewTests
             }
 
             // 무대 밖으로 보낸 오브젝트도 잘리지 않는다 — 사각형이 있고 클릭으로 고른다.
-            editor.SetObjectPlacement(null, "s1", 1500f, 0f, 0f, 1f, 1f);
+            editor.SetObjectPlacement(null, "s1", 1500f, 0f, 0f);
             Quad outside = view.ObjectQuad("s1")!.Value;
             Assert.True(view.ToScreen(outside.Center).X > view.StageRect.Right);
         }
@@ -403,7 +403,7 @@ public class ViewportViewTests
         {
             Assert.Equal("s1", view.SelectedObjectId);
             editor.AddSceneObject(null, "s2", "character", SceneLayers.Front);
-            editor.SetObjectPlacement(null, "s2", 300f, 0f, 0f, 1f, 1f);
+            editor.SetObjectPlacement(null, "s2", 300f, 0f, 0f);
 
             Quad first = view.ObjectQuad("s1")!.Value;
             Quad second = view.ObjectQuad("s2")!.Value;

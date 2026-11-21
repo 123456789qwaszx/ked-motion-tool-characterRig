@@ -12,7 +12,7 @@ namespace Mt.Authoring.Tests;
 public class ControllersFileTests
 {
     [Fact]
-    public void 내장_표는_character_리그의_세_묶음과_열_컨트롤러이고_노드가_전부_덤프에_있다()
+    public void 내장_표는_character_리그의_세_묶음과_아홉_컨트롤러이고_노드가_전부_덤프에_있다()
     {
         ControllersFile file = BuiltinTuning.Controllers;
 
@@ -21,7 +21,7 @@ public class ControllersFileTests
         Assert.Equal(MotionChannelMode.Absolute, rig.Groups[0].Mode);
         Assert.Equal(MotionChannelMode.Absolute, rig.Groups[1].Mode);
         Assert.Equal(MotionChannelMode.Relative, rig.Groups[2].Mode);
-        Assert.Equal(10, rig.Controllers.Count);
+        Assert.Equal(9, rig.Controllers.Count);
         Assert.Empty(rig.Validate(BuiltinTuning.RigSchemas.NodeIds["character"]));
         Assert.Null(file.Rig("screenEffect")); // 표가 없는 리그는 노드로 다룬다
     }

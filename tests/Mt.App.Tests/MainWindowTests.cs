@@ -502,13 +502,12 @@ public class MainWindowTests
                 Assert.Equal("s2", window.Viewport.SelectedObjectId);
 
                 long before = window.Session.Editor.Revision;
-                window.CommitObjectPlacementFromForm(120f, -30f, 5f, 1.2f, 1f);
+                window.CommitObjectPlacementFromForm(120f, -30f, 5f);
                 Assert.Equal(before + 1, window.Session.Editor.Revision);
                 Mt.Authoring.Model.SceneObject s2 = window.Viewport.SelectedObject!;
                 Assert.Equal(120f, s2.PositionX);
                 Assert.Equal(-30f, s2.PositionY);
                 Assert.Equal(5f, s2.RotationZ);
-                Assert.Equal(1.2f, s2.ScaleX);
 
                 window.Session.Editor.Undo();
                 Assert.Equal(0f, window.Viewport.SelectedObject!.PositionX);
@@ -567,11 +566,11 @@ public class MainWindowTests
                 window.AddChannelFromForm(y.Node, y.Kind);
                 window.Session.Editor.SetKeys("nod", y.Node, y.Kind, y.Axis, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
 
-                // 컨트롤러 10개 전부, 표 순서 그대로(선택·키와 무관 — 순서가 바뀌면 헷갈린다).
-                // 행 수 = 컨트롤러 10 + 키가 있는(또는 고른) 컨트롤러의 성분: 몸 2. 키가 없는 컨트롤러는 이름 한 줄이다.
-                string[] tableOrder = { "place", "slotLean", "stance", "depth", "body", "lean", "bow", "shake", "squash", "facing" };
+                // 컨트롤러 9개 전부, 표 순서 그대로(선택·키와 무관 — 순서가 바뀌면 헷갈린다).
+                // 행 수 = 컨트롤러 9 + 키가 있는(또는 고른) 컨트롤러의 성분: 몸 2. 키가 없는 컨트롤러는 이름 한 줄이다.
+                string[] tableOrder = { "place", "slotLean", "depth", "body", "lean", "bow", "shake", "squash", "facing" };
                 Assert.Equal(tableOrder, window.OutlinerOrder);
-                Assert.Equal(12, window.OutlinerRowCount);
+                Assert.Equal(11, window.OutlinerRowCount);
                 Assert.Single(window.Graph.Curves);
 
                 // 흐린 성분(몸 X) 클릭은 성분을 만들지 않는다(A2) — 그 컨트롤러를 고를 뿐.
@@ -962,7 +961,7 @@ public class MainWindowTests
             try
             {
                 window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
-                window.CommitObjectPlacementFromForm(200f, -40f, 0f, 1f, 1f); // s1
+                window.CommitObjectPlacementFromForm(200f, -40f, 0f); // s1
 
                 // 자리(place) — 씬 탭 콤보로. Track_Focus가 코어 place 폴드로 풀린다.
                 window.SelectInHierarchy("s1", null);

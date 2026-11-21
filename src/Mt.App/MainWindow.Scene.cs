@@ -93,13 +93,12 @@ public partial class MainWindow
             Children =
             {
                 new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { Small("오프셋 X"), _objX, Small("Y"), _objY, Small("Rot Z"), _objRot } },
-                new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { Small("Scale X"), _objSx, Small("Y"), _objSy } },
             },
         };
-        ToolTip.SetTip(_placementExpander, "모션이 없을 때의 자리 — CharSlot_Track(move)·SwayPivot(rotate)·Scale에 그대로 들어간다. 채널 박스의 자리 키는 여기서 출발한다. 모션 키가 아니다");
+        ToolTip.SetTip(_placementExpander, "모션이 없을 때의 자리 — CharSlot_Track(move)·SwayPivot(rotate)에 그대로 들어간다. 채널 박스의 자리 키는 여기서 출발한다. 모션 키가 아니다");
         panel.Children.Add(_placementExpander);
 
-        foreach (TextBox box in new[] { _objX, _objY, _objRot, _objSx, _objSy })
+        foreach (TextBox box in new[] { _objX, _objY, _objRot })
         {
             OnCommit(box, _ => CommitObjectPlacement());
         }
@@ -138,7 +137,7 @@ public partial class MainWindow
             SceneObject? selected = _viewport.SelectedObject;
             bool has = selected is not null;
 
-            foreach (Control c in new Control[] { _objX, _objY, _objRot, _objSx, _objSy, _objVisible, _objId, _objLayer, _objStage, _objPlace })
+            foreach (Control c in new Control[] { _objX, _objY, _objRot, _objVisible, _objId, _objLayer, _objStage, _objPlace })
             {
                 c.IsEnabled = has;
             }
@@ -163,8 +162,6 @@ public partial class MainWindow
             _objX.Text = selected is null ? "" : F(selected.PositionX);
             _objY.Text = selected is null ? "" : F(selected.PositionY);
             _objRot.Text = selected is null ? "" : F(selected.RotationZ);
-            _objSx.Text = selected is null ? "" : F(selected.ScaleX);
-            _objSy.Text = selected is null ? "" : F(selected.ScaleY);
             _objLayer.SelectedIndex = selected is null ? -1 : SceneLayers.IndexOf(selected.Layer);
             _objVisible.IsChecked = selected?.Visible ?? false;
             CameraSettings? camera = _viewport.Scene?.Camera;
@@ -173,7 +170,7 @@ public partial class MainWindow
             _camPanY.Text = camera is null ? "" : F(camera.PanY);
 
             // 접힌 묶음은 값이 기본이 아닐 때만 스스로 펼친다(닫지는 않는다).
-            _placementExpander.IsExpanded |= selected is not null && (selected.PositionX != 0 || selected.PositionY != 0 || selected.RotationZ != 0 || selected.ScaleX != 1 || selected.ScaleY != 1);
+            _placementExpander.IsExpanded |= selected is not null && (selected.PositionX != 0 || selected.PositionY != 0 || selected.RotationZ != 0);
             _cameraExpander.IsExpanded |= camera is not null && (camera.Zoom != 0 || camera.PanX != 0 || camera.PanY != 0);
         }
         finally
@@ -811,13 +808,12 @@ public partial class MainWindow
             return;
         }
 
-        if (!TryFloat(_objX.Text ?? "", out float x) || !TryFloat(_objY.Text ?? "", out float y) || !TryFloat(_objRot.Text ?? "", out float rot)
-            || !TryFloat(_objSx.Text ?? "", out float sx) || !TryFloat(_objSy.Text ?? "", out float sy))
+        if (!TryFloat(_objX.Text ?? "", out float x) || !TryFloat(_objY.Text ?? "", out float y) || !TryFloat(_objRot.Text ?? "", out float rot))
         {
             return;
         }
 
-        Guard("배치", () => _session.Editor.SetObjectPlacement(null, o.Id, x, y, rot, sx, sy));
+        Guard("배치", () => _session.Editor.SetObjectPlacement(null, o.Id, x, y, rot));
     }
 
     /// <summary>테스트 손잡이 — 오브젝트 추가(최상위, 그 레이어)와 채널 박스.</summary>
@@ -862,13 +858,11 @@ public partial class MainWindow
         return path;
     }
 
-    internal void CommitObjectPlacementFromForm(float x, float y, float rotationZ, float scaleX, float scaleY)
+    internal void CommitObjectPlacementFromForm(float x, float y, float rotationZ)
     {
         _objX.Text = F(x);
         _objY.Text = F(y);
         _objRot.Text = F(rotationZ);
-        _objSx.Text = F(scaleX);
-        _objSy.Text = F(scaleY);
         CommitObjectPlacement();
     }
 }

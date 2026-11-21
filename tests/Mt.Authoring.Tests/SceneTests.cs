@@ -25,7 +25,7 @@ public class SceneTests
         Assert.Equal("stage00", s1.Stage); // 게임·코어 slot 기본과 같다
 
         editor.AddSceneObject(null, "fx", "screenEffect", SceneLayers.Far);
-        editor.SetObjectPlacement(null, "s1", 120f, -30f, 5f, 1.2f, 0.9f);
+        editor.SetObjectPlacement(null, "s1", 120f, -30f, 5f);
         editor.SetObjectPortrait(null, "s1", "assets/harin.png");
         editor.SetObjectVisible(null, "fx", false);
 
@@ -36,7 +36,7 @@ public class SceneTests
         SceneAsset back = read.ActiveSceneAsset!;
         Assert.Equal(new[] { "s1", "fx" }, back.Objects.Select(o => o.Id));
         Assert.Equal(120f, back.Objects[0].PositionX);
-        Assert.Equal(0.9f, back.Objects[0].ScaleY);
+        Assert.Equal(5f, back.Objects[0].RotationZ);
         Assert.Equal("assets/harin.png", back.Objects[0].Portrait);
         Assert.False(back.Objects[1].Visible);
         Assert.Contains("\"layer\": \"far\"", json, StringComparison.Ordinal);
@@ -55,8 +55,8 @@ public class SceneTests
 
         long before = editor.Revision;
         editor.AddSceneObject(null, "s2", "character", SceneLayers.Close);
-        editor.SetObjectPlacement(null, "s2", 10f, 0f, 0f, 1f, 1f);
-        editor.SetObjectPlacement(null, "s2", 10f, 0f, 0f, 1f, 1f); // 같은 값은 조작이 아니다
+        editor.SetObjectPlacement(null, "s2", 10f, 0f, 0f);
+        editor.SetObjectPlacement(null, "s2", 10f, 0f, 0f); // 같은 값은 조작이 아니다
         editor.SetObjectLayer(null, "s2", SceneLayers.Back);
         Assert.Equal(before + 3, editor.Revision);
 
@@ -71,7 +71,7 @@ public class SceneTests
     public void 씬_트리는_오브젝트마다_접두사로_서고_배치가_배치_축_노드에_들어간다()
     {
         var scene = new SceneAsset();
-        scene.Objects.Add(new SceneObject { Id = "s1", Rig = "character", PositionX = 100f, PositionY = 50f, RotationZ = 10f, ScaleX = 1.5f, ScaleY = 2f });
+        scene.Objects.Add(new SceneObject { Id = "s1", Rig = "character", PositionX = 100f, PositionY = 50f, RotationZ = 10f });
         scene.Objects.Add(new SceneObject { Id = "fx", Rig = "screenEffect", Layer = SceneLayers.Far });
         scene.Objects.Add(new SceneObject { Id = "nope", Rig = "robot" });
         var missing = new List<SceneObject>();
@@ -87,9 +87,6 @@ public class SceneTests
         Assert.Equal(100f, track.AnchoredPosition.X);
         Assert.Equal(50f, track.AnchoredPosition.Y);
         Assert.Equal(10f, tree.GetState("s1/CharSlot_SwayPivot").LocalEulerAngles.Z);
-        Assert.Equal(1.5f, tree.GetState("s1/CharSlot_Scale").LocalScale.X);
-        Assert.Equal(2f, tree.GetState("s1/CharSlot_Scale").LocalScale.Y);
-        Assert.Equal(1f, tree.GetState("s1/CharSlot_Scale").LocalScale.Z); // z는 그대로
 
         // 초상 사이징(종횡비 0.8)은 접두사 밑에서도 입혀진다.
         Vec2 image = tree.GetRectSize("s1/CharacterPortraitSprite_Image");
@@ -264,7 +261,7 @@ public class SceneTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddSceneObject(null, "s2", "character", SceneLayers.Far, stage: "stage01");
-        editor.SetObjectPlacement(null, "s1", 120f, -30f, 5f, 1.1f, 1f);
+        editor.SetObjectPlacement(null, "s1", 120f, -30f, 5f);
         SceneAsset scene = editor.Document.ActiveSceneAsset!;
         Assert.Throws<InvalidOperationException>(() => editor.AddSceneObject(null, "s3", "character", SceneLayers.Mid, stage: "stage07"));
 

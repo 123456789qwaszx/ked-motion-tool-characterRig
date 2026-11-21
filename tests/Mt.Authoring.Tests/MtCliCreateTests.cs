@@ -146,11 +146,11 @@ public class MtCliCreateTests : IDisposable
 
         // 캐릭터 — 없으면 세우고, 있으면 적은 값만 바꾼다.
         Assert.Equal("object", Run("object", _document, "--id", "s2", "--x", "300").Json["made"]!.GetValue<string>());
-        JsonNode moved = Run("object", _document, "--id", "s2", "--y", "-20", "--scale", "1.1").Json;
+        JsonNode moved = Run("object", _document, "--id", "s2", "--y", "-20", "--rotation", "5").Json;
         Assert.Equal("object-changed", moved["made"]!.GetValue<string>());
         Assert.Equal(300f, moved["x"]!.GetValue<float>());
         Assert.Equal(-20f, moved["y"]!.GetValue<float>());
-        Assert.Equal(1.1f, moved["scaleY"]!.GetValue<float>());
+        Assert.Equal(5f, moved["rotation"]!.GetValue<float>());
 
         // 클립 — 배역과 트랙은 블록을 놓을 때 선다.
         Assert.Equal(0, Run("add-clip", _document, "--name", "greet").Code);

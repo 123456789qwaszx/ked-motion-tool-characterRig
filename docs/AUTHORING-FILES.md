@@ -68,7 +68,7 @@
 | `mt key <문서> --motion <이름> --controller <id> --axis x\|y\|z …` | 모션에 키. 손잡이의 `id`로(또는 `--node <노드> --kind <종류>`로). 시각은 **초** |
 | `mt key <문서> --emoji <이름> [--picture <그림>] --kind <종류> --axis x\|y\|z …` | 이모지에 키. `--picture`가 없으면 이모지 전체. 시각은 **프레임** |
 | `mt unkey <문서> (key와 같은 자리) --time <초>` (이모지는 `--frame <프레임>`) | 그 시각의 키 하나를 지운다. 없는 시각이면 있는 시각을 말해 준다 |
-| `mt object <문서> --id <id> [--x <px>] [--y <px>] [--rotation <도>] [--scale <배>] [--scene <씬>]` | 씬의 캐릭터 — 없으면 세우고, 있으면 **적은 값만** 바꾼다 |
+| `mt object <문서> --id <id> [--x <px>] [--y <px>] [--rotation <도>] [--scene <씬>]` | 씬의 캐릭터 — 없으면 세우고, 있으면 **적은 값만** 바꾼다 |
 | `mt add-clip <문서> --name <이름> [--scene <씬>] [--duration <초>]` | 빈 클립 |
 | `mt block <문서> --clip <이름> --motion <이름> --at <초> --object <id> [--mode relative\|absolute] [--track <번호>\|new]` | 클립에 모션 블록 하나. 배역(이름은 캐릭터의 id — `--role`로 바꾼다)과 그 트랙이 없으면 세운다. 같은 노드가 겹치면 `--track new`로 줄을 나누거나 `--at`을 옮긴다 |
 | `mt span <문서> --emoji <이름> --name <구간> --start <프레임> --end <프레임>` | 이모지의 구간 — 없으면 더하고, 있으면 옮긴다(끝 포함). 등장 · 머묾 · 퇴장에 이은 것이면 `linked`에 나온다 |
@@ -182,7 +182,6 @@ mt pose     a.motion-authoring.json --clip greet --time 0.5
 | 연기 | 방향 | `CharacterPortrait_ActingScale_X` | `scale` | x(1 그대로 · −1 뒤집기) | 돌아서기 |
 | 자리 | 자리 | `CharSlot_Track` | `position` | x · y(px) | 무대에서의 자리 — **절대값으로 재생한다** |
 | 자리 | 슬롯 기울기 | `CharSlot_SwayPivot` | `euler` | z(도) | 절대값 |
-| 자리 | 배율 | `CharSlot_Scale` | `scale` | x · y | 절대값. 연기의 진폭까지 커진다 |
 
 - 자리의 노드는 "그 자리로 간다"는 뜻이라 대본에서 `absolute`로 재생해야 한다. 연기와 한 모션에 섞지 않는다(검증이 알린다).
 - `CharSlot_Track_Focus`는 키를 받지 않는다. 그 밖의 노드는 리그 덤프(`rig-schemas.json`)에 있으면 쓸 수 있지만, 위 표에 없는 것은 쓰지 않는 편이 낫다.

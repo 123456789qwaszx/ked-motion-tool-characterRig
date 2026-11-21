@@ -79,9 +79,7 @@ public static partial class MtCli
                 id,
                 Float(options, "x", o.PositionX),
                 Float(options, "y", o.PositionY),
-                Float(options, "rotation", o.RotationZ),
-                Float(options, "scale-x", Float(options, "scale", o.ScaleX)),
-                Float(options, "scale-y", Float(options, "scale", o.ScaleY)));
+                Float(options, "rotation", o.RotationZ));
         });
 
         SceneObject done = scene.Find(id)!;
@@ -95,8 +93,6 @@ public static partial class MtCli
             ["x"] = done.PositionX,
             ["y"] = done.PositionY,
             ["rotation"] = done.RotationZ,
-            ["scaleX"] = done.ScaleX,
-            ["scaleY"] = done.ScaleY,
         });
     }
 

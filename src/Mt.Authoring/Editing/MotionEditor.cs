@@ -158,8 +158,6 @@ public sealed partial class MotionEditor
             PositionX = source.PositionX,
             PositionY = source.PositionY,
             RotationZ = source.RotationZ,
-            ScaleX = source.ScaleX,
-            ScaleY = source.ScaleY,
             Portrait = source.Portrait,
             Visible = source.Visible,
             Place = source.Place,
@@ -208,13 +206,13 @@ public sealed partial class MotionEditor
         return candidate;
     }
 
-    /// <summary>배치(위치·회전·배율) — 마야 채널 박스의 Translate/Rotate/Scale. 모션 키가 아니다.</summary>
-    public void SetObjectPlacement(string? sceneName, string id, float x, float y, float rotationZ, float scaleX, float scaleY)
+    /// <summary>배치(위치·회전) — 마야 채널 박스의 Translate/Rotate. 모션 키가 아니다.</summary>
+    public void SetObjectPlacement(string? sceneName, string id, float x, float y, float rotationZ)
     {
         SceneAsset scene = RequireScene(sceneName);
         SceneObject o = RequireObject(scene, id);
 
-        if (o.PositionX == x && o.PositionY == y && o.RotationZ == rotationZ && o.ScaleX == scaleX && o.ScaleY == scaleY)
+        if (o.PositionX == x && o.PositionY == y && o.RotationZ == rotationZ)
         {
             return;
         }
@@ -224,8 +222,6 @@ public sealed partial class MotionEditor
             o.PositionX = x;
             o.PositionY = y;
             o.RotationZ = rotationZ;
-            o.ScaleX = scaleX;
-            o.ScaleY = scaleY;
         });
     }
 

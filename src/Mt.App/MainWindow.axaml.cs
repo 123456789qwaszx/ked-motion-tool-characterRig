@@ -145,8 +145,6 @@ public partial class MainWindow : Window
     private readonly TextBox _objX = new() { FontSize = 11, Width = 64 };
     private readonly TextBox _objY = new() { FontSize = 11, Width = 64 };
     private readonly TextBox _objRot = new() { FontSize = 11, Width = 64 };
-    private readonly TextBox _objSx = new() { FontSize = 11, Width = 64 };
-    private readonly TextBox _objSy = new() { FontSize = 11, Width = 64 };
     private readonly ComboBox _objLayer = new() { ItemsSource = SceneLayers.Order, FontSize = 11 };
     private readonly ComboBox _objStage = new() { ItemsSource = StageNodes.Stages, FontSize = 11 };
     private readonly ComboBox _objPlace = new() { FontSize = 11, MinWidth = 90 };

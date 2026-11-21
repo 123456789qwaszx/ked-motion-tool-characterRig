@@ -46,7 +46,7 @@ public sealed class CameraSettings
 /// <summary>
 /// 씬의 오브젝트 하나 = 리그 인스턴스(슬롯). 자리는 런타임과 같은 두 겹이다:
 /// <see cref="Place"/>(화면 지점 × focus 프리셋 → <c>CharSlot_Track_Focus</c>, 코어 place 폴드)와
-/// 오프셋(<see cref="PositionX"/>/<see cref="PositionY"/> → <c>CharSlot_Track</c>, move) · 회전 → <c>CharSlot_SwayPivot</c> · 배율 → <c>CharSlot_Scale</c>.
+/// 오프셋(<see cref="PositionX"/>/<see cref="PositionY"/> → <c>CharSlot_Track</c>, move) · 회전 → <c>CharSlot_SwayPivot</c>.
 /// 그 노드가 없는 리그는 루트 노드에 들어간다.
 /// 오브젝트는 무대 뼈대의 <c>Stage{NN}Depth_{Layer}_Content</c>에 선다(오브젝트끼리의 부모·자식은 없다 — 런타임에도 없다).
 /// </summary>
@@ -93,10 +93,6 @@ public sealed class SceneObject
     /// <summary>도.</summary>
     public float RotationZ { get; set; }
 
-    public float ScaleX { get; set; } = 1f;
-
-    public float ScaleY { get; set; } = 1f;
-
     /// <summary>미리보기 초상 이미지(문서 기준 상대 경로). 산출물과 무관.</summary>
     public string? Portrait { get; set; }
 
@@ -129,12 +125,11 @@ public static class SceneLayers
     public static bool IsKnown(string? layer) => layer is not null && Array.IndexOf((string[])Order, layer) >= 0;
 }
 
-/// <summary>배치 값을 트리에 넣는 자리 — 런타임의 move/rotate/scale 폴드와 같은 노드.</summary>
+/// <summary>배치 값을 트리에 넣는 자리 — 런타임의 move/rotate 폴드와 같은 노드.</summary>
 public static class PlacementNodes
 {
     public const string Position = "CharSlot_Track";
     public const string Rotation = "CharSlot_SwayPivot";
-    public const string Scale = "CharSlot_Scale";
 
     /// <summary>배치 축 노드들 — 모션 채널로 쓰면 런타임 place/size와 겹칠 수 있어 툴이 "고급"으로 접는다.</summary>
     public static bool IsPlacementAxis(string nodeId) => nodeId.StartsWith("CharSlot_", StringComparison.Ordinal);

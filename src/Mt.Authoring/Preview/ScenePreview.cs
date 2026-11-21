@@ -119,7 +119,6 @@ public static class ScenePreview
         string root = RootKeyOf(o);
         string position = tree.Contains(o.KeyOf(PlacementNodes.Position)) ? o.KeyOf(PlacementNodes.Position) : root;
         string rotation = tree.Contains(o.KeyOf(PlacementNodes.Rotation)) ? o.KeyOf(PlacementNodes.Rotation) : root;
-        string scale = tree.Contains(o.KeyOf(PlacementNodes.Scale)) ? o.KeyOf(PlacementNodes.Scale) : root;
 
         if (tree.Contains(position))
         {
@@ -130,12 +129,6 @@ public static class ScenePreview
         {
             RectNodeState state = tree.GetState(rotation);
             tree.SetState(rotation, state.WithLocalEuler(new Vec3(state.LocalEulerAngles.X, state.LocalEulerAngles.Y, o.RotationZ)));
-        }
-
-        if (tree.Contains(scale))
-        {
-            RectNodeState state = tree.GetState(scale);
-            tree.SetState(scale, state.WithLocalScale(new Vec3(o.ScaleX, o.ScaleY, state.LocalScale.Z)));
         }
     }
 
