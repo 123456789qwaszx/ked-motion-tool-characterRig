@@ -114,7 +114,7 @@ public class SceneTests
     }
 
     [Fact]
-    public void 깊이_커브가_있으면_레이어가_런타임_size_폴드와_같은_깊이가_된다()
+    public void 깊이_커브가_있으면_레이어가_런타임_size와_같은_깊이가_된다()
     {
         string depthPath = DepthTuningFile.TryFindBeside(Fixtures.PathOf("rig-schemas.json")) ?? throw new InvalidOperationException("presets/depth.json이 없다");
         var depth = DepthTuningFile.Load(depthPath);
@@ -128,21 +128,19 @@ public class SceneTests
         scene.Objects.Add(new SceneObject { Id = "s2", Rig = "character", Layer = SceneLayers.Far });
         RectNodeTree tree = ScenePreview.Build(RigFile, scene, null, null, depth);
 
-        Assert.Equal(midScale, tree.GetState("s1/CharSlot_DepthScale").LocalScale.X, 4);
-        Assert.Equal(farScale, tree.GetState("s2/CharSlot_DepthScale").LocalScale.X, 4);
-        // DepthY는 focus 보존이 정한다 — 초점(VisualOffset)이 배율 중심과 겹치면 레이어가 달라도 0일 수 있다. 값은 아래에서 코어와 대조한다.
+        Assert.Equal(midScale, tree.GetState("s1/CharacterPortrait_DepthScale").LocalScale.X, 4);
+        Assert.Equal(farScale, tree.GetState("s2/CharacterPortrait_DepthScale").LocalScale.X, 4);
 
-        // 깊이 축에도 focus 보존이 들어가므로 날 커브 값과는 다를 수 있다 — 같은 코어 함수로 다시 접은 값과 같다.
-        var state = new StageState(new RectSpace(RigFile.Dto.capturedUnderParentSize.ToVec2(), Vec2.Half));
-        RigSchemaLoader.AddRigTo(state.Nodes, RigFile.Dto.rigs.First(r => r.rigKind == "character"), "s1/");
-        state.RegisterSlot("s1");
-        PortraitLayout.ApplySizing(state.Nodes, PortraitLayout.PlaceholderAspect, "s1/");
-        Assert.True(SetDepthStageReduction.TryReduce(state, "s1", "", "mid", "bust", depth.Level, null, out StageNodeClaim y, out _, out _));
-        Assert.Equal(y.Value.Y, tree.GetState("s1/CharSlot_DepthY").AnchoredPosition.Y, 3);
+        // Y도 커브의 값 그대로다 — 같은 코어 함수(size)가 낸 타깃과 같다.
+        Assert.True(NodeTargets.TrySetDepth("s1", "mid", keepY: false, depth.Level, out bool movesY, out NodeTarget y, out _, out _));
+        Assert.True(movesY);
+        Assert.Equal(midY, y.Value.Y, 3);
+        Assert.Equal(y.Value.Y, tree.GetState("s1/CharacterPortrait_DepthOffset").AnchoredPosition.Y, 3);
+        Assert.Equal(farY, tree.GetState("s2/CharacterPortrait_DepthOffset").AnchoredPosition.Y, 3);
 
         // 커브가 없으면 깊이 축은 덤프 그대로다.
         RectNodeTree plain = ScenePreview.Build(RigFile, scene);
-        Assert.Equal(1f, plain.GetState("s1/CharSlot_DepthScale").LocalScale.X);
+        Assert.Equal(1f, plain.GetState("s1/CharacterPortrait_DepthScale").LocalScale.X);
     }
 
     [Fact]
@@ -337,25 +335,25 @@ public class SceneTests
     }
 
     [Fact]
-    public void 내장_깊이와_focus_표로_세우면_실제_게임_프리팹의_DepthY_DepthScale과_같다()
+    public void 내장_깊이와_focus_표로_세우면_깊이는_커브의_값이고_자리는_포커스_노드에_풀린다()
     {
-        // 게임 진행 중 PresentataionUIRoot 프리팹(Stage00 Mid, 배역 오프셋 없음): CharSlot_DepthY (0, −580.56) · DepthScale 1.708.
+        // Mid(level 14): DepthScale 1.708 · DepthOffset의 Y −664(level 커브의 값 — 런타임 size가 놓는 값).
         var editor = new MotionEditor(new MotionDocument());
         SceneAsset scene = editor.Document.ActiveSceneAsset!;
         RectNodeTree tree = ScenePreview.Build(RigFile, scene, null, null, BuiltinTuning.Depth, BuiltinTuning.Focus, BuiltinTuning.StageRig);
 
-        Assert.Equal(1.708f, tree.GetState("s1/CharSlot_DepthScale").LocalScale.X, 3);
-        Assert.Equal(-580.56f, tree.GetState("s1/CharSlot_DepthY").AnchoredPosition.Y, 1);
-        Assert.Equal(0f, tree.GetState("s1/CharSlot_Track_Focus").AnchoredPosition.X, 3); // place 없음
+        Assert.Equal(1.708f, tree.GetState("s1/CharacterPortrait_DepthScale").LocalScale.X, 3);
+        Assert.Equal(-664f, tree.GetState("s1/CharacterPortrait_DepthOffset").AnchoredPosition.Y, 1);
+        Assert.Equal(0f, tree.GetState("s1/CharFocus_Track").AnchoredPosition.X, 3); // place 없음
 
-        // place(left, bust): focus 점이 화면 왼쪽 지점(−0.24·1920)에 온다 — 코어 place 폴드.
+        // place(left, bust): focus 점이 화면 왼쪽 지점(−0.24·1920)에 온다 — 코어의 보조 계산이 CharFocus_Track의 값을 푼다.
         editor.SetObjectPlace(null, "s1", "left");
         Assert.Throws<InvalidOperationException>(() => editor.SetObjectPlace(null, "s1", "middle"));
         Assert.Throws<InvalidOperationException>(() => editor.SetObjectPlace(null, "s1", "left", "nose"));
         RectNodeTree placed = ScenePreview.Build(RigFile, scene, null, null, BuiltinTuning.Depth, BuiltinTuning.Focus, BuiltinTuning.StageRig);
-        Assert.Equal(-0.24f * 1920f, placed.GetState("s1/CharSlot_Track_Focus").AnchoredPosition.X, 1);
-        Assert.Equal(-580.56f, placed.GetState("s1/CharSlot_DepthY").AnchoredPosition.Y, 1); // 깊이 → place 순서라 DepthY는 그대로(게임과 같다)
-        Assert.NotEqual(0f, placed.GetState("s1/CharSlot_Track_Focus").AnchoredPosition.Y);
+        Assert.Equal(-0.24f * 1920f, placed.GetState("s1/CharFocus_Track").AnchoredPosition.X, 1);
+        Assert.Equal(-664f, placed.GetState("s1/CharacterPortrait_DepthOffset").AnchoredPosition.Y, 1); // 자리는 깊이를 건드리지 않는다
+        Assert.NotEqual(0f, placed.GetState("s1/CharFocus_Track").AnchoredPosition.Y);
 
         editor.SetObjectPlace(null, "s1", "left", "face");
         Assert.Equal("face", scene.Find("s1")!.PlaceFocus);

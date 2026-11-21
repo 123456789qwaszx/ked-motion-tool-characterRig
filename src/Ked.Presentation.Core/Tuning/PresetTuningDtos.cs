@@ -60,11 +60,6 @@ namespace Ked.Presentation.Core
     {
         public Float2Dto depthY;
         public float depthScale;
-
-        /// <summary>CharacterFocusPreset 정수 값 (0/10/20/30/31/40/41).</summary>
-        public int preserveFocusPreset;
-
-        public Float2Dto preserveFocusOffset;
     }
 
 
@@ -80,9 +75,6 @@ namespace Ked.Presentation.Core
     {
         public AnimationCurveDto yCurve;
         public AnimationCurveDto scaleCurve;
-
-        // farPreserveFocus 등 보존 프리셋은 담지 않는다 — 프리셋 경로와 같은 이유로
-        // 런타임이 커맨드 인자로 덮어쓰는 사장 데이터다(SetDepthStageReduction 주석 참조).
 
         public bool TryResolve(float level, out float depthY, out float depthScale)
         {
@@ -209,30 +201,10 @@ namespace Ked.Presentation.Core
     /// <summary>
     /// focus 프리셋 어휘. 런타임 CharacterFocusPreset과의 대응은 값으로 잇는다.
     ///
-    /// ⚠ 호스트 파서(CharacterFocusPresetParser)에는 별칭 표가 크다(p3·torso·x1 …).
-    /// 코어는 정규 이름만 안다 — 실측 결과 원문이 정규 이름만 쓰기 때문이다
-    /// (bust·body·face, 별칭 0건). 별칭이 오면 조용히 넘기지 않고 Unhandled로 소리를 낸다.
+    /// 코어는 정규 이름만 안다(bust · body · face …). 모르는 이름은 조용히 넘기지 않는다.
     /// </summary>
     public static class FocusPresetName
     {
-        /// <summary>덤프의 preserveFocusPreset 정수 → 이름. 모르면 false.</summary>
-        public static bool TryFromEnumValue(int value, out string name)
-        {
-            name = value switch
-            {
-                0 => "feet",
-                10 => "body",
-                20 => "bust",
-                30 => "face",
-                31 => "faceAura",
-                40 => "handLeft",
-                41 => "handRight",
-                _ => null,
-            };
-
-            return name != null;
-        }
-
         /// <summary>yarn 토큰("bust") 정규화. 모르면 false — 추측 보정하지 않는다.</summary>
         public static bool TryNormalizeToken(string token, out string name)
         {

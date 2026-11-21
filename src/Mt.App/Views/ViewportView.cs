@@ -1077,7 +1077,7 @@ public sealed partial class ViewportView : Control
     /// <summary>카메라가 트리(뼈대의 Zoom/Pan 노드)에 들어가 있나. 뼈대가 없으면 보기 변환으로 입힌다(같은 식).</summary>
     public bool CameraInTree => _stage is not null;
 
-    /// <summary>presets/depth.json — 레이어를 깊이(DepthY·DepthScale)로. null이면 레이어는 그리는 순서만.</summary>
+    /// <summary>presets/depth.json — 레이어를 깊이(DepthOffset·DepthScale)로. null이면 레이어는 그리는 순서만.</summary>
     public void SetDepth(DepthTuningFile? depth)
     {
         _depth = depth;

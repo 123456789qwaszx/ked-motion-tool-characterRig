@@ -1,7 +1,7 @@
 using Ked.Presentation.Core;
 using NUnit.Framework;
 
-// 모션 샘플링·합성·클레임 — 정본이 코어라는 것을 값으로 못 박는다.
+// 모션 샘플링·합성·타깃 — 정본이 코어라는 것을 값으로 못 박는다.
 // 재생 샘플러·툴 프리뷰·리듀서가 전부 이 함수를 지난다. mode는 채널이 아니라 호출부가 준다(motions/2).
 public class MotionMathTests
 {
@@ -59,7 +59,7 @@ public class MotionMathTests
     [Test]
     public void 같은_채널을_relative로도_absolute로도_읽는다_첫_키가_중립값이_아니면_첫_프레임부터_움직인다()
     {
-        // 0프레임 x=140 → 1초 x=360. absolute면 140→360, relative면 지금 값+140 → 지금 값+360 (소유자 정의).
+        // 0프레임 x=140 → 1초 x=360. absolute면 140→360, relative면 지금 값+140 → 지금 값+360.
         CurveKey[] from140 = { new CurveKey(0f, 140f, 0f, 0f), new CurveKey(1f, 360f, 0f, 0f) };
         MotionChannel ch = Channel(MotionChannelKind.Position, x: from140);
         Vec3 start = new(20f, 0f, 0f);
@@ -120,21 +120,21 @@ public class MotionMathTests
     }
 
     [Test]
-    public void 클레임은_종류대로_나가고_값은_끝값이다()
+    public void 타깃은_종류대로_나가고_값은_끝값이다()
     {
         Vec3 start = new(1f, 2f, 3f);
 
-        StageNodeClaim pos = MotionMath.ClaimFor(Channel(MotionChannelKind.Position, x: Rise10), Rel, "c1/N", start);
-        StageNodeClaim scale = MotionMath.ClaimFor(Channel(MotionChannelKind.Scale, x: From5To7, y: From5To7), Abs, "c1/N", start);
-        StageNodeClaim euler = MotionMath.ClaimFor(Channel(MotionChannelKind.Euler, z: From5To7), Abs, "c1/N", start);
+        NodeTarget pos = MotionMath.TargetFor(Channel(MotionChannelKind.Position, x: Rise10), Rel, "c1/N", start);
+        NodeTarget scale = MotionMath.TargetFor(Channel(MotionChannelKind.Scale, x: From5To7, y: From5To7), Abs, "c1/N", start);
+        NodeTarget euler = MotionMath.TargetFor(Channel(MotionChannelKind.Euler, z: From5To7), Abs, "c1/N", start);
 
-        Assert.AreEqual(StageNodeClaimKind.AnchoredPosition, pos.Kind);
+        Assert.AreEqual(NodeTargetKind.AnchoredPosition, pos.Kind);
         Assert.AreEqual(new Vec2(11f, 2f), pos.Value.XY);
 
-        Assert.AreEqual(StageNodeClaimKind.LocalScaleXY, scale.Kind);
+        Assert.AreEqual(NodeTargetKind.LocalScaleXY, scale.Kind);
         Assert.AreEqual(new Vec2(7f, 7f), scale.Value.XY);
 
-        Assert.AreEqual(StageNodeClaimKind.LocalEulerAngles, euler.Kind);
+        Assert.AreEqual(NodeTargetKind.LocalEulerAngles, euler.Kind);
         Assert.AreEqual(new Vec3(1f, 2f, 7f), euler.Value);
         Assert.AreEqual("c1/N", euler.NodeKey);
     }
@@ -150,5 +150,41 @@ public class MotionMathTests
         Assert.AreEqual(new Vec3(10f, 20f, 0f), MotionMath.StartOf(Channel(MotionChannelKind.Position), state));
         Assert.AreEqual(new Vec3(2f, 3f, 1f), MotionMath.StartOf(Channel(MotionChannelKind.Scale), state));
         Assert.AreEqual(new Vec3(0f, 0f, 45f), MotionMath.StartOf(Channel(MotionChannelKind.Euler), state));
+    }
+
+    // ── 세기 — 화면 흔들림이 같은 클립을 세기만 바꿔 튼다 ───────────────
+
+    [Test]
+    public void 세기는_중립에서_벗어난_만큼에_곱한다()
+    {
+        MotionChannel position = Channel(MotionChannelKind.Position, x: Rise10);
+        MotionChannel scale = Channel(MotionChannelKind.Scale, x: From5To7);
+
+        // 위치 · 회전의 중립은 0 — v × 세기.
+        Assert.AreEqual(MotionMath.Sample(position, 0.5f).X * 0.5f, MotionMath.SampleScaled(position, 0.5f, 0.5f).X, Eps);
+        Assert.AreEqual(20f, MotionMath.SampleScaled(position, 1f, 2f).X, Eps);
+
+        // 배율의 중립은 1 — 1 + (v − 1) × 세기. 5배의 절반 세기는 3배다(2.5배가 아니다).
+        Assert.AreEqual(3f, MotionMath.SampleScaled(scale, 0f, 0.5f).X, Eps);
+
+        // 없는 성분은 세기와 무관하게 중립이다.
+        Assert.AreEqual(0f, MotionMath.SampleScaled(position, 1f, 3f).Y, 0f);
+        Assert.AreEqual(1f, MotionMath.SampleScaled(scale, 1f, 3f).Y, 0f);
+    }
+
+    [Test]
+    public void 세기_1은_원시_값_그대로이고_0은_중립이다()
+    {
+        MotionChannel position = Channel(MotionChannelKind.Position, x: Rise10, y: From5To7);
+        MotionChannel scale = Channel(MotionChannelKind.Scale, x: From5To7);
+
+        for (int i = 0; i <= 4; i++)
+        {
+            float t = i / 4f;
+
+            Assert.AreEqual(MotionMath.Sample(position, t), MotionMath.SampleScaled(position, t, 1f), $"t={t}");
+            Assert.AreEqual(new Vec3(0f, 0f, 0f), MotionMath.SampleScaled(position, t, 0f), $"t={t}");
+            Assert.AreEqual(new Vec3(1f, 1f, 1f), MotionMath.SampleScaled(scale, t, 0f), $"t={t}");
+        }
     }
 }

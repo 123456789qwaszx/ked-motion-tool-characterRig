@@ -11,8 +11,8 @@ namespace Mt.Authoring.Rig;
 /// </summary>
 public static class BuiltinTuning
 {
-    /// <summary>원본 — 런타임 커밋과 익스포트 시각(export-report.json). 리그 덤프는 2026-11-11의 것(character · screenEffect · emoji), 깊이·focus는 그 전과 같다.</summary>
-    public const string Source = "ked-presentation-runtime 007d4c16 · ExportedTuning 2026-11-11";
+    /// <summary>원본 — 런타임 커밋과 익스포트 시각(export-report.json). 리그의 계층을 바꾼 뒤의 덤프다(character 20노드 · screenEffect · emoji · camera).</summary>
+    public const string Source = "ked-presentation-runtime b56a2ebc · ExportedTuning 2026-11-21";
 
     private const string Prefix = "Defaults/";
 
@@ -23,7 +23,7 @@ public static class BuiltinTuning
     private static readonly Lazy<Vec2> BaseResolutionLazy = new(() => BaseResolutionFile.Parse(Text("ExportedTuning/base-resolution.json")));
     private static readonly Lazy<ControllersFile> ControllersLazy = new(() => ControllersFile.Parse(Text("controllers.json")));
 
-    /// <summary>리그 덤프(character · screenEffect · emoji). 배경은 캐스팅하지 않은 character 슬롯이다.</summary>
+    /// <summary>리그 덤프(character · screenEffect · emoji · camera). 배경은 캐스팅하지 않은 character 슬롯이다. camera는 덤프에 있을 뿐 이 툴이 다루지 않는다.</summary>
     public static RigSchemaFile RigSchemas => RigSchemasLazy.Value;
 
     /// <summary>무대 뼈대 — rigKind "stage" 하나. 노드 id는 유니티 이름 그대로(<c>Stage00Depth_Mid_Content</c>…), 전부 항등.</summary>

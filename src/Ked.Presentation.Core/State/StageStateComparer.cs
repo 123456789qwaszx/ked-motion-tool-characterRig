@@ -26,6 +26,9 @@ namespace Ked.Presentation.Core
 
             public int ComparedNodes;
 
+            /// <summary>비교한 무대 층 수(카메라 제외). 무대 뷰를 넘기지 않은 비교면 0.</summary>
+            public int ComparedLayers;
+
             /// <summary>접힌 쪽에만 있는 노드 수. 캡처가 안 덮는 축의 크기다.</summary>
             public int FoldOnlyNodes;
 
@@ -33,8 +36,8 @@ namespace Ked.Presentation.Core
 
             public override string ToString()
                 => IsEquivalent
-                    ? $"등가 (노드 {ComparedNodes}개 비교, 접힘 전용 {FoldOnlyNodes}개)"
-                    : $"불일치 {Mismatches.Count}건 (노드 {ComparedNodes}개 비교)";
+                    ? $"등가 (노드 {ComparedNodes}개 · 층 {ComparedLayers}개 비교, 접힘 전용 {FoldOnlyNodes}개)"
+                    : $"불일치 {Mismatches.Count}건 (노드 {ComparedNodes}개 · 층 {ComparedLayers}개 비교)";
         }
 
         /// <summary>captured의 노드·축을 folded와 비교한다.</summary>
@@ -76,6 +79,62 @@ namespace Ked.Presentation.Core
             return result;
         }
 
+        /// <summary>
+        /// 노드 · 샷 의도에 더해, 샷이 무대에 쓴 것(카메라 · 층)까지 본다.
+        /// 기대값은 접힌 샷 의도를 ShotLayoutMath로 푼 값이다 — 폴드가 층 반응을 "접는다"는 것은 이 뜻이다.
+        /// 샷은 본 무대만 움직이므로(StageRoles) 덮는 무대의 기대값은 Solve(Default), 곧 항등이다.
+        /// </summary>
+        public static Result Compare(StageState folded, StageState captured, StageViewSnapshot capturedView, LayerProfileCurve curve)
+        {
+            Result result = Compare(folded, captured);
+            CompareStageView(folded.Shot, capturedView, curve, result);
+            return result;
+        }
+
+        public static void CompareStageView(
+            in ShotIntentState foldedShot, StageViewSnapshot captured, LayerProfileCurve curve, Result result)
+        {
+            foreach (StageViewSnapshot.CameraEntry camera in captured.Cameras)
+            {
+                ShotIntentState shot = ShotOf(camera.StageKey, in foldedShot);
+                CameraPose expected = ShotLayoutMath.SolveCamera(in shot);
+
+                string key = $"stage:{camera.StageKey}";
+
+                CompareVec2(key, "cameraPan", expected.Pan, camera.Pose.Pan, PositionEpsilon, result);
+                CompareScalar(key, "cameraZoom", expected.ZoomScale, camera.Pose.ZoomScale, ScalarEpsilon, result);
+                CompareDegrees(key, "cameraRoll", expected.Roll, camera.Pose.Roll, result);
+                CompareScalar(key, "cameraDolly", expected.DollyScale, camera.Pose.DollyScale, ScalarEpsilon, result);
+                CompareVec2(key, "cameraTrack", expected.TrackPosition, camera.Pose.TrackPosition, PositionEpsilon, result);
+
+                // 흔들림은 접히지 않는다 — 정착한 프레임에서는 항등이어야 한다.
+                CompareVec2(key, "cameraShake", Vec2.Zero, camera.ShakePosition, PositionEpsilon, result);
+                CompareDegrees(key, "cameraShakeRotation", 0f, camera.ShakeRotation, result);
+            }
+
+            foreach (StageViewSnapshot.LayerEntry layer in captured.Layers)
+            {
+                result.ComparedLayers++;
+
+                ShotIntentState shot = ShotOf(layer.StageKey, in foldedShot);
+                CameraPose camera = ShotLayoutMath.SolveCamera(in shot);
+                LayerResponse response = ShotLayoutMath.SolveLayer(in shot, layer.Depth, curve);
+
+                Vec2 expectedCenter = ShotLayoutMath.ProjectToRigSpace(Vec2.Zero, in camera, in response);
+                Vec2 expectedScale = response.Scale * camera.Scale;
+
+                string key = string.Format(CultureInfo.InvariantCulture, "stage:{0}/layer:{1}", layer.StageKey, layer.Depth);
+
+                CompareVec2(key, "center", expectedCenter, layer.CenterInRigSpace, PositionEpsilon, result);
+                CompareVec2(key, "totalScale", expectedScale, layer.TotalScale, ScalarEpsilon, result);
+                CompareDegrees(key, "rotation", camera.Roll, layer.Rotation, result);
+            }
+        }
+
+        // 그 무대가 따르는 샷 — 본 무대는 접힌 샷, 덮는 무대는 Default(중립에 고정).
+        private static ShotIntentState ShotOf(string stageKey, in ShotIntentState foldedShot)
+            => StageRoles.Of(stageKey) == StageRole.Main ? foldedShot : ShotIntentState.Default;
+
         private static void CompareNode(
             string key, in RectNodeState folded, in RectNodeState captured, Result result)
         {
@@ -95,6 +154,30 @@ namespace Ked.Presentation.Core
 
             CompareVec2("shot", "panInRigSpace", folded.PanInRigSpace, captured.PanInRigSpace, PositionEpsilon, result);
             CompareVec2("shot", "focusPointInRigSpace", folded.FocusPointInRigSpace, captured.FocusPointInRigSpace, PositionEpsilon, result);
+            CompareVec2("shot", "track", folded.Track, captured.Track, PositionEpsilon, result);
+            CompareScalar("shot", "dolly", folded.Dolly, captured.Dolly, ScalarEpsilon, result);
+            CompareDegrees("shot", "roll", folded.Roll, captured.Roll, result);
+        }
+
+        private static void CompareScalar(
+            string key, string field, float folded, float captured, float epsilon, Result result)
+        {
+            if (Math.Abs(folded - captured) > epsilon)
+                result.Mismatches.Add(Diff(key, field, folded, captured));
+        }
+
+        // 각도는 한 바퀴를 넘겨 적혀도 같은 기울기다(−10 = 350).
+        private static void CompareDegrees(string key, string field, float folded, float captured, Result result)
+        {
+            float delta = (folded - captured) % 360f;
+
+            if (delta > 180f)
+                delta -= 360f;
+            else if (delta < -180f)
+                delta += 360f;
+
+            if (Math.Abs(delta) > DegreesEpsilon)
+                result.Mismatches.Add(Diff(key, field, folded, captured));
         }
 
         private static void CompareVec2(

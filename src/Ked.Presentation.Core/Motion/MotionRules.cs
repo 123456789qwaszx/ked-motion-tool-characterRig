@@ -6,7 +6,7 @@ namespace Ked.Presentation.Core
 {
     // ─────────────────────────────────────────────────────────────────
     // 모션 검증 — 내보내기(에디터)와 런타임 로더와 저작 도구가 같은 규칙을 써야 한다.
-    // 한쪽만 알면 "툴에서는 되는데 재생에서 사라지는" 모션이 생긴다(CurveKindRules와 같은 사정).
+    // 한쪽만 알면 "툴에서는 되는데 재생에서 사라지는" 모션이 생긴다.
     //
     // 규칙은 **모양**만 본다(이름·길이·노드·종류·성분·키 시각). 값의 뜻(relative/absolute)은 재생하는 커맨드가
     // 정하므로 "첫 키가 중립값"·"restore의 마지막 키가 중립값" 같은 값 규칙은 없다 — 튀는 모션은 작가의 선택이고
@@ -23,10 +23,23 @@ namespace Ked.Presentation.Core
         public const float Tolerance = 1e-4f;
 
         /// <summary>
-        /// 키잉 금지 노드. Track_Focus는 저작값이 아니라 해(解)다 — focus 프리셋 × ScreenPoint × 정착 체인에서
-        /// 풀려 나온다. 직접 키잉하면 place가 다음에 푸는 값과 싸운다.
+        /// 키잉 금지 노드 — 포커스 계층(대화할 때만 서는 자리). focus_move · focus_rotate · focus_scale이 절대값으로 놓고
+        /// focus_reset이 0으로 되돌리는 자리라, 클립이 키를 주면 돌아갈 본래 값이 흐려진다(docs/PLAN_rig-layers.md L1 · §9 ③).
         /// </summary>
-        public static readonly IReadOnlyCollection<string> ForbiddenNodes = new[] { "CharSlot_Track_Focus" };
+        public static readonly IReadOnlyCollection<string> ForbiddenNodes =
+            new[] { "CharFocus_Track", "CharFocus_Rotation", "CharFocus_Scale" };
+
+        /// <summary>캐릭터 리그의 이름(rig-schemas.json의 rigKind). motion 커맨드가 트는 클립의 리그다.</summary>
+        public const string CharacterRig = "character";
+
+        /// <summary>카메라 리그의 이름. 이 리그의 클립은 화면 흔들림이다 — shot_shake가 튼다.</summary>
+        public const string CameraRig = "camera";
+
+        /// <summary>
+        /// 카메라 리그에서 키를 줄 수 있는 노드는 이것 하나다. 나머지 카메라 노드(팬 · 줌 · 롤 · 달리 · 트랙)는
+        /// 저작값이 아니라 샷 식의 해(解)다 — 직접 키잉하면 샷이 다음에 쓰는 값과 싸운다.
+        /// </summary>
+        public const string CameraShakeNode = "Camera_Shake";
 
         /// <summary>
         /// 클립 전체를 검증한다. rigNodeIds를 주면 노드가 그 스키마에 있는지도 본다(null이면 생략 —
@@ -58,6 +71,14 @@ namespace Ked.Presentation.Core
                 return false;
             }
 
+            // 흔들림은 끝값을 남기지 않는다 — 구도 위에 얹혔다가 0으로 돌아오는 연기라, 정지 프레임이 접을 것이 없다.
+            // commit이면 흔들림 노드에 값이 남아 화면이 폴드와 어긋난다.
+            if (clip.Rig == CameraRig && clip.End != MotionEnd.Restore)
+            {
+                reason = $"'{CameraRig}' 리그의 모션은 restore여야 한다 — 흔들림은 끝값을 남기지 않는다";
+                return false;
+            }
+
             // 채널이 없는 모션은 유효하다 — 아무것도 하지 않고 길이만큼 흐른다(저작 도구는 첫 키에서 채널을 만든다).
             HashSet<(string, MotionChannelKind)> seen = new();
             MotionChannel[] channels = clip.Channels ?? System.Array.Empty<MotionChannel>();
@@ -67,6 +88,12 @@ namespace Ked.Presentation.Core
                 if (!TryValidateChannel(channels[i], clip.Duration, clip.End, rigNodeIds, out string why))
                 {
                     reason = $"채널 {i}: {why}";
+                    return false;
+                }
+
+                if (clip.Rig == CameraRig && channels[i].Node != CameraShakeNode)
+                {
+                    reason = $"채널 {i}: '{CameraRig}' 리그에서 키를 줄 수 있는 노드는 {CameraShakeNode} 하나다 ('{channels[i].Node}') — 나머지는 샷 식의 해(解)다";
                     return false;
                 }
 
@@ -94,7 +121,7 @@ namespace Ked.Presentation.Core
             {
                 if (channel.Node == forbidden)
                 {
-                    reason = $"'{channel.Node}'는 키잉할 수 없다 — 저작값이 아니라 해(解)다";
+                    reason = $"'{channel.Node}'는 키잉할 수 없다 — 포커스 계층은 focus_* 커맨드가 놓는다";
                     return false;
                 }
             }

@@ -74,8 +74,8 @@ public sealed class Controller
     public bool Manipulator { get; }
 
     /// <summary>
-    /// depthLevel 굽기가 배율과 함께 쓰는 위치 노드(<c>bakeY</c>, 보통 <c>CharSlot_DepthY</c>) — level의 배율에서
-    /// <c>−bust높이 × (배율 − 1)</c>로 Y를 구워 얼굴은 제자리, 발은 멀수록 위로(런타임 size의 focus 보존과 같은 값). 없으면 배율만.
+    /// depthLevel 굽기가 배율과 함께 쓰는 위치 노드(<c>bakeY</c>, 보통 <c>CharacterPortrait_DepthOffset</c>) — level 커브의 Y를
+    /// 그대로 굽는다(런타임 size가 놓는 값과 같다). 없으면 배율만.
     /// </summary>
     public string? DepthYNode { get; }
 

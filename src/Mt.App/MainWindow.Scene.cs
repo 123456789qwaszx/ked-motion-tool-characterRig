@@ -28,7 +28,7 @@ public partial class MainWindow
             Children = { Small("자리"), _objPlace, Small("focus"), _objPlaceFocus },
         });
         panel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { Small("배역"), _objCharacter } });
-        ToolTip.SetTip(_objCharacter, "배역 키(런타임 cast의 characterKey) — 기준점 표(presets/focus.json)의 그 배역 값으로 자리·깊이를 푼다. 비우면 표의 기본값");
+        ToolTip.SetTip(_objCharacter, "배역 키(런타임 cast의 characterKey) — 기준점 표(presets/focus.json)의 그 배역 값으로 자리를 푼다. 비우면 표의 기본값");
         OnCommit(_objCharacter, text =>
         {
             if (!_refreshing && _viewport.SelectedObject is { } o)
@@ -36,7 +36,7 @@ public partial class MainWindow
                 Guard("배역", () => _session.Editor.SetObjectCharacter(null, o.Id, text));
             }
         });
-        ToolTip.SetTip(_objPlace, "place — focus 프리셋 점이 이 화면 지점에 오도록 CharSlot_Track_Focus를 푼다(코어 place 폴드, 런타임과 같은 함수). 없으면 Track_Focus는 0");
+        ToolTip.SetTip(_objPlace, "place — focus 프리셋 점이 이 화면 지점에 오도록 CharFocus_Track의 값을 푼다(코어의 계산 — 대본에는 풀린 값을 place x y나 focus_move x y로 적는다). 없으면 CharFocus_Track은 0");
         ToolTip.SetTip(_objPlaceFocus, "place가 맞추는 focus 프리셋(bust 기본)");
         _objPlace.SelectionChanged += (_, _) =>
         {

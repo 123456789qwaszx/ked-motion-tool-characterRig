@@ -235,7 +235,7 @@ public partial class MainWindow
                     if (c.Bake == ControllerBake.DepthLevel)
                     {
                         slider = new Slider { Minimum = DepthTuningFile.MinLevel, Maximum = DepthTuningFile.MaxLevel, Margin = new Avalonia.Thickness(4, 0), VerticalAlignment = VerticalAlignment.Center, IsEnabled = false };
-                        ToolTip.SetTip(slider, "깊이 level — 0 far · 10 back · 14 mid · 16 front · 20 close · 40까지(close 너머는 커브 연장). 놓으면 DepthScale 배율과 DepthY(얼굴 제자리, 발은 멀수록 위로)에 굽는다");
+                        ToolTip.SetTip(slider, "깊이 level — 0 far · 10 back · 14 mid · 16 front · 20 close · 40까지(close 너머는 커브 연장). 놓으면 DepthScale 배율과 DepthOffset의 Y(level 커브의 값)에 굽는다");
                     }
 
                     string unit = c.Unit.Length == 0 ? "" : $" ({c.Unit})";
@@ -428,12 +428,12 @@ public partial class MainWindow
                 DepthTuningFile depth = _session.Depth ?? BuiltinTuning.Depth;
                 float level = Math.Clamp(target, DepthTuningFile.MinLevel, DepthTuningFile.MaxLevel);
 
-                if (!depth.TryDepthOf(level, DepthTuningFile.FocusHeightOf(_session.Focus), out float depthY, out float scale))
+                if (!depth.TryDepthOf(level, out float depthY, out float scale))
                 {
                     return;
                 }
 
-                // 배율 X·Y와 깊이 Y(얼굴 제자리·발은 멀수록 위로)가 한 손잡이 — 되돌리기 하나.
+                // 배율 X·Y와 깊이 Y(level 커브의 값)가 한 손잡이 — 되돌리기 하나.
                 _session.Editor.Batch(MotionChangeKind.Keys, () =>
                 {
                     EnsurePreviewModeForGroup(motion, c);

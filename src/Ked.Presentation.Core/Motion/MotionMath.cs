@@ -34,6 +34,23 @@ namespace Ked.Presentation.Core
         }
 
         /// <summary>
+        /// 세기를 곱한 원시 값 — 중립값에서 벗어난 만큼에 intensity를 곱한다. 위치 · 회전은 v × 세기,
+        /// 배율은 1 + (v − 1) × 세기. 세기 1이면 Sample 그대로, 0이면 중립이다. 없는 성분은 중립값 그대로다.
+        /// 화면 흔들림(shot_shake)이 같은 클립을 세기만 바꿔 튼다 — 흔들림 노드는 언제나 항등에서 시작하므로
+        /// 이 값이 곧 노드에 쓰는 값이다.
+        /// </summary>
+        public static Vec3 SampleScaled(in MotionChannel channel, float seconds, float intensity)
+        {
+            float neutral = Neutral(channel.Kind);
+            Vec3 sample = Sample(channel, seconds);
+
+            return new Vec3(
+                neutral + (sample.X - neutral) * intensity,
+                neutral + (sample.Y - neutral) * intensity,
+                neutral + (sample.Z - neutral) * intensity);
+        }
+
+        /// <summary>
         /// 시작값 위에 채널을 얹은 실제 값. 한 함수가 모션의 모양을 전부 정한다.
         ///   Relative : 위치·회전 start + v · 배율 start × v (없는 성분은 중립값이라 start 그대로)
         ///   Absolute : v, 없는 성분은 start 유지
@@ -70,19 +87,19 @@ namespace Ked.Presentation.Core
         }
 
         /// <summary>
-        /// 채널의 클레임 — 장부 게시·트윈 종점·상태 폴드 세 갈래가 같은 값을 본다. commit 모션에서만 뜻이 있다
+        /// 채널의 타깃 — 장부 게시·트윈 종점·상태 폴드 세 갈래가 같은 값을 본다. commit 모션에서만 뜻이 있다
         /// (restore는 남기는 것이 없다 — 호출부가 End를 보고 부르지 않는다).
-        /// 종류가 StageNodeClaimKind로 가는 자리는 여기 하나다.
+        /// 종류가 NodeTargetKind로 가는 자리는 여기 하나다.
         /// </summary>
-        public static StageNodeClaim ClaimFor(in MotionChannel channel, MotionChannelMode mode, string nodeKey, Vec3 start)
+        public static NodeTarget TargetFor(in MotionChannel channel, MotionChannelMode mode, string nodeKey, Vec3 start)
         {
             Vec3 end = EndValue(channel, mode, start);
 
             return channel.Kind switch
             {
-                MotionChannelKind.Position => StageNodeClaim.AnchoredPosition(nodeKey, end.XY),
-                MotionChannelKind.Scale => StageNodeClaim.LocalScaleXY(nodeKey, end.XY),
-                MotionChannelKind.Euler => StageNodeClaim.LocalEuler(nodeKey, end),
+                MotionChannelKind.Position => NodeTarget.AnchoredPosition(nodeKey, end.XY),
+                MotionChannelKind.Scale => NodeTarget.LocalScaleXY(nodeKey, end.XY),
+                MotionChannelKind.Euler => NodeTarget.LocalEuler(nodeKey, end),
                 _ => throw new System.ArgumentOutOfRangeException(nameof(channel), channel.Kind, "모르는 채널 종류"),
             };
         }

@@ -43,7 +43,7 @@
 |---|---|---|
 | S1 | `stance` 컨트롤러와 씬의 배율을 걷는다 — 모델 · 편집 명령 · 직렬화 · 화면 · `mt` · 시험 · `AUTHORING-FILES.md` · 예시 | 끝 — Windows에서 기준선과 같다(Core 438 · App 144 · Authoring 332/334, §4의 둘만 실패). 예시 파일은 손으로 두 줄을 지웠다 — 빌더와 바이트가 같은지는 줄바꿈 실패에 가려 Windows에서 확인되지 않는다 |
 | S2 | 시험과 견본의 키를 남는 노드로 — `Track_Move_X` · `_Y` → `CharacterPortrait_Track_Move`의 x · y, `CharSlot_Track_X` · `_Y` → `CharSlot_Track`. `stage-parity` 견본을 다시 낸다 | 끝 — 기준선과 같다. `grow`는 `CharacterPortrait_ActingScale`로 옮겼다(값은 그대로, 노드 이름만). `nod` · `bow`는 런타임 `Assets/Dialogue/motions.json`의 것과 글자가 같다 |
-| S3 | 코어 전체 동기화 + 덤프 교체 + 소비자 적응 + 이름이 바뀐 노드 — 한 커밋(나누면 중간이 통과하지 않는다) | 아직 |
+| S3 | 코어 전체 동기화 + 덤프 교체 + 소비자 적응 + 이름이 바뀐 노드 — 한 커밋(나누면 중간이 통과하지 않는다) | 끝 — Core 580/580 · App 144/144 · Authoring 332/334(§4의 둘만). `diff -r` 0줄 |
 | S4 | 문서 · `vendoring.md` · 그림 다시 뽑기 · 런타임에 넘길 견본(`motions.json` · `poses.json`) | 아직 |
 
 ## 4. 테스트를 돌리는 길
@@ -100,3 +100,15 @@ Authoring의 둘은 이 일과 무관하게 Windows에서만 실패한다 — `L
 - **세션은 PC의 터미널에 글자를 넣지 못한다**(컴퓨터 사용에서 터미널 · 탐색기는 보기와 클릭만). 테스트는 §4의 한 줄을 소유자가 돌린다.
 - **런타임 저장소는 읽기만 한다.** 견본(`stage-parity/motions.json` · `poses.json`)은 이쪽이 원본이다 — S4에서 두 파일을 넘기고 커밋은 소유자가 한다(`MAINTENANCE.md` §4.7).
 - 그림 설명서의 그림은 화면이 바뀌면 다시 뽑는다(S1에서 Scale X · Y 칸이 빠진다) — `MT_RENDER_DIR`도 소유자 PC에서 돌려야 한다.
+
+## 6. S3에서 정하고 간 것 — 소유자가 뒤집을 수 있다
+
+전체 동기화를 하니 노드 이름 말고도 런타임의 동작이 바뀐 곳이 드러났다. 묻지 않고 아래처럼 두었다(2026-11-22).
+
+| # | 무엇 | 둔 것 | 까닭 |
+|---|---|---|---|
+| P1 | 깊이의 Y | level 커브의 값 그대로(`DepthTuningFile.TryDepthOf` — 코어 `NodeTargets.TrySetDepth`와 같다). mid −664 · close −1000(전에는 −580.56 · −984). `FocusHeightOf` · `PreservedFocus`는 지웠다 | 런타임 `size`가 초점 보존을 걷었다(L6). 보이는 것 = 재생하는 것 |
+| P2 | 씬의 자리(place) | 코어의 보조 계산(`NodeTargets.TrySolveFocusPlacement`)으로 `CharFocus_Track`의 값을 푼다. 오프셋은 전처럼 `CharSlot_Track` | 옛 `Track_Focus`의 이름 바뀜을 그대로 따랐다. 런타임에는 이 일을 하는 커맨드가 없다(L11) — 본래 자리(`CharSlot_Track`)에 푸는 쪽이 맞다면 `ScenePreview.PlaceNode` 한 줄과 오프셋을 더하는 순서를 고친다 |
+| P3 | 초상의 크기 | 높이 맞춤 그대로(`PortraitLayout.ApplySizing`에 식 한 줄) | 런타임은 11-09에 원본 픽셀 크기로 바꿨다. 따라가려면 그림의 픽셀 크기와 배역 앵커(`role-anchor.json`)를 들여야 한다 — R7 밖. **지금 툴의 초상 크기는 런타임과 다르다** |
+| P4 | 컨트롤러의 별칭 | 내장 표에서만 뺐다(`body` · `squash`). 기능(`ControllerAlias` · 채널 박스의 합산 · 도프 시트의 라벨)은 남아 있다 | `PLAN-cleanup.md` §105가 남긴 까닭(런타임의 `nod`가 별칭 노드를 쓴다)이 사라졌다 — 걷을지는 소유자가 정한다 |
+| P5 | `camera` 리그 · `Cover_Image` | 덤프에 있을 뿐 툴에서 따로 열지 않는다 | 이 툴은 카메라를 움직이지 않는다 |

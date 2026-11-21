@@ -14,11 +14,14 @@ public static class ScenePreview
     /// 씬 전체의 시작 상태. 덤프에 없는 rigKind의 오브젝트는 건너뛴다(<paramref name="missing"/>에 남긴다).
     /// 루트 공간은 덤프가 캡처된 공간이다(스트레치 노드 크기의 기준).
     /// </summary>
-    public const string DepthYNode = SetDepthStageReduction.DepthYNodeId;
-    public const string DepthScaleNode = SetDepthStageReduction.DepthScaleNodeId;
+    public const string DepthOffsetNode = NodeTargets.DepthOffsetNodeId;
+    public const string DepthScaleNode = NodeTargets.DepthScaleNodeId;
 
-    /// <param name="depth">presets/depth.json. 있으면 레이어 라벨을 깊이(DepthY·DepthScale)로 — 런타임 size 폴드와 같은 함수(focus 보존 bust, 캐릭터별 오프셋 없이).</param>
-    /// <param name="focus">presets/focus.json. 있으면 그 표의 focus 오프셋(오브젝트의 배역 키로 — 없으면 base만)이 깊이·place 폴드에 들어간다.</param>
+    /// <summary>자리(place)를 푸는 이동 노드 — 포커스 계층의 맨 위. 오프셋은 그 아래 <c>CharSlot_Track</c>에 들어간다.</summary>
+    public const string PlaceNode = NodeTargets.FocusTrackNodeId;
+
+    /// <param name="depth">presets/depth.json. 있으면 레이어 라벨을 깊이(DepthOffset·DepthScale)로 — 런타임 size와 같은 함수(level 커브의 Y와 배율).</param>
+    /// <param name="focus">presets/focus.json. 있으면 그 표의 focus 오프셋(오브젝트의 배역 키로 — 없으면 base만)이 자리(place)를 푸는 데 들어간다.</param>
     /// <param name="stage">
     /// 무대 뼈대(<c>PresentataionUIRoot</c>, rigKind "stage"). 있으면 <c>stage/</c> 접두사로 먼저 서고 오브젝트는
     /// <c>Stage{NN}Depth_{Layer}_Content</c> 밑에 붙으며, 카메라(zoom·pan)와 층 패럴랙스가 오브젝트가 다 선 뒤 뼈대 노드에 들어간다. 없으면 루트 직속(좌표는 같다 — 뼈대는 항등).
@@ -57,9 +60,9 @@ public static class ScenePreview
             state.RegisterSlot(o.Id);
             PortraitLayout.ApplySizing(state.Nodes, aspectOf?.Invoke(o) ?? PortraitLayout.PlaceholderAspect, o.Prefix);
 
-            // 순서는 런타임 대본과 같이 slot → size(깊이) → place → 오프셋(move_by·rotate_by·scale_by).
+            // 순서는 런타임 대본과 같이 slot → size(깊이) → place → 오프셋(move_by·rotate_by).
             // place는 커맨드 순간 한 번 풀리는 것이라 그 뒤의 오프셋을 모른다 — 오프셋을 먼저 넣으면 place가 그만큼 되감아 오프셋이 안 보인다(버그였다).
-            ApplyDepth(state, o, depth, focus);
+            ApplyDepth(state, o, depth);
             ApplyPlace(state, o, focus);
             ApplyPlacement(state.Nodes, o);
         }
@@ -75,8 +78,9 @@ public static class ScenePreview
     }
 
     /// <summary>
-    /// 자리(place) — focus 프리셋 점이 화면 지점에 오도록 <c>CharSlot_Track_Focus</c>를 푼다. 코어 <see cref="PlaceFocusStageReduction"/> 그대로.
-    /// place가 없거나 리그에 그 축이 없으면 건너뛴다(false). 깊이 뒤에 부른다(런타임 순서: size → place; 그래야 DepthY가 게임과 같다).
+    /// 자리(place) — focus 프리셋 점이 화면 지점에 오도록 <see cref="PlaceNode"/>의 값을 푼다. 런타임에는 이 일을 하는 커맨드가 없다 —
+    /// 코어의 보조 계산(<c>NodeTargets.TrySolveFocusPlacement</c>)을 도구가 부른다.
+    /// place가 없거나 리그에 그 축이 없으면 건너뛴다(false). 깊이 뒤에 부른다 — 초점을 재는 노드가 깊이 아래라 크기가 먼저 서야 한다.
     /// </summary>
     public static bool ApplyPlace(StageState state, SceneObject o, FocusTuningFile? focus)
     {
@@ -88,12 +92,12 @@ public static class ScenePreview
             return false;
         }
 
-        if (!PlaceFocusStageReduction.TryReduce(state, o.Id, o.Character ?? "", o.PlaceFocus ?? SceneObject.DefaultPlaceFocus, o.Place, focus?.Body, out StageNodeClaim claim, out _))
+        if (!NodeTargets.TrySolveFocusPlacement(state, o.Id, o.Character ?? "", o.PlaceFocus ?? SceneObject.DefaultPlaceFocus, o.Place, focus?.Body, PlaceNode, out Vec2 solved, out _))
         {
             return false;
         }
 
-        state.Apply(claim);
+        state.Apply(NodeTarget.AnchoredPosition(o.KeyOf(PlaceNode), solved));
         return true;
     }
 
@@ -102,7 +106,7 @@ public static class ScenePreview
     /// 캐릭터가 아닌 리그(screenEffect 등)는 깊이·자리 없이 선다(층은 그리는 순서만).
     /// </summary>
     private static bool IsCharacterShaped(StageState state, SceneObject o)
-        => state.Nodes.Contains(o.KeyOf(DepthYNode)) && state.Nodes.Contains(o.KeyOf(DepthScaleNode)) && state.Nodes.Contains(o.KeyOf(PortraitLayout.ImageNodeId));
+        => state.Nodes.Contains(o.KeyOf(PlaceNode)) && state.Nodes.Contains(o.KeyOf(DepthOffsetNode)) && state.Nodes.Contains(o.KeyOf(DepthScaleNode)) && state.Nodes.Contains(o.KeyOf(PortraitLayout.ImageNodeId));
 
     /// <summary>화면 지점 이름들 — 코어 <see cref="ScreenPointRatios"/>가 아는 것.</summary>
     public static readonly IReadOnlyList<string> ScreenPoints = new[] { "center", "left", "right", "top", "bottom", "tl", "tr", "bl", "br" };
@@ -133,10 +137,10 @@ public static class ScenePreview
     }
 
     /// <summary>
-    /// 레이어 → 깊이(DepthY 위치·DepthScale 배율). 런타임 size 폴드와 **같은 함수**(<see cref="SetDepthStageReduction"/>, focus 보존 bust)를
+    /// 레이어 → 깊이(DepthOffset 위치·DepthScale 배율). 런타임 size와 **같은 함수**(<see cref="NodeTargets.TrySetDepth"/> — level 커브의 Y와 배율)를
     /// 지나므로 보이는 깊이 = 정지 프레임의 깊이다. 커브가 없거나 리그에 깊이 축이 없으면 건너뛴다(false).
     /// </summary>
-    public static bool ApplyDepth(StageState state, SceneObject o, DepthTuningFile? depth, FocusTuningFile? focus = null)
+    public static bool ApplyDepth(StageState state, SceneObject o, DepthTuningFile? depth)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(o);
@@ -146,12 +150,16 @@ public static class ScenePreview
             return false;
         }
 
-        if (!SetDepthStageReduction.TryReduce(state, o.Id, o.Character ?? "", o.Layer, "bust", depth.Level, focus?.Body, out StageNodeClaim depthY, out StageNodeClaim depthScale, out _))
+        if (!NodeTargets.TrySetDepth(o.Id, o.Layer, keepY: false, depth.Level, out bool movesY, out NodeTarget depthOffset, out NodeTarget depthScale, out _))
         {
             return false;
         }
 
-        state.Apply(depthY);
+        if (movesY)
+        {
+            state.Apply(depthOffset);
+        }
+
         state.Apply(depthScale);
         return true;
     }

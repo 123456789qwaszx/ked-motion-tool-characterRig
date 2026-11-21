@@ -6,9 +6,10 @@ namespace Ked.Presentation.Core
     /// <summary>
     /// background-dimensions.json — 배경 스프라이트 키 → 픽셀 치수.
     ///
-    /// 배경은 캐스팅하지 않은 캐릭터 슬롯이다(StageReducer.Background.cs). 초상과 같은
-    /// 사이징(높이 맞춤 + 종횡비)을 타지만 종횡비의 출처가 다르다 — 초상은 (캐릭터·변형·표정)로
-    /// 초상 DB를 찾고, 배경은 `bg_sprite`의 키 하나로 `Resources/Backgrounds/{키}`를 연다.
+    /// 배경은 캐스팅하지 않은 캐릭터 슬롯이다(StageReducer.Background.cs). 초상과 같은 사이징 —
+    /// **원본 픽셀 크기 그대로** 화면 가운데(2026-11-09) — 을 타고, 다른 것은 크기의 출처 하나다.
+    /// 화면보다 큰 배경이 화면 밖까지 걸치고, 카메라는 그 안을 본다.
+    /// 초상은 (캐릭터·변형·표정)으로 초상 DB를 찾고, 배경은 `bg_sprite`의 키 하나로 `Resources/Backgrounds/{키}`를 연다.
     ///
     /// 조회 규약은 런타임 해석기(ResourcesSpriteResolver → Resources.Load)를 그대로 따른다:
     ///   · 키는 Backgrounds/ 아래 상대 경로(확장자 없음). 트림하지 않는다.
@@ -27,10 +28,10 @@ namespace Ked.Presentation.Core
 
         [NonSerialized] private Dictionary<string, BackgroundDimensionDto> _index;
 
-        /// <summary>종횡비(가로/세로). 사이징이 필요로 하는 유일한 값이다.</summary>
-        public bool TryGetAspect(string spriteKey, out float aspect, out string reason)
+        /// <summary>픽셀 크기(가로, 세로). 배경 사이징이 쓰는 값이다 — 캔버스 기준 1px = 원본 1px.</summary>
+        public bool TryGetSize(string spriteKey, out Vec2 size, out string reason)
         {
-            aspect = 0f;
+            size = default;
 
             if (string.IsNullOrEmpty(spriteKey))
             {
@@ -46,13 +47,13 @@ namespace Ked.Presentation.Core
                 return false;
             }
 
-            if (!(entry.height > 0f))
+            if (!(entry.width > 0f) || !(entry.height > 0f))
             {
-                reason = $"배경 치수의 높이가 유효하지 않다: {entry}";
+                reason = $"배경 치수가 유효하지 않다: {entry}";
                 return false;
             }
 
-            aspect = entry.width / entry.height;
+            size = new Vec2(entry.width, entry.height);
             reason = null;
             return true;
         }
@@ -86,8 +87,8 @@ namespace Ked.Presentation.Core
         /// <summary>`bg_sprite`가 쓰는 키 = Resources/Backgrounds 아래 상대 경로(확장자 없음).</summary>
         public string key;
 
-        // 스프라이트 rect의 픽셀 크기. 사이징이 쓰는 건 종횡비 하나지만,
-        // 둘 다 남겨야 나중에 값이 어긋났을 때 어느 쪽이 변했는지 알 수 있다.
+        // 스프라이트 rect의 픽셀 크기 = 화면에 그려지는 크기(캔버스 기준 px).
+        // 임포터 상한에 걸려 줄어든 그림은 익스포터가 경고한다(원본과 rect가 다르면 화면 크기가 틀린다).
         public float width;
         public float height;
 

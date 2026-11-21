@@ -45,7 +45,7 @@ public sealed class CameraSettings
 
 /// <summary>
 /// 씬의 오브젝트 하나 = 리그 인스턴스(슬롯). 자리는 런타임과 같은 두 겹이다:
-/// <see cref="Place"/>(화면 지점 × focus 프리셋 → <c>CharSlot_Track_Focus</c>, 코어 place 폴드)와
+/// <see cref="Place"/>(화면 지점 × focus 프리셋 → <c>CharFocus_Track</c>, 코어의 보조 계산)와
 /// 오프셋(<see cref="PositionX"/>/<see cref="PositionY"/> → <c>CharSlot_Track</c>, move) · 회전 → <c>CharSlot_SwayPivot</c>.
 /// 그 노드가 없는 리그는 루트 노드에 들어간다.
 /// 오브젝트는 무대 뼈대의 <c>Stage{NN}Depth_{Layer}_Content</c>에 선다(오브젝트끼리의 부모·자식은 없다 — 런타임에도 없다).
@@ -77,8 +77,8 @@ public sealed class SceneObject
     public string Layer { get; set; } = SceneLayers.Mid;
 
     /// <summary>
-    /// 자리(place) — 화면 지점 이름(center·left·right·top·bottom·tl·tr·bl·br). null이면 place 없음(Track_Focus 그대로).
-    /// 코어 <c>PlaceFocusStageReduction</c>이 <see cref="PlaceFocus"/> 점이 그 지점에 오도록 <c>CharSlot_Track_Focus</c>를 푼다 — 런타임 place와 같은 함수.
+    /// 자리(place) — 화면 지점 이름(center·left·right·top·bottom·tl·tr·bl·br). null이면 place 없음(CharFocus_Track 그대로).
+    /// 코어 <c>NodeTargets.TrySolveFocusPlacement</c>가 <see cref="PlaceFocus"/> 점이 그 지점에 오도록 <c>CharFocus_Track</c>의 값을 푼다.
     /// </summary>
     public string? Place { get; set; }
 

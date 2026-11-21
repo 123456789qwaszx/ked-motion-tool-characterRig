@@ -196,7 +196,7 @@ public class MainWindowTests
                 window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("wave", "character", "0.5", MotionEnd.Restore);
                 Assert.Contains("CharacterPortrait_Track_Move", window.Viewport.NodeChoices);
-                Assert.DoesNotContain("CharSlot_Track_Focus", window.Viewport.NodeChoices);
+                Assert.DoesNotContain("CharFocus_Track", window.Viewport.NodeChoices);
 
                 window.Viewport.SelectedNode = "CharacterPortrait_Track_Move";
                 window.Viewport.Manipulator = ManipulatorMode.Move;
@@ -427,18 +427,18 @@ public class MainWindowTests
                 window.SetControllerValue("depth", Axis.X, "20");
                 MotionAsset step = window.Session.Editor.Document.Find("step")!;
                 Assert.Equal(MotionChannelMode.Absolute, step.PreviewMode);
-                ChannelAsset depth = step.FindChannel("CharSlot_DepthScale", ChannelKind.Scale)!;
+                ChannelAsset depth = step.FindChannel("CharacterPortrait_DepthScale", ChannelKind.Scale)!;
                 Assert.Equal(2.2, depth.X!.Keys.Single().V, 3);
                 Assert.Equal(2.2, depth.Y!.Keys.Single().V, 3);
                 Assert.Equal("20", window.ControllerValueText("depth", Axis.X));
-                // 같은 손잡이가 DepthY도 굽는다 — 얼굴(bust 820) 제자리: −820 × (2.2 − 1) = −984. 되돌리기 하나.
-                Assert.Equal(-984.0, step.FindChannel("CharSlot_DepthY", ChannelKind.Position)!.Y!.Keys.Single().V, 2);
+                // 같은 손잡이가 DepthOffset의 Y도 굽는다 — level 20에서 커브의 값 −1000. 되돌리기 하나.
+                Assert.Equal(-1000.0, step.FindChannel("CharacterPortrait_DepthOffset", ChannelKind.Position)!.Y!.Keys.Single().V, 2);
                 window.Session.Editor.Undo();
-                Assert.Null(window.Session.Editor.Document.Find("step")!.FindChannel("CharSlot_DepthY", ChannelKind.Position));
-                Assert.Null(window.Session.Editor.Document.Find("step")!.FindChannel("CharSlot_DepthScale", ChannelKind.Scale));
+                Assert.Null(window.Session.Editor.Document.Find("step")!.FindChannel("CharacterPortrait_DepthOffset", ChannelKind.Position));
+                Assert.Null(window.Session.Editor.Document.Find("step")!.FindChannel("CharacterPortrait_DepthScale", ChannelKind.Scale));
                 window.Session.Editor.Redo();
                 step = window.Session.Editor.Document.Find("step")!;
-                Assert.Equal(-984.0, step.FindChannel("CharSlot_DepthY", ChannelKind.Position)!.Y!.Keys.Single().V, 2);
+                Assert.Equal(-1000.0, step.FindChannel("CharacterPortrait_DepthOffset", ChannelKind.Position)!.Y!.Keys.Single().V, 2);
 
                 // 숙임 15 → CharacterPortrait_SwayPivot euler Z 키(absolute 미리보기라 값 그대로).
                 window.SetControllerValue("bow", Axis.Z, "15");
@@ -454,9 +454,9 @@ public class MainWindowTests
                 Assert.True(window.ApplyFix("step", Mt.Authoring.Validation.MotionFix.SplitByGroup));
                 MotionAsset place = window.Session.Editor.Document.Find("step_place")!;
                 Assert.Equal(MotionChannelMode.Absolute, place.PreviewMode);
-                Assert.NotNull(place.FindChannel("CharSlot_DepthScale", ChannelKind.Scale));
-                Assert.NotNull(place.FindChannel("CharSlot_DepthY", ChannelKind.Position)); // 깊이 Y도 깊이 묶음
-                Assert.Null(window.Session.Editor.Document.Find("step")!.FindChannel("CharSlot_DepthScale", ChannelKind.Scale));
+                Assert.NotNull(place.FindChannel("CharacterPortrait_DepthScale", ChannelKind.Scale));
+                Assert.NotNull(place.FindChannel("CharacterPortrait_DepthOffset", ChannelKind.Position)); // 깊이 Y도 깊이 묶음
+                Assert.Null(window.Session.Editor.Document.Find("step")!.FindChannel("CharacterPortrait_DepthScale", ChannelKind.Scale));
                 Assert.NotNull(window.Session.Editor.Document.Find("step")!.FindChannel("CharacterPortrait_SwayPivot", ChannelKind.Euler));
                 Assert.DoesNotContain(window.ProblemsShown, p => !p.Blocking);
 
@@ -618,15 +618,15 @@ public class MainWindowTests
                 Assert.Equal(0f, bowKey.V, 3);
                 Assert.Equal(tableOrder, window.OutlinerOrder);
 
-                // 깊이를 고르고 S(단축키) — 배율 X·Y와 깊이 Y가 한 번에(되돌리기 하나). 키 값은 재생 기준(relative/absolute)대로(absolute): s1은 mid라 1.708 · −580.56.
+                // 깊이를 고르고 S(단축키) — 배율 X·Y와 깊이 Y가 한 번에(되돌리기 하나). 키 값은 재생 기준(relative/absolute)대로(absolute): s1은 mid라 1.708 · −664.
                 window.Session.Editor.SetPreviewMode("nod", MotionChannelMode.Absolute);
                 window.SelectControllerInHierarchy("s1", "depth");
                 long revision = window.Session.Editor.Revision;
                 window.KeyPressQwerty(PhysicalKey.S, RawInputModifiers.None);
                 Assert.Equal(revision + 1, window.Session.Editor.Revision);
                 MotionAsset nod = window.Session.Editor.Document.Find("nod")!;
-                Assert.Equal(1.708, nod.FindChannel("CharSlot_DepthScale", ChannelKind.Scale)!.X!.Keys.Single().V, 2);
-                Assert.Equal(-580.56, nod.FindChannel("CharSlot_DepthY", ChannelKind.Position)!.Y!.Keys.Single().V, 1);
+                Assert.Equal(1.708, nod.FindChannel("CharacterPortrait_DepthScale", ChannelKind.Scale)!.X!.Keys.Single().V, 2);
+                Assert.Equal(-664.0, nod.FindChannel("CharacterPortrait_DepthOffset", ChannelKind.Position)!.Y!.Keys.Single().V, 1);
                 Assert.Equal(tableOrder, window.OutlinerOrder);
 
                 // 시간 표시는 프레임이 기본: 0.5초 = 15프레임.
@@ -911,7 +911,7 @@ public class MainWindowTests
 
                 // 리그 노드는 연기/배치 폴더가 아니라 덤프의 parent 사슬이다. 오브젝트 항목이 곧 __root.
                 IReadOnlyList<string> path = window.HierarchyPathOf("s1", "CharacterPortrait_Track_Move");
-                Assert.Equal(new[] { "Scene  scene  ·  PresentataionUIRoot", "StageViewportLayer", "StageShot_Root", "StagePan_Root  ·  pan 0,0", "StageZoom_Root  ·  zoom 0", "Stage00_Root", "Stage00Mask_Root", "Stage00DepthSystem_Root", "Stage00Depth_Mid_Root", "Stage00Depth_Mid_FramingTransform", "Stage00Depth_Mid_FramingScale", "Stage00Depth_Mid_Content", "s1  ·  character", "CharSlot_Track_Focus", "CharSlot_DepthY", "CharSlot_DepthScale", "CharSlot_Track_Idle", "CharSlot_Track", "CharSlot_Track_X", "CharSlot_Track_Y", "CharSlot_Rotation", "CharSlot_SwayPivot", "CharSlot_Scale", "CharacterPortrait_VisualOffset", "CharacterPortrait_Track", "CharacterPortrait_Rotation", "CharacterPortrait_Track_Move" }, path);
+                Assert.Equal(new[] { "Scene  scene  ·  PresentataionUIRoot", "StageViewportLayer", "StageShot_Root", "StagePan_Root  ·  pan 0,0", "StageZoom_Root  ·  zoom 0", "Stage00_Root", "Stage00Mask_Root", "Stage00DepthSystem_Root", "Stage00Depth_Mid_Root", "Stage00Depth_Mid_FramingTransform", "Stage00Depth_Mid_FramingScale", "Stage00Depth_Mid_Content", "s1  ·  character", "CharFocus_Track", "CharSlot_Track", "CharFocus_Rotation", "CharFocus_Scale", "CharSlot_Rotation", "CharSlot_SwayPivot", "CharacterPortrait_DepthOffset", "CharacterPortrait_DepthScale", "CharacterPortrait_VisualOffset", "CharacterPortrait_Track", "CharacterPortrait_Rotation", "CharacterPortrait_Track_Move" }, path);
                 Assert.DoesNotContain("연기 축", window.HierarchyPathOf("s1", "CharacterPortrait_SwayPivot"));
 
                 // 노드 위에서 "만들기" = 그 오브젝트와 같은 무대·층(오브젝트끼리 부모·자식은 없다). 트리에서는 같은 Content 밑.
@@ -961,14 +961,14 @@ public class MainWindowTests
                 window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.CommitObjectPlacementFromForm(200f, -40f, 0f); // s1
 
-                // 자리(place) — 씬 탭 콤보로. Track_Focus가 코어 place 폴드로 풀린다.
+                // 자리(place) — 씬 탭 콤보로. CharFocus_Track의 값이 코어의 계산으로 풀린다.
                 window.SelectInHierarchy("s1", null);
                 window.SetPlaceFromForm("right", "face");
                 Mt.Authoring.Model.SceneObject s1 = window.Viewport.Scene!.Find("s1")!;
                 Assert.Equal("right", s1.Place);
                 Assert.Equal("face", s1.PlaceFocus);
                 // place는 오프셋을 모른다(런타임 대본 순서: place → move_by). focus 점이 화면 오른쪽 지점(0.24·1920)에 서고, 오프셋(move) 200은 그 위에 더해진다.
-                Assert.Equal(0.24f * 1920f, window.Viewport.CurrentPose()!.GetState("s1/CharSlot_Track_Focus").AnchoredPosition.X, 1);
+                Assert.Equal(0.24f * 1920f, window.Viewport.CurrentPose()!.GetState("s1/CharFocus_Track").AnchoredPosition.X, 1);
                 Assert.Equal(200f, window.Viewport.CurrentPose()!.GetState("s1/CharSlot_Track").AnchoredPosition.X, 1);
             }
             finally
@@ -1109,24 +1109,24 @@ public class MainWindowTests
                 window.AutoKeyChecked = false;
                 window.Viewport.ScrubTo(0.25);
 
-                // Auto Key OFF에서 깊이를 바꾸고 S — DepthScale X·Y와 DepthY가 한 칸으로 생기고 한 칸으로 사라진다.
+                // Auto Key OFF에서 깊이를 바꾸고 S — DepthScale X·Y와 DepthOffset의 Y가 한 칸으로 생기고 한 칸으로 사라진다.
                 // (첫 키라 재생 기준이 absolute로 — 채널이 없는 모션에서만 자동으로 바뀐다.)
                 window.SetControllerValue("depth", Axis.X, "20");
                 Assert.Equal(MotionChannelMode.Absolute, Step().PreviewMode);
-                Assert.Null(Step().FindChannel("CharSlot_DepthScale", ChannelKind.Scale));
+                Assert.Null(Step().FindChannel("CharacterPortrait_DepthScale", ChannelKind.Scale));
                 long before = editor.Revision;
                 window.SetKeyFromShell();
                 Assert.Equal(before + 1, editor.Revision);
-                Assert.Equal(2.2, Step().FindChannel("CharSlot_DepthScale", ChannelKind.Scale)!.X!.Keys.Single().V, 3);
-                Assert.Equal(2.2, Step().FindChannel("CharSlot_DepthScale", ChannelKind.Scale)!.Y!.Keys.Single().V, 3);
-                Assert.Equal(-984.0, Step().FindChannel("CharSlot_DepthY", ChannelKind.Position)!.Y!.Keys.Single().V, 2);
+                Assert.Equal(2.2, Step().FindChannel("CharacterPortrait_DepthScale", ChannelKind.Scale)!.X!.Keys.Single().V, 3);
+                Assert.Equal(2.2, Step().FindChannel("CharacterPortrait_DepthScale", ChannelKind.Scale)!.Y!.Keys.Single().V, 3);
+                Assert.Equal(-1000.0, Step().FindChannel("CharacterPortrait_DepthOffset", ChannelKind.Position)!.Y!.Keys.Single().V, 2);
                 editor.Undo();
-                Assert.Null(Step().FindChannel("CharSlot_DepthScale", ChannelKind.Scale));
-                Assert.Null(Step().FindChannel("CharSlot_DepthY", ChannelKind.Position));
+                Assert.Null(Step().FindChannel("CharacterPortrait_DepthScale", ChannelKind.Scale));
+                Assert.Null(Step().FindChannel("CharacterPortrait_DepthOffset", ChannelKind.Position));
                 Assert.True(window.Viewport.HasPending); // 키 확정 직전의 키 없는 포즈로
                 editor.Redo();
                 Assert.False(window.Viewport.HasPending);
-                Assert.Equal(-984.0, Step().FindChannel("CharSlot_DepthY", ChannelKind.Position)!.Y!.Keys.Single().V, 2);
+                Assert.Equal(-1000.0, Step().FindChannel("CharacterPortrait_DepthOffset", ChannelKind.Position)!.Y!.Keys.Single().V, 2);
 
                 // 좌우·상하 두 성분을 키 없는 포즈로 두고 S — 키 확정은 한 칸(연기 축은 휴지가 항등이라 absolute 값 = 넣은 값).
                 window.SetControllerValue("body", Axis.X, "10");

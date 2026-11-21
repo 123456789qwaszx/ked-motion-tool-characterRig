@@ -3,15 +3,15 @@ namespace Ked.Presentation.Core
     /// <summary>
     /// bg_* — 배경은 **캐스팅하지 않은 캐릭터 슬롯**이다.
     ///
-    /// 별도 배경 리그가 있던 시절(2026-05-21 ~ 10)의 흔적이 `bg_` 접두사다. 리그를 하나로 합친 뒤에도
-    /// 어휘는 남겼다 — 대본·문서·외부 도구가 그대로이고, "이건 배경"이라는 저작 의도가 대본에 남는다.
+    /// 배경도 캐릭터 리그지만 `bg_` 어휘를 둔다 — "이건 배경"이라는 저작 의도가 대본에 남는다.
     /// 그래서 여기 폴드는 새로 발명한 것이 없다: 슬롯 스폰 · 사이징 · fade · move · scale을
-    /// 캐릭터 폴드와 **같은 노드, 같은 리덕션**으로 접는다. 다른 것은 종횡비의 출처 하나다
-    /// (초상 DB가 아니라 background-dimensions.json).
+    /// 캐릭터 폴드와 **같은 노드, 같은 목표 계산**으로 접는다. 다른 것은 크기의 출처 하나다 —
+    /// 초상 DB가 아니라 background-dimensions.json. 사이징은 초상과 같은 원본 픽셀 크기 그대로 가운데
+    /// (NodeTargets.SourcePixelsSizing). 화면보다 큰 배경은 화면 밖까지 걸친다(2026-11-09).
     ///
     /// 파서(StageCommandParser.Background)와의 대응(PLAN_background-as-slot "명령 대응표"):
-    ///   bg_spawn / bg_slotNN → SetupCharRig(far, 배경) + 스프라이트            → 여기: SpawnSlot + 배역 풀기 + 사이징 (숨은 채)
-    ///   bg_sprite            → 스프라이트 키 Spec(HeightFit)                 → 사이징
+    ///   bg_spawn             → SetupCharRig(stage00 · far 생략값, 배경) + 스프라이트 → 여기: SpawnSlot + 배역 풀기 + 사이징 (숨은 채)
+    ///   bg_sprite            → 스프라이트 키 Spec(SourcePixels)              → 사이징
     ///   bg_fade_in/out       → FadeIn/Out(CharacterPortraitSprite_Root)       → ApplyFade (디스패치에서 직접)
     ///   bg_move              → MoveBy(CharSlot_Track)                         → ApplyMoveBy (디스패치에서 직접)
     ///   bg_scale             → ScaleTo(CharacterPortrait_ActingScale)         → ApplyPortraitScaleTo (디스패치에서 직접)
@@ -19,7 +19,7 @@ namespace Ked.Presentation.Core
     public static partial class StageReducer
     {
         /// <summary>
-        /// bg_spawn / bg_slotNN (rigKey, spriteKey[, layer]).
+        /// bg_spawn (rigKey, spriteKey[, stage[, layer]]).
         ///
         /// 슬롯을 세우고 스프라이트 크기를 맞춘다. **숨은 채 선다**(스프라이트 루트 α 0) — 캐릭터 slot과 같다.
         /// 대본은 bg_fade_in으로 들인다. 옛 배경 리그는 세우면 바로 보여서, 대본마다 뒤에 쓴 bg_fade_in 24fr이
@@ -29,7 +29,7 @@ namespace Ked.Presentation.Core
         /// 거짓말이 된다. cast와 같은 규율로 못 접은 축만 기록한다.
         ///
         /// **배역 있는 슬롯을 덮으면 배역을 푼다.** 배경은 캐스팅하지 않은 슬롯이라는 정의를 지키려는 것이다 —
-        /// 배역이 남으면 `fade_in harin`이 배경을 페이드하고, 배역 기반 축(focus_on)이 배경을 초점면에 넣는다.
+        /// 배역이 남으면 `fade_in harin`이 배경을 페이드하고, 배역 기반 축(depth_focus_on)이 배경을 초점면에 넣는다.
         /// 런타임 SetupCharRigCommand(asBackground)도 같은 자리에서 배역을 풀고 경고를 남긴다.
         /// 그림만 바꾸려면 `bg_sprite`를 쓴다. 같은 키로 `bg_spawn`을 다시 부르면 SpawnSlot의 재선언 규칙을 탄다 —
         /// 새 리그가 숨은 채 서므로(노드·α가 스키마로) 다시 `bg_fade_in`해야 보인다.
@@ -63,7 +63,7 @@ namespace Ked.Presentation.Core
         }
 
         /// <summary>
-        /// 배경 사이징 — 초상과 같은 리덕션(폭 = 부모 높이 × 종횡비), 종횡비만 배경 치수표에서.
+        /// 배경 사이징 — 원본 픽셀 크기 그대로(NodeTargets.SourcePixelsSizing). 크기는 배경 치수표에서.
         /// 치수표가 없거나 키가 없으면 false — 짐작으로 잇지 않는다.
         /// </summary>
         private static bool ApplyBackgroundSizing(
@@ -76,17 +76,16 @@ namespace Ked.Presentation.Core
                 return false;
             }
 
-            if (!tuning.BackgroundDimensions.TryGetAspect(spriteKey, out float aspect, out reason))
+            if (!tuning.BackgroundDimensions.TryGetSize(spriteKey, out Vec2 spriteSize, out reason))
                 return false;
 
-            float parentHeight = state.Nodes
-                .GetRectSize(StageState.NodeKeyOf(slotKey, PortraitSizingStageReduction.ParentNodeId))
-                .Y;
+            string imageKey = StageState.NodeKeyOf(slotKey, NodeTargets.PortraitImageNodeId);
+            Vec2 parentSize = state.Nodes
+                .GetRectSize(StageState.NodeKeyOf(slotKey, NodeTargets.PortraitParentNodeId));
+            RectNodeState image = state.Nodes.GetState(imageKey);
 
-            state.Apply(PortraitSizingReduction.Reduce(
-                StageState.NodeKeyOf(slotKey, PortraitSizingStageReduction.ImageNodeId),
-                parentHeight,
-                aspect));
+            state.Apply(NodeTargets.SourcePixelsSizing(
+                imageKey, parentSize, image.AnchorMin, image.AnchorMax, spriteSize));
 
             reason = null;
             return true;

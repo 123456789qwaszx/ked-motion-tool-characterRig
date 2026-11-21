@@ -16,7 +16,7 @@ public class MotionRulesTests
         return result;
     }
 
-    private static MotionChannel Channel(string node = "CharacterPortrait_Track_Move_Y", MotionChannelKind kind = MotionChannelKind.Position,
+    private static MotionChannel Channel(string node = "CharacterPortrait_Track_Move", MotionChannelKind kind = MotionChannelKind.Position,
         CurveKey[] x = null, CurveKey[] y = null, CurveKey[] z = null)
         => new() { Node = node, Kind = kind, X = x, Y = y, Z = z };
 
@@ -28,7 +28,7 @@ public class MotionRulesTests
 
     private static MotionChannel Nod => Channel(y: Keys((0f, 0f), (0.3f, -18f), (0.6f, 0f)));
 
-    private static readonly HashSet<string> Rig = new() { "CharacterPortrait_Track_Move_Y", "CharacterPortrait_SwayPivot", "CharSlot_Track_X", "CharSlot_Track_Focus" };
+    private static readonly HashSet<string> Rig = new() { "CharacterPortrait_Track_Move", "CharacterPortrait_SwayPivot", "CharSlot_Track", "CharFocus_Track", "CharFocus_Rotation", "CharFocus_Scale" };
 
     [Test]
     public void 유효한_클립은_통과한다_스키마가_있어도_없어도()
@@ -65,12 +65,16 @@ public class MotionRulesTests
     }
 
     [Test]
-    public void Track_Focus는_키잉할_수_없다()
+    public void 포커스_계층은_키잉할_수_없다()
     {
-        MotionClip clip = Clip(0.6f, Channel("CharSlot_Track_Focus", x: Keys((0f, 0f), (0.6f, 10f))));
+        // 포커스 계층(대화할 때만 서는 자리)은 focus_* 커맨드가 놓고 focus_reset이 되돌린다 — 클립이 키를 주지 않는다.
+        foreach (string node in new[] { "CharFocus_Track", "CharFocus_Rotation", "CharFocus_Scale" })
+        {
+            MotionClip clip = Clip(0.6f, Channel(node, x: Keys((0f, 0f), (0.6f, 10f))));
 
-        Assert.IsFalse(MotionRules.TryValidate(clip, Rig, out string reason));
-        StringAssert.Contains("Track_Focus", reason);
+            Assert.IsFalse(MotionRules.TryValidate(clip, Rig, out string reason), node);
+            StringAssert.Contains("포커스 계층", reason);
+        }
     }
 
     [Test]
@@ -164,5 +168,67 @@ public class MotionRulesTests
         MotionClip clip = Clip(0.6f, Channel(y: Keys((0.00001f, 0.00001f), (0.59999f, 3f))));
 
         Assert.IsTrue(MotionRules.TryValidate(clip, null, out string reason), reason);
+    }
+
+    // ── 카메라 리그 — 화면 흔들림 ─────────────────────────────────────
+
+    private static MotionClip Shake(MotionEnd end, params MotionChannel[] channels)
+        => new() { Name = "shake_hit", Rig = MotionRules.CameraRig, Duration = 0.6f, End = end, Channels = channels };
+
+    private static MotionChannel ShakeX(string node)
+        => Channel(node, x: Keys((0f, 0f), (0.3f, 12f), (0.6f, 0f)));
+
+    private static readonly HashSet<string> CameraRigNodes = new()
+    {
+        "Camera_Root", "Camera_Shake", "Camera_Pan", "Camera_Zoom", "Camera_Roll", "Camera_Dolly", "Camera_Track",
+    };
+
+    [Test]
+    public void 흔들림은_Camera_Shake의_위치_회전_배율에_키를_준다()
+    {
+        MotionClip clip = Shake(
+            MotionEnd.Restore,
+            ShakeX(MotionRules.CameraShakeNode),
+            Channel(MotionRules.CameraShakeNode, MotionChannelKind.Euler, z: Keys((0f, 0f), (0.3f, 0.5f), (0.6f, 0f))));
+
+        Assert.IsTrue(MotionRules.TryValidate(clip, CameraRigNodes, out string reason), reason);
+        Assert.IsTrue(MotionRules.TryValidate(clip, null, out reason), reason);
+    }
+
+    [TestCase("Camera_Pan")]
+    [TestCase("Camera_Zoom")]
+    [TestCase("Camera_Roll")]
+    [TestCase("Camera_Dolly")]
+    [TestCase("Camera_Track")]
+    [TestCase("Camera_Root")]
+    public void 흔들림_노드가_아닌_카메라_노드는_키잉할_수_없다(string node)
+    {
+        // 샷의 축 노드는 저작값이 아니라 샷 식의 해다 — 키를 주면 샷이 다음에 쓰는 값과 싸운다.
+        MotionClip clip = Shake(MotionEnd.Restore, ShakeX(node));
+
+        Assert.IsFalse(MotionRules.TryValidate(clip, CameraRigNodes, out string reason));
+        StringAssert.Contains("Camera_Shake 하나다", reason);
+
+        // 스키마를 주지 않아도 걸린다 — 리그 이름만으로 정해지는 규칙이다.
+        Assert.IsFalse(MotionRules.TryValidate(clip, null, out _));
+    }
+
+    [Test]
+    public void 흔들림은_restore여야_한다()
+    {
+        // commit이면 흔들림 노드에 값이 남는다. 폴드는 흔들림을 접지 않으므로 화면이 정지 프레임과 어긋난다.
+        MotionClip clip = Shake(MotionEnd.Commit, ShakeX(MotionRules.CameraShakeNode));
+
+        Assert.IsFalse(MotionRules.TryValidate(clip, CameraRigNodes, out string reason));
+        StringAssert.Contains("restore여야 한다", reason);
+    }
+
+    [Test]
+    public void 캐릭터_리그의_모션은_카메라의_규칙을_받지_않는다()
+    {
+        // 같은 이름의 노드를 가리켜도 리그가 다르면 다른 규칙이다 — commit도 된다.
+        MotionClip clip = Clip(0.6f, Nod);
+
+        Assert.IsTrue(MotionRules.TryValidate(clip, Rig, out string reason), reason);
     }
 }

@@ -1,6 +1,7 @@
 using NUnit.Framework;
+using Ked.Presentation.Core;
 
-namespace Ked.Presentation.Core.Tests
+namespace Ked.Presentation.Tests
 {
     /// <summary>
     /// Nfr = N/30초(30fps — 2026-11-18 24fps에서 바꿈), Ns = N초, 단위 없는 N = N초(하위호환). 결과는 0으로 클램프.

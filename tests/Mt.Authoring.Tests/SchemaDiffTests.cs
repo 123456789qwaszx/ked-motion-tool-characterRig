@@ -22,7 +22,7 @@ public class SchemaDiffTests
         Assert.Equal(Schema.Dto.rigs.Select(r => r.rigKind), print.Rigs.Select(r => r.Kind));
         SchemaPrintRig character = print.Rigs.Single(r => r.Kind == "character");
         Assert.Equal(Schema.Dto.rigs.Single(r => r.rigKind == "character").nodes.Select(n => n.id), character.Parsed().Select(n => n.Id));
-        Assert.Contains(("CharSlot_DepthY", "CharSlot_Track_Focus"), character.Parsed());
+        Assert.Contains(("CharSlot_Track", "CharFocus_Track"), character.Parsed());
 
         Assert.True(SchemaDiff.Compare(print, SchemaDiff.PrintOf(Schema)).IsEmpty);
     }
@@ -127,6 +127,6 @@ public class SchemaDiffTests
 
         MotionDocument read = MotionDocumentJson.Read(MotionDocumentJson.Write(editor.Document));
         Assert.True(SchemaDiff.Compare(read.BuiltOn!, SchemaDiff.PrintOf(Schema)).IsEmpty);
-        Assert.Contains("\"CharSlot_DepthY < CharSlot_Track_Focus\"", MotionDocumentJson.Write(editor.Document), StringComparison.Ordinal);
+        Assert.Contains("\"CharSlot_Track < CharFocus_Track\"", MotionDocumentJson.Write(editor.Document), StringComparison.Ordinal);
     }
 }

@@ -6,8 +6,10 @@ namespace Ked.Presentation.Core
     /// <summary>
     /// portrait-dimensions.json — (캐릭터 · 변형 · 표정) → 초상 스프라이트 픽셀 치수.
     ///
+    /// 초상은 **원본 픽셀 크기 그대로** 그린다(2026-11-09, NodeTargets.SourcePixelsSizing) — 그래서 쓰는 값은 픽셀 크기다.
+    ///
     /// 조회 규약은 런타임 PortraitResolver를 그대로 따른다. 그게 요점이다 —
-    /// 폴드가 다른 스프라이트를 고르면 폭이 달라지고, 그건 곧 불일치다.
+    /// 폴드가 다른 스프라이트를 고르면 크기가 달라지고, 그건 곧 불일치다.
     ///   · 키 정규화: 캐릭터 소문자 · 변형은 **문자열 전체**(`school` ≠ `casual`) · 표정 2자리
     ///   · 중복 키는 **먼저 들어온 것이 이긴다** (PortraitResolver의 TryAdd와 같다)
     ///   · 정확 일치 실패 시 (캐릭터, "a", "01")로 한 번 물러선다
@@ -24,14 +26,14 @@ namespace Ked.Presentation.Core
         [NonSerialized] private Dictionary<(string, string, string), PortraitDimensionDto> _index;
 
         /// <summary>
-        /// 종횡비(가로/세로). 사이징이 필요로 하는 유일한 값이다.
+        /// 픽셀 크기(가로, 세로). 초상 사이징이 쓰는 값이다 — 캔버스 기준 1px = 원본 1px.
         /// 찾지 못하면 false — 짐작으로 잇지 않는다(Unhandled로 소리를 낸다).
         /// </summary>
-        public bool TryGetAspect(
+        public bool TryGetSize(
             string characterKey, string variantKey, string emotionKey,
-            out float aspect, out string reason)
+            out Vec2 size, out string reason)
         {
-            aspect = 0f;
+            size = default;
 
             // 비어 있는 인자만 기본값으로 채운다 — PortraitResolver.Resolve와 같은 자리다.
             // 값이 있는데 규격 밖인 표정("abc")은 여기서 손대지 않는다:
@@ -66,13 +68,13 @@ namespace Ked.Presentation.Core
                 return false;
             }
 
-            if (!(entry.height > 0f))
+            if (!(entry.width > 0f) || !(entry.height > 0f))
             {
-                reason = $"초상 치수의 높이가 유효하지 않다: {entry}";
+                reason = $"초상 치수가 유효하지 않다: {entry}";
                 return false;
             }
 
-            aspect = entry.width / entry.height;
+            size = new Vec2(entry.width, entry.height);
             reason = null;
             return true;
         }
@@ -112,6 +114,9 @@ namespace Ked.Presentation.Core
         public string character;
         public string variant;
         public string emotion;
+
+        // 스프라이트 rect의 픽셀 크기 = 그림 노드의 크기(캔버스 기준 px, 역할 앵커 배율 전).
+        // 임포터 상한에 걸려 줄어든 그림은 익스포터가 경고한다(원본과 rect가 다르면 화면 크기가 틀린다).
         public float width;
         public float height;
 
@@ -131,9 +136,8 @@ namespace Ked.Presentation.Core
 
         /// <summary>
         /// 변형 키는 **문자열 전체**가 키다 (`a` → "a", `school` → "school").
-        /// 종전에는 마지막 글자만 봤는데, 초상 에셋이 폴더 규약(&lt;캐릭터&gt;/&lt;변형&gt;/&lt;표정&gt;.png)으로
-        /// 옮겨 가면서 변형이 폴더 이름 그 자체가 됐다. 마지막 글자 규칙을 남겨 두면
-        /// `school`과 `casual`이 조용히 같은 키가 된다.
+        /// 초상 에셋의 폴더 규약(&lt;캐릭터&gt;/&lt;변형&gt;/&lt;표정&gt;.png)에서 변형은 폴더 이름 그 자체다.
+        /// 마지막 글자만 보면 `school`과 `casual`이 조용히 같은 키가 된다.
         /// </summary>
         public static string VariantKey(string variantKey)
             => (variantKey ?? "").Trim().ToLowerInvariant();
@@ -156,33 +160,6 @@ namespace Ked.Presentation.Core
                 return "0" + input;
 
             return "";
-        }
-
-        /// <summary>
-        /// show의 faceToken → 표정 인자. `e1`·`emo2`·`emotion3`·`face4`의 접두사를 벗긴다.
-        /// **빈 토큰은 "2"다** — 생략된 인자의 기본값("e1")과는 다른 규칙이니 헷갈리지 말 것.
-        /// (런타임 ShowFaceAliasParser와 같다)
-        /// </summary>
-        public static string ParseShowFaceAlias(string token)
-        {
-            if (string.IsNullOrWhiteSpace(token))
-                return "2";
-
-            string s = token.Trim().ToLowerInvariant();
-
-            if (s.StartsWith("emotion", StringComparison.Ordinal))
-                return s.Substring("emotion".Length);
-
-            if (s.StartsWith("emo", StringComparison.Ordinal))
-                return s.Substring("emo".Length);
-
-            if (s.StartsWith("face", StringComparison.Ordinal))
-                return s.Substring("face".Length);
-
-            if (s.StartsWith("e", StringComparison.Ordinal))
-                return s.Substring(1);
-
-            return token.Trim();
         }
 
         private static bool IsAsciiDigit(char c) => c >= '0' && c <= '9';

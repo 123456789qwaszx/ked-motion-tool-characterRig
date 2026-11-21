@@ -23,6 +23,6 @@ public class AuthoringFormatTests
     public void 반입_코어의_모션_규칙이_보인다()
     {
         // Mt.Authoring → Ked.Presentation.Core 참조가 살아 있는지. 초점 트랙은 모션이 건드릴 수 없다.
-        Assert.Contains("CharSlot_Track_Focus", MotionRules.ForbiddenNodes);
+        Assert.Contains("CharFocus_Track", MotionRules.ForbiddenNodes);
     }
 }

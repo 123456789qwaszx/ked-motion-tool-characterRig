@@ -38,7 +38,7 @@ public class ShapeProblemsTests
     [InlineData("""{ "name": "ok", "rig": "character", "duration": 1, "end": "commit", "channels": [ { "node": "N", "kind": "scale", "x": { "keys": [ { "t": 0, "v": 1 }, { "t": 1, "v": 2 } ] } } ] }""")]
     [InlineData("""{ "name": "ok", "rig": "character", "duration": 0, "end": "commit", "channels": [] }""")]
     [InlineData("""{ "name": "NO", "rig": "character", "duration": -1, "end": "commit", "channels": [] }""")]
-    [InlineData("""{ "name": "ok", "rig": "character", "duration": 1, "end": "commit", "channels": [ { "node": "CharSlot_Track_Focus", "kind": "position", "x": { "keys": [ { "t": 0, "v": 1 }, { "t": 1, "v": 2 } ] }, "y": { "keys": [ { "t": 0, "v": 1 } ] } } ] }""")]
+    [InlineData("""{ "name": "ok", "rig": "character", "duration": 1, "end": "commit", "channels": [ { "node": "CharFocus_Track", "kind": "position", "x": { "keys": [ { "t": 0, "v": 1 }, { "t": 1, "v": 2 } ] }, "y": { "keys": [ { "t": 0, "v": 1 } ] } } ] }""")]
     [InlineData("""{ "name": "ok", "rig": "character", "duration": 1, "end": "commit", "channels": [ { "node": "N", "kind": "position", "x": { "keys": [ { "t": 0, "v": 1 }, { "t": 1, "v": 2 } ] } }, { "node": "N", "kind": "position", "y": { "keys": [ { "t": 0, "v": 1 }, { "t": 0.5, "v": 1 }, { "t": 0.5, "v": 2 }, { "t": 1, "v": 2 } ] } } ] }""")]
     [InlineData("""{ "name": "ok", "rig": "character", "duration": 1, "end": "commit", "channels": [ { "node": "N", "kind": "euler" } ] }""")]
     [InlineData(Broken)]

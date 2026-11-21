@@ -85,7 +85,7 @@ public static class EmojiPreview
     }
 
     /// <summary>
-    /// 이미 있는 트리(씬)에 조립한 리그를 세운다 — 런타임처럼 캐릭터의 <c>CharSlot_Scale</c> 밑(로케이터 자리)에.
+    /// 이미 있는 트리(씬)에 조립한 리그를 세운다 — 런타임처럼 캐릭터의 <c>CharacterPortrait_DepthScale</c> 밑(로케이터 자리)에.
     /// <paramref name="parentKey"/>가 null이면 트리의 루트 공간 직속. 노드의 키는 <paramref name="keyPrefix"/>를 머리로 단다.
     /// </summary>
     /// <remarks><paramref name="locatorFlipped"/>면 세운 로케이터를 뒤집는다(<see cref="FlipLocator"/>) — 왼쪽을 보는 인물.</remarks>

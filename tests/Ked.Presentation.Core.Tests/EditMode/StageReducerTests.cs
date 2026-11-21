@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Ked.Presentation.Core;
 
-namespace Ked.Presentation.Core.Tests
+namespace Ked.Presentation.Tests
 {
     /// <summary>
     /// 리듀서 폴드 골든.
     ///
-    /// 리그는 실제 캐릭터 스키마와 같은 부모 사슬의 합성 24노드다 — 실제 덤프와의
+    /// 리그는 실제 캐릭터 스키마와 같은 부모 사슬의 합성 20노드다 — 실제 덤프와의
     /// 대조는 UnityParity·등가성 하네스의 일이고, 여기서는 폴드 규율을 고정한다.
     /// 기본값·표적은 전부 브리지 실측에서 왔다(각 테스트 주석).
     /// </summary>
@@ -52,36 +53,31 @@ namespace Ked.Presentation.Core.Tests
                 nodes = new List<RigSchemaNodeDto>
                 {
                     Node("__root", ""),
-                    Node("CharSlot_Track_Focus", "__root"),
-                    Node("CharSlot_DepthY", "CharSlot_Track_Focus"),
-                    Node("CharSlot_DepthScale", "CharSlot_DepthY", bottomPivot: true),
-                    Node("CharSlot_Track_Idle", "CharSlot_DepthScale"),
-                    Node("CharSlot_Track", "CharSlot_Track_Idle"),
-                    Node("CharSlot_Track_X", "CharSlot_Track"),
-                    Node("CharSlot_Track_Y", "CharSlot_Track_X"),
-                    Node("CharSlot_Rotation", "CharSlot_Track_Y"),
+                    Node("CharFocus_Track", "__root"),
+                    Node("CharSlot_Track", "CharFocus_Track"),
+                    Node("CharFocus_Rotation", "CharSlot_Track", bottomPivot: true),
+                    Node("CharFocus_Scale", "CharFocus_Rotation", bottomPivot: true),
+                    Node("CharSlot_Rotation", "CharFocus_Scale"),
                     Node("CharSlot_SwayPivot", "CharSlot_Rotation", bottomPivot: true),
-                    Node("CharSlot_Scale", "CharSlot_SwayPivot", bottomPivot: true),
-                    Node("CharacterPortrait_VisualOffset", "CharSlot_Scale", bottomPivot: true),
+                    Node("CharacterPortrait_DepthOffset", "CharSlot_SwayPivot"),
+                    Node("CharacterPortrait_DepthScale", "CharacterPortrait_DepthOffset", bottomPivot: true),
+                    Node("CharacterPortrait_VisualOffset", "CharacterPortrait_DepthScale", bottomPivot: true),
                     Node("CharacterPortrait_Track", "CharacterPortrait_VisualOffset"),
                     Node("CharacterPortrait_Rotation", "CharacterPortrait_Track"),
                     Node("CharacterPortrait_Track_Move", "CharacterPortrait_Rotation"),
-                    Node("CharacterPortrait_Track_Move_X", "CharacterPortrait_Track_Move"),
-                    Node("CharacterPortrait_Track_Move_Y", "CharacterPortrait_Track_Move_X"),
-                    Node("CharacterPortrait_SwayPivot", "CharacterPortrait_Track_Move_Y", bottomPivot: true),
+                    Node("CharacterPortrait_SwayPivot", "CharacterPortrait_Track_Move", bottomPivot: true),
                     Node("CharacterPortrait_Shake", "CharacterPortrait_SwayPivot"),
                     Node("CharacterPortrait_ActingScale", "CharacterPortrait_Shake"),
-                    Node("CharacterPortrait_ActingScale_X", "CharacterPortrait_ActingScale"),
-                    Node("CharacterPortrait_ActingScale_Y", "CharacterPortrait_ActingScale_X"),
+                    Node("CharacterPortrait_Mirror", "CharacterPortrait_ActingScale"),
                     // 실제 스키마: NeedsCanvasGroup + InitialCanvasGroupAlpha = 0.
-                    Node("CharacterPortraitSprite_Root", "CharacterPortrait_ActingScale_Y", canvasGroupAlpha: 0f),
+                    Node("CharacterPortraitSprite_Root", "CharacterPortrait_Mirror", canvasGroupAlpha: 0f),
                     Node("CharacterPortraitSprite_Image", "CharacterPortraitSprite_Root"),
                     Node("EmojiSlot00_Root", "__root", canvasGroupAlpha: 0f),
                 },
             };
         }
 
-        private const int RigNodeCount = 25;
+        private const int RigNodeCount = 20;
 
         private static StageReducerTuning NewTuning()
         {
@@ -107,8 +103,9 @@ namespace Ked.Presentation.Core.Tests
         }
 
         /// <summary>
-        /// 높이를 전부 1080(= 부모 rect 높이)으로 둔다 — 그러면 접힌 폭이 곧 여기 적은 width다.
-        /// tyrant는 변형·표정마다 폭이 다르다: **종횡비가 캐릭터당 하나라는 가정을 깨는 자리**다.
+        /// 초상은 원본 픽셀 크기 그대로라 그려지는 폭이 곧 여기 적은 width다.
+        /// tyrant는 변형·표정마다 폭이 다르다: **크기가 캐릭터당 하나라는 가정을 깨는 자리**다.
+        /// harin만 높이가 부모 rect(1080)와 다르다 — 높이 맞춤이 아니라는 것을 가르는 자리다.
         /// </summary>
         private static PortraitDimensionsFileDto NewPortraitDimensions()
         {
@@ -120,12 +117,14 @@ namespace Ked.Presentation.Core.Tests
                     new() { character = "tyrant", variant = "a", emotion = "02", width = 540f, height = 1080f },
                     new() { character = "tyrant", variant = "b", emotion = "01", width = 810f, height = 1080f },
                     new() { character = "parkeunseol", variant = "a", emotion = "01", width = 432f, height = 1080f },
+                    new() { character = "harin", variant = "a", emotion = "01", width = 1745f, height = 2170f },
                 },
             };
         }
 
+        /// <summary>그려지는 폭 = 그림 노드 rect의 가로(부모 크기 × 앵커 간격 + sizeDelta).</summary>
         private static float PortraitWidthOf(StageState state, string slotKey)
-            => state.Nodes.GetState(StageState.NodeKeyOf(slotKey, "CharacterPortraitSprite_Image")).SizeDelta.X;
+            => state.Nodes.GetRectSize(StageState.NodeKeyOf(slotKey, "CharacterPortraitSprite_Image")).X;
 
         private static StageCommand Cmd(string name, params string[] args)
             => new(name, args, "test.yarn:1");
@@ -146,7 +145,7 @@ namespace Ked.Presentation.Core.Tests
             Assert.That(state.HasSlot("c1"), Is.True);
             Assert.That(state.Nodes.Count, Is.EqualTo(RigNodeCount));
             Assert.That(state.Nodes.Contains("c1/__root"), Is.True);
-            Assert.That(state.Nodes.GetParentKey("c1/CharSlot_Track"), Is.EqualTo("c1/CharSlot_Track_Idle"));
+            Assert.That(state.Nodes.GetParentKey("c1/CharSlot_Track"), Is.EqualTo("c1/CharFocus_Track"));
 
             // 브리지 기본값: stage00 / mid.
             Assert.That(state.TryGetAttachment("c1", out SlotAttachment attachment), Is.True);
@@ -157,9 +156,9 @@ namespace Ked.Presentation.Core.Tests
         }
 
         [Test]
-        public void slot01은_stage01에_붙는다()
+        public void slot은_둘째_인자의_무대에_붙는다()
         {
-            StageState state = Fold(Cmd("slot01", "c1", "front"));
+            StageState state = Fold(Cmd("slot", "c1", "stage01", "front"));
 
             state.TryGetAttachment("c1", out SlotAttachment attachment);
             Assert.That(attachment.StageKey, Is.EqualTo("stage01"));
@@ -175,7 +174,7 @@ namespace Ked.Presentation.Core.Tests
             StageState state = Fold(
                 Cmd("slot", "c1"),
                 Cmd("cast", "c1", "tyrant"),
-                Cmd("left", "c1", "2u"),
+                Cmd("move_by", "c1", "-2u", "0u"),
                 Cmd("fade_in", "c1"),
                 Cmd("slot", "c1", "stage02", "back"));
 
@@ -184,7 +183,7 @@ namespace Ked.Presentation.Core.Tests
             state.TryGetAttachment("c1", out SlotAttachment attachment);
             Assert.That(attachment.StageKey, Is.EqualTo("stage02"));
 
-            Assert.That(state.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition, Is.EqualTo(Vec2.Zero),
+            Assert.That(state.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition, Is.EqualTo(Vec2.Zero),
                 "좌표는 스키마 초기값으로");
             Assert.That(state.Nodes.GetState("c1/CharacterPortraitSprite_Image").SizeDelta, Is.EqualTo(Vec2.Zero),
                 "초상 사이징도 새 리그의 값으로");
@@ -200,12 +199,12 @@ namespace Ked.Presentation.Core.Tests
             StageState state = Fold(
                 Cmd("slot", "c1"),
                 Cmd("slot", "c2"),
-                Cmd("left", "c1", "1u"));
+                Cmd("move_by", "c1", "-1u", "0u"));
 
             Assert.That(state.Nodes.Count, Is.EqualTo(RigNodeCount * 2));
-            Assert.That(state.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X,
+            Assert.That(state.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition.X,
                 Is.EqualTo(-PixelsPerUnit).Within(Eps));
-            Assert.That(state.Nodes.GetState("c2/CharSlot_Track_X").AnchoredPosition.X,
+            Assert.That(state.Nodes.GetState("c2/CharSlot_Track").AnchoredPosition.X,
                 Is.EqualTo(0f).Within(Eps));
         }
 
@@ -238,16 +237,16 @@ namespace Ked.Presentation.Core.Tests
                 Cmd("slot", "c1"),
                 Cmd("cast", "c1", "parkeunseol"),
                 Cmd("actor", "@3", "parkeunseol"),
-                Cmd("left", "@3", "2u"));
+                Cmd("move_by", "@3", "-2u", "0u"));
 
-            Assert.That(state.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X,
+            Assert.That(state.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition.X,
                 Is.EqualTo(-2f * PixelsPerUnit).Within(Eps));
 
             // 캐릭터 키로도 풀린다.
             StageState byCharacter = StageReducer.Apply(
-                state, Cmd("right", "parkeunseol", "1u"), NewTuning());
+                state, Cmd("move_by", "parkeunseol", "1u", "0u"), NewTuning());
 
-            Assert.That(byCharacter.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X,
+            Assert.That(byCharacter.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition.X,
                 Is.EqualTo(-PixelsPerUnit).Within(Eps));
         }
 
@@ -290,6 +289,23 @@ namespace Ked.Presentation.Core.Tests
         }
 
         // ── 초상 축 (변형 · 표정 · 사이징) ───────────────────────────
+
+        [Test]
+        public void 초상은_원본_픽셀_크기_그대로_선다()
+        {
+            // 높이 맞춤을 걷었다(2026-11-09) — 부모 높이(1080)와 다른 그림도 늘이거나 줄이지 않는다.
+            // 화면에 서는 크기는 역할 앵커 visualScale이 정한다(CharacterPortrait_VisualOffset).
+            StageState state = Fold(Cmd("slot", "c1"), Cmd("cast", "c1", "harin"));
+
+            Vec2 sizeDelta = state.Nodes.GetState("c1/CharacterPortraitSprite_Image").SizeDelta;
+            Vec2 rect = state.Nodes.GetRectSize("c1/CharacterPortraitSprite_Image");
+
+            Assert.That(sizeDelta.X, Is.EqualTo(1745f - 1920f).Within(Eps), "그림 크기 − 부모 크기");
+            Assert.That(sizeDelta.Y, Is.EqualTo(2170f - 1080f).Within(Eps), "그림 크기 − 부모 크기");
+            Assert.That(rect.X, Is.EqualTo(1745f).Within(Eps));
+            Assert.That(rect.Y, Is.EqualTo(2170f).Within(Eps));
+            Assert.That(state.Unhandled, Is.Empty);
+        }
 
         [Test]
         public void face는_표정마다_폭을_다시_접는다()
@@ -383,88 +399,42 @@ namespace Ked.Presentation.Core.Tests
         // ── 이동 계열 (1u = 기준 폭 / 48) ────────────────────────────
 
         [Test]
-        public void gesture는_무변으로_접힌다()
-        {
-            // 순변위 0이 정체다 — 라인 시작과 끝의 무대가 같으므로 손대지 않는 것이 옳다.
-            StageState before = Fold(Cmd("slot", "c1"), Cmd("left", "c1", "2u"));
-            StageState after = StageReducer.Apply(before, Cmd("gesture", "c1", "0.3u", "1u", "12fr"), NewTuning());
-
-            Assert.That(after.Unhandled, Is.Empty, "Unhandled에 싣지 않는다");
-
-            Assert.That(after.Nodes.GetState("c1/CharacterPortrait_Shake").AnchoredPosition,
-                Is.EqualTo(before.Nodes.GetState("c1/CharacterPortrait_Shake").AnchoredPosition));
-            Assert.That(after.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X,
-                Is.EqualTo(before.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X).Within(Eps),
-                "다른 축도 건드리지 않는다");
-        }
-
-        [Test]
-        public void gesture의_인자는_폴드에_무해하다()
-        {
-            // 폴드가 곡선·진폭을 읽지 않으므로 인자 자리에 의존하는 것이 없다.
-            // 표준 이징 이름도, 없는 곡선 이름도 폴드를 흔들지 않는다(재생 쪽이 경고한다).
-            StageReducerTuning tuning = NewTuning();
-            StageState before = Fold(Cmd("slot", "c1"));
-
-            foreach (StageCommand cmd in new[]
-                     {
-                         Cmd("gesture", "c1"),
-                         Cmd("gesture", "c1", "0.3u"),
-                         Cmd("gesture", "c1", "0u", "1.2u", "24fr", "", "@hop"),
-                         Cmd("gesture", "c1", "1u", "1u", "12fr", "@no_such", "OutCubic"),
-                     })
-            {
-                StageState after = StageReducer.Apply(before, cmd, tuning);
-
-                Assert.That(after.Unhandled, Is.Empty, cmd.ToString());
-                Assert.That(after.Nodes.GetState("c1/CharacterPortrait_Shake").AnchoredPosition,
-                    Is.EqualTo(Vec2.Zero), cmd.ToString());
-            }
-        }
-
-        [Test]
-        public void 없는_슬롯의_gesture는_사유를_남긴다()
-        {
-            StageState state = Fold(Cmd("gesture", "nobody", "1u"));
-
-            Assert.That(state.Unhandled.Count, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void nudge의_마지막_이징_인자는_폴드에_무해하다()
+        public void move_by의_마지막_이징_인자는_폴드에_무해하다()
         {
             // 이징은 경로의 모양만 정한다 — 종점은 그대로다.
             // 지키는 것은 인자 자리다: 이징 토큰이 붙어도 거리를 읽는 인덱스가 밀리면 안 된다.
             StageState plain = Fold(
-                Cmd("slot", "c1"), Cmd("left", "c1", "2u", "8fr"));
+                Cmd("slot", "c1"), Cmd("move_by", "c1", "-2u", "1.5u", "8fr"));
 
             StageState eased = Fold(
-                Cmd("slot", "c1"), Cmd("left", "c1", "2u", "8fr", "InOutSine"));
+                Cmd("slot", "c1"), Cmd("move_by", "c1", "-2u", "1.5u", "8fr", "InOutSine"));
 
             Assert.That(eased.Unhandled, Is.Empty);
-            Assert.That(eased.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X,
-                Is.EqualTo(plain.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X).Within(Eps));
+            Assert.That(eased.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition,
+                Is.EqualTo(plain.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition));
+
+            // 1u = 기준 폭 / 48.
+            Assert.That(eased.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition, Is.EqualTo(new Vec2(-80f, 60f)));
         }
 
         [Test]
-        public void nudge는_1u를_기준_폭에서_파생한다()
+        public void 걷은_이름은_Unhandled로_드러난다()
         {
-            // 브리지: left/right → Track_X, up/down → Track_Y. unitToken은 필수.
+            // 좌우 · 상하를 따로 두던 노드와 슬롯의 배율 노드를 걷었다(docs/PLAN_rig-layers.md L7 · L12) — 그 커맨드도 함께 사라졌다.
+            // 남은 대본의 것은 모르는 이름으로 남는다: move_by x 0u · move_by 0u y · size가 대신한다.
             StageState state = Fold(
                 Cmd("slot", "c1"),
-                Cmd("left", "c1", "2u"),
-                Cmd("up", "c1", "1.5u"));
+                Cmd("left", "c1", "2u"), Cmd("right", "c1", "2u"), Cmd("up", "c1", "1u"), Cmd("down", "c1", "1u"),
+                Cmd("scale_by", "c1", "1.5"), Cmd("scale_reset", "c1"));
 
-            Assert.That(state.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X,
-                Is.EqualTo(-80f).Within(Eps));
-            Assert.That(state.Nodes.GetState("c1/CharSlot_Track_Y").AnchoredPosition.Y,
-                Is.EqualTo(60f).Within(Eps));
+            Assert.That(state.Unhandled.Count, Is.EqualTo(6));
+            Assert.That(state.Unhandled.All(u => u.Reason.Contains("이관되지 않은")), Is.True);
         }
 
         [Test]
-        public void move_by는_상대_move_reset은_두_노드_절대_0이다()
+        public void move_by는_상대_move_reset은_절대_0이다()
         {
-            // 브리지: move_by(slot, x="0u", y="0u") 상대 / move_reset은 Track과 Track_Focus에 절대 0.
+            // 브리지: move_by(slot, x="0u", y="0u") 상대 / move_reset은 같은 노드(Track)에 절대 0. 포커스는 focus_reset이 걷는다.
             StageState moved = Fold(
                 Cmd("slot", "c1"),
                 Cmd("move_by", "c1", "1u", "-2u"),
@@ -476,108 +446,94 @@ namespace Ked.Presentation.Core.Tests
             StageState reset = StageReducer.Apply(moved, Cmd("move_reset", "c1"), NewTuning());
 
             Assert.That(reset.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition, Is.EqualTo(Vec2.Zero));
-            Assert.That(reset.Nodes.GetState("c1/CharSlot_Track_Focus").AnchoredPosition, Is.EqualTo(Vec2.Zero));
         }
 
         [Test]
-        public void scale_by는_상대_곱_rotate_by는_상대_z_가산이다()
+        public void rotate_by는_상대_z_가산이고_rotate_reset은_0이다()
         {
             StageState state = Fold(
                 Cmd("slot", "c1"),
-                Cmd("scale_by", "c1", "1.5"),
-                Cmd("scale_by", "c1", "2"),
                 Cmd("rotate_by", "c1", "15"),
                 Cmd("rotate_by", "c1", "-40"));
 
-            Assert.That(state.Nodes.GetState("c1/CharSlot_Scale").LocalScale.XY,
-                Is.EqualTo(new Vec2(3f, 3f)));
             Assert.That(state.Nodes.GetState("c1/CharSlot_SwayPivot").LocalEulerAngles.Z,
                 Is.EqualTo(-25f).Within(Eps));
 
-            StageState reset = StageReducer.ApplyAll(
-                state,
-                new[] { Cmd("scale_reset", "c1"), Cmd("rotate_reset", "c1") },
-                NewTuning());
+            StageState reset = StageReducer.Apply(state, Cmd("rotate_reset", "c1"), NewTuning());
 
-            Assert.That(reset.Nodes.GetState("c1/CharSlot_Scale").LocalScale.XY, Is.EqualTo(Vec2.One));
             Assert.That(reset.Nodes.GetState("c1/CharSlot_SwayPivot").LocalEulerAngles, Is.EqualTo(Vec3.Zero));
         }
 
-        // ── show ─────────────────────────────────────────────────────
+        // ── cast의 역할 앵커 (런타임 파서: cast → pose → face → SetAnchor) ──
 
         [Test]
-        public void show는_연기_축을_리셋하고_배역_앵커를_입힌다()
-        {
-            StageState state = Fold(
-                Cmd("slot", "c1"),
-                Cmd("cast", "c1", "tyrant"),
-                Cmd("move_by", "c1", "3u", "0u"),
-                Cmd("rotate_by", "c1", "20"),   // SwayPivot — show가 되돌리지 않는 축
-                Cmd("scale_by", "c1", "2"),
-                Cmd("show", "c1"));
-
-            // 리셋 축.
-            Assert.That(state.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition, Is.EqualTo(Vec2.Zero));
-            Assert.That(state.Nodes.GetState("c1/CharSlot_Scale").LocalScale.XY, Is.EqualTo(Vec2.One));
-            Assert.That(state.Nodes.GetState("c1/CharSlot_Rotation").LocalEulerAngles, Is.EqualTo(Vec3.Zero));
-
-            // 런타임 실동작: rotate_by의 표적(CharSlot_SwayPivot)은 show가 되돌리지 않는다.
-            Assert.That(state.Nodes.GetState("c1/CharSlot_SwayPivot").LocalEulerAngles.Z,
-                Is.EqualTo(20f).Within(Eps));
-
-            // 배역 앵커: tyrant = offset (-30, -800), scale 5 (실제 덤프의 비기본값 엔트리).
-            RectNodeState anchor = state.Nodes.GetState("c1/CharacterPortrait_VisualOffset");
-            Assert.That(anchor.AnchoredPosition, Is.EqualTo(new Vec2(-30f, -800f)));
-            Assert.That(anchor.LocalScale.XY, Is.EqualTo(new Vec2(5f, 5f)));
-
-            // 가시성 두 장.
-            Assert.That(state.GetAlpha("c1/__root"), Is.EqualTo(1f));
-            Assert.That(state.GetAlpha("c1/CharacterPortraitSprite_Root"), Is.EqualTo(1f));
-
-            // 초상 폭: faceToken 생략 → "e1" → 표정 "1" → "01".
-            Assert.That(PortraitWidthOf(state, "c1"), Is.EqualTo(620f).Within(Eps));
-            Assert.That(state.Unhandled, Is.Empty);
-        }
-
-        [Test]
-        public void show의_faceToken은_별칭을_벗는다()
-        {
-            StageState alias = Fold(
-                Cmd("slot", "c1"), Cmd("cast", "c1", "tyrant"), Cmd("show", "c1", "emo2"));
-
-            Assert.That(PortraitWidthOf(alias, "c1"), Is.EqualTo(540f).Within(Eps));
-
-            StageState shortForm = Fold(
-                Cmd("slot", "c1"), Cmd("cast", "c1", "tyrant"), Cmd("show", "c1", "e2"));
-
-            Assert.That(PortraitWidthOf(shortForm, "c1"), Is.EqualTo(540f).Within(Eps));
-        }
-
-        [Test]
-        public void 배역이_없으면_show_앵커는_기본값이고_사이징만_기록된다()
-        {
-            StageState state = Fold(Cmd("slot", "c1"), Cmd("show", "c1"));
-
-            RectNodeState anchor = state.Nodes.GetState("c1/CharacterPortrait_VisualOffset");
-            Assert.That(anchor.AnchoredPosition, Is.EqualTo(Vec2.Zero));
-            Assert.That(anchor.LocalScale.XY, Is.EqualTo(Vec2.One));
-
-            Assert.That(state.GetAlpha("c1/CharacterPortraitSprite_Root"), Is.EqualTo(1f),
-                "사이징이 빠져도 가시성은 접힌다");
-            Assert.That(state.Unhandled.Count, Is.EqualTo(1));
-            Assert.That(state.Unhandled[0].Reason, Does.Contain("배역이 없다"));
-        }
-
-        [Test]
-        public void role_anchor_튜닝이_없으면_show가_소리를_낸다()
+        public void role_anchor_튜닝이_없으면_cast가_소리를_낸다()
         {
             StageReducerTuning tuning = NewTuning();
             tuning.RoleAnchors = null;
 
-            StageState state = Fold(tuning, Cmd("slot", "c1"), Cmd("show", "c1"));
+            StageState state = Fold(tuning, Cmd("slot", "c1"), Cmd("cast", "c1", "tyrant"));
 
             Assert.That(state.Unhandled.Any(u => u.Reason.Contains("role-anchor")), Is.True,
                 "실측 덤프에 비기본값 엔트리(tyrant·Amber)가 있다 — 침묵하면 그 장면이 어긋난다");
+        }
+
+        [Test]
+        public void cast는_배역_앵커를_입힌다()
+        {
+            // 런타임 파서가 cast를 SetAnchor까지 팬아웃한다(StageCommandParser.CharRigSetup.EnqueueCastCharacterSpec).
+            // 인물은 이 앵커로 선다.
+            StageState state = Fold(Cmd("slot", "c1"), Cmd("cast", "c1", "tyrant"));
+
+            RectNodeState anchor = state.Nodes.GetState("c1/CharacterPortrait_VisualOffset");
+            Assert.That(anchor.AnchoredPosition, Is.EqualTo(new Vec2(-30f, -800f)));
+            Assert.That(anchor.LocalScale.XY, Is.EqualTo(new Vec2(5f, 5f)));
+            Assert.That(state.Unhandled, Is.Empty);
+        }
+
+        [Test]
+        public void 움직인_뒤의_cast는_연기_축을_되돌린다()
+        {
+            // 런타임 cast의 SetAnchor는 두 리셋 플래그가 모두 켜진 채 나간다(EnqueueSetAnchorSpecs 기본값).
+            // 항목이 없는 캐릭터(parkeunseol)는 앵커가 기본값(0/1)이다.
+            StageState state = Fold(
+                Cmd("slot", "c1"),
+                Cmd("cast", "c1", "tyrant"),
+                Cmd("move_by", "c1", "3u", "0u"),
+                Cmd("rotate_by", "c1", "20"),   // SwayPivot — cast가 되돌리지 않는 축
+                Cmd("char_scale_to", "c1", "2"),
+                Cmd("cast", "c1", "parkeunseol"));
+
+            Assert.That(state.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition, Is.EqualTo(Vec2.Zero));
+            Assert.That(state.Nodes.GetState("c1/CharacterPortrait_ActingScale").LocalScale.XY, Is.EqualTo(Vec2.One));
+            Assert.That(state.Nodes.GetState("c1/CharSlot_Rotation").LocalEulerAngles, Is.EqualTo(Vec3.Zero));
+
+            // 런타임 실동작: rotate_by의 표적(CharSlot_SwayPivot)은 리셋 목록에 없다.
+            Assert.That(state.Nodes.GetState("c1/CharSlot_SwayPivot").LocalEulerAngles.Z,
+                Is.EqualTo(20f).Within(Eps));
+
+            RectNodeState anchor = state.Nodes.GetState("c1/CharacterPortrait_VisualOffset");
+            Assert.That(anchor.AnchoredPosition, Is.EqualTo(Vec2.Zero));
+            Assert.That(anchor.LocalScale.XY, Is.EqualTo(Vec2.One));
+            Assert.That(state.Unhandled, Is.Empty);
+        }
+
+        [Test]
+        public void 역할_앵커_키는_대소문자를_가리지_않고_나중_항목이_이긴다()
+        {
+            // 런타임 RoleAnchorTuningDBSO: OrdinalIgnoreCase 사전에 `_map[key] = entry`로 덮는다.
+            var anchors = new RoleAnchorTuningBodyDto
+            {
+                entries = new List<RoleAnchorEntryDto>
+                {
+                    new() { key = "Harin", offset = F2(1f, 2f), visualScale = 0.5f },
+                    new() { key = " harin ", offset = F2(3f, 4f), visualScale = 0.25f },
+                },
+            };
+
+            Assert.That(anchors.TryGet("HARIN", out NodeTargets.RoleAnchorTuning tuning), Is.True);
+            Assert.That(tuning.Offset, Is.EqualTo(new Vec2(3f, 4f)));
+            Assert.That(tuning.VisualScale, Is.EqualTo(0.25f).Within(Eps));
         }
 
         // ── 초기 가시성 (첫 리포트의 최대 불일치 클래스) ────────────
@@ -586,7 +542,7 @@ namespace Ked.Presentation.Core.Tests
         public void 스폰은_덤프의_초기_alpha를_반영한다()
         {
             // 실제 리그에서 초상·오버레이·이모지 루트는 alpha 0으로 태어난다.
-            // 기본값 1로 두면 show 전 구간이 전부 어긋난다.
+            // 기본값 1로 두면 fade_in 전 구간이 전부 어긋난다.
             StageState state = Fold(Cmd("slot", "c1"));
 
             Assert.That(state.GetAlpha("c1/CharacterPortraitSprite_Root"), Is.EqualTo(0f));
@@ -617,17 +573,16 @@ namespace Ked.Presentation.Core.Tests
         }
 
         [Test]
-        public void show는_초기_alpha_0을_1로_올린다()
+        public void fade_in은_초기_alpha_0을_1로_올린다()
         {
-            // 스폰 직후 0 → show가 1. 첫 리포트에서 Sprite_Root만 419건이었던 이유다
-            // (show 이후로는 폴드도 캡처도 1이라 맞았다).
+            // 스폰 직후 0 → fade_in이 1. 첫 리포트에서 Sprite_Root만 419건이었던 이유다.
             StageState spawned = Fold(Cmd("slot", "c1"));
             Assert.That(spawned.GetAlpha("c1/CharacterPortraitSprite_Root"), Is.EqualTo(0f));
 
-            StageState shown = StageReducer.Apply(spawned, Cmd("show", "c1"), NewTuning());
+            StageState shown = StageReducer.Apply(spawned, Cmd("fade_in", "c1"), NewTuning());
             Assert.That(shown.GetAlpha("c1/CharacterPortraitSprite_Root"), Is.EqualTo(1f));
 
-            // show가 안 건드리는 이모지 루트는 0 그대로 — 캡처도 0이다.
+            // fade_in이 안 건드리는 이모지 루트는 0 그대로 — 캡처도 0이다.
             Assert.That(shown.GetAlpha("c1/EmojiSlot00_Root"), Is.EqualTo(0f));
         }
 
@@ -637,7 +592,7 @@ namespace Ked.Presentation.Core.Tests
             // 브리지 표적: CharacterPortraitSprite_Root.
             StageState state = Fold(
                 Cmd("slot", "c1"),
-                Cmd("show", "c1"),
+                Cmd("fade_in", "c1"),
                 Cmd("fade_out", "c1"));
 
             Assert.That(state.GetAlpha("c1/CharacterPortraitSprite_Root"), Is.EqualTo(0f));
@@ -647,65 +602,108 @@ namespace Ked.Presentation.Core.Tests
             Assert.That(back.GetAlpha("c1/CharacterPortraitSprite_Root"), Is.EqualTo(1f));
         }
 
+        [Test]
+        public void fade는_목표_alpha까지_접고_범위_밖은_자른다()
+        {
+            StageState state = Fold(Cmd("slot", "c1"), Cmd("fade_in", "c1"));
+
+            StageState half = StageReducer.Apply(state, Cmd("fade", "c1", "0.5", "12fr"), NewTuning());
+            Assert.That(half.GetAlpha("c1/CharacterPortraitSprite_Root"), Is.EqualTo(0.5f));
+            Assert.That(half.GetAlpha("c1/__root"), Is.EqualTo(1f), "리그 루트는 그대로");
+
+            StageState over = StageReducer.Apply(state, Cmd("fade", "c1", "1.5"), NewTuning());
+            Assert.That(over.GetAlpha("c1/CharacterPortraitSprite_Root"), Is.EqualTo(1f), "[0,1] 밖은 자른다");
+        }
+
         // ── shot ─────────────────────────────────────────────────────
 
         [Test]
         public void shot_계열은_샷_축에_접힌다()
         {
-            // 브리지 기본값: shot_zoom(zoom=1) / shot_to(zoom=1, x=2.5u, y=0u) / shot_track(x=2.5u, y=0u).
+            // shot_<축>은 그 축 하나를 절대값으로 놓는다 — 같은 명령을 두 번 적어도 더해지지 않는다.
             StageState state = Fold(
                 Cmd("shot_zoom", "3"),
+                Cmd("shot_pan", "2u", "-0.5u"),
+                Cmd("shot_focus", "6u", "1u"),
                 Cmd("shot_track", "1u", "-0.5u"),
-                Cmd("shot_track", "1u", "0u"));
+                Cmd("shot_track", "1u", "0u"),
+                Cmd("shot_dolly", "4"),
+                Cmd("shot_roll", "-8"));
 
+            Assert.That(state.Unhandled, Is.Empty);
             Assert.That(state.Shot.Zoom, Is.EqualTo(3f));
             Assert.That(state.Shot.PanInRigSpace, Is.EqualTo(new Vec2(80f, -20f)));
+            Assert.That(state.Shot.FocusPointInRigSpace, Is.EqualTo(new Vec2(240f, 40f)), "초점은 무대 좌표의 절대값이다");
+            Assert.That(state.Shot.Track, Is.EqualTo(new Vec2(40f, 0f)), "트랙은 절대값이다 — 마지막 것이 남는다");
+            Assert.That(state.Shot.Dolly, Is.EqualTo(4f));
+            Assert.That(state.Shot.Roll, Is.EqualTo(-8f));
 
-            StageState to = StageReducer.Apply(state, Cmd("shot_to", "5", "-2u", "1u"), NewTuning());
+            // 줌과 팬을 나란히 적으면 둘 다 남는다 — 몸은 건드리지 않는다.
+            StageState to = StageReducer.Apply(
+                StageReducer.Apply(state, Cmd("shot_zoom", "5"), NewTuning()), Cmd("shot_pan", "-2u", "1u"), NewTuning());
             Assert.That(to.Shot.Zoom, Is.EqualTo(5f));
             Assert.That(to.Shot.PanInRigSpace, Is.EqualTo(new Vec2(-80f, 40f)));
+            Assert.That(to.Shot.Track, Is.EqualTo(new Vec2(40f, 0f)), "렌즈 명령은 몸을 건드리지 않는다");
+            Assert.That(to.Shot.FocusPointInRigSpace, Is.EqualTo(new Vec2(240f, 40f)), "줌 · 팬은 초점을 건드리지 않는다");
 
+            // shot_reset은 렌즈만 — 카메라의 몸과 롤은 그대로다.
             StageState reset = StageReducer.Apply(to, Cmd("shot_reset"), NewTuning());
             Assert.That(reset.Shot.Zoom, Is.EqualTo(0f));
             Assert.That(reset.Shot.PanInRigSpace, Is.EqualTo(Vec2.Zero));
+            Assert.That(reset.Shot.FocusPointInRigSpace, Is.EqualTo(Vec2.Zero), "초점도 렌즈다");
+            Assert.That(reset.Shot.Track, Is.EqualTo(new Vec2(40f, 0f)));
+            Assert.That(reset.Shot.Dolly, Is.EqualTo(4f));
+            Assert.That(reset.Shot.Roll, Is.EqualTo(-8f));
+
+            StageState all = StageReducer.Apply(reset, Cmd("shot_reset_all"), NewTuning());
+            Assert.That(all.Shot.ToString(), Is.EqualTo(ShotIntentState.Default.ToString()));
         }
 
         [Test]
-        public void shot_focus_to는_focus_튜닝_없이도_접힌다()
+        public void shot_계열의_값_인자에는_생략값이_없다()
         {
-            // 튜닝이 없으면 오프셋이 0일 뿐 폴드 자체는 성립한다.
-            // (오프셋 합의 정확성은 FocusStageReductionTests가 본다.)
-            StageState state = Fold(Cmd("slot", "c1"), Cmd("shot_focus_to", "c1", "body", "center", "2.5"));
+            // 값이 빠졌거나 읽지 못하면 접지 않고 남긴다 — 뜻 없는 생략값(zoom 1 · x 2.5u)으로 조용히 가지 않는다.
+            StageState state = Fold(
+                Cmd("shot_zoom"),
+                Cmd("shot_zoom", "abc"),
+                Cmd("shot_pan", "1u"),
+                Cmd("shot_focus", "1u"),
+                Cmd("shot_track"),
+                Cmd("shot_dolly"),
+                Cmd("shot_roll", "x"));
 
-            Assert.That(state.Unhandled, Is.Empty);
-            Assert.That(state.Shot.Zoom, Is.EqualTo(2.5f));
+            Assert.That(state.Unhandled.Count, Is.EqualTo(7), string.Join("\n", state.Unhandled));
+            Assert.That(state.Shot.ToString(), Is.EqualTo(ShotIntentState.Default.ToString()), "아무것도 접히지 않았다");
         }
 
         // ── 시간 커맨드 (접을 것이 없다) ─────────────────────────────
 
-        [TestCase("1fr")]
-        [TestCase("12fr")]
-        [TestCase("24fr")]
-        [TestCase("48fr")]
-        [TestCase("pause")]
-        public void 시간_커맨드는_무해하게_접힌다(string name)
+        [Test]
+        public void pause는_무해하게_접힌다()
         {
-            // 브리지 BindFramePauseAliases: <<1fr>>~<<48fr>>은 대기 별칭이다(24fps 기준).
             // 무대 상태를 하나도 건드리지 않으므로 Unhandled 작업 목록에 넣지 않는다.
-            StageState state = Fold(Cmd("slot", "c1"), Cmd(name));
+            StageState state = Fold(Cmd("slot", "c1"), Cmd("pause"));
 
             Assert.That(state.Unhandled, Is.Empty);
         }
 
-        [TestCase("0fr")]
-        [TestCase("49fr")]
-        [TestCase("fr")]
-        [TestCase("-2fr")]
-        [TestCase("2.5fr")]
-        [TestCase("frame")]
-        public void 대기_별칭이_아닌_이름은_그대로_Unhandled다(string name)
+        [TestCase("12fr")]
+        [TestCase("0.5")]
+        public void pause의_시간_토큰도_무해하게_접힌다(string duration)
         {
-            // 브리지가 등록하지 않는 이름이다 — 비슷하게 생겼다고 삼키지 않는다.
+            StageState state = Fold(Cmd("slot", "c1"), Cmd("pause", duration));
+
+            Assert.That(state.Unhandled, Is.Empty);
+        }
+
+        [TestCase("1fr")]
+        [TestCase("24fr")]
+        [TestCase("48fr")]
+        [TestCase("49fr")]
+        [TestCase("frame")]
+        public void 프레임_별칭은_모르는_이름으로_Unhandled다(string name)
+        {
+            // <<Nfr>> 별칭은 걷었다(docs/PLAN_line-beat.md D4) — <<pause 12fr>>로 쓴다. 비슷하게 생겼다고 삼키지 않는다.
             StageState state = Fold(Cmd(name));
 
             Assert.That(state.Unhandled.Count, Is.EqualTo(1));
@@ -730,21 +728,22 @@ namespace Ked.Presentation.Core.Tests
         {
             StageState state = Fold(
                 Cmd("slot", "c1"),
-                Cmd("scale_by", "c1", "숫자아님"),
-                Cmd("left", "c1"));   // unitToken 필수 (브리지에 기본값 없음)
+                Cmd("char_scale_to", "c1", "숫자아님"),
+                Cmd("move_by", "c1", "거리아님", "0u"));
 
             Assert.That(state.Unhandled.Count, Is.EqualTo(2));
             Assert.That(state.Unhandled[0].Reason, Does.Contain("배율"));
             Assert.That(state.Unhandled[1].Reason, Does.Contain("거리 토큰"));
 
             // 실패한 커맨드는 상태를 바꾸지 않는다.
-            Assert.That(state.Nodes.GetState("c1/CharSlot_Scale").LocalScale.XY, Is.EqualTo(Vec2.One));
+            Assert.That(state.Nodes.GetState("c1/CharacterPortrait_ActingScale").LocalScale.XY, Is.EqualTo(Vec2.One));
+            Assert.That(state.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition, Is.EqualTo(Vec2.Zero));
         }
 
         [Test]
         public void 미스폰_슬롯은_남는다()
         {
-            StageState state = Fold(Cmd("left", "c9", "2u"));
+            StageState state = Fold(Cmd("move_by", "c9", "2u", "0u"));
 
             Assert.That(state.Unhandled.Count, Is.EqualTo(1));
             Assert.That(state.Unhandled[0].Reason, Does.Contain("c9"));
@@ -766,7 +765,7 @@ namespace Ked.Presentation.Core.Tests
         [Test]
         public void 폴드_중_예외는_기록이_되고_이전_상태는_무사하다()
         {
-            // VisualOffset이 없는 손상 리그: show의 앵커 클레임이 트리에서 터진다.
+            // VisualOffset이 없는 손상 리그: cast의 앵커 타깃이 트리에서 터진다.
             StageReducerTuning tuning = NewTuning();
             tuning.RigSchemas.rigs[0].nodes.RemoveAll(n => n.id == "CharacterPortrait_VisualOffset");
             tuning.RigSchemas.rigs[0].nodes.RemoveAll(n => n.parent == "CharacterPortrait_VisualOffset");
@@ -776,7 +775,7 @@ namespace Ked.Presentation.Core.Tests
             StageState before = Fold(tuning, Cmd("slot", "c1"));
             int unhandledBefore = before.Unhandled.Count;
 
-            StageState after = StageReducer.Apply(before, Cmd("show", "c1"), tuning);
+            StageState after = StageReducer.Apply(before, Cmd("cast", "c1", "tyrant"), tuning);
 
             Assert.That(after.Unhandled.Count, Is.GreaterThan(unhandledBefore));
             Assert.That(after.Unhandled.Any(u => u.Reason.Contains("폴드 중 예외")), Is.True);
@@ -792,14 +791,14 @@ namespace Ked.Presentation.Core.Tests
             StageState state = Fold(
                 Cmd("slot", "c1"),
                 Cmd("모르는커맨드"),
-                Cmd("left", "c1", "1u"));
+                Cmd("move_by", "c1", "-1u", "0u"));
 
             Assert.That(state.Unhandled.Count, Is.EqualTo(1));
-            Assert.That(state.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X,
+            Assert.That(state.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition.X,
                 Is.EqualTo(-PixelsPerUnit).Within(Eps));
         }
 
-        // ── motion — 채널마다 마지막 키가 클레임 ─────────────────────
+        // ── motion — 채널마다 마지막 키가 타깃 ─────────────────────
 
         private static MotionChannel MotionChannelOf(
             string node, MotionChannelKind kind, float duration,
@@ -819,13 +818,47 @@ namespace Ked.Presentation.Core.Tests
         }
 
         [Test]
+        public void shot_shake는_아무것도_남기지_않는다()
+        {
+            // 흔들림은 구도 위에 얹혔다가 0으로 돌아온다 — 접을 것이 없다. 못 접는 것(Unhandled)이 아니다.
+            MotionClip hit = new()
+            {
+                Name = "hit", Rig = MotionRules.CameraRig, Duration = 0.3f, End = MotionEnd.Restore,
+                Channels = new[] { MotionChannelOf(MotionRules.CameraShakeNode, MotionChannelKind.Position, 0.3f, x: (0f, 0f)) },
+            };
+
+            StageReducerTuning tuning = TuningWithMotions(hit);
+
+            StageState before = Fold(tuning, Cmd("shot_track", "2u", "0u"), Cmd("shot_zoom", "3"));
+            StageState after = Fold(tuning, Cmd("shot_track", "2u", "0u"), Cmd("shot_zoom", "3"), Cmd("shot_shake", "hit", "1.5"));
+
+            Assert.That(after.Unhandled, Is.Empty);
+            Assert.That(after.Shot.ToString(), Is.EqualTo(before.Shot.ToString()), "샷 의도는 그대로다");
+        }
+
+        [Test]
+        public void 틀_수_없는_shot_shake는_Unhandled로_남는다()
+        {
+            // 런타임이 틀지 않는 줄이다 — 모르는 이름, 카메라 리그가 아닌 클립, 이름 없음.
+            MotionClip nod = new()
+            {
+                Name = "nod", Rig = MotionRules.CharacterRig, Duration = 0.6f, End = MotionEnd.Restore,
+                Channels = new[] { MotionChannelOf("CharacterPortrait_Track_Move", MotionChannelKind.Position, 0.6f, y: (0f, 0f)) },
+            };
+
+            StageState state = Fold(TuningWithMotions(nod), Cmd("shot_shake", "nope"), Cmd("shot_shake", "nod"), Cmd("shot_shake"));
+
+            Assert.That(state.Unhandled.Count, Is.EqualTo(3), string.Join("\n", state.Unhandled));
+        }
+
+        [Test]
         public void motion은_채널마다_마지막_키를_접는다_mode는_세_번째_인자다_relative는_더하고_absolute는_그_값이다()
         {
             MotionClip walk = new()
             {
                 Name = "walk", Rig = "character", Duration = 0.5f, End = MotionEnd.Commit,
                 // 걷기: 배치 축 +80. 클립은 mode를 모른다 — 커맨드가 정한다.
-                Channels = new[] { MotionChannelOf("CharSlot_Track_X", MotionChannelKind.Position, 0.5f, x: (0f, 80f)) },
+                Channels = new[] { MotionChannelOf("CharSlot_Track", MotionChannelKind.Position, 0.5f, x: (0f, 80f)) },
             };
 
             MotionClip tilt = new()
@@ -839,14 +872,14 @@ namespace Ked.Presentation.Core.Tests
 
             StageState state = Fold(tuning,
                 Cmd("slot", "c1"),
-                Cmd("left", "c1", "1u"),                        // Track_X = -40
+                Cmd("move_by", "c1", "-1u", "0u"),              // Track x = -40
                 Cmd("char_rotate_to", "c1", "40"),              // SwayPivot z = 40
                 Cmd("motion", "c1", "walk"),                    // 생략 = relative
                 Cmd("motion", "c1", "walk", "relative"),        // 두 번 — relative는 누적
                 Cmd("motion", "c1", "tilt", "absolute"));       // absolute — 시작값이 무엇이든 15
 
             Assert.That(state.Unhandled, Is.Empty);
-            Assert.That(state.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X, Is.EqualTo(-40f + 160f).Within(Eps));
+            Assert.That(state.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition.X, Is.EqualTo(-40f + 160f).Within(Eps));
             Assert.That(state.Nodes.GetState("c1/CharacterPortrait_SwayPivot").LocalEulerAngles.Z, Is.EqualTo(15f).Within(Eps));
 
             // 같은 tilt를 relative로 — 지금 15 + 마지막 키 15 = 30. 모르는 mode 낱말은 Unhandled.
@@ -864,25 +897,25 @@ namespace Ked.Presentation.Core.Tests
             MotionClip nod = new()
             {
                 Name = "nod", Rig = "character", Duration = 0.6f, End = MotionEnd.Restore,
-                Channels = new[] { MotionChannelOf("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, 0.6f, y: (0f, -18f)) },
+                Channels = new[] { MotionChannelOf("CharacterPortrait_Track_Move", MotionChannelKind.Position, 0.6f, y: (0f, -18f)) },
             };
 
             MotionClip grow = new()
             {
                 Name = "grow", Rig = "character", Duration = 0.4f, End = MotionEnd.Commit,
-                Channels = new[] { MotionChannelOf("CharSlot_Scale", MotionChannelKind.Scale, 0.4f, x: (1f, 1.5f), y: (1f, 1.5f)) },
+                Channels = new[] { MotionChannelOf("CharacterPortrait_ActingScale", MotionChannelKind.Scale, 0.4f, x: (1f, 1.5f), y: (1f, 1.5f)) },
             };
 
-            StageState scaled = Fold(TuningWithMotions(grow), Cmd("slot", "c1"), Cmd("scale_by", "c1", "2"), Cmd("motion", "c1", "grow"));
-            Assert.That(scaled.Nodes.GetState("c1/CharSlot_Scale").LocalScale.XY, Is.EqualTo(new Vec2(3f, 3f)), "2 × 1.5");
+            StageState scaled = Fold(TuningWithMotions(grow), Cmd("slot", "c1"), Cmd("char_scale_to", "c1", "2"), Cmd("motion", "c1", "grow"));
+            Assert.That(scaled.Nodes.GetState("c1/CharacterPortrait_ActingScale").LocalScale.XY, Is.EqualTo(new Vec2(3f, 3f)), "2 × 1.5");
 
             // restore는 마지막 키가 무엇이든 무변이다 — 재생이 끝에서 시작값을 되쓴다.
             StageState before = Fold(TuningWithMotions(nod), Cmd("slot", "c1"));
             StageState after = StageReducer.Apply(before, Cmd("motion", "c1", "nod", "absolute"), TuningWithMotions(nod));
 
             Assert.That(after.Unhandled, Is.Empty);
-            Assert.That(after.Nodes.GetState("c1/CharacterPortrait_Track_Move_Y").AnchoredPosition,
-                Is.EqualTo(before.Nodes.GetState("c1/CharacterPortrait_Track_Move_Y").AnchoredPosition));
+            Assert.That(after.Nodes.GetState("c1/CharacterPortrait_Track_Move").AnchoredPosition,
+                Is.EqualTo(before.Nodes.GetState("c1/CharacterPortrait_Track_Move").AnchoredPosition));
         }
 
         [Test]
@@ -893,7 +926,7 @@ namespace Ked.Presentation.Core.Tests
                 Name = "bad", Rig = "character", Duration = 0.5f, End = MotionEnd.Commit,
                 Channels = new[]
                 {
-                    MotionChannelOf("CharSlot_Track_X", MotionChannelKind.Position, 0.5f, x: (0f, 80f)),
+                    MotionChannelOf("CharSlot_Track", MotionChannelKind.Position, 0.5f, x: (0f, 80f)),
                     MotionChannelOf("NoSuchNode", MotionChannelKind.Position, 0.5f, x: (0f, 80f)),
                 },
             };
@@ -906,7 +939,7 @@ namespace Ked.Presentation.Core.Tests
             Assert.That(state.Unhandled.Count, Is.EqualTo(2));
             StringAssert.Contains("모른다", state.Unhandled[0].Reason);
             StringAssert.Contains("NoSuchNode", state.Unhandled[1].Reason);
-            Assert.That(state.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X, Is.EqualTo(0f), "첫 채널만 접히면 안 된다");
+            Assert.That(state.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition.X, Is.EqualTo(0f), "첫 채널만 접히면 안 된다");
 
             StageState noTuning = Fold(NewTuning(), Cmd("slot", "c1"), Cmd("motion", "c1", "bad"));
             StringAssert.Contains("motions.json", noTuning.Unhandled[0].Reason);

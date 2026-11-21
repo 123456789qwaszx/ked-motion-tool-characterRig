@@ -11,15 +11,16 @@ public readonly record struct Quad(Vec2 BottomLeft, Vec2 BottomRight, Vec2 TopRi
 /// <summary>
 /// 초상 한 장이 무대 어디에 어떻게 서는가 — 포즈(<see cref="MotionPreview"/>)를 받아 계산한다.
 ///
-/// 사이징은 런타임 <c>HeightFitPreserveAspect</c>와 같다: <c>sizeDelta = (부모 rect 높이 × 종횡비, 0)</c>
-/// (코어 <see cref="PortraitSizingReduction"/>). 노드 rect는 스트레치 앵커라 그보다 넓지만, Unity Image의
+/// 사이징은 높이 맞춤이다: <c>sizeDelta = (부모 rect 높이 × 종횡비, 0)</c>. **런타임은 2026-11-09에 원본 픽셀 크기로 바꿨다**
+/// (코어 <see cref="NodeTargets.SourcePixelsSizing"/> — 그림 크기와 배역 앵커의 배율이 있어야 한다). 이 툴은 아직 따라가지 않았다 —
+/// 리그의 계층(R7)과 따로 정할 일이다(<c>docs/PLAN-rig-layers.md</c> §6). 노드 rect는 스트레치 앵커라 그보다 넓지만, Unity Image의
 /// <c>preserveAspect</c>가 스프라이트를 rect 안에 종횡비대로 가운데 맞추므로 **보이는 것**은 높이 맞춤이다.
 /// <see cref="VisualQuad"/>가 그 보이는 사각형이다.
 /// </summary>
 public static class PortraitLayout
 {
-    public const string ImageNodeId = PortraitSizingStageReduction.ImageNodeId;
-    public const string ParentNodeId = PortraitSizingStageReduction.ParentNodeId;
+    public const string ImageNodeId = NodeTargets.PortraitImageNodeId;
+    public const string ParentNodeId = NodeTargets.PortraitParentNodeId;
 
     /// <summary>초상이 없을 때 쓰는 자리표시 종횡비(실측 덤프 harin/a/01: 1647×2048).</summary>
     public const float PlaceholderAspect = 1647f / 2048f;
@@ -37,8 +38,7 @@ public static class PortraitLayout
         }
 
         float parentHeight = tree.GetRectSize(parentKey).Y;
-        StageNodeClaim claim = PortraitSizingReduction.Reduce(imageKey, parentHeight, aspect);
-        tree.SetState(imageKey, tree.GetState(imageKey).WithSizeDelta(claim.Value.XY));
+        tree.SetState(imageKey, tree.GetState(imageKey).WithSizeDelta(new Vec2(parentHeight * aspect, 0f)));
     }
 
     /// <summary>노드 rect의 네 모서리(루트 공간). 원점은 pivot.</summary>

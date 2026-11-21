@@ -25,8 +25,7 @@ namespace Ked.Presentation.Core
         /// **같은 키 재선언은 리그를 새로 세운다.** 런타임 SetupCharRigCommand는 매번 새 리그를 짓고
         /// CharacterRigRegistry.Register가 옛 리그를 부순다 — 노드는 스키마 초기값으로, 가시성은 스키마 α로
         /// 돌아간다. 배역·변형·별칭은 CastRegistry 쪽이라 남는다. 그래서 여기서도 노드와 α만 되돌린다.
-        /// (예전 주석은 "런타임은 기존 리그를 재사용한다"였다 — 사실이 아니었다. 배경을 합치며 같은 키의
-        ///  `bg_spawn` 재선언을 검토하다 드러나 바로잡았다, 2026-10-29. 배경 그림만 바꾸는 것은 `bg_sprite`다.)
+        /// 배경 그림만 바꾸는 것은 `bg_sprite`다.
         /// </summary>
         private static bool SpawnSlot(
             StageState state, string slotKey, StageReducerTuning tuning,
@@ -49,6 +48,9 @@ namespace Ked.Presentation.Core
             if (state.HasSlot(slotKey))
             {
                 ResetSlotToSchema(state, slotKey, rig);
+
+                // 이모지는 슬롯에 딸린 것이다 — 옛 리그가 부서지면 그 밑의 이모지도 함께 사라진다.
+                state.ClearEmojis(slotKey);
             }
             else
             {
@@ -61,7 +63,7 @@ namespace Ked.Presentation.Core
 
             // 초기 가시성: 덤프의 CanvasGroup alpha.
             // 초상·오버레이·이모지 루트는 0으로 태어난다 — 기본값 1로 두면
-            // show 전 구간이 전부 어긋난다(첫 리포트의 최대 불일치 클래스였다).
+            // fade_in 전 구간이 전부 어긋난다(첫 리포트의 최대 불일치 클래스였다).
             for (int i = 0; i < rig.nodes.Count; i++)
             {
                 RigSchemaNodeDto node = rig.nodes[i];
@@ -111,8 +113,9 @@ namespace Ked.Presentation.Core
         /// <summary>
         /// cast (slot, characterKey, variant="a", emotion="1").
         ///
-        /// 브리지는 이걸 셋으로 팬아웃한다: 배역 → pose(변형) → face(표정+사이징).
+        /// 브리지는 이걸 넷으로 팬아웃한다: 배역 → pose(변형) → face(표정+사이징) → SetAnchor(축 리셋 + 역할 앵커).
         /// 그 순서를 그대로 따른다 — 배역이 변형을 비우므로 pose가 먼저여야 한다.
+        /// (StageCommandParser.CharRigSetup.EnqueueCastCharacterSpec)
         /// </summary>
         private static bool ApplyCast(
             StageState state, in StageCommand cmd, StageReducerTuning tuning, out string reason)
@@ -136,6 +139,9 @@ namespace Ked.Presentation.Core
             if (!ApplyPortraitSizing(state, slotKey, cmd.Arg(3, "1"), tuning, out string sizingReason))
                 state.AddUnhandled(cmd, sizingReason);
 
+            // 런타임은 face 다음에 SetAnchor를 건다. 사이징과 앵커는 노드가 달라 순서가 결과를 바꾸지 않는다.
+            ApplyRoleAnchor(state, cmd, slotKey, tuning);
+
             return true;
         }
 
@@ -144,27 +150,15 @@ namespace Ked.Presentation.Core
             reason = null;
 
             string aliasSymbol = cmd.Arg(0);
-            string targetKey = cmd.Arg(1);
+            string roleKey = cmd.Arg(1);
 
-            if (string.IsNullOrEmpty(aliasSymbol) || string.IsNullOrEmpty(targetKey))
+            if (string.IsNullOrEmpty(aliasSymbol) || string.IsNullOrEmpty(roleKey))
             {
                 reason = "actor 인자가 모자란다 (별칭, 대상)";
                 return false;
             }
 
-            state.SetAlias(aliasSymbol, targetKey);
-            return true;
-        }
-
-        // ── 구조 ─────────────────────────────────────────────────────
-
-        private static bool ApplyCharTo(
-            StageState state, in StageCommand cmd, string stageKey, string layerKey, out string reason)
-        {
-            if (!TryGetSpawnedSlot(state, cmd, out string slotKey, out reason))
-                return false;
-
-            state.SetAttachment(slotKey, new SlotAttachment(stageKey, layerKey));
+            state.SetAlias(aliasSymbol, roleKey);
             return true;
         }
     }

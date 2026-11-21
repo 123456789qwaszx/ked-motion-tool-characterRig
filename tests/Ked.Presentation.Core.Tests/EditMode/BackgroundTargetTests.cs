@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using Ked.Presentation.Core;
 
-namespace Ked.Presentation.Core.Tests
+namespace Ked.Presentation.Tests
 {
     /// <summary>
     /// bg_* 폴드 골든 — 배경은 캐스팅하지 않은 캐릭터 슬롯이다(StageReducer.Background.cs).
@@ -9,11 +10,11 @@ namespace Ked.Presentation.Core.Tests
     /// 고정하는 규율:
     ///   · 배경 슬롯은 캐릭터 슬롯과 **같은 리그·같은 노드**로 선다.
     ///   · bg_spawn은 캐릭터 slot처럼 숨은 채 선다(α 0) — bg_fade_in으로 들인다.
-    ///   · 종횡비는 초상 DB가 아니라 배경 치수표(키 하나)에서 온다. 없으면 그 축만 Unhandled.
+    ///   · 그림 크기는 초상 DB가 아니라 배경 치수표(키 하나)에서 온다. 없으면 그 축만 Unhandled.
     ///   · 지운 어휘(bg_size·bg_place)는 Unhandled로 소리를 낸다 — 조용히 통과하지 않는다.
     /// 합성 리그는 StageReducerTests와 같은 부모 사슬이다.
     /// </summary>
-    public sealed class BackgroundReductionTests
+    public sealed class BackgroundTargetTests
     {
         private const float Eps = 1e-3f;
 
@@ -49,34 +50,29 @@ namespace Ked.Presentation.Core.Tests
                 nodes = new List<RigSchemaNodeDto>
                 {
                     Node("__root", ""),
-                    Node("CharSlot_Track_Focus", "__root"),
-                    Node("CharSlot_DepthY", "CharSlot_Track_Focus"),
-                    Node("CharSlot_DepthScale", "CharSlot_DepthY", bottomPivot: true),
-                    Node("CharSlot_Track_Idle", "CharSlot_DepthScale"),
-                    Node("CharSlot_Track", "CharSlot_Track_Idle"),
-                    Node("CharSlot_Track_X", "CharSlot_Track"),
-                    Node("CharSlot_Track_Y", "CharSlot_Track_X"),
-                    Node("CharSlot_Rotation", "CharSlot_Track_Y"),
+                    Node("CharFocus_Track", "__root"),
+                    Node("CharSlot_Track", "CharFocus_Track"),
+                    Node("CharFocus_Rotation", "CharSlot_Track", bottomPivot: true),
+                    Node("CharFocus_Scale", "CharFocus_Rotation", bottomPivot: true),
+                    Node("CharSlot_Rotation", "CharFocus_Scale"),
                     Node("CharSlot_SwayPivot", "CharSlot_Rotation", bottomPivot: true),
-                    Node("CharSlot_Scale", "CharSlot_SwayPivot", bottomPivot: true),
-                    Node("CharacterPortrait_VisualOffset", "CharSlot_Scale", bottomPivot: true),
+                    Node("CharacterPortrait_DepthOffset", "CharSlot_SwayPivot"),
+                    Node("CharacterPortrait_DepthScale", "CharacterPortrait_DepthOffset", bottomPivot: true),
+                    Node("CharacterPortrait_VisualOffset", "CharacterPortrait_DepthScale", bottomPivot: true),
                     Node("CharacterPortrait_Track", "CharacterPortrait_VisualOffset"),
                     Node("CharacterPortrait_Rotation", "CharacterPortrait_Track"),
                     Node("CharacterPortrait_Track_Move", "CharacterPortrait_Rotation"),
-                    Node("CharacterPortrait_Track_Move_X", "CharacterPortrait_Track_Move"),
-                    Node("CharacterPortrait_Track_Move_Y", "CharacterPortrait_Track_Move_X"),
-                    Node("CharacterPortrait_SwayPivot", "CharacterPortrait_Track_Move_Y", bottomPivot: true),
+                    Node("CharacterPortrait_SwayPivot", "CharacterPortrait_Track_Move", bottomPivot: true),
                     Node("CharacterPortrait_Shake", "CharacterPortrait_SwayPivot"),
                     Node("CharacterPortrait_ActingScale", "CharacterPortrait_Shake"),
-                    Node("CharacterPortrait_ActingScale_X", "CharacterPortrait_ActingScale"),
-                    Node("CharacterPortrait_ActingScale_Y", "CharacterPortrait_ActingScale_X"),
-                    Node("CharacterPortraitSprite_Root", "CharacterPortrait_ActingScale_Y", canvasGroupAlpha: 0f),
+                    Node("CharacterPortrait_Mirror", "CharacterPortrait_ActingScale"),
+                    Node("CharacterPortraitSprite_Root", "CharacterPortrait_Mirror", canvasGroupAlpha: 0f),
                     Node("CharacterPortraitSprite_Image", "CharacterPortraitSprite_Root"),
                 },
             };
         }
 
-        private const int RigNodeCount = 24;
+        private const int RigNodeCount = 19;
 
         private static StageReducerTuning NewTuning(bool withBackgroundDimensions = true)
         {
@@ -94,8 +90,9 @@ namespace Ked.Presentation.Core.Tests
         }
 
         /// <summary>
-        /// 실제 예제 배경의 비율 둘 — 16:9(1920×1080)와 살짝 좁은 것(1026×580).
-        /// 높이가 부모 rect(1080)와 다르므로 접힌 폭은 1080 × 종횡비다.
+        /// 실제 예제 배경 둘 — 화면과 같은 것(1920×1080)과 화면보다 작은 것(1026×580) —
+        /// 그리고 화면보다 큰 원본 게임 배경(2540×1800).
+        /// 배경은 원본 픽셀 크기 그대로라 접힌 sizeDelta = 그림 크기 − 부모 rect(1920×1080)다.
         /// </summary>
         private static BackgroundDimensionsFileDto NewBackgroundDimensions()
         {
@@ -106,13 +103,23 @@ namespace Ked.Presentation.Core.Tests
                 {
                     new() { key = "class_day", width = 1026f, height = 580f },
                     new() { key = "3_한옥_에피소드시작", width = 1920f, height = 1080f },
+                    new() { key = "BG_uniseed_office", width = 2540f, height = 1800f },
                     new() { key = "Class_Day", width = 100f, height = 100f }, // 대소문자만 다르다 — 먼저 온 class_day가 이긴다
                 },
             };
         }
 
-        private static float ImageWidthOf(StageState state, string slotKey)
-            => state.Nodes.GetState(StageState.NodeKeyOf(slotKey, "CharacterPortraitSprite_Image")).SizeDelta.X;
+        private static Vec2 ImageSizeDeltaOf(StageState state, string slotKey)
+            => state.Nodes.GetState(StageState.NodeKeyOf(slotKey, "CharacterPortraitSprite_Image")).SizeDelta;
+
+        private static Vec2 ImageRectSizeOf(StageState state, string slotKey)
+            => state.Nodes.GetRectSize(StageState.NodeKeyOf(slotKey, "CharacterPortraitSprite_Image"));
+
+        private static void AssertVec2(Vec2 actual, float x, float y, string message = null)
+        {
+            Assert.That(actual.X, Is.EqualTo(x).Within(Eps), message);
+            Assert.That(actual.Y, Is.EqualTo(y).Within(Eps), message);
+        }
 
         private static StageCommand Cmd(string name, params string[] args)
             => new(name, args, "test.yarn:1");
@@ -141,17 +148,18 @@ namespace Ked.Presentation.Core.Tests
             // 숨은 채 선다 — 캐릭터 slot과 같다. 대본은 bg_fade_in으로 들인다.
             Assert.That(state.GetAlpha("bg_main/CharacterPortraitSprite_Root"), Is.EqualTo(0f));
 
-            // 폭 = 부모 높이 1080 × (1026/580).
-            Assert.That(ImageWidthOf(state, "bg_main"), Is.EqualTo(1080f * 1026f / 580f).Within(Eps));
+            // 원본 픽셀 크기 그대로 — 화면보다 작은 그림은 작게 선다(늘리지 않는다).
+            AssertVec2(ImageSizeDeltaOf(state, "bg_main"), 1026f - 1920f, 580f - 1080f);
+            AssertVec2(ImageRectSizeOf(state, "bg_main"), 1026f, 580f);
             Assert.That(state.Unhandled, Is.Empty);
         }
 
         [Test]
-        public void bg_slotNN은_스테이지를_접미사로_레이어를_셋째_인자로_받는다()
+        public void bg_spawn은_셋째_넷째_인자로_무대와_층을_받는다()
         {
             StageState state = Fold(
-                Cmd("bg_slot01", "bg_a", "class_day"),
-                Cmd("bg_slot02", "bg_b", "class_day", "mid"));
+                Cmd("bg_spawn", "bg_a", "class_day", "stage01"),
+                Cmd("bg_spawn", "bg_b", "class_day", "stage02", "mid"));
 
             state.TryGetAttachment("bg_a", out SlotAttachment a);
             Assert.That(a.StageKey, Is.EqualTo("stage01"));
@@ -168,10 +176,21 @@ namespace Ked.Presentation.Core.Tests
             StageState state = Fold(Cmd("bg_spawn", "bg_main", "class_day"));
 
             Assert.That(state.TryGetCharacter("bg_main", out _), Is.False,
-                "배경 = 캐스팅하지 않은 슬롯. 배역 기반 축(focus_on 등)이 여기서 갈린다");
+                "배경 = 캐스팅하지 않은 슬롯. 배역 기반 축(depth_focus_on 등)이 여기서 갈린다");
         }
 
         // ── 사이징 ───────────────────────────────────────────────────
+
+        [Test]
+        public void 화면보다_큰_배경은_원본_크기로_화면_밖까지_걸친다()
+        {
+            // 원본 게임 실영상(2026-11-09): 2540×1800 배경의 가운데 2336×1078이 보인다 — 높이 맞춤이 아니다.
+            StageState state = Fold(Cmd("bg_spawn", "bg_main", "BG_uniseed_office"));
+
+            AssertVec2(ImageSizeDeltaOf(state, "bg_main"), 620f, 720f, "2540−1920, 1800−1080");
+            AssertVec2(ImageRectSizeOf(state, "bg_main"), 2540f, 1800f);
+            Assert.That(state.Unhandled, Is.Empty);
+        }
 
         [Test]
         public void bg_sprite는_폭만_바꾸고_가시성은_건드리지_않는다()
@@ -181,7 +200,7 @@ namespace Ked.Presentation.Core.Tests
                 Cmd("bg_fade_out", "bg_main"),
                 Cmd("bg_sprite", "bg_main", "3_한옥_에피소드시작"));
 
-            Assert.That(ImageWidthOf(state, "bg_main"), Is.EqualTo(1920f).Within(Eps), "1080 × 16/9");
+            AssertVec2(ImageSizeDeltaOf(state, "bg_main"), 0f, 0f, "화면과 같은 크기 — 증감 0");
             Assert.That(state.GetAlpha("bg_main/CharacterPortraitSprite_Root"), Is.EqualTo(0f),
                 "그림 교체는 숨긴 배경을 드러내지 않는다");
             Assert.That(state.Unhandled, Is.Empty);
@@ -193,7 +212,7 @@ namespace Ked.Presentation.Core.Tests
             // Resources.Load가 그렇다 — 가리면 런타임은 그림을 찾아 크기를 맞추는데 폴드만 Unhandled가 된다.
             StageState state = Fold(Cmd("bg_spawn", "bg_main", "CLASS_DAY"));
 
-            Assert.That(ImageWidthOf(state, "bg_main"), Is.EqualTo(1080f * 1026f / 580f).Within(Eps),
+            AssertVec2(ImageRectSizeOf(state, "bg_main"), 1026f, 580f,
                 "대소문자만 다른 두 엔트리 중 먼저 온 class_day");
             Assert.That(state.Unhandled, Is.Empty);
         }
@@ -266,14 +285,14 @@ namespace Ked.Presentation.Core.Tests
         [Test]
         public void bg_scale은_가운데_피벗의_ActingScale에_절대값으로_간다()
         {
-            // CharSlot_Scale(발 피벗)이 아니다 — 배경은 화면 가운데에서 커져야 한다(D 대응표).
+            // 깊이(CharacterPortrait_DepthScale, 발 피벗)가 아니다 — 배경은 화면 가운데에서 커져야 한다(D 대응표).
             StageState state = Fold(
                 Cmd("bg_spawn", "bg_main", "class_day"),
                 Cmd("bg_scale", "bg_main", "1.2", "10fr"));
 
             Assert.That(state.Nodes.GetState("bg_main/CharacterPortrait_ActingScale").LocalScale.XY,
                 Is.EqualTo(new Vec2(1.2f, 1.2f)));
-            Assert.That(state.Nodes.GetState("bg_main/CharSlot_Scale").LocalScale.XY,
+            Assert.That(state.Nodes.GetState("bg_main/CharacterPortrait_DepthScale").LocalScale.XY,
                 Is.EqualTo(Vec2.One));
             Assert.That(state.Unhandled, Is.Empty);
         }
@@ -309,7 +328,7 @@ namespace Ked.Presentation.Core.Tests
             Assert.That(state.Nodes.Count, Is.EqualTo(RigNodeCount));
             Assert.That(state.Nodes.GetState("bg0/CharSlot_Track").AnchoredPosition, Is.EqualTo(Vec2.Zero));
             Assert.That(state.Nodes.GetState("bg0/CharacterPortrait_ActingScale").LocalScale.XY, Is.EqualTo(Vec2.One));
-            Assert.That(ImageWidthOf(state, "bg0"), Is.EqualTo(1920f).Within(Eps), "새 그림의 폭");
+            AssertVec2(ImageRectSizeOf(state, "bg0"), 1920f, 1080f, "새 그림의 크기");
             Assert.That(state.GetAlpha("bg0/CharacterPortraitSprite_Root"), Is.EqualTo(0f),
                 "새 리그는 숨은 채 선다 — 다시 bg_fade_in으로 들인다");
             Assert.That(state.Unhandled, Is.Empty);
@@ -318,7 +337,7 @@ namespace Ked.Presentation.Core.Tests
         [Test]
         public void 캐스팅된_캐릭터_키는_슬롯_키보다_먼저_풀린다()
         {
-            // 런타임 CharacterRigTargetResolver와 같은 순서 — 캐릭터 키가 이긴다.
+            // 런타임 CharacterRigResolver와 같은 순서 — 캐릭터 키가 이긴다.
             // 배경 키를 캐릭터 키와 같게 지으면 bg_* 명령이 그 캐릭터의 슬롯으로 간다(런타임은 세울 때 경고한다).
             StageState state = Fold(
                 Cmd("slot", "s1"),
@@ -339,7 +358,7 @@ namespace Ked.Presentation.Core.Tests
         public void 배경이_배역_있는_슬롯을_덮으면_배역을_푼다()
         {
             // 배경 = 캐스팅하지 않은 슬롯. 배역이 남으면 fade_in harin이 배경을 페이드하고
-            // focus_on이 배경을 초점면에 넣는다. 런타임도 같은 자리에서 배역을 풀고 경고한다.
+            // depth_focus_on이 배경을 초점면에 넣는다. 런타임도 같은 자리에서 배역을 풀고 경고한다.
             StageState state = Fold(
                 Cmd("slot", "s1"),
                 Cmd("cast", "s1", "tyrant"),

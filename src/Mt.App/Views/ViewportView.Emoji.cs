@@ -16,7 +16,7 @@ internal sealed record EmojiFrameView(RectNodeTree Tree, float Alpha, IReadOnlyL
 // 이모지의 미리보기(docs/history/PLAN-emoji.md E6). 이모지를 고르면 뷰포트의 시간은 그 이모지의 것이다:
 //   타임라인 보기 — 시계 = 타임라인(초). 그래프 · 도프 시트와 같은 시각이다. 그 프레임을 내보내는 길 그대로 읽어(EmojiPreview.Timeline) 보인다.
 //   수명 보기     — 시계 = 등장 → 머묾 × 바퀴 → 퇴장(머묾이 없으면 main 한 번). 코어 재생(EmojiPlayback)을 그대로 돌린다.
-// 이모지는 런타임처럼 캐릭터의 CharSlot_Scale 밑(로케이터 자리 — 발)에 선다. 씬에 캐릭터가 없으면 무대 가운데.
+// 이모지는 런타임처럼 캐릭터의 CharacterPortrait_DepthScale 밑(로케이터 자리 — 발)에 선다. 씬에 캐릭터가 없으면 무대 가운데.
 // 타임라인 보기에서는 뷰포트에서 직접 만진다(docs/history/PLAN-ux.md U4) — 그림을 눌러 고르고, 매니퓰레이터(W 이동 · E 회전 · R 크기)로 끈다.
 //   Auto Key가 꺼져 있으면 기본값(그림의 자리 · 크기 · 회전 = EmojiRig_Place, 이모지 전체는 머리에서의 자리)이 바뀐다 — 키가 아니다.
 //   Auto Key가 켜져 있으면 지금 프레임에 키가 놓인다(그림의 키 = EmojiRig_Image, 이모지 전체의 키 = Emoji_Offset).
@@ -24,7 +24,7 @@ internal sealed record EmojiFrameView(RectNodeTree Tree, float Alpha, IReadOnlyL
 public sealed partial class ViewportView
 {
     private const string EmojiKeyPrefix = "emoji/";
-    private const string HostNode = "CharSlot_Scale";
+    private const string HostNode = "CharacterPortrait_DepthScale";
 
     private static readonly IPen EmojiRigPen = new Pen(new SolidColorBrush(Color.FromArgb(150, 0xF0, 0xC0, 0x40)), 1, DashStyle.Dash);
     private static readonly IPen SelectedEmojiRigPen = new Pen(new SolidColorBrush(Color.FromRgb(0xF0, 0xC0, 0x40)), 2);
@@ -433,7 +433,7 @@ public sealed partial class ViewportView
         return EmojiPreview.Moment(definition, _clock.Time, EmojiPreview.OffAt(definition, _emojiHoldCycles));
     }
 
-    /// <summary>이모지가 설 캐릭터 — 고른 오브젝트가 CharSlot_Scale을 가졌으면 그것, 아니면 그런 첫 오브젝트. 없으면 null(무대 가운데).</summary>
+    /// <summary>이모지가 설 캐릭터 — 고른 오브젝트가 CharacterPortrait_DepthScale을 가졌으면 그것, 아니면 그런 첫 오브젝트. 없으면 null(무대 가운데).</summary>
     private SceneObject? EmojiHost(RectNodeTree tree)
     {
         if (SelectedObject is { } selected && tree.Contains(selected.KeyOf(HostNode)))

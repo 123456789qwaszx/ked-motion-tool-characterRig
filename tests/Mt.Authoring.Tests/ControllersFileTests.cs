@@ -27,27 +27,27 @@ public class ControllersFileTests
     }
 
     [Fact]
-    public void 커브는_주_노드로도_별칭으로도_컨트롤러_성분으로_풀리고_주_노드가_별칭을_이긴다()
+    public void 커브는_컨트롤러_성분으로_풀리고_표에_없는_커브는_노드_이름으로_보인다()
     {
         ControllerRig rig = BuiltinTuning.Controllers.Rig("character")!;
 
-        // 견본 nod는 Track_Move_Y에 있다 — 별칭으로 몸 Y, 표의 axisLabels로 "상하".
-        Assert.True(rig.TryResolve(new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y), out Controller body, out Axis axis));
+        // 견본 nod는 Track_Move의 y에 있다 — 몸의 Y, 표의 axisLabels로 "상하".
+        Assert.True(rig.TryResolve(new CurveRef("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y), out Controller body, out Axis axis));
         Assert.Equal("body", body.Id);
         Assert.Equal(Axis.Y, axis);
         Assert.Equal("연기 · 상하", rig.LabelOf(new CurveRef("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y)));
         Assert.Equal("연기 · 발 기준 회전", rig.LabelOf(new CurveRef("CharacterPortrait_SwayPivot", ChannelKind.Euler, Axis.Z)));
         Assert.Equal("자리 · 자리 X", rig.LabelOf(new CurveRef("CharSlot_Track", ChannelKind.Position, Axis.X)));
 
-        // ActingScale_X의 scale X는 facing의 주 노드다 — squash의 별칭이 아니다.
-        Assert.True(rig.TryResolve(new CurveRef("CharacterPortrait_ActingScale_X", ChannelKind.Scale, Axis.X), out Controller facing, out _));
+        // 방향(mirror)과 크기는 다른 노드다 — 합치면 배율 모션이 뒤집힌 부호를 덮는다.
+        Assert.True(rig.TryResolve(new CurveRef("CharacterPortrait_Mirror", ChannelKind.Scale, Axis.X), out Controller facing, out _));
         Assert.Equal("facing", facing.Id);
-        Assert.True(rig.TryResolve(new CurveRef("CharacterPortrait_ActingScale_Y", ChannelKind.Scale, Axis.Y), out Controller squash, out _));
+        Assert.True(rig.TryResolve(new CurveRef("CharacterPortrait_ActingScale", ChannelKind.Scale, Axis.Y), out Controller squash, out _));
         Assert.Equal("squash", squash.Id);
 
         // 표에 없는 커브는 null — 노드 이름으로 보인다.
-        Assert.Null(rig.LabelOf(new CurveRef("CharSlot_Track_X", ChannelKind.Position, Axis.X)));
-        Assert.Equal(new[] { "CharacterPortrait_Track_Move", "CharacterPortrait_Track_Move_Y" }, body.CurvesOf(Axis.Y).Select(c => c.Node));
+        Assert.Null(rig.LabelOf(new CurveRef("CharSlot_Rotation", ChannelKind.Euler, Axis.Z)));
+        Assert.Equal(new[] { "CharacterPortrait_Track_Move" }, body.CurvesOf(Axis.Y).Select(c => c.Node));
     }
 
     [Fact]
@@ -60,13 +60,13 @@ public class ControllersFileTests
         Assert.Equal("squash", rig.DefaultFor(ChannelKind.Scale)!.Id);
         Assert.Equal(ControllerBake.DepthLevel, rig.Find("depth")!.Bake);
 
-        // 깊이 손잡이는 DepthY도 맡는다 — 커브·노드·라벨이 깊이로 풀린다.
-        Assert.Equal("CharSlot_DepthY", rig.Find("depth")!.DepthYNode);
-        Assert.True(rig.TryResolve(new CurveRef("CharSlot_DepthY", ChannelKind.Position, Axis.Y), out Controller depth, out Axis depthAxis));
+        // 깊이 손잡이는 DepthOffset의 Y도 맡는다 — 커브·노드·라벨이 깊이로 풀린다.
+        Assert.Equal("CharacterPortrait_DepthOffset", rig.Find("depth")!.DepthYNode);
+        Assert.True(rig.TryResolve(new CurveRef("CharacterPortrait_DepthOffset", ChannelKind.Position, Axis.Y), out Controller depth, out Axis depthAxis));
         Assert.Equal("depth", depth.Id);
         Assert.Equal(Axis.Y, depthAxis);
-        Assert.Equal("depth", rig.OfNode("CharSlot_DepthY")!.Id);
-        Assert.Equal("깊이 · 깊이 Y", DopeSheetRows.NodeLabel("CharSlot_DepthY", rig));
+        Assert.Equal("depth", rig.OfNode("CharacterPortrait_DepthOffset")!.Id);
+        Assert.Equal("깊이 · 깊이 Y", DopeSheetRows.NodeLabel("CharacterPortrait_DepthOffset", rig));
     }
 
     [Fact]
@@ -87,17 +87,14 @@ public class ControllersFileTests
         Assert.True(depth.TryScaleOf(DepthLevelLabels.Mid, out float mid));
         Assert.Equal(1.708f, mid, 2); // 게임 프리팹 Stage00 Mid의 DepthScale과 같다(PLAN-scene §7.7)
 
-        // 깊이 Y = −bust × (배율 − 1): 런타임 size의 focus 보존이 정지 자세에서 남기는 값(yCurve는 상쇄된다). Mid = 프리팹의 −580.56.
-        float bust = DepthTuningFile.FocusHeightOf(BuiltinTuning.Focus);
-        Assert.Equal(820f, bust, 2);
-        Assert.True(depth.TryDepthOf(DepthLevelLabels.Mid, bust, out float midY, out float midScale));
-        Assert.Equal(-580.56f, midY, 1);
+        // 깊이 Y는 level 커브의 값 그대로다(런타임 size가 DepthOffset에 놓는 값) — 덤프의 yCurve는 0에서 120, 20에서 −1000인 직선이다.
+        Assert.True(depth.TryDepthOf(DepthLevelLabels.Mid, out float midY, out float midScale));
+        Assert.Equal(-664f, midY, 1);
         Assert.Equal(mid, midScale, 4);
-        Assert.True(depth.TryDepthOf(DepthLevelLabels.Far, bust, out float farY, out _));
-        Assert.True(farY > 100f, "멀면 발이 위로(+)"); // 0.86 배율 → +114.8
-        Assert.True(depth.TryDepthOf(DepthLevelLabels.Close, bust, out float closeY, out _));
-        Assert.Equal(-984f, closeY, 1);
-        Assert.Equal(0f, DepthTuningFile.FocusHeightOf(null));
+        Assert.True(depth.TryDepthOf(DepthLevelLabels.Far, out float farY, out _));
+        Assert.Equal(120f, farY, 1); // 멀면 위로(+)
+        Assert.True(depth.TryDepthOf(DepthLevelLabels.Close, out float closeY, out _));
+        Assert.Equal(-1000f, closeY, 1);
         Assert.True(depth.TryLevelOf(0f, out float clampedLow) && clampedLow < 0.01f, "범위 밖은 끝으로");
         Assert.True(depth.TryLevelOf(9f, out float clampedHigh) && clampedHigh > 19.99f);
     }

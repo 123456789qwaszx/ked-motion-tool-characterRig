@@ -48,17 +48,24 @@ namespace Ked.Presentation.Core
         public override string ToString() => $"{Command} — {Reason}";
     }
 
-    // 슬롯 리그의 구조 부착 상태
-    // 스테이지·레이어 어휘는 게임 데이터라 문자열로 담는다 (코어는 뜻을 모름)
+    // 슬롯 리그의 구조 부착 상태 — 어느 무대의 어느 깊이 층에 섰나. 스폰 때 한 번 정해진다 —
+    // 리그는 무대 · 층을 옮기지 않는다(char_to는 2026-11-06에 걷었다. 다른 자리에 서려면 fade_out 뒤 새 slot).
+    // 무대 키는 게임 데이터라 문자열로 담는다(어떤 무대가 있는지는 호스트가 정한다).
+    // 층은 깊이 값 d다. 라벨 → d는 StageLayerLabels의 눈금이고, 모르는 라벨은 mid로 간다 —
+    // 런타임 StageKeyParser와 같다(그쪽은 경고한다). 원문 라벨은 진단용으로 남긴다.
     public readonly struct SlotAttachment
     {
         public readonly string StageKey;
         public readonly string LayerKey;
+        public readonly float LayerDepth;
 
         public SlotAttachment(string stageKey, string layerKey)
         {
-            StageKey = stageKey;
+            string stage = (stageKey ?? "").Trim().ToLowerInvariant();
+
+            StageKey = stage.Length == 0 ? StageRoles.MainStageKey : stage;
             LayerKey = layerKey;
+            LayerDepth = StageLayerLabels.TryGetDepth(layerKey, out float depth) ? depth : StageLayerLabels.Mid;
         }
 
         public override string ToString() => $"{StageKey}/{LayerKey}";
@@ -95,7 +102,24 @@ namespace Ked.Presentation.Core
         // 런타임 CastBinding도 변형만 들고, 표정은 커맨드마다 인자로 온다.
         private readonly Dictionary<string, string> _variantBySlot;
 
+        // 컷인 축: 덮는 무대마다 컷인 끝 상태(열림/닫힘 · 판 · 자리 · 배율). 창 모션의 도중은 접지 않는다(docs/PLAN_cutin.md §6).
+        private readonly Dictionary<string, CutInState> _cutIns;
+
+        // 그림 팝업 축: 덮는 무대마다 팝업 끝 상태(열림/닫힘 · 그림 · 자리 · 배율). 페이드 도중은 접지 않는다(docs/PLAN_popup.md §7).
+        private readonly Dictionary<string, PopupState> _popups;
+
+        // 이모지 축: 슬롯마다 서 있는 이모지의 이름(세운 순서). 이모지는 슬롯에 딸린 것이다 —
+        // 슬롯이 다시 서면 함께 사라진다. 노드는 접지 않는다(docs/PLAN_emoji.md §4의 2-7): 과제 2의 이모지는
+        // 정의의 값 그대로 서 있을 뿐이고, 움직임의 끝값은 과제 3에서 접는다.
+        private readonly Dictionary<string, List<string>> _emojisBySlot;
+
         public IReadOnlyList<UnhandledCommand> Unhandled => _unhandled;
+
+        /// <summary>무대 키 → 컷인 끝 상태. 한 번도 열지 않은 무대는 없다.</summary>
+        public IReadOnlyDictionary<string, CutInState> CutIns => _cutIns;
+
+        /// <summary>무대 키 → 그림 팝업 끝 상태. 한 번도 열지 않은 무대는 없다.</summary>
+        public IReadOnlyDictionary<string, PopupState> Popups => _popups;
 
         public IReadOnlyCollection<string> Slots => _slots;
 
@@ -112,6 +136,9 @@ namespace Ked.Presentation.Core
             _characterBySlot = new Dictionary<string, string>(StringComparer.Ordinal);
             _aliases = new Dictionary<string, string>(StringComparer.Ordinal);
             _variantBySlot = new Dictionary<string, string>(StringComparer.Ordinal);
+            _cutIns = new Dictionary<string, CutInState>(StringComparer.Ordinal);
+            _popups = new Dictionary<string, PopupState>(StringComparer.Ordinal);
+            _emojisBySlot = new Dictionary<string, List<string>>(StringComparer.Ordinal);
         }
 
         private StageState(StageState source)
@@ -127,6 +154,90 @@ namespace Ked.Presentation.Core
             _characterBySlot = new Dictionary<string, string>(source._characterBySlot, StringComparer.Ordinal);
             _aliases = new Dictionary<string, string>(source._aliases, StringComparer.Ordinal);
             _variantBySlot = new Dictionary<string, string>(source._variantBySlot, StringComparer.Ordinal);
+            _cutIns = new Dictionary<string, CutInState>(source._cutIns, StringComparer.Ordinal);
+            _popups = new Dictionary<string, PopupState>(source._popups, StringComparer.Ordinal);
+
+            _emojisBySlot = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+
+            foreach (KeyValuePair<string, List<string>> pair in source._emojisBySlot)
+                _emojisBySlot[pair.Key] = new List<string>(pair.Value);
+        }
+
+        // ── 이모지 ───────────────────────────────────────────────────
+
+        private static readonly IReadOnlyList<string> NoEmojis = Array.Empty<string>();
+
+        /// <summary>슬롯에 서 있는 이모지의 이름들 — 세운 순서. 없으면 빈 목록.</summary>
+        public IReadOnlyList<string> EmojisOf(string slotKey)
+            => slotKey != null && _emojisBySlot.TryGetValue(slotKey, out List<string> names) ? names : NoEmojis;
+
+        public bool HasEmoji(string slotKey, string emojiName)
+            => slotKey != null && _emojisBySlot.TryGetValue(slotKey, out List<string> names) && names.Contains(emojiName);
+
+        /// <summary>emoji — 슬롯에 이모지를 세운다. 같은 이름이 서 있으면 새로 선 것으로 친다(맨 뒤로).</summary>
+        public void AddEmoji(string slotKey, string emojiName)
+        {
+            if (string.IsNullOrEmpty(slotKey))
+                throw new ArgumentException("슬롯 키가 비어 있다.", nameof(slotKey));
+
+            if (string.IsNullOrEmpty(emojiName))
+                throw new ArgumentException("이모지 이름이 비어 있다.", nameof(emojiName));
+
+            if (!_emojisBySlot.TryGetValue(slotKey, out List<string> names))
+            {
+                names = new List<string>();
+                _emojisBySlot[slotKey] = names;
+            }
+
+            names.Remove(emojiName);
+            names.Add(emojiName);
+        }
+
+        /// <summary>emoji_off — 이름 하나를 내린다. 서 있지 않았으면 false.</summary>
+        public bool RemoveEmoji(string slotKey, string emojiName)
+        {
+            if (slotKey == null || !_emojisBySlot.TryGetValue(slotKey, out List<string> names))
+                return false;
+
+            bool removed = names.Remove(emojiName);
+
+            if (names.Count == 0)
+                _emojisBySlot.Remove(slotKey);
+
+            return removed;
+        }
+
+        /// <summary>슬롯의 이모지를 전부 내린다 — 이름 없는 emoji_off, 그리고 슬롯의 재선언.</summary>
+        public void ClearEmojis(string slotKey)
+        {
+            if (slotKey != null)
+                _emojisBySlot.Remove(slotKey);
+        }
+
+        // ── 컷인 ─────────────────────────────────────────────────────
+
+        public bool TryGetCutIn(string stageKey, out CutInState cutIn)
+            => _cutIns.TryGetValue(stageKey ?? "", out cutIn);
+
+        public void SetCutIn(string stageKey, in CutInState cutIn)
+        {
+            if (string.IsNullOrEmpty(stageKey))
+                throw new ArgumentException("무대 키가 비어 있다.", nameof(stageKey));
+
+            _cutIns[stageKey] = cutIn;
+        }
+
+        // ── 그림 팝업 ────────────────────────────────────────────────
+
+        public bool TryGetPopup(string stageKey, out PopupState popup)
+            => _popups.TryGetValue(stageKey ?? "", out popup);
+
+        public void SetPopup(string stageKey, in PopupState popup)
+        {
+            if (string.IsNullOrEmpty(stageKey))
+                throw new ArgumentException("무대 키가 비어 있다.", nameof(stageKey));
+
+            _popups[stageKey] = popup;
         }
 
         /// <summary>깊은 복제. 리듀서의 순수성(원본 불변)이 이것 위에 선다.</summary>
@@ -207,15 +318,15 @@ namespace Ked.Presentation.Core
                 : "";
 
         /// <summary>actor — 별칭 기호("@3")를 캐릭터/슬롯 키에 잇는다.</summary>
-        public void SetAlias(string aliasSymbol, string targetKey)
+        public void SetAlias(string aliasSymbol, string roleKey)
         {
             if (string.IsNullOrEmpty(aliasSymbol))
                 throw new ArgumentException("별칭 기호가 비어 있다.", nameof(aliasSymbol));
 
-            if (string.IsNullOrEmpty(targetKey))
-                throw new ArgumentException("별칭 대상이 비어 있다.", nameof(targetKey));
+            if (string.IsNullOrEmpty(roleKey))
+                throw new ArgumentException("별칭 대상이 비어 있다.", nameof(roleKey));
 
-            _aliases[aliasSymbol] = targetKey;
+            _aliases[aliasSymbol] = roleKey;
         }
 
         /// <summary>슬롯에 앉은 캐릭터 키. 배역이 없으면 false.</summary>
@@ -231,30 +342,29 @@ namespace Ked.Presentation.Core
         /// <summary>
         /// 커맨드 대상 키 → 슬롯 키.
         ///
-        /// 해석 순서(런타임 CharacterRigTargetResolver.ResolveRigKeyByPolicy와 같다): 별칭을 풀고 →
+        /// 해석 순서(런타임 CharacterRigResolver.ResolveSlotKey와 같다): 별칭을 풀고 →
         /// 캐릭터 키인가(배역 맵) → 슬롯 키인가. 이걸로 "@3"·"parkeunseol"·"c1"이 모두 풀린다.
         /// 한 키가 슬롯 키이면서 캐스팅된 캐릭터 키이면 **캐릭터 쪽**이 이긴다 — 런타임이 그렇다.
-        /// (2026-10-29까지 여기만 슬롯 키를 먼저 봤다. 주석은 "런타임과 같다"였다.)
         /// </summary>
-        public bool TryResolveSlot(string targetKey, out string slotKey)
+        public bool TryResolveSlot(string roleKey, out string slotKey)
         {
             slotKey = null;
 
-            if (string.IsNullOrEmpty(targetKey))
+            if (string.IsNullOrEmpty(roleKey))
                 return false;
 
-            if (_aliases.TryGetValue(targetKey, out string aliased))
-                targetKey = aliased;
+            if (_aliases.TryGetValue(roleKey, out string aliased))
+                roleKey = aliased;
 
-            if (_slotByCharacter.TryGetValue(targetKey, out string bySlot) && _slots.Contains(bySlot))
+            if (_slotByCharacter.TryGetValue(roleKey, out string bySlot) && _slots.Contains(bySlot))
             {
                 slotKey = bySlot;
                 return true;
             }
 
-            if (_slots.Contains(targetKey))
+            if (_slots.Contains(roleKey))
             {
-                slotKey = targetKey;
+                slotKey = roleKey;
                 return true;
             }
 
@@ -286,6 +396,12 @@ namespace Ked.Presentation.Core
             return false;
         }
 
+        /// <summary>스폰된 슬롯의 부착. SpawnSlot이 언제나 남기므로, 없으면 폴드 배선의 잘못이다.</summary>
+        public SlotAttachment GetAttachment(string slotKey)
+            => _attachments.TryGetValue(slotKey, out SlotAttachment attachment)
+                ? attachment
+                : throw new InvalidOperationException($"슬롯 '{slotKey}'의 부착이 없다 — 스폰(SpawnSlot)을 거치지 않은 슬롯이다.");
+
         public void SetAttachment(string slotKey, in SlotAttachment attachment)
         {
             if (string.IsNullOrEmpty(slotKey))
@@ -294,21 +410,46 @@ namespace Ked.Presentation.Core
             _attachments[slotKey] = attachment;
         }
 
-        // ── 클레임 라우팅 ────────────────────────────────────────────
+        /// <summary>리그가 하나라도 선 무대 키. 순서는 사전순(결정적).</summary>
+        public List<string> AttachedStages()
+        {
+            SortedSet<string> stages = new(StringComparer.Ordinal);
+
+            foreach (SlotAttachment attachment in _attachments.Values)
+                stages.Add(attachment.StageKey);
+
+            return new List<string>(stages);
+        }
+
+        /// <summary>이 무대에서 리그가 선 깊이 층의 d. 오름차순(먼 층부터) — 무대 리그의 형제 순서와 같다.</summary>
+        public List<float> AttachedLayerDepths(string stageKey)
+        {
+            SortedSet<float> depths = new();
+
+            foreach (SlotAttachment attachment in _attachments.Values)
+            {
+                if (string.Equals(attachment.StageKey, stageKey, StringComparison.Ordinal))
+                    depths.Add(attachment.LayerDepth);
+            }
+
+            return new List<float>(depths);
+        }
+
+        // ── 타깃 라우팅 ────────────────────────────────────────────
 
         /// <summary>
-        /// 리덕션 출력을 상태에 접는다. 트랜스폼은 트리로, alpha는 가시성 축으로.
-        /// 클레임이 흐르는 세 갈래 중 "상태 폴드"가 여기다.
+        /// 목표 계산 출력을 상태에 접는다. 트랜스폼은 트리로, alpha는 가시성 축으로.
+        /// 타깃이 흐르는 세 갈래 중 "상태 폴드"가 여기다.
         /// </summary>
-        public void Apply(in StageNodeClaim claim)
+        public void Apply(in NodeTarget target)
         {
-            if (claim.Kind == StageNodeClaimKind.CanvasAlpha)
+            if (target.Kind == NodeTargetKind.CanvasAlpha)
             {
-                SetAlpha(claim.NodeKey, claim.Value.X);
+                SetAlpha(target.NodeKey, target.Value.X);
                 return;
             }
 
-            claim.ApplyTo(Nodes);
+            target.ApplyTo(Nodes);
         }
 
         // ── Unhandled ────────────────────────────────────────────────

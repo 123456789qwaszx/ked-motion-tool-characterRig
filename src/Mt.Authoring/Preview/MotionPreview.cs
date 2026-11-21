@@ -96,7 +96,7 @@ public static class MotionPreview
         return tree;
     }
 
-    /// <summary>채널 종류가 노드 상태의 어느 자리를 쓰는가 — 코어 <c>StageNodeClaim</c>과 같은 대응.</summary>
+    /// <summary>채널 종류가 노드 상태의 어느 자리를 쓰는가 — 코어 <c>NodeTarget</c>과 같은 대응.</summary>
     public static RectNodeState Apply(ChannelKind kind, in RectNodeState state, Vec3 value) => kind switch
     {
         ChannelKind.Position => state.WithAnchoredPosition(value.XY),

@@ -14,7 +14,7 @@ public sealed class EmojiLocatorFile
     public const string FileName = "emoji-locator.json";
 
     /// <summary>
-    /// 표에 없을 때의 자리 — 발(<c>CharSlot_Scale</c>의 아래 가운데)에서 잰 px, y 위. 런타임 표의 새 항목이 갖는 값과 같다.
+    /// 표에 없을 때의 자리 — 발(<c>CharacterPortrait_DepthScale</c>의 아래 가운데)에서 잰 px, y 위. 런타임 표의 새 항목이 갖는 값과 같다.
     /// 런타임에서 표에 없는 캐릭터의 자리는 게임의 설정(부트스트랩)이 정하므로 이 값은 보기를 위한 어림이다.
     /// </summary>
     public static readonly Vec2 DefaultPosition = new(0f, 800f);

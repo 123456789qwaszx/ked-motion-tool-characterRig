@@ -179,12 +179,12 @@ mt pose     a.motion-authoring.json --clip greet --time 0.5
 | 연기 | 발 기준 회전 | `CharacterPortrait_SwayPivot` | `euler` | z(도) | 발을 축으로 숙인다 |
 | 연기 | 떨림 | `CharacterPortrait_Shake` | `position` | x · y(px) | 움찔 · 떨림 |
 | 연기 | 크기 | `CharacterPortrait_ActingScale` | `scale` | x · y(배율, 1이 제 크기) | 그림만 커진다 — 이동량은 그대로 |
-| 연기 | 방향 | `CharacterPortrait_ActingScale_X` | `scale` | x(1 그대로 · −1 뒤집기) | 돌아서기 |
+| 연기 | 방향 | `CharacterPortrait_Mirror` | `scale` | x(1 그대로 · −1 뒤집기) | 돌아서기 |
 | 자리 | 자리 | `CharSlot_Track` | `position` | x · y(px) | 무대에서의 자리 — **절대값으로 재생한다** |
 | 자리 | 슬롯 기울기 | `CharSlot_SwayPivot` | `euler` | z(도) | 절대값 |
 
 - 자리의 노드는 "그 자리로 간다"는 뜻이라 대본에서 `absolute`로 재생해야 한다. 연기와 한 모션에 섞지 않는다(검증이 알린다).
-- `CharSlot_Track_Focus`는 키를 받지 않는다. 그 밖의 노드는 리그 덤프(`rig-schemas.json`)에 있으면 쓸 수 있지만, 위 표에 없는 것은 쓰지 않는 편이 낫다.
+- 포커스 계층(`CharFocus_Track` · `CharFocus_Rotation` · `CharFocus_Scale`)은 키를 받지 않는다 — 대본의 `focus_*` 커맨드가 놓는 자리다. 그 밖의 노드는 리그 덤프(`rig-schemas.json`)에 있으면 쓸 수 있지만, 위 표에 없는 것은 쓰지 않는 편이 낫다.
 - **중립값**(아무것도 안 한 상태): 자리 · 회전 0, 배율 1.
 
 ### 키

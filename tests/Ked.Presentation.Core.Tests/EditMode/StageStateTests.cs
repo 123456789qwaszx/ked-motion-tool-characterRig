@@ -1,7 +1,8 @@
 using System;
 using NUnit.Framework;
+using Ked.Presentation.Core;
 
-namespace Ked.Presentation.Core.Tests
+namespace Ked.Presentation.Tests
 {
     /// <summary>
     /// 무대 상태의 축들. 리듀서가 이 위에서 돌기 전에 축 자체의 규약을 고정한다.
@@ -19,10 +20,10 @@ namespace Ked.Presentation.Core.Tests
         public void Arg는_범위_밖과_빈_값에_fallback을_준다()
         {
             // yarn의 생략 인자가 빈 문자열로 오는 경우가 있다 — 둘을 같이 다뤄야 한다.
-            StageCommand cmd = Cmd("show", "c1", "");
+            StageCommand cmd = Cmd("face", "c1", "");
 
             Assert.That(cmd.Arg(0), Is.EqualTo("c1"));
-            Assert.That(cmd.Arg(1, "e1"), Is.EqualTo("e1"), "빈 문자열은 fallback");
+            Assert.That(cmd.Arg(1, "1"), Is.EqualTo("1"), "빈 문자열은 fallback");
             Assert.That(cmd.Arg(9, "기본"), Is.EqualTo("기본"), "범위 밖은 fallback");
             Assert.That(cmd.Arg(9), Is.Null);
             Assert.That(cmd.Arg(-1, "기본"), Is.EqualTo("기본"));
@@ -47,8 +48,8 @@ namespace Ked.Presentation.Core.Tests
         public void ToString은_출처를_함께_보여준다()
         {
             // Unhandled 목록을 사람이 읽고 고칠 수 있어야 한다.
-            Assert.That(Cmd("place_left", "c1", "bust").ToString(),
-                Is.EqualTo("<<place_left c1 bust>> @ test.yarn:1"));
+            Assert.That(Cmd("fade_in", "c1", "18fr").ToString(),
+                Is.EqualTo("<<fade_in c1 18fr>> @ test.yarn:1"));
         }
 
         // ── Unhandled ────────────────────────────────────────────────
@@ -214,16 +215,16 @@ namespace Ked.Presentation.Core.Tests
             Assert.That(state.GetAlpha("c1/CharacterPortraitSprite_Root"), Is.EqualTo(0f));
         }
 
-        // ── 클레임 라우팅 ────────────────────────────────────────────
+        // ── 타깃 라우팅 ────────────────────────────────────────────
 
         [Test]
-        public void 트랜스폼_클레임은_트리로_alpha_클레임은_가시성_축으로_간다()
+        public void 트랜스폼_타깃은_트리로_alpha_타깃은_가시성_축으로_간다()
         {
             StageState state = NewState();
             state.Nodes.Add("c1/CharSlot_Track", null, RectNodeState.StretchFull);
 
-            state.Apply(StageNodeClaim.AnchoredPosition("c1/CharSlot_Track", new Vec2(30f, -10f)));
-            state.Apply(FadeOutReduction.Reduce("c1/CharacterPortraitSprite_Root"));
+            state.Apply(NodeTarget.AnchoredPosition("c1/CharSlot_Track", new Vec2(30f, -10f)));
+            state.Apply(NodeTargets.FadeOut("c1/CharacterPortraitSprite_Root"));
 
             Assert.That(state.Nodes.GetState("c1/CharSlot_Track").AnchoredPosition,
                 Is.EqualTo(new Vec2(30f, -10f)));
@@ -248,6 +249,39 @@ namespace Ked.Presentation.Core.Tests
             Assert.That(state.TryGetAttachment("c1", out SlotAttachment attachment), Is.True);
             Assert.That(attachment.StageKey, Is.EqualTo("stage01"));
             Assert.That(attachment.LayerKey, Is.EqualTo("front"));
+            Assert.That(attachment.LayerDepth, Is.EqualTo(StageLayerLabels.Front));
+        }
+
+        [Test]
+        public void 부착의_층은_깊이_값이고_모르는_라벨은_mid다_런타임과_같다()
+        {
+            Assert.That(new SlotAttachment("stage00", "close").LayerDepth, Is.EqualTo(StageLayerLabels.Close));
+            Assert.That(new SlotAttachment("stage00", "near").LayerDepth, Is.EqualTo(StageLayerLabels.Mid), "별칭은 없다");
+            Assert.That(new SlotAttachment(" Stage01 ", "far").StageKey, Is.EqualTo("stage01"), "무대 키는 런타임 파서처럼 다듬는다");
+            Assert.That(new SlotAttachment("", "far").StageKey, Is.EqualTo("stage00"));
+        }
+
+        [Test]
+        public void 무대를_생략하면_본_무대고_그_밖은_덮는_무대다()
+        {
+            Assert.That(StageRoles.MainStageKey, Is.EqualTo("stage00"));
+            Assert.That(StageRoles.Of(new SlotAttachment("", "mid").StageKey), Is.EqualTo(StageRole.Main));
+            Assert.That(StageRoles.Of("stage01"), Is.EqualTo(StageRole.Overlay));
+            Assert.That(StageRoles.Of("stage02"), Is.EqualTo(StageRole.Overlay));
+        }
+
+        [Test]
+        public void 무대별로_리그가_선_층을_먼_층부터_낸다()
+        {
+            StageState state = NewState();
+            state.SetAttachment("c1", new SlotAttachment("stage00", "close"));
+            state.SetAttachment("c2", new SlotAttachment("stage00", "far"));
+            state.SetAttachment("c3", new SlotAttachment("stage00", "close"));
+            state.SetAttachment("bg", new SlotAttachment("stage01", "mid"));
+
+            Assert.That(state.AttachedStages(), Is.EqualTo(new[] { "stage00", "stage01" }));
+            Assert.That(state.AttachedLayerDepths("stage00"), Is.EqualTo(new[] { StageLayerLabels.Far, StageLayerLabels.Close }));
+            Assert.That(state.AttachedLayerDepths("stage02"), Is.Empty);
         }
 
         // ── 복제 (리듀서 순수성의 전제) ──────────────────────────────

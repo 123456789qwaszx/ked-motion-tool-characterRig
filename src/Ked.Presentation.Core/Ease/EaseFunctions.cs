@@ -5,7 +5,7 @@ namespace Ked.Presentation.Core
     // ─────────────────────────────────────────────────────────────────
     // 이징 순수 함수 — DOTween EaseManager.Evaluate의 코어 포팅.
     //
-    // 형태 규약은 reduction-boundary.md 그대로: 순수, UnityEngine 타입 금지,
+    // 형태 규약은 target-boundary.md 그대로: 순수, UnityEngine 타입 금지,
     // 시간·랜덤·IO·전역 상태 없음. 같은 입력은 언제나 같은 출력.
     //
     // 수식은 DOTween 소스(EaseManager.cs · Bounce.cs · Flash.cs)를 식 단위로
@@ -15,7 +15,7 @@ namespace Ked.Presentation.Core
     // 자리에서 전 항목 × 257샘플 오차 < 1e-4를 고정한다.
     //
     // 호스트 트윈 경로(SetEase)는 이 함수를 쓰지 않는다 — DOTween이 그대로
-    // 시간의 세계를 진다. 첫 고객은 VnTool 프리뷰(W66b 시간 재현)다.
+    // 시간의 세계를 진다. 첫 고객은 VnTool 프리뷰(시간 재현)다.
     // ─────────────────────────────────────────────────────────────────
     public static class EaseFunctions
     {

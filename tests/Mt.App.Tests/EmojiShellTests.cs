@@ -205,8 +205,8 @@ public class EmojiShellTests
             Assert.True(now.Visible);
             Assert.Contains("s1의 발", now.Label);
 
-            // 캐릭터의 CharSlot_Scale 밑에 섰다 — 로케이터(덤프의 __root)의 부모가 그 노드다.
-            Assert.Equal("s1/CharSlot_Scale", now.Tree.GetParentKey("emoji/__root"));
+            // 캐릭터의 CharacterPortrait_DepthScale 밑에 섰다 — 로케이터(덤프의 __root)의 부모가 그 노드다.
+            Assert.Equal("s1/CharacterPortrait_DepthScale", now.Tree.GetParentKey("emoji/__root"));
 
             Vec2 center = window.Viewport.EmojiRigCenter("body")!.Value;
             long before = editor.Revision;

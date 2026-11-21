@@ -123,7 +123,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 | 재생 기준 자동 변경 | 채널이 없는 모션의 **첫 키**를 자리·깊이 컨트롤러에 놓을 때만 절대값으로 바뀐다(`EnsurePreviewModeForGroup`) |
 | 자산 동기화 | `DocumentSession`은 편집기 Changed에서 리그·초상 지문(`rig=…\nbase=…\nportrait id=…`)이 바뀐 때만 다시 읽는다. 키 편집은 다시 읽지 않는다 |
 | 글 칸 확정 | `OnCommit`: Enter는 확정 + 포커스를 뷰포트로, LostFocus는 글이 바뀐 때만 확정. 같은 값 재확정은 기록이 아니다 |
-| 깊이 슬라이더 | 0‥40, close = 20, 그 너머는 `depth.json` 커브의 할선 연장(런타임 규칙). 놓으면 DepthScale X·Y + DepthY를 한 번에 굽는다 |
+| 깊이 슬라이더 | 0‥40, close = 20, 그 너머는 `depth.json` 커브의 할선 연장(런타임 규칙). 놓으면 DepthScale X·Y + DepthOffset의 Y를 한 번에 굽는다(둘 다 level 커브의 값) |
 | 옛 파일 | 읽지 않는다. 저작본은 `motion-authoring/3`이 아니면 거부한다(/2는 이모지의 프레임이 24fps — 툴 밖의 한 번 쓰는 `tools/authoring-24to30.py`로 옮긴다, 11-18). `motions.json`도 `motions/2`가 아니면 읽지 않는다. 지운 기능(카메라 모션 · 상태 블록)이 든 문서는 열리되 검증이 문제로 알린다 |
 | 안 쓰는 using | 빌드가 막지 않는다(`IDE0005`는 꺼져 있다). 훑는 법은 `PLAN-cleanup.md` §4 |
 | 설정 파일 | `%APPDATA%/ked-motion-tool-characterRig/`. 옛 자리(`ked-motion-tool`)는 형제 툴의 것이다 — 읽지도 쓰지도 않는다 |
