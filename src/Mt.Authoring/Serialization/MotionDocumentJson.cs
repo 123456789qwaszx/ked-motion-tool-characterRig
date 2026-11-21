@@ -23,6 +23,8 @@ public static class MotionDocumentJson
         PropertyNameCaseInsensitive = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         WriteIndented = true,
+        // 줄바꿈은 어느 OS에서나 \n — 저장소의 파일(.gitattributes eol=lf)과 바이트까지 같아야 한다. 두지 않으면 Windows에서 \r\n이 나간다.
+        NewLine = "\n",
         ReadCommentHandling = JsonCommentHandling.Skip,
         AllowTrailingCommas = true,
         // 한글 메모가 \uXXXX로 깨져 보이지 않게.

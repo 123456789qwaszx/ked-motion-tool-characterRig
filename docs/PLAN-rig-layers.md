@@ -55,9 +55,9 @@ dotnet build KedMotionTool.sln -c Release *> artifacts\r7-build.log; dotnet test
 ```
 
 **기준선(`538a99e`, Windows)**: 빌드 경고 0 · 오류 0. Core 438/438 · App 144/144 · Authoring 332/334.
-Authoring의 둘은 이 일과 무관하게 Windows에서만 실패한다 — `LibraryTests.내보낸_것이_export에_둔_산출물과_같다`(emojis)와
-`EmojiExampleTests.예시_파일은_빌더가_낸_것과_같다`. 툴이 쓴 JSON의 줄바꿈이 `\r\n`이고 저장소의 파일은 `\n`이다
-(`EmojiExport` · `MotionDocumentJson`의 `WriteIndented`가 그 OS의 줄바꿈을 쓴다). CI(ubuntu)에서는 드러나지 않는다. 고칠지는 소유자가 정한다.
+Authoring의 둘(`LibraryTests.내보낸_것이_export에_둔_산출물과_같다`의 emojis · `EmojiExampleTests.예시_파일은_빌더가_낸_것과_같다`)은 이 일과 무관하게
+Windows에서만 실패했다 — 툴이 쓴 JSON의 줄바꿈이 `\r\n`이었다(`WriteIndented`가 그 OS의 줄바꿈을 쓴다). **고쳤다**: `MotionDocumentJson` · `EmojiExport`가
+어느 OS에서나 `\n`으로 쓴다. 그 뒤로 Core 580 · Authoring 334 · App 144 전부 통과다(S1에서 손으로 고친 예시 파일도 빌더와 바이트가 같다).
 
 ## 5. 이어받을 때 (2026-11-22 01:30에 멈췄다)
 
