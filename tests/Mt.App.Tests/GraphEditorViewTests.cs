@@ -642,4 +642,49 @@ public class GraphEditorViewTests
             window.Close();
         }
     });
+
+    [Fact]
+    public void 부드럽게_끌면_곁의_키가_거리에_따라_덜_따라온다() => HeadlessUi.Run(() =>
+    {
+        (Window window, GraphEditorView view, MotionEditor editor) = Show();
+
+        try
+        {
+            // 프레임마다 찍힌 키 다섯 — 0.1초 간격, 모두 0.
+            editor.SetKeys("nod", Y.Node, Y.Kind, Y.Axis, Enumerable.Range(0, 5).Select(i => new KeyAsset { T = i * 0.1f, V = 0f, Tangent = TangentMode.Free }).ToArray());
+            view.FitAll();
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+            view.SoftDrag = true;
+            view.SoftRadius = 0.2;
+            view.Select(new[] { new KeyRef(Y, 2) }, additive: false);
+            long before = editor.Revision;
+
+            Point middle = InWindow(window, view, At(view, 2));
+            window.MouseDown(middle, MouseButton.Middle);
+            window.MouseMove(new Point(middle.X, middle.Y - 40), RawInputModifiers.MiddleMouseButton);
+            window.MouseUp(new Point(middle.X, middle.Y - 40), MouseButton.Middle);
+
+            // 한 번의 조작이다. 고른 키가 온전히, 한 칸 곁은 절반, 반경에 닿은 끝의 키는 그대로.
+            List<KeyAsset> keys = Y.Resolve(editor.Document.Find("nod")!)!.Keys;
+            Assert.Equal(before + 1, editor.Revision);
+            Assert.True(keys[2].V > 0f);
+            Assert.Equal(keys[2].V / 2, keys[1].V, 3);
+            Assert.Equal(keys[2].V / 2, keys[3].V, 3);
+            Assert.Equal(0f, keys[0].V);
+            Assert.Equal(0f, keys[4].V);
+
+            // B로 켜고 끈다 — 툴바가 따라가게 알린다.
+            int told = 0;
+            view.ToolChanged += (_, _) => told++;
+            view.Focus();
+            window.KeyPressQwerty(PhysicalKey.B, RawInputModifiers.None);
+            Assert.False(view.SoftDrag);
+            Assert.Equal(1, told);
+        }
+        finally
+        {
+            window.Close();
+        }
+    });
 }

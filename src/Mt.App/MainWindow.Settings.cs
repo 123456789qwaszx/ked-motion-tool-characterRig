@@ -297,6 +297,7 @@ public partial class MainWindow
         "  RMB 드래그  선택 키 둘레면 한 축만 이동, 빈 자리면 팬      Alt+MMB  팬      Alt+RMB  줌 드래그      휠  줌\n" +
         "  더블클릭  커브 위에 키      I  현재 시각에 키      A / F  전체 · 선택 맞춤\n" +
         "  Q / W / R  선택·이동·스케일 툴(그래프 안)      Ctrl+1…6  탄젠트 auto·flat·linear·free·spline·plateau\n" +
+        "  B  부드럽게 끌기(고른 키를 옮기면 곁의 키가 덜 따라온다)\n" +
         "  Ctrl+B / Ctrl+Shift+B  버퍼 커브 찍기·바꾸기      툴바 step  계단 키(이모지의 타임라인만 — 그림 바꾸기는 늘 계단)\n\n" +
         "도프 시트\n" +
         "  블록 드래그  시간 이동      Alt+드래그  복제      범위 띠 양끝  시간 스케일      더블클릭  키      노드 행 클릭  접기\n\n" +

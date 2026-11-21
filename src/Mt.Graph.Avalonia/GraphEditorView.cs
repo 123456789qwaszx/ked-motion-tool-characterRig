@@ -125,6 +125,18 @@ public sealed class GraphEditorView : Control
     /// <summary>마야 값 스냅 — 끌 때 키 값을 정수로.</summary>
     public bool ValueSnapEnabled { get; set; }
 
+    /// <summary>
+    /// 부드럽게 끌기(마야 Soft Selection, <b>B</b>) — 고른 키를 옮기면 같은 커브의 곁의 키가 <see cref="SoftRadius"/> 안에서 값만 덜 따라온다.
+    /// 프레임마다 찍힌 키의 한 대목을 통째로 올리고 내릴 때 쓴다.
+    /// </summary>
+    public bool SoftDrag { get; set; }
+
+    /// <summary>부드럽게 끌기가 닿는 거리(초).</summary>
+    public double SoftRadius { get; set; } = Mt.Authoring.Graph.SoftDrag.DefaultRadius;
+
+    /// <summary>툴이나 부드럽게 끌기가 단축키로 바뀌었다 — 툴바가 따라간다.</summary>
+    public event EventHandler? ToolChanged;
+
     /// <summary>선택한 커브들.</summary>
     public IReadOnlyCollection<CurveRef> SelectedCurves => _selectedCurves;
 
@@ -1959,6 +1971,44 @@ public sealed class GraphEditorView : Control
             preview.T = (float)Math.Max(0, t);
             preview.V = (float)v;
         }
+
+        if (SoftDrag)
+        {
+            SoftFollowPreview(motion, dx, dy);
+        }
+    }
+
+    // 부드럽게 끌기 — 고르지 않은 곁의 키가 값만 덜 따라온다(시각은 그대로 — 차례가 뒤집히지 않는다).
+    private void SoftFollowPreview(MotionAsset motion, double dx, double dy)
+    {
+        foreach ((CurveRef curveRef, List<KeyAsset> keys) in _preview)
+        {
+            if (curveRef.Resolve(motion) is not { } original)
+            {
+                continue;
+            }
+
+            List<float> picked = _selection.Where(k => k.Curve == curveRef && k.Index < original.Keys.Count).Select(k => original.Keys[k.Index].T).ToList();
+
+            if (picked.Count == 0)
+            {
+                continue;
+            }
+
+            double dv = CameraOf(curveRef).DeltaToGraph(dx, dy).V;
+
+            for (int i = 0; i < keys.Count && i < original.Keys.Count; i++)
+            {
+                if (_selection.Contains(new KeyRef(curveRef, i)))
+                {
+                    continue;
+                }
+
+                KeyAsset from = original.Keys[i];
+                double weight = Mt.Authoring.Graph.SoftDrag.Weight(picked.Min(t => Math.Abs(t - from.T)), SoftRadius);
+                keys[i].V = (float)(from.V + dv * weight);
+            }
+        }
     }
 
     private float SnapValue(float value) => ValueSnapEnabled ? MathF.Round(value) : value;
@@ -2337,12 +2387,19 @@ public sealed class GraphEditorView : Control
                 break;
             case Key.Q:
                 Tool = GraphTool.Select;
+                ToolChanged?.Invoke(this, EventArgs.Empty);
                 break;
             case Key.W:
                 Tool = GraphTool.Move;
+                ToolChanged?.Invoke(this, EventArgs.Empty);
                 break;
             case Key.R:
                 Tool = GraphTool.Scale;
+                ToolChanged?.Invoke(this, EventArgs.Empty);
+                break;
+            case Key.B when !ctrl:
+                SoftDrag = !SoftDrag;
+                ToolChanged?.Invoke(this, EventArgs.Empty);
                 break;
             case Key.OemPeriod:
                 JumpToKey(forward: true);

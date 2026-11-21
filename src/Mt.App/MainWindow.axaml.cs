@@ -106,6 +106,7 @@ public partial class MainWindow : Window
     private Button? _regionButton;
     private Button? _bufferButton;
     private readonly CheckBox _valueSnap = new() { Content = "값 스냅", FontSize = 11 };
+    private readonly CheckBox _softDrag = new() { Content = "부드럽게", FontSize = 11 };
     private readonly CheckBox _stackGraph = new() { Content = "종류별 칸", FontSize = 11 };
 
     /// <summary>그래프를 종류별 칸에 나누는가 — 이모지의 타임라인을 볼 때, 설정이 켜져 있으면.</summary>
@@ -607,6 +608,12 @@ public partial class MainWindow : Window
         {
             _graph.ValueSnapEnabled = _valueSnap.IsChecked == true;
         };
+        _softDrag.IsCheckedChanged += (_, _) =>
+        {
+            _graph.SoftDrag = _softDrag.IsChecked == true;
+        };
+        // B로 켜고 끈 것을 칸이 따라간다.
+        _graph.ToolChanged += (_, _) => _softDrag.IsChecked = _graph.SoftDrag;
         _preInfinity.SelectionChanged += (_, _) =>
         {
             if (_preInfinity.SelectedIndex >= 0)
@@ -626,6 +633,7 @@ public partial class MainWindow : Window
         ToolTip.SetTip(_preInfinity, "Pre Infinity — 첫 키 앞을 어떻게 이어 보이나(보기만, 산출물의 끝은 restore/commit)");
         ToolTip.SetTip(_postInfinity, "Post Infinity — 마지막 키 뒤를 어떻게 이어 보이나(보기만)");
         ToolTip.SetTip(_valueSnap, "끌 때 키 값을 정수로(마야 Snap Values)");
+        ToolTip.SetTip(_softDrag, "부드럽게 끌기(B · 마야 Soft Selection) — 고른 키를 옮기면 같은 커브의 곁의 키(5프레임 안)가 값만 덜 따라온다. 프레임마다 찍힌 키의 한 대목을 통째로 올리고 내릴 때");
         ToolTip.SetTip(_regionButton, "리전 툴(토글) — 상자로 고르고, 안을 끌면 이동, 모서리를 끌면 그 축만 반대쪽 기준 스케일. 다시 누르면 선택 툴(Q)로");
         _keyValue.Width = 64;
         ToolTip.SetTip(_keyValue, "선택 키의 값. 여러 키면 +=3 · *=2 식 상대 입력");
@@ -658,7 +666,7 @@ public partial class MainWindow : Window
             RefreshToolButtons();
         }), Separator());
         Add(_regionButton, Separator());
-        Add(_snap, _valueSnap, Separator());
+        Add(_snap, _valueSnap, _softDrag, Separator());
         _stackGraph.IsChecked = _settings.StackEmojiGraph;
         _stackGraph.IsCheckedChanged += (_, _) =>
         {
@@ -671,7 +679,7 @@ public partial class MainWindow : Window
         Add(OnlyIn(WorkMode.Emoji, new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { _stackGraph, Separator() } }));
         Add(new TextBlock { Text = "무한", FontSize = 10, Opacity = 0.7 }, _preInfinity, _postInfinity, Separator());
         Add(new TextBlock { Text = "값", FontSize = 10, Opacity = 0.7 }, _keyValue);
-        ToolTip.SetTip(bar, "툴 Q 선택 · W 이동 · R 스케일 · I 현재 시각에 키 끼우기 · A 전체 맞춤 · F 선택 맞춤 · 탄젠트 Ctrl+1 auto · 2 flat · 3 linear · 4 free · 5 spline · 6 plateau · step(계단 — 이모지의 타임라인만) · 버퍼 Ctrl+B 찍기 / Ctrl+Shift+B 바꾸기");
+        ToolTip.SetTip(bar, "툴 Q 선택 · W 이동 · R 스케일 · B 부드럽게 끌기 · I 현재 시각에 키 끼우기 · A 전체 맞춤 · F 선택 맞춤 · 탄젠트 Ctrl+1 auto · 2 flat · 3 linear · 4 free · 5 spline · 6 plateau · step(계단 — 이모지의 타임라인만) · 버퍼 Ctrl+B 찍기 / Ctrl+Shift+B 바꾸기");
         RefreshToolButtons();
         return bar;
     }
