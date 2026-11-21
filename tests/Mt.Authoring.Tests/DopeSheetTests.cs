@@ -178,7 +178,7 @@ public class DopeSheetRowsTests
     }
 
     [Fact]
-    public void 컨트롤러_표가_있으면_노드_행은_묶음_컨트롤러_라벨이고_별칭_노드는_성분까지다()
+    public void 컨트롤러_표가_있으면_노드_행은_묶음_컨트롤러_라벨이다()
     {
         ControllerRig rig = BuiltinTuning.Controllers.Rig("character")!;
         MotionDocument document = Fixtures.NodBowDocument();

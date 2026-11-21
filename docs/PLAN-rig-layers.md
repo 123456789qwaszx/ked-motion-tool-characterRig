@@ -1,6 +1,6 @@
 # 리그의 계층을 따라간다 — R7
 
-2026-11-22 · `dev` · 상태: **조사 · 결정 끝, 고치기 전** · 넘겨받은 일: `ked-story-tools`의 `docs/handoff/character-rig.md` · 런타임 `docs/PLAN_rig-layers.md`(§2 · §3 · §6 · §7 R7)
+2026-11-22 · `dev` · 상태: **끝(2026-11-22)** — 남은 것은 §6 P3(초상의 크기)뿐 · 넘겨받은 일: `ked-story-tools`의 `docs/handoff/character-rig.md` · 런타임 `docs/PLAN_rig-layers.md`(§2 · §3 · §6 · §7 R7)
 
 ## 0. 한 문장
 
@@ -44,7 +44,7 @@
 | S1 | `stance` 컨트롤러와 씬의 배율을 걷는다 — 모델 · 편집 명령 · 직렬화 · 화면 · `mt` · 시험 · `AUTHORING-FILES.md` · 예시 | 끝 — Windows에서 기준선과 같다(Core 438 · App 144 · Authoring 332/334, §4의 둘만 실패). 예시 파일은 손으로 두 줄을 지웠다 — 빌더와 바이트가 같은지는 줄바꿈 실패에 가려 Windows에서 확인되지 않는다 |
 | S2 | 시험과 견본의 키를 남는 노드로 — `Track_Move_X` · `_Y` → `CharacterPortrait_Track_Move`의 x · y, `CharSlot_Track_X` · `_Y` → `CharSlot_Track`. `stage-parity` 견본을 다시 낸다 | 끝 — 기준선과 같다. `grow`는 `CharacterPortrait_ActingScale`로 옮겼다(값은 그대로, 노드 이름만). `nod` · `bow`는 런타임 `Assets/Dialogue/motions.json`의 것과 글자가 같다 |
 | S3 | 코어 전체 동기화 + 덤프 교체 + 소비자 적응 + 이름이 바뀐 노드 — 한 커밋(나누면 중간이 통과하지 않는다) | 끝 — Core 580/580 · App 144/144 · Authoring 332/334(§4의 둘만). `diff -r` 0줄 |
-| S4 | 문서 · `vendoring.md` · 그림 다시 뽑기 · 런타임에 넘길 견본 | 문서 끝. **견본은 넘길 것이 없다** — S2에서 툴이 다시 낸 `stage-parity/motions.json` · `poses.json`이 런타임 `b56a2ebc`의 `ToolExport~` 사본과 바이트까지 같다(런타임이 손으로 옮긴 것과 툴이 낸 것이 일치). 런타임 쪽은 시험 머리 주석의 "손으로 옮겼다"를 출처 커밋 `f3b2858`로 고치면 된다. 그림은 아직 — 소유자 PC에서 `MT_RENDER_DIR`로 뽑아야 한다 |
+| S4 | 문서 · `vendoring.md` · 그림 다시 뽑기 · 런타임에 넘길 견본 | 문서 끝. **견본은 넘길 것이 없다** — S2에서 툴이 다시 낸 `stage-parity/motions.json` · `poses.json`이 런타임 `b56a2ebc`의 `ToolExport~` 사본과 바이트까지 같다(런타임이 손으로 옮긴 것과 툴이 낸 것이 일치). 런타임 쪽은 시험 머리 주석의 "손으로 옮겼다"를 출처 커밋 `f3b2858`로 고치면 된다. 그림도 끝 — 소유자 PC에서 뽑아 22장을 바꿨다(바뀐 화면은 채널 박스뿐) |
 
 ## 4. 테스트를 돌리는 길
 
@@ -62,7 +62,7 @@ Windows에서만 실패했다 — 툴이 쓴 JSON의 줄바꿈이 `\r\n`이었�
 ## 5. 이어받을 때 (2026-11-22 01:30에 멈췄다)
 
 **어디서 멈췄나(11-22 02:00 고침).** S1~S3을 커밋했다(`6859998` · `f3b2858` · `9988f28`) — 아래 "S1에서 고칠 자리" · "S3에서 바꿔 부를 것"은 끝난 일의 기록이다.
-남은 것: 그림 다시 뽑기(S4) · §6의 P2~P4를 소유자가 확인 · §4의 줄바꿈 실패를 고칠지.
+그 뒤 그림을 다시 뽑고(`91d259f`), 줄바꿈을 고치고(`c81593a`), 별칭 기능을 걷었다. **R7은 끝났다** — 소유자는 §6의 P1~P3을 둔 대로 받았다(11-22). 남은 것은 P3(초상의 크기를 런타임처럼 원본 픽셀로)뿐이고 R7 밖의 일이다. 푸시는 소유자가 한다.
 
 **S1에서 고칠 자리**(`stance` · 씬의 배율 — `grep`으로 센 것, `bin` · `obj` 제외):
 
@@ -110,5 +110,5 @@ Windows에서만 실패했다 — 툴이 쓴 JSON의 줄바꿈이 `\r\n`이었�
 | P1 | 깊이의 Y | level 커브의 값 그대로(`DepthTuningFile.TryDepthOf` — 코어 `NodeTargets.TrySetDepth`와 같다). mid −664 · close −1000(전에는 −580.56 · −984). `FocusHeightOf` · `PreservedFocus`는 지웠다 | 런타임 `size`가 초점 보존을 걷었다(L6). 보이는 것 = 재생하는 것 |
 | P2 | 씬의 자리(place) | 코어의 보조 계산(`NodeTargets.TrySolveFocusPlacement`)으로 `CharFocus_Track`의 값을 푼다. 오프셋은 전처럼 `CharSlot_Track` | 옛 `Track_Focus`의 이름 바뀜을 그대로 따랐다. 런타임에는 이 일을 하는 커맨드가 없다(L11) — 본래 자리(`CharSlot_Track`)에 푸는 쪽이 맞다면 `ScenePreview.PlaceNode` 한 줄과 오프셋을 더하는 순서를 고친다 |
 | P3 | 초상의 크기 | 높이 맞춤 그대로(`PortraitLayout.ApplySizing`에 식 한 줄) | 런타임은 11-09에 원본 픽셀 크기로 바꿨다. 따라가려면 그림의 픽셀 크기와 배역 앵커(`role-anchor.json`)를 들여야 한다 — R7 밖. **지금 툴의 초상 크기는 런타임과 다르다** |
-| P4 | 컨트롤러의 별칭 | 내장 표에서만 뺐다(`body` · `squash`). 기능(`ControllerAlias` · 채널 박스의 합산 · 도프 시트의 라벨)은 남아 있다 | `PLAN-cleanup.md` §105가 남긴 까닭(런타임의 `nod`가 별칭 노드를 쓴다)이 사라졌다 — 걷을지는 소유자가 정한다 |
+| P4 | 컨트롤러의 별칭 | **걷었다**(소유자, 11-22) — `ControllerAlias` · `Aliases` · `CurvesOf` · 채널 박스의 합산 · 별칭 노드를 찾아가던 길 · 도프 시트의 별칭 라벨. 옛 표의 `aliases` 키는 읽을 때 버려진다 | `PLAN-cleanup.md` §105가 남긴 까닭(런타임의 `nod`가 별칭 노드를 쓴다)이 사라졌다. 안 쓰는 기능은 흔적 없이 |
 | P5 | `camera` 리그 · `Cover_Image` | 덤프에 있을 뿐 툴에서 따로 열지 않는다 | 이 툴은 카메라를 움직이지 않는다 |

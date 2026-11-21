@@ -18,9 +18,6 @@ public enum ControllerBake
 /// <summary>컨트롤러 묶음 — 자리 · 깊이 · 연기. <see cref="Mode"/>는 이 묶음의 모션을 재생할 때 권장하는 mode다.</summary>
 public sealed record ControllerGroup(string Id, string Label, MotionChannelMode Mode, string? Note);
 
-/// <summary>축별 노드(<c>Track_Move_X</c> · <c>_Y</c> …)에 놓인 키가 같은 손잡이로 보이게 하는 별칭 — (노드, 성분) → 컨트롤러의 같은 성분.</summary>
-public sealed record ControllerAlias(string Node, Axis Axis);
-
 /// <summary>
 /// 컨트롤러 하나 — 이름 → (노드, 종류, 성분) 고정 대응. 애니메이터가 보는 것은 이것이고, 키는 노드 채널에 그대로 저장된다
 /// (규약 <c>motions/2</c>는 안 바뀐다). 리거의 지식이라 리그 덤프 옆 <c>presets/controllers.json</c>에 산다.
@@ -29,7 +26,7 @@ public sealed class Controller
 {
     public Controller(
         string id, ControllerGroup group, string label, string node, ChannelKind kind, IReadOnlyList<Axis> axes,
-        string unit, IReadOnlyList<ControllerAlias> aliases, ControllerBake bake, bool manipulator, string? note, string? depthYNode = null,
+        string unit, ControllerBake bake, bool manipulator, string? note, string? depthYNode = null,
         IReadOnlyDictionary<Axis, string>? axisLabels = null)
     {
         DepthYNode = depthYNode;
@@ -41,7 +38,6 @@ public sealed class Controller
         Kind = kind;
         Axes = axes;
         Unit = unit;
-        Aliases = aliases;
         Bake = bake;
         Manipulator = manipulator;
         Note = note;
@@ -66,8 +62,6 @@ public sealed class Controller
     /// <summary>px · deg · x(배) · sign · level — 화면 표기용.</summary>
     public string Unit { get; }
 
-    public IReadOnlyList<ControllerAlias> Aliases { get; }
-
     public ControllerBake Bake { get; }
 
     /// <summary>W/E/R 매니퓰레이터가 그 종류의 기본 손잡이로 고르는 컨트롤러인가.</summary>
@@ -89,22 +83,8 @@ public sealed class Controller
         => AxisLabels is not null && AxisLabels.TryGetValue(axis, out string? own) ? own
             : Axes.Count == 1 ? Label : $"{Label} {axis.ToString().ToUpperInvariant()}";
 
-    /// <summary>이 컨트롤러 성분의 주 커브(키를 새로 놓을 자리).</summary>
+    /// <summary>이 컨트롤러 성분의 커브(키를 놓는 자리).</summary>
     public CurveRef Primary(Axis axis) => new(Node, Kind, axis);
-
-    /// <summary>이 성분으로 읽히는 커브 전부 — 주 노드와 별칭 노드. 표시는 합치고, 키는 있는 채널에 놓는다.</summary>
-    public IEnumerable<CurveRef> CurvesOf(Axis axis)
-    {
-        yield return Primary(axis);
-
-        foreach (ControllerAlias alias in Aliases)
-        {
-            if (alias.Axis == axis)
-            {
-                yield return new CurveRef(alias.Node, Kind, axis);
-            }
-        }
-    }
 }
 
 /// <summary>리그 하나의 컨트롤러 표.</summary>
@@ -118,7 +98,6 @@ public sealed class ControllerRig
         Groups = groups;
         Controllers = controllers;
 
-        // 주 커브가 별칭을 이긴다 — facing의 주 노드(ActingScale_X)가 다른 컨트롤러의 별칭에 가려지지 않게.
         foreach (Controller c in controllers)
         {
             foreach (Axis axis in c.Axes)
@@ -129,11 +108,6 @@ public sealed class ControllerRig
 
         foreach (Controller c in controllers)
         {
-            foreach (ControllerAlias alias in c.Aliases)
-            {
-                _byCurve.TryAdd((alias.Node, c.Kind, alias.Axis), (c, alias.Axis));
-            }
-
             if (c.DepthYCurve is { } depthY)
             {
                 _byCurve.TryAdd((depthY.Node, depthY.Kind, depthY.Axis), (c, Axis.Y));
@@ -151,7 +125,7 @@ public sealed class ControllerRig
 
     public Controller? Find(string id) => Controllers.FirstOrDefault(c => string.Equals(c.Id, id, StringComparison.Ordinal));
 
-    /// <summary>커브 → 컨트롤러 성분. 주 노드든 별칭이든. 표에 없으면 false.</summary>
+    /// <summary>커브 → 컨트롤러 성분. 표에 없으면 false.</summary>
     public bool TryResolve(CurveRef curve, out Controller controller, out Axis axis)
     {
         if (_byCurve.TryGetValue((curve.Node, curve.Kind, curve.Axis), out (Controller Controller, Axis Axis) hit))
@@ -170,10 +144,9 @@ public sealed class ControllerRig
     public string? LabelOf(CurveRef curve)
         => TryResolve(curve, out Controller c, out Axis axis) ? $"{c.Group.Label} · {c.AttributeLabel(axis)}" : null;
 
-    /// <summary>노드가 속한 컨트롤러(주 노드 또는 별칭) — 노드 이름만 아는 자리(도프 시트 노드 행)용.</summary>
+    /// <summary>노드가 속한 컨트롤러(주 노드 또는 깊이의 Y 노드) — 노드 이름만 아는 자리(도프 시트 노드 행)용.</summary>
     public Controller? OfNode(string node)
         => Controllers.FirstOrDefault(c => c.Node == node)
-            ?? Controllers.FirstOrDefault(c => c.Aliases.Any(a => a.Node == node))
             ?? Controllers.FirstOrDefault(c => c.DepthYNode == node);
 
     /// <summary>W/E/R의 기본 손잡이 — manipulator 표시가 있는 그 종류의 컨트롤러. 없으면 그 종류의 첫 컨트롤러.</summary>
@@ -191,14 +164,6 @@ public sealed class ControllerRig
             if (!rigNodeIds.Contains(c.Node))
             {
                 problems.Add($"컨트롤러 '{c.Label}'({c.Id})의 노드 '{c.Node}'가 리그 '{RigKind}'에 없다");
-            }
-
-            foreach (ControllerAlias alias in c.Aliases)
-            {
-                if (!rigNodeIds.Contains(alias.Node))
-                {
-                    problems.Add($"컨트롤러 '{c.Label}'({c.Id})의 별칭 노드 '{alias.Node}'가 리그 '{RigKind}'에 없다");
-                }
             }
 
             if (c.DepthYNode is { } depthY && !rigNodeIds.Contains(depthY))
@@ -357,18 +322,6 @@ public sealed class ControllersFile
                     throw new JsonException($"컨트롤러 '{c.Id}': 성분이 하나는 있어야 한다.");
                 }
 
-                var aliases = new List<ControllerAlias>();
-
-                foreach (AliasDto a in c.Aliases ?? new List<AliasDto>())
-                {
-                    if (string.IsNullOrEmpty(a.Node) || !TryParseAxis(a.Axis, out Axis axis) || !axes.Contains(axis))
-                    {
-                        throw new JsonException($"컨트롤러 '{c.Id}': 별칭은 노드와 이 컨트롤러에 있는 성분이어야 한다 ('{a.Node}' {a.Axis}).");
-                    }
-
-                    aliases.Add(new ControllerAlias(a.Node, axis));
-                }
-
                 ControllerBake bake = (c.Bake ?? "").Trim().ToLowerInvariant() switch
                 {
                     "" or "none" => ControllerBake.None,
@@ -402,7 +355,7 @@ public sealed class ControllersFile
 
                 controllers.Add(new Controller(
                     c.Id, group, string.IsNullOrEmpty(c.Label) ? c.Id : c.Label, c.Node, kind, axes,
-                    c.Unit ?? "", aliases, bake, c.Manipulator, c.Note, depthYNode, axisLabels));
+                    c.Unit ?? "", bake, c.Manipulator, c.Note, depthYNode, axisLabels));
             }
 
             rigs[rigDto.RigKind] = new ControllerRig(rigDto.RigKind, groups, controllers);
@@ -464,17 +417,10 @@ public sealed class ControllersFile
         public string? Kind { get; set; }
         public List<string>? Axes { get; set; }
         public string? Unit { get; set; }
-        public List<AliasDto>? Aliases { get; set; }
         public string? Bake { get; set; }
         public string? BakeY { get; set; }
         public bool Manipulator { get; set; }
         public string? Note { get; set; }
         public Dictionary<string, string>? AxisLabels { get; set; }
-    }
-
-    private sealed class AliasDto
-    {
-        public string? Node { get; set; }
-        public string? Axis { get; set; }
     }
 }

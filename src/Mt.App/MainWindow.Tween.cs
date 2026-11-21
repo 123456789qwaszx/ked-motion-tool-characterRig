@@ -291,7 +291,7 @@ public partial class MainWindow
 
         if (SelectedControllerOf(bound) is { } controller)
         {
-            var own = controller.Axes.SelectMany(controller.CurvesOf).ToHashSet();
+            var own = controller.Axes.Select(controller.Primary).ToHashSet();
 
             if (controller.DepthYCurve is { } depthY)
             {

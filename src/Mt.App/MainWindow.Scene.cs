@@ -361,14 +361,9 @@ public partial class MainWindow
                     item.Tag = new HierarchyController(o.Id, c.Id);
                     item.FontWeight = FontWeight.Normal;
                     item.Foreground = group.Mode == MotionChannelMode.Absolute ? PlacementNodeBrush : ActingNodeBrush;
-                    ToolTip.SetTip(item, $"{c.Node}  ·  {c.Unit}" + (c.Aliases.Count > 0 ? "\n별칭: " + string.Join(", ", c.Aliases.Select(a => $"{a.Node} {a.Axis}")) : "") + (c.Note is null ? "" : "\n" + c.Note));
+                    ToolTip.SetTip(item, $"{c.Node}  ·  {c.Unit}" + (c.Note is null ? "" : "\n" + c.Note));
                     Attach(item, groupItem);
                     itemsByNode.TryAdd(c.Node, item);
-
-                    foreach (ControllerAlias alias in c.Aliases)
-                    {
-                        itemsByNode.TryAdd(alias.Node, item);
-                    }
 
                     if (c.DepthYNode is { } depthYNode)
                     {
@@ -641,7 +636,7 @@ public partial class MainWindow
         => _session.ControllersOf(_viewport.Scene?.Find(tag.ObjectId)?.Rig)?.Find(tag.ControllerId);
 
     /// <summary>
-    /// 컨트롤러 항목: 그 오브젝트를 고르고, 채널 박스·매니퓰레이터의 노드를 컨트롤러의 노드로(모션에 별칭 노드의 채널만 있으면 그 노드).
+    /// 컨트롤러 항목: 그 오브젝트를 고르고, 채널 박스·매니퓰레이터의 노드를 컨트롤러의 노드로.
     /// 매니퓰레이터가 선택(Q)이 아니면 컨트롤러 종류의 것(이동·회전·배율)으로 바꾼다.
     /// </summary>
     private void SelectControllerInHierarchy(HierarchyController tag)
@@ -654,7 +649,7 @@ public partial class MainWindow
 
         _viewport.SelectedObjectId = tag.ObjectId;
         _followSelection = false;
-        _viewport.SelectedNode = ControllerNodeFor(_graph.Motion, c);
+        _viewport.SelectedNode = c.Node;
         ShowControllerCurves(c);
         RefreshChannels();
 
@@ -670,17 +665,6 @@ public partial class MainWindow
 
         _viewport.InvalidateVisual();
         RefreshChannelBox();
-    }
-
-    /// <summary>컨트롤러의 노드 — 모션이 주 노드에 채널이 없고 별칭 노드에만 있으면 그 별칭 노드(런타임 견본 nod의 Track_Move_Y).</summary>
-    private static string ControllerNodeFor(MotionAsset? motion, Controller c)
-    {
-        if (motion is null || motion.FindChannel(c.Node, c.Kind) is not null)
-        {
-            return c.Node;
-        }
-
-        return c.Aliases.FirstOrDefault(a => motion.FindChannel(a.Node, c.Kind) is not null)?.Node ?? c.Node;
     }
 
     /// <summary>노드 항목: 그 오브젝트를 고르고, 채널 박스·매니퓰레이터의 노드를 그 노드로. 키 따라가기는 끈다(사용자가 직접 골랐다).</summary>

@@ -73,7 +73,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 
 ### 4.2 컨트롤러 표 바꾸기 (손잡이 추가·이름·성분 라벨)
 
-- 내장본 `Mt.Authoring/Defaults/controllers.json`(스키마 `controllers/1`). 필드: `id`·`group`(placement/depth/acting)·`label`·`node`·`kind`(position/euler/scale)·`axes`·`unit`·`axisLabels`(성분별 이름)·`manipulator`(W/E/R 기본 손잡이)·`aliases`(별칭 노드)·`bake`/`bakeY`(깊이 굽기)·`note`.
+- 내장본 `Mt.Authoring/Defaults/controllers.json`(스키마 `controllers/1`). 필드: `id`·`group`(placement/depth/acting)·`label`·`node`·`kind`(position/euler/scale)·`axes`·`unit`·`axisLabels`(성분별 이름)·`manipulator`(W/E/R 기본 손잡이)·`bake`/`bakeY`(깊이 굽기)·`note`.
 - 노드는 덤프 `rig-schemas.json`에 있어야 한다 — `ControllersFileTests.내장_표는_…_노드가_전부_덤프에_있다`가 지킨다.
 - 덤프 옆 `presets/controllers.json`이 있으면 그것이 내장본을 이긴다(리거가 바꾸는 길).
 

@@ -47,7 +47,7 @@ public class ControllersFileTests
 
         // 표에 없는 커브는 null — 노드 이름으로 보인다.
         Assert.Null(rig.LabelOf(new CurveRef("CharSlot_Rotation", ChannelKind.Euler, Axis.Z)));
-        Assert.Equal(new[] { "CharacterPortrait_Track_Move" }, body.CurvesOf(Axis.Y).Select(c => c.Node));
+        Assert.Equal(new CurveRef("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y), body.Primary(Axis.Y));
     }
 
     [Fact]

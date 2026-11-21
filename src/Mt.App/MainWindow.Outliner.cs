@@ -48,7 +48,7 @@ public partial class MainWindow
 
         foreach (Controller c in table.Controllers)
         {
-            List<CurveRef> curves = OutlinerCurvesOf(motion, c);
+            List<CurveRef> curves = OutlinerCurvesOf(c);
             List<CurveRef> existing = curves.Where(cr => cr.Resolve(motion) is not null).ToList();
             bool keyed = existing.Count > 0;
             bool isSelected = ReferenceEquals(c, selected);
@@ -447,8 +447,8 @@ public partial class MainWindow
         return row;
     }
 
-    /// <summary>컨트롤러의 아웃라이너 성분들 — 표가 쓰는 성분만(B): 성분마다 모션에 있는 커브(주 노드·별칭), 없으면 주 커브 하나(흐림). 깊이는 배율 X·Y + 깊이 Y.</summary>
-    private static List<CurveRef> OutlinerCurvesOf(MotionAsset motion, Controller c)
+    /// <summary>컨트롤러의 아웃라이너 성분들 — 표가 쓰는 성분만(B): 성분마다 그 커브 하나(모션에 없으면 흐림). 깊이는 배율 X·Y + 깊이 Y.</summary>
+    private static List<CurveRef> OutlinerCurvesOf(Controller c)
     {
         var curves = new List<CurveRef>();
 
@@ -460,8 +460,7 @@ public partial class MainWindow
 
         foreach (Axis axis in c.Axes)
         {
-            List<CurveRef> existing = c.CurvesOf(axis).Where(cr => cr.Resolve(motion) is not null).ToList();
-            curves.AddRange(existing.Count > 0 ? existing : new[] { c.Primary(axis) });
+            curves.Add(c.Primary(axis));
         }
 
         return curves;
@@ -481,7 +480,7 @@ public partial class MainWindow
     private void SelectController(Controller c, bool showCurves = true)
     {
         _followSelection = false;
-        _viewport.SelectedNode = ControllerNodeFor(_graph.Motion, c);
+        _viewport.SelectedNode = c.Node;
         SyncHierarchySelection(c);
 
         if (showCurves)
@@ -498,7 +497,7 @@ public partial class MainWindow
     private void ShowControllerCurves(Controller c)
     {
         MotionAsset? motion = _graph.Motion;
-        List<CurveRef> existing = motion is null ? new List<CurveRef>() : OutlinerCurvesOf(motion, c).Where(cr => cr.Resolve(motion) is not null).ToList();
+        List<CurveRef> existing = motion is null ? new List<CurveRef>() : OutlinerCurvesOf(c).Where(cr => cr.Resolve(motion) is not null).ToList();
         ShowCurves(existing, additive: false);
     }
 

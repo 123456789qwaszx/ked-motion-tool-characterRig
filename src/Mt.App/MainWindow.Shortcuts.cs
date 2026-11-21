@@ -185,7 +185,7 @@ public partial class MainWindow
         }
 
         _followSelection = false;
-        _viewport.SelectedNode = ControllerNodeFor(_graph.Motion, fallback);
+        _viewport.SelectedNode = fallback.Node;
         RefreshChannelBox();
         RefreshChannels();
     }

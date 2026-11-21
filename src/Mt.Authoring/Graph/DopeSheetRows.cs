@@ -41,7 +41,7 @@ public sealed record DopeRow(
 /// </summary>
 public static class DopeSheetRows
 {
-    /// <param name="controllers">컨트롤러 표 — 있으면 노드 행의 라벨이 "연기 · 몸"(별칭 노드는 "연기 · 몸 Y")이다. 없으면 노드 이름.</param>
+    /// <param name="controllers">컨트롤러 표 — 있으면 노드 행의 라벨이 "연기 · 몸"이다. 없으면 노드 이름.</param>
     public static List<DopeRow> Build(MotionAsset motion, Func<string, bool>? isCollapsed = null, ControllerRig? controllers = null)
     {
         ArgumentNullException.ThrowIfNull(motion);
@@ -100,7 +100,7 @@ public static class DopeSheetRows
         return rows;
     }
 
-    /// <summary>노드 행의 글자 — 표가 있으면 "묶음 · 컨트롤러", 별칭 노드(한 성분만 맡는 노드)는 그 성분까지. 표에 없으면 노드 이름.</summary>
+    /// <summary>노드 행의 글자 — 표가 있으면 "묶음 · 컨트롤러"(깊이의 Y 노드는 "깊이 · 깊이 Y"). 표에 없으면 노드 이름.</summary>
     public static string NodeLabel(string node, ControllerRig? controllers)
     {
         if (controllers?.OfNode(node) is not { } c)
@@ -108,18 +108,7 @@ public static class DopeSheetRows
             return node;
         }
 
-        if (c.Node == node)
-        {
-            return $"{c.Group.Label} · {c.Label}";
-        }
-
-        if (c.DepthYNode == node)
-        {
-            return $"{c.Group.Label} · {c.Label} Y";
-        }
-
-        Axis axis = c.Aliases.First(a => a.Node == node).Axis;
-        return $"{c.Group.Label} · {c.AttributeLabel(axis)}";
+        return c.DepthYNode == node ? $"{c.Group.Label} · {c.Label} Y" : $"{c.Group.Label} · {c.Label}";
     }
 
     private static List<DopeBlock> Group(MotionAsset motion, List<KeyRef> keys)

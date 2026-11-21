@@ -341,14 +341,14 @@ public partial class MainWindow
         return (row, box);
     }
 
-    /// <summary>컨트롤러 성분으로 읽히는 커브들 — 깊이는 주 노드의 X·Y 둘, 나머지는 주 노드 + 별칭.</summary>
+    /// <summary>컨트롤러 성분으로 읽히는 커브들 — 깊이는 배율 X·Y와 깊이 Y, 나머지는 그 성분의 커브 하나.</summary>
     private static IEnumerable<CurveRef> ControllerCurves(Controller c, Axis axis)
         => c.Bake == ControllerBake.DepthLevel
             ? c.Axes.Select(c.Primary).Concat(c.DepthYCurve is { } y ? new[] { y } : Array.Empty<CurveRef>())
-            : c.CurvesOf(axis);
+            : new[] { c.Primary(axis) };
 
     /// <summary>
-    /// 컨트롤러 성분의 지금 값 — 주 노드와 별칭의 합(배율은 곱). 깊이는 배율을 level로 되돌린 값. 포즈가 없으면 null.
+    /// 컨트롤러 성분의 지금 값. 깊이는 배율을 level로 되돌린 값. 포즈가 없으면 null.
     /// </summary>
     private float? ControllerValue(Controller c, Axis axis)
     {
@@ -365,33 +365,7 @@ public partial class MainWindow
             return depth.TryLevelOf(primary.Value, out float level) ? level : primary;
         }
 
-        float value = primary.Value;
-
-        foreach (ControllerAlias alias in c.Aliases)
-        {
-            if (alias.Axis != axis || _viewport.ComponentValue(alias.Node, c.Kind, axis) is not { } aliasValue)
-            {
-                continue;
-            }
-
-            value = c.Kind == ChannelKind.Scale ? value * aliasValue : value + aliasValue;
-        }
-
-        return value;
-    }
-
-    /// <summary>키를 놓을 노드 — 그 성분에 채널이 있는 노드(별칭이라도), 없으면 주 노드.</summary>
-    private static string ControllerTargetNode(MotionAsset? motion, Controller c, Axis axis)
-    {
-        foreach (CurveRef curve in c.CurvesOf(axis))
-        {
-            if (motion?.FindChannel(curve.Node, curve.Kind)?.Get(curve.Axis) is not null)
-            {
-                return curve.Node;
-            }
-        }
-
-        return c.Node;
+        return primary;
     }
 
     /// <summary>첫 키를 놓는 순간 재생 기준(relative/absolute)를 그 묶음의 mode로 — 자리·깊이는 absolute, 연기는 relative(되돌리기 한 번 더).</summary>
@@ -447,21 +421,10 @@ public partial class MainWindow
                 return;
             }
 
-            string node = ControllerTargetNode(motion, c, axis);
-
-            if (_viewport.ComponentValue(node, c.Kind, axis) is not { } nodeValue)
-            {
-                return;
-            }
-
-            // 합(곱)으로 보인 값의 차이를 그 노드 하나에 싣는다.
-            float next = c.Kind == ChannelKind.Scale
-                ? (Math.Abs(current.Value) < 1e-6f ? target : nodeValue * (target / current.Value))
-                : nodeValue + (target - current.Value);
             _session.Editor.Batch(MotionChangeKind.Keys, () =>
             {
                 EnsurePreviewModeForGroup(motion, c); // 첫 키의 재생 기준 자동 변경은 그 키와 같은 칸
-                _viewport.SetComponent(node, c.Kind, axis, next);
+                _viewport.SetComponent(c.Node, c.Kind, axis, target);
             });
         });
         RefreshChannelBox();
@@ -490,7 +453,7 @@ public partial class MainWindow
                 return;
             }
 
-            _viewport.KeyComponent(ControllerTargetNode(motion, c, axis), c.Kind, axis);
+            _viewport.KeyComponent(c.Node, c.Kind, axis);
         }));
     }
 
