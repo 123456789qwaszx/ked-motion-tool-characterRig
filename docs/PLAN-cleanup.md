@@ -92,7 +92,7 @@
 
 ### 적어 둘 것
 
-- **그래프를 라이브러리로 뗐다**(2026-11-22 — 소유자, `ked-story-tools`의 계획서 D12 · §4.8). 그 툴이 줄마다 모션을 그래프로 고치게 되어, 커브의 모델(`MotionAsset` · `KeyAsset` · `ChannelKind`)과 그래프의 산수(`Graph/` — 도프 행만 빼고)를 `Mt.Graph`로, `GraphEditorView`를 `Mt.Graph.Avalonia`로 옮겼다. 뷰는 `MotionEditor` 대신 `IGraphEditor`(모션 찾기 · 키를 고치는 명령 일곱 · 바뀜 알림)만 안다 — `MotionEditor`가 그것을 내놓는다. **동작은 바꾸지 않았다. 네임스페이스도 옮기기 전 그대로다**(`Mt.Authoring.Model` · `Mt.Authoring.Graph` · `Mt.App.Views` — 파일 100여 개의 using을 건드리지 않으려고. 어셈블리 이름과 어긋난다). 정본은 이 저장소이고 `ked-story-tools`가 사본을 들인다 — 이 두 프로젝트에 저작본 · 리그 · 편집기에 기대는 코드를 넣지 않는다. 확인: 도메인 334 · 화면 143(이 세션의 빌드 — XAML이 든 주 창 테스트 하나는 못 돌렸다).
+- **그래프를 라이브러리로 뗐다**(2026-11-22 — 소유자, `ked-story-tools`의 계획서 D12 · §4.8). 그 툴이 줄마다 모션을 그래프로 고치게 되어, 커브의 모델(`MotionAsset` · `KeyAsset` · `ChannelKind`)과 그래프의 산수(`Graph/` — 도프 행만 빼고)를 `Mt.Graph`로, `GraphEditorView`를 `Mt.Graph.Avalonia`로 옮겼다. 뷰는 `MotionEditor` 대신 `IGraphEditor`(모션 찾기 · 키를 고치는 명령 일곱 · 바뀜 알림)만 안다 — `MotionEditor`가 그것을 내놓는다. **동작은 바꾸지 않았다. 네임스페이스도 옮기기 전 그대로다**(`Mt.Authoring.Model` · `Mt.Authoring.Graph` · `Mt.App.Views` — 파일 100여 개의 using을 건드리지 않으려고. 어셈블리 이름과 어긋난다). 정본은 이 저장소이고 `ked-story-tools`가 사본을 들인다 — 이 두 프로젝트에 저작본 · 리그 · 편집기에 기대는 코드를 넣지 않는다. 확인: 도메인 334 · 화면 143(이 세션의 빌드 — XAML이 든 주 창 테스트 하나는 못 돌렸다). 이어서 키를 고치는 명령의 속(`SetKeysMany` · `SetTangentMode` · `SetBroken` · `SetTangents` · `PasteKeys` · `RemoveKeys`)을 `Mt.Graph`의 `MotionKeyEdits`로 옮겼다 — 모션을 받아 "무엇을 바꿀지"를 돌려주고, `MotionEditor`는 그것을 `Mutate`로 감쌀 뿐이다. 다른 툴의 편집기가 같은 속을 쓴다.
 
 - **정리 전 README의 기능 설명**은 `docs/history/README-2026-11.md`에 있다 — 2단계의 설명서를 쓸 때 재료로 쓰고, 설명서가 서면 필요 없다. `USER-GUIDE.md`는 2단계에서 다시 쓴다(지금은 지운 기능의 대목만 뺐다).
 - **`vendoring.md`의 본문**은 그대로 두었다(반입한 그때의 사실을 적은 표다). 코어의 전체 재반입은 남은 빚이다.

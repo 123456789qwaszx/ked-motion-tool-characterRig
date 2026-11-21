@@ -520,7 +520,7 @@ public sealed partial class MotionEditor : IGraphEditor
         MotionAsset motion = Require(name);
         ChannelAsset channel = RequireChannel(motion, node, kind);
 
-        ComponentCurve? curve = Normalize(keys);
+        ComponentCurve? curve = MotionKeyEdits.Normalize(keys);
 
         Mutate(MotionChangeKind.Keys, () => channel.Set(axis, curve));
     }
@@ -531,97 +531,38 @@ public sealed partial class MotionEditor : IGraphEditor
     /// </summary>
     public void SetKeysMany(string name, IEnumerable<(CurveRef Curve, IEnumerable<KeyAsset> Keys)> edits)
     {
-        ArgumentNullException.ThrowIfNull(edits);
-        MotionAsset motion = Require(name);
-        var plan = new List<(ChannelAsset Channel, Axis Axis, ComponentCurve? Curve)>();
-
-        foreach ((CurveRef curveRef, IEnumerable<KeyAsset> keys) in edits)
+        if (MotionKeyEdits.SetKeysMany(Require(name), edits) is { } change)
         {
-            ChannelAsset channel = RequireChannel(motion, curveRef.Node, curveRef.Kind);
-            plan.Add((channel, curveRef.Axis, Normalize(keys)));
+            Mutate(MotionChangeKind.Keys, change);
         }
-
-        if (plan.Count == 0)
-        {
-            return;
-        }
-
-        Mutate(MotionChangeKind.Keys, () =>
-        {
-            foreach ((ChannelAsset channel, Axis axis, ComponentCurve? curve) in plan)
-            {
-                channel.Set(axis, curve);
-            }
-        });
     }
 
     /// <summary>키들의 탄젠트 모드를 바꾼다. free가 아니면 탄젠트가 바로 다시 계산된다.</summary>
     public void SetTangentMode(string name, IEnumerable<KeyRef> keys, TangentMode mode)
     {
         ArgumentNullException.ThrowIfNull(keys);
-        MotionAsset motion = Require(name);
-        List<(ComponentCurve Curve, int Index)> targets = ResolveKeys(motion, keys);
 
-        if (targets.Count == 0)
+        if (MotionKeyEdits.SetTangentMode(Require(name), keys, mode) is { } change)
         {
-            return;
+            Mutate(MotionChangeKind.Keys, change);
         }
-
-        Mutate(MotionChangeKind.Keys, () =>
-        {
-            foreach ((ComponentCurve curve, int index) in targets)
-            {
-                curve.Keys[index].Tangent = mode;
-            }
-
-            foreach (ComponentCurve curve in targets.Select(t => t.Curve).Distinct())
-            {
-                TangentMath.Recompute(curve.Keys);
-            }
-        });
     }
 
     /// <summary>in·out 탄젠트를 따로 놀게(끊기) 하거나 다시 붙인다. 붙이면 out이 in을 따른다. 모드는 free가 된다.</summary>
     public void SetBroken(string name, IEnumerable<KeyRef> keys, bool broken)
     {
         ArgumentNullException.ThrowIfNull(keys);
-        MotionAsset motion = Require(name);
-        List<(ComponentCurve Curve, int Index)> targets = ResolveKeys(motion, keys);
 
-        if (targets.Count == 0)
+        if (MotionKeyEdits.SetBroken(Require(name), keys, broken) is { } change)
         {
-            return;
+            Mutate(MotionChangeKind.Keys, change);
         }
-
-        Mutate(MotionChangeKind.Keys, () =>
-        {
-            foreach ((ComponentCurve curve, int index) in targets)
-            {
-                KeyAsset key = curve.Keys[index];
-                key.Tangent = TangentMode.Free;
-                key.Broken = broken;
-
-                if (!broken)
-                {
-                    key.OutTangent = key.InTangent;
-                }
-            }
-        });
     }
 
     /// <summary>핸들을 끈 결과. 모드는 free가 된다. 끊기지 않은 키는 양쪽이 같이 돈다 — 호출부가 같은 값을 넣는다.</summary>
     public void SetTangents(string name, KeyRef key, float inTangent, float outTangent)
     {
-        MotionAsset motion = Require(name);
-        KeyAsset target = key.Resolve(motion) ?? throw new KeyNotFoundException($"키 {key}가 없다.");
-
-        Mutate(MotionChangeKind.Keys, () =>
-        {
-            target.Tangent = TangentMode.Free;
-            target.InTangent = inTangent;
-            target.OutTangent = outTangent;
-            target.Broken = inTangent != outTangent;
-        });
+        Mutate(MotionChangeKind.Keys, MotionKeyEdits.SetTangents(Require(name), key, inTangent, outTangent));
     }
 
     /// <summary>
@@ -727,63 +668,12 @@ public sealed partial class MotionEditor : IGraphEditor
     /// </summary>
     public List<KeyRef> PasteKeys(string name, KeyClipboard clipboard, float atTime, Func<float, float>? snap = null, IReadOnlyList<CurveRef>? targets = null)
     {
-        ArgumentNullException.ThrowIfNull(clipboard);
-        MotionAsset motion = Require(name);
-        float shift = atTime - clipboard.Origin;
         var result = new List<KeyRef>();
 
-        if (clipboard.Count == 0)
+        if (MotionKeyEdits.PasteKeys(Require(name), clipboard, atTime, snap, targets, result) is { } change)
         {
-            return result;
+            Mutate(MotionChangeKind.Keys, change);
         }
-
-        List<(CurveRef Curve, IReadOnlyList<KeyAsset> Keys)> items = targets is { Count: > 0 }
-            ? clipboard.Items.Count == 1
-                ? targets.Select(t => (t, clipboard.Items[0].Keys)).ToList()
-                : clipboard.Items.Zip(targets, (item, target) => (target, item.Keys)).ToList()
-            : clipboard.Items.ToList();
-
-        Mutate(MotionChangeKind.Keys, () =>
-        {
-            foreach ((CurveRef curveRef, IReadOnlyList<KeyAsset> keys) in items)
-            {
-                ChannelAsset? channel = motion.FindChannel(curveRef.Node, curveRef.Kind);
-
-                if (channel is null)
-                {
-                    channel = new ChannelAsset { Node = curveRef.Node, Kind = curveRef.Kind };
-                    motion.Channels.Add(channel);
-                }
-
-                ComponentCurve curve = channel.Get(curveRef.Axis) ?? new ComponentCurve();
-                var pastedTimes = new List<float>();
-
-                foreach (KeyAsset key in keys)
-                {
-                    float t = Math.Max(0f, snap is null ? key.T + shift : snap(key.T + shift));
-                    curve.Keys.RemoveAll(k => Math.Abs(k.T - t) <= MotionRules.Tolerance);
-                    curve.Keys.Add(new KeyAsset
-                    {
-                        T = t, V = key.V, InTangent = key.InTangent, OutTangent = key.OutTangent, Tangent = key.Tangent, Broken = key.Broken,
-                    });
-                    pastedTimes.Add(t);
-                }
-
-                curve.Keys.Sort((a, b) => a.T.CompareTo(b.T));
-                TangentMath.Recompute(curve.Keys);
-                channel.Set(curveRef.Axis, curve);
-
-                foreach (float t in pastedTimes)
-                {
-                    int index = curve.Keys.FindIndex(k => Math.Abs(k.T - t) <= MotionRules.Tolerance);
-
-                    if (index >= 0)
-                    {
-                        result.Add(new KeyRef(curveRef, index));
-                    }
-                }
-            }
-        });
 
         return result;
     }
@@ -855,70 +745,12 @@ public sealed partial class MotionEditor : IGraphEditor
     public void RemoveKeys(string name, IEnumerable<KeyRef> keys)
     {
         ArgumentNullException.ThrowIfNull(keys);
-        MotionAsset motion = Require(name);
-        var byCurve = new Dictionary<CurveRef, List<int>>();
+        List<(CurveRef, IEnumerable<KeyAsset>)> edits = MotionKeyEdits.WithoutKeys(Require(name), keys);
 
-        foreach (KeyRef key in keys)
+        if (edits.Count > 0)
         {
-            if (key.Resolve(motion) is null)
-            {
-                continue;
-            }
-
-            if (!byCurve.TryGetValue(key.Curve, out List<int>? indices))
-            {
-                indices = new List<int>();
-                byCurve[key.Curve] = indices;
-            }
-
-            indices.Add(key.Index);
+            SetKeysMany(name, edits);
         }
-
-        if (byCurve.Count == 0)
-        {
-            return;
-        }
-
-        var edits = new List<(CurveRef, IEnumerable<KeyAsset>)>();
-
-        foreach ((CurveRef curveRef, List<int> indices) in byCurve)
-        {
-            ComponentCurve curve = curveRef.Resolve(motion)!;
-            var remaining = new HashSet<int>(indices);
-            edits.Add((curveRef, curve.Keys.Where((_, i) => !remaining.Contains(i)).ToList()));
-        }
-
-        SetKeysMany(name, edits);
-    }
-
-    private static ComponentCurve? Normalize(IEnumerable<KeyAsset> keys)
-    {
-        List<KeyAsset> sorted = keys.Select(Clone).OrderBy(k => k.T).ToList();
-
-        if (sorted.Count == 0)
-        {
-            return null;
-        }
-
-        TangentMath.Recompute(sorted);
-        return new ComponentCurve { Keys = sorted };
-    }
-
-    private static List<(ComponentCurve Curve, int Index)> ResolveKeys(MotionAsset motion, IEnumerable<KeyRef> keys)
-    {
-        var targets = new List<(ComponentCurve Curve, int Index)>();
-
-        foreach (KeyRef key in keys.Distinct())
-        {
-            ComponentCurve? curve = key.Curve.Resolve(motion);
-
-            if (curve is not null && key.Index >= 0 && key.Index < curve.Keys.Count)
-            {
-                targets.Add((curve, key.Index));
-            }
-        }
-
-        return targets;
     }
 
     /// <summary>키를 더한다. 같은 시각(허용 오차 안)에 키가 있으면 그 키를 대신한다 — 한 시각에 키는 하나다.</summary>
@@ -927,7 +759,7 @@ public sealed partial class MotionEditor : IGraphEditor
         ArgumentNullException.ThrowIfNull(key);
         MotionAsset motion = Require(name);
         ChannelAsset channel = RequireChannel(motion, node, kind);
-        KeyAsset copy = Clone(key);
+        KeyAsset copy = MotionKeyEdits.Clone(key);
 
         Mutate(MotionChangeKind.Keys, () =>
         {
@@ -949,7 +781,7 @@ public sealed partial class MotionEditor : IGraphEditor
         MotionAsset motion = Require(name);
         ChannelAsset channel = RequireChannel(motion, node, kind);
         ComponentCurve curve = RequireCurve(channel, axis, index);
-        KeyAsset copy = Clone(value);
+        KeyAsset copy = MotionKeyEdits.Clone(value);
 
         Mutate(MotionChangeKind.Keys, () =>
         {
@@ -1381,15 +1213,6 @@ public sealed partial class MotionEditor : IGraphEditor
     }
 
     // 호출자의 객체를 문서에 꽂지 않는다 — 문서 밖에서 고치면 되돌리기 스냅샷이 거짓이 된다.
-    private static KeyAsset Clone(KeyAsset key) => new()
-    {
-        T = key.T,
-        V = key.V,
-        InTangent = key.InTangent,
-        OutTangent = key.OutTangent,
-        Tangent = key.Tangent,
-        Broken = key.Broken,
-    };
 }
 
 public enum MotionChangeKind
