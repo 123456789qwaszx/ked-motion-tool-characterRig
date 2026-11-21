@@ -15,7 +15,7 @@ public class RigSchemaFileTests
         Assert.Contains("character", rig.RigKinds);
         Assert.Contains("screenEffect", rig.RigKinds);
         Assert.DoesNotContain("background", rig.RigKinds); // 배경은 캐스팅하지 않은 캐릭터 슬롯이 됐다(무대 dc690c1)
-        Assert.Contains("CharacterPortrait_Track_Move_Y", rig.NodeIds["character"]);
+        Assert.Contains("CharacterPortrait_Track_Move", rig.NodeIds["character"]);
         Assert.Contains("CharacterPortrait_SwayPivot", rig.NodeIds["character"]);
         Assert.DoesNotContain("CharacterPortrait_SwayPivot", rig.NodeIds["screenEffect"]);
         Assert.True(rig.TryGetRig("character", out RigSchemaRigDto character));

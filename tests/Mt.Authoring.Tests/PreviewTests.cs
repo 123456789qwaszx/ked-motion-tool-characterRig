@@ -10,7 +10,7 @@ namespace Mt.Authoring.Tests;
 public class MotionPreviewTests
 {
     private static readonly RigSchemaFile RigFile = RigSchemaFile.Load(Fixtures.PathOf("rig-schemas.json"));
-    private const string MoveY = "CharacterPortrait_Track_Move_Y";
+    private const string MoveY = "CharacterPortrait_Track_Move";
     private const string Sway = "CharacterPortrait_SwayPivot";
 
     [Fact]
@@ -71,27 +71,27 @@ public class MotionPreviewTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("a", "character", 1f, MotionEnd.Commit, MotionChannelMode.Relative);
-        editor.AddChannel("a", "CharSlot_Scale", ChannelKind.Scale);
-        editor.SetKeys("a", "CharSlot_Scale", ChannelKind.Scale, Axis.X, new[] { Fixtures.Key(0f, 1f), Fixtures.Key(1f, 2f) });
-        editor.AddChannel("a", "CharSlot_Track_X", ChannelKind.Position);
-        editor.SetKeys("a", "CharSlot_Track_X", ChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 100f), Fixtures.Key(1f, 300f) });
+        editor.AddChannel("a", "CharacterPortrait_ActingScale", ChannelKind.Scale);
+        editor.SetKeys("a", "CharacterPortrait_ActingScale", ChannelKind.Scale, Axis.X, new[] { Fixtures.Key(0f, 1f), Fixtures.Key(1f, 2f) });
+        editor.AddChannel("a", "CharSlot_Track", ChannelKind.Position);
+        editor.SetKeys("a", "CharSlot_Track", ChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 100f), Fixtures.Key(1f, 300f) });
         editor.AddChannel("a", "NoSuchNode", ChannelKind.Position);
         editor.SetKeys("a", "NoSuchNode", ChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 1f), Fixtures.Key(1f, 2f) });
 
         RectNodeTree template = RigFile.BuildTree("character");
-        float trackStart = template.GetState("CharSlot_Track_X").AnchoredPosition.X;
+        float trackStart = template.GetState("CharSlot_Track").AnchoredPosition.X;
         RectNodeTree relative = MotionPreview.Pose(template, editor.Document.Find("a")!, 1);
 
-        Assert.Equal(2f, relative.GetState("CharSlot_Scale").LocalScale.X, 4);
-        Assert.Equal(1f, relative.GetState("CharSlot_Scale").LocalScale.Y, 4); // 없는 성분은 그대로
-        Assert.Equal(trackStart + 300f, relative.GetState("CharSlot_Track_X").AnchoredPosition.X, 4); // relative: 시작값 + 키
+        Assert.Equal(2f, relative.GetState("CharacterPortrait_ActingScale").LocalScale.X, 4);
+        Assert.Equal(1f, relative.GetState("CharacterPortrait_ActingScale").LocalScale.Y, 4); // 없는 성분은 그대로
+        Assert.Equal(trackStart + 300f, relative.GetState("CharSlot_Track").AnchoredPosition.X, 4); // relative: 시작값 + 키
         Assert.False(relative.Contains("NoSuchNode"));
 
         // 같은 키를 absolute 렌즈로 — 값 그대로. 키는 안 바뀐다(mode는 커맨드가 정하는 것, 여기서는 뷰포트의 렌즈).
         editor.SetPreviewMode("a", MotionChannelMode.Absolute);
         RectNodeTree absolute = MotionPreview.Pose(template, editor.Document.Find("a")!, 1);
-        Assert.Equal(300f, absolute.GetState("CharSlot_Track_X").AnchoredPosition.X, 4);
-        Assert.Equal(2f, absolute.GetState("CharSlot_Scale").LocalScale.X, 4);
+        Assert.Equal(300f, absolute.GetState("CharSlot_Track").AnchoredPosition.X, 4);
+        Assert.Equal(2f, absolute.GetState("CharacterPortrait_ActingScale").LocalScale.X, 4);
     }
 }
 
@@ -367,7 +367,7 @@ public class KeyTimesTests
     public void 선택_키_시각()
     {
         MotionAsset nod = Fixtures.NodBowDocument().Find("nod")!;
-        var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
+        var y = new CurveRef("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y);
 
         List<float> selected = KeyTimes.OfSelection(nod, new[] { new KeyRef(y, 2), new KeyRef(y, 1), new KeyRef(y, 9) });
         Assert.Equal(new[] { 0.3f, 0.6f }, selected);

@@ -178,7 +178,7 @@ public class MotionEditorTests
         Assert.Equal(MotionChannelMode.Relative, editor.Document.Find("nod")!.PreviewMode);
     }
 
-    private static readonly CurveRef NodY = new("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
+    private static readonly CurveRef NodY = new("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y);
 
     [Fact]
     public void 바뀐_것이_없는_명령은_기록도_다시하기_삭제도_Revision도_없다()

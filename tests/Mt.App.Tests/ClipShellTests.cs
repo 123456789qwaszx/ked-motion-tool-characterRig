@@ -11,7 +11,7 @@ namespace Mt.App.Tests;
 /// <summary>연출 클립 K3(<c>PLAN-clip.md</c>) — 셸에서 클립을 고르면 뷰포트·시계가 클립의 것이 된다.</summary>
 public class ClipShellTests
 {
-    private const string MoveY = "CharacterPortrait_Track_Move_Y";
+    private const string MoveY = "CharacterPortrait_Track_Move";
     private const string Sway = "CharacterPortrait_SwayPivot";
 
     private static MainWindow NewWindow()

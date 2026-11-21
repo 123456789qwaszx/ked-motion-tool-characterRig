@@ -134,8 +134,8 @@ public class ControllersFileTests
         editor.AddMotion("step", "character", 0.5f, MotionEnd.Commit);
         editor.AddChannel("step", "CharSlot_Track", ChannelKind.Position);
         editor.SetKeys("step", "CharSlot_Track", ChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, -200f), Fixtures.Key(0.5f, 400f) });
-        editor.AddChannel("step", "CharacterPortrait_Track_Move_Y", ChannelKind.Position);
-        editor.SetKeys("step", "CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, -18f) });
+        editor.AddChannel("step", "CharacterPortrait_Track_Move", ChannelKind.Position);
+        editor.SetKeys("step", "CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, -18f) });
 
         // 컨트롤러 표 없이는 경고가 없다. 표를 주면 relative 미리보기 + 자리 컨트롤러 = 경고(막지 않는다).
         Assert.Empty(MotionValidator.Validate(editor.Document));
@@ -167,7 +167,7 @@ public class ControllersFileTests
         Assert.Equal(2, editor.Document.Find("step")!.Channels.Count);
 
         // 전부 자리거나 전부 연기면 나눌 것이 없다.
-        editor.RemoveChannel("step", "CharacterPortrait_Track_Move_Y", ChannelKind.Position);
+        editor.RemoveChannel("step", "CharacterPortrait_Track_Move", ChannelKind.Position);
         Assert.False(MotionFixes.Apply(editor, "step", MotionFix.SplitByGroup, controllers));
     }
 }

@@ -6,7 +6,7 @@ namespace Mt.Authoring.Tests;
 
 public class MotionEditorGraphTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y);
 
     [Fact]
     public void 여러_성분을_한_번에_바꾸면_되돌리기도_한_번이다()
@@ -95,7 +95,7 @@ public class MotionEditorGraphTests
 
 public class TimeSliderOpsTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y);
     private const float Frame = 1f / 30f;
 
     [Fact]

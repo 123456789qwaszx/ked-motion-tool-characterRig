@@ -11,7 +11,7 @@ namespace Mt.Authoring.Tests;
 /// <summary>툴 쪽 채널 종류(PLAN-emoji.md E2) — 코어의 셋 + 불투명도 · 그림, 그리고 계단 키.</summary>
 public sealed class ChannelKindTests
 {
-    private const string Node = "CharacterPortrait_Track_Move_Y";
+    private const string Node = "CharacterPortrait_Track_Move";
 
     [Fact]
     public void 종류마다_성분과_중립값과_쓰는_곳이_정해져_있다()

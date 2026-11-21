@@ -176,7 +176,7 @@ public class ViewportViewTests
 
         try
         {
-            const string node = "CharacterPortrait_Track_Move_Y";
+            const string node = "CharacterPortrait_Track_Move";
             view.SelectedNode = node;
             view.Manipulator = ManipulatorMode.Move;
             view.AutoKey = true;
@@ -213,7 +213,7 @@ public class ViewportViewTests
 
         try
         {
-            const string node = "CharacterPortrait_Track_Move_Y";
+            const string node = "CharacterPortrait_Track_Move";
             view.SelectedNode = node;
             view.Manipulator = ManipulatorMode.Move;
             view.AutoKey = false;
@@ -378,7 +378,7 @@ public class ViewportViewTests
 
         try
         {
-            var y = new Mt.Authoring.Graph.CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Mt.Authoring.Model.Axis.Y);
+            var y = new Mt.Authoring.Graph.CurveRef("CharacterPortrait_Track_Move", ChannelKind.Position, Mt.Authoring.Model.Axis.Y);
             view.ScrubTo(0.3);
             Assert.Equal(-18f, view.CurrentPortraitQuad()!.Value.Center.Y, 2);
 
@@ -559,7 +559,7 @@ public class ViewportViewTests
 
         try
         {
-            const string node = "CharacterPortrait_Track_Move_Y";
+            const string node = "CharacterPortrait_Track_Move";
             view.SelectedNode = node;
             view.Manipulator = ManipulatorMode.Move;
             view.AutoKey = false;

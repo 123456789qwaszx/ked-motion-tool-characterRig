@@ -77,7 +77,7 @@ public class TweenShellTests
     {
         HeadlessUi.Run(() =>
         {
-            const string moveY = "CharacterPortrait_Track_Move_Y";
+            const string moveY = "CharacterPortrait_Track_Move";
             string settings = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", $"settings-{Guid.NewGuid():N}.json");
             Directory.CreateDirectory(Path.GetDirectoryName(settings)!);
             File.WriteAllText(settings, "{}");

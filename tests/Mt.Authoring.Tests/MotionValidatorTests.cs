@@ -68,9 +68,9 @@ public class MotionValidatorTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("a", "character", 1f, MotionEnd.Restore);
-        editor.AddChannel("a", "CharacterPortrait_Track_Move_Y", ChannelKind.Position);
+        editor.AddChannel("a", "CharacterPortrait_Track_Move", ChannelKind.Position);
         // 마지막 키가 길이(1)에 있지 않다 — 편집 중엔 자연스러운 상태.
-        editor.SetKeys("a", "CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.25f, -10f), Fixtures.Key(0.5f, 0f) });
+        editor.SetKeys("a", "CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.25f, -10f), Fixtures.Key(0.5f, 0f) });
 
         Assert.False(MotionExport.TryExport(editor.Document, RigFile.NodeIds, out string json, out IReadOnlyList<MotionProblem> problems));
         Assert.Equal("", json);
@@ -86,7 +86,7 @@ public class MotionValidatorTests
 
 public class MotionFixesTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y);
 
     [Fact]
     public void 문구에서_돕는_손을_고른다()

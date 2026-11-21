@@ -13,7 +13,7 @@ namespace Mt.App.Tests;
 
 public class TimeSliderViewTests
 {
-    private const string Node = "CharacterPortrait_Track_Move_Y";
+    private const string Node = "CharacterPortrait_Track_Move";
     private static readonly CurveRef Y = new(Node, ChannelKind.Position, Axis.Y);
     private const double Frame = 1.0 / 30.0;
 

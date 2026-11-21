@@ -66,10 +66,10 @@ public class MainWindowTests
                 Assert.Equal("nod", window.SelectedMotion);
                 Assert.Equal("nod", window.Graph.MotionName);
 
-                window.AddChannelFromForm("CharacterPortrait_Track_Move_Y", ChannelKind.Position);
+                window.AddChannelFromForm("CharacterPortrait_Track_Move", ChannelKind.Position);
                 Assert.Empty(window.Graph.Curves); // 성분은 키가 생기면 생긴다
 
-                var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
+                var y = new CurveRef("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y);
                 window.Graph.CurrentTime = 0;
                 window.EnsureComponent(y.Node, y.Kind, y.Axis);
                 Assert.Single(window.Graph.Curves);
@@ -148,7 +148,7 @@ public class MainWindowTests
             {
                 window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
-                var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
+                var y = new CurveRef("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y);
                 window.AddChannelFromForm(y.Node, y.Kind);
                 window.EnsureComponent(y.Node, y.Kind, y.Axis);
 
@@ -195,10 +195,10 @@ public class MainWindowTests
             {
                 window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("wave", "character", "0.5", MotionEnd.Restore);
-                Assert.Contains("CharacterPortrait_Track_Move_X", window.Viewport.NodeChoices);
+                Assert.Contains("CharacterPortrait_Track_Move", window.Viewport.NodeChoices);
                 Assert.DoesNotContain("CharSlot_Track_Focus", window.Viewport.NodeChoices);
 
-                window.Viewport.SelectedNode = "CharacterPortrait_Track_Move_X";
+                window.Viewport.SelectedNode = "CharacterPortrait_Track_Move";
                 window.Viewport.Manipulator = ManipulatorMode.Move;
                 window.AutoKeyChecked = true;
                 Assert.True(window.Viewport.AutoKey);
@@ -210,7 +210,7 @@ public class MainWindowTests
                 window.MouseMove(target, RawInputModifiers.LeftMouseButton);
                 window.MouseUp(target, MouseButton.Left);
 
-                ChannelAsset channel = window.Session.Editor.Document.Find("wave")!.FindChannel("CharacterPortrait_Track_Move_X", ChannelKind.Position)!;
+                ChannelAsset channel = window.Session.Editor.Document.Find("wave")!.FindChannel("CharacterPortrait_Track_Move", ChannelKind.Position)!;
                 Assert.Single(channel.X!.Keys);
                 Assert.True(channel.X.Keys[0].V > 0);
                 Assert.Equal(3, window.Dope.Rows.Count);
@@ -227,7 +227,7 @@ public class MainWindowTests
     {
         string directory = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
-        const string Node = "CharacterPortrait_Track_Move_Y";
+        const string Node = "CharacterPortrait_Track_Move";
         const string Renamed = "CharacterPortrait_Track_Move_Up";
 
         // 유니티 쪽에서 노드 이름이 바뀐 덤프 — 그 밖은 같다.
@@ -323,7 +323,7 @@ public class MainWindowTests
             {
                 window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("nod", "character", "0.5", MotionEnd.Restore);
-                var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
+                var y = new CurveRef("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y);
                 window.AddChannelFromForm(y.Node, y.Kind);
                 window.Session.Editor.SetKeys("nod", y.Node, y.Kind, y.Axis, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
 
@@ -411,9 +411,9 @@ public class MainWindowTests
                 window.AddObjectFromForm("s2", "character", "front");
                 Assert.Equal(2, window.HierarchyObjectCount);
 
-                window.SelectInHierarchy("s2", "CharacterPortrait_Track_Move_Y");
+                window.SelectInHierarchy("s2", "CharacterPortrait_Track_Move");
                 Assert.Equal("s2", window.Viewport.SelectedObjectId);
-                Assert.Equal("CharacterPortrait_Track_Move_Y", window.ChannelBoxNode);
+                Assert.Equal("CharacterPortrait_Track_Move", window.ChannelBoxNode);
                 Assert.Equal("ctl:character", window.ChannelBoxLayout);
 
                 // 컨트롤러 값은 포즈다 — 몸 0, 크기 1, 깊이는 층(front = 16)을 level로 되돌린 값.
@@ -460,7 +460,7 @@ public class MainWindowTests
                 Assert.NotNull(window.Session.Editor.Document.Find("step")!.FindChannel("CharacterPortrait_SwayPivot", ChannelKind.Euler));
                 Assert.DoesNotContain(window.ProblemsShown, p => !p.Blocking);
 
-                // 옛 모션(nod는 Track_Move_Y)은 "몸 Y"로 보이고, 그 성분에 값을 넣으면 있는 채널(별칭 노드)에 키가 간다.
+                // 들여온 모션(nod는 Track_Move의 y)은 몸의 "상하"로 보이고, 그 성분에 값을 넣으면 그 채널에 키가 간다.
                 window.Session.ImportMotions(TestDocuments.FixturePath("motions.nod-bow.json"));
                 window.SelectMotion("nod");
                 window.SelectInHierarchy("s2", null);
@@ -468,8 +468,7 @@ public class MainWindowTests
                 Assert.Equal("-18", window.ControllerValueText("body", Axis.Y));
                 window.SetControllerValue("body", Axis.Y, "-20");
                 MotionAsset nod = window.Session.Editor.Document.Find("nod")!;
-                Assert.Null(nod.FindChannel("CharacterPortrait_Track_Move", ChannelKind.Position));
-                Assert.Equal(-20.0, nod.FindChannel("CharacterPortrait_Track_Move_Y", ChannelKind.Position)!.Y!.Keys.Single(k => Math.Abs(k.T - 0.3f) < 1e-4).V, 3);
+                Assert.Equal(-20.0, nod.FindChannel("CharacterPortrait_Track_Move", ChannelKind.Position)!.Y!.Keys.Single(k => Math.Abs(k.T - 0.3f) < 1e-4).V, 3);
 
                 // ● 는 지금 값으로 지금 시각에 키 — 채널이 없는 성분은 주 노드에 생긴다.
                 window.Viewport.ScrubTo(0.1);
@@ -561,7 +560,7 @@ public class MainWindowTests
             {
                 window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
-                var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
+                var y = new CurveRef("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y);
                 var x = y with { Axis = Axis.X };
                 window.AddChannelFromForm(y.Node, y.Kind);
                 window.Session.Editor.SetKeys("nod", y.Node, y.Kind, y.Axis, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
@@ -577,7 +576,7 @@ public class MainWindowTests
                 window.OutlinerClick(x, additive: false);
                 Assert.Single(window.Graph.Curves);
                 Assert.Null(window.Session.Editor.Document.Find("nod")!.FindChannel(x.Node, x.Kind)!.X);
-                Assert.Equal("CharacterPortrait_Track_Move_Y", window.Viewport.SelectedNode);
+                Assert.Equal("CharacterPortrait_Track_Move", window.Viewport.SelectedNode);
 
                 // 있는 성분 클릭은 그 커브만 · 더하기.
                 window.Session.Editor.SetKeys("nod", x.Node, x.Kind, x.Axis, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.6f, 0f) });
@@ -593,8 +592,7 @@ public class MainWindowTests
                 Assert.Equal(tableOrder, window.OutlinerOrder);
                 Assert.All(window.Graph.Curves, c => Assert.False(c.Visible));
                 window.SelectControllerInHierarchy("s1", "body");
-                Assert.True(window.Graph.Curves.Single(c => c.Curve == y).Visible); // 몸 Y(별칭 Track_Move_Y)
-                Assert.False(window.Graph.Curves.Single(c => c.Curve == x).Visible); // Track_Move_Y의 X는 몸의 성분이 아니다(별칭은 Y만)
+                Assert.All(window.Graph.Curves, c => Assert.True(c.Visible)); // 몸의 두 성분(좌우 · 상하)
                 window.SelectControllerInHierarchy("s1", "bow");
 
                 // 검색은 컨트롤러 이름·id·노드로 거른다.
@@ -654,7 +652,7 @@ public class MainWindowTests
             {
                 window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
-                var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
+                var y = new CurveRef("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y);
                 window.AddChannelFromForm(y.Node, y.Kind);
                 window.Session.Editor.SetKeys("nod", y.Node, y.Kind, y.Axis, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
                 MotionAsset Nod() => window.Session.Editor.Document.Find("nod")!;
@@ -912,8 +910,8 @@ public class MainWindowTests
                 window.ShowStageSkeleton = true; // 기본은 Scene › 무대 › 층만 — 이 테스트는 뼈대 전체
 
                 // 리그 노드는 연기/배치 폴더가 아니라 덤프의 parent 사슬이다. 오브젝트 항목이 곧 __root.
-                IReadOnlyList<string> path = window.HierarchyPathOf("s1", "CharacterPortrait_Track_Move_Y");
-                Assert.Equal(new[] { "Scene  scene  ·  PresentataionUIRoot", "StageViewportLayer", "StageShot_Root", "StagePan_Root  ·  pan 0,0", "StageZoom_Root  ·  zoom 0", "Stage00_Root", "Stage00Mask_Root", "Stage00DepthSystem_Root", "Stage00Depth_Mid_Root", "Stage00Depth_Mid_FramingTransform", "Stage00Depth_Mid_FramingScale", "Stage00Depth_Mid_Content", "s1  ·  character", "CharSlot_Track_Focus", "CharSlot_DepthY", "CharSlot_DepthScale", "CharSlot_Track_Idle", "CharSlot_Track", "CharSlot_Track_X", "CharSlot_Track_Y", "CharSlot_Rotation", "CharSlot_SwayPivot", "CharSlot_Scale", "CharacterPortrait_VisualOffset", "CharacterPortrait_Track", "CharacterPortrait_Rotation", "CharacterPortrait_Track_Move", "CharacterPortrait_Track_Move_X", "CharacterPortrait_Track_Move_Y" }, path);
+                IReadOnlyList<string> path = window.HierarchyPathOf("s1", "CharacterPortrait_Track_Move");
+                Assert.Equal(new[] { "Scene  scene  ·  PresentataionUIRoot", "StageViewportLayer", "StageShot_Root", "StagePan_Root  ·  pan 0,0", "StageZoom_Root  ·  zoom 0", "Stage00_Root", "Stage00Mask_Root", "Stage00DepthSystem_Root", "Stage00Depth_Mid_Root", "Stage00Depth_Mid_FramingTransform", "Stage00Depth_Mid_FramingScale", "Stage00Depth_Mid_Content", "s1  ·  character", "CharSlot_Track_Focus", "CharSlot_DepthY", "CharSlot_DepthScale", "CharSlot_Track_Idle", "CharSlot_Track", "CharSlot_Track_X", "CharSlot_Track_Y", "CharSlot_Rotation", "CharSlot_SwayPivot", "CharSlot_Scale", "CharacterPortrait_VisualOffset", "CharacterPortrait_Track", "CharacterPortrait_Rotation", "CharacterPortrait_Track_Move" }, path);
                 Assert.DoesNotContain("연기 축", window.HierarchyPathOf("s1", "CharacterPortrait_SwayPivot"));
 
                 // 노드 위에서 "만들기" = 그 오브젝트와 같은 무대·층(오브젝트끼리 부모·자식은 없다). 트리에서는 같은 Content 밑.
@@ -1042,7 +1040,7 @@ public class MainWindowTests
             {
                 window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
                 var editor = window.Session.Editor;
-                var y = new CurveRef("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
+                var y = new CurveRef("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y);
                 editor.AddChannel("nod", y.Node, y.Kind);
                 editor.SetKeys("nod", y.Node, y.Kind, y.Axis, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
                 float ValueAt1() => y.Resolve(editor.Document.Find("nod")!)!.Keys[1].V;

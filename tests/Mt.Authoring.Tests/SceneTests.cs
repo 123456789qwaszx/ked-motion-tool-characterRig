@@ -106,8 +106,8 @@ public class SceneTests
 
         RectNodeTree pose = ScenePreview.Pose(template, scene.Find("s2")!, nod, 0.3);
 
-        Assert.Equal(-18f, pose.GetState("s2/CharacterPortrait_Track_Move_Y").AnchoredPosition.Y, 3);
-        Assert.Equal(template.GetState("s1/CharacterPortrait_Track_Move_Y").AnchoredPosition.Y, pose.GetState("s1/CharacterPortrait_Track_Move_Y").AnchoredPosition.Y, 3);
+        Assert.Equal(-18f, pose.GetState("s2/CharacterPortrait_Track_Move").AnchoredPosition.Y, 3);
+        Assert.Equal(template.GetState("s1/CharacterPortrait_Track_Move").AnchoredPosition.Y, pose.GetState("s1/CharacterPortrait_Track_Move").AnchoredPosition.Y, 3);
 
         Assert.True(ScenePreview.CanWear(RigFile, scene.Find("s1")!, nod));
         Assert.False(ScenePreview.CanWear(RigFile, scene.Find("fx")!, nod)); // 화면 효과 리그에는 그 노드가 없다

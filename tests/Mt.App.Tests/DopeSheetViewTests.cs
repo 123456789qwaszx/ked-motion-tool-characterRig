@@ -11,7 +11,7 @@ namespace Mt.App.Tests;
 
 public class DopeSheetViewTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y);
 
     private static (Window Window, DopeSheetView View, MotionEditor Editor) Show()
     {

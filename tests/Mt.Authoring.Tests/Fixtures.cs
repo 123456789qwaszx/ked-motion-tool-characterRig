@@ -14,7 +14,7 @@ internal static class Fixtures
 
     /// <summary>
     /// 재생 저장소에서 Unity Animation 창으로 만들어 내보낸 그 두 모션을 편집기 명령으로 똑같이 짓는다.
-    /// nod: Track_Move_Y 위치, y 0 → -18 → 0 (restore 0.6s). bow: SwayPivot 회전, z 0 → 8 (commit 0.4s, 미리보기는 absolute).
+    /// nod: Track_Move 위치, y 0 → -18 → 0 (restore 0.6s). bow: SwayPivot 회전, z 0 → 8 (commit 0.4s, 미리보기는 absolute).
     /// bow의 x·y는 Unity가 세 성분을 묶어 기록해 상수 0으로 딸려 나온 것이고 파일에 그대로 남는다(motions/2는 mode를 몰라 빼지 않는다).
     /// </summary>
     public static MotionDocument NodBowDocument()
@@ -22,8 +22,8 @@ internal static class Fixtures
         var editor = new MotionEditor(new MotionDocument());
 
         editor.AddMotion("nod", "character", 0.6f, MotionEnd.Restore, MotionChannelMode.Relative);
-        editor.AddChannel("nod", "CharacterPortrait_Track_Move_Y", ChannelKind.Position);
-        editor.SetKeys("nod", "CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y, new[]
+        editor.AddChannel("nod", "CharacterPortrait_Track_Move", ChannelKind.Position);
+        editor.SetKeys("nod", "CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y, new[]
         {
             Key(0f, 0f), Key(0.3f, -18f), Key(0.6f, 0f),
         });

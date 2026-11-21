@@ -11,8 +11,8 @@ namespace Mt.Authoring.Tests;
 public class ClipPreviewTests
 {
     private const string Sway = "CharacterPortrait_SwayPivot";
-    private const string MoveY = "CharacterPortrait_Track_Move_Y";
-    private const string TrackX = "CharSlot_Track_X";
+    private const string MoveY = "CharacterPortrait_Track_Move";
+    private const string TrackX = "CharSlot_Track";
 
     private static readonly RigSchemaFile RigFile = RigSchemaFile.Load(Fixtures.PathOf("rig-schemas.json"));
 

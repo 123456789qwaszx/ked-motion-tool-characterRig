@@ -127,19 +127,19 @@ public class StageParityTests
         });
 
         editor.AddMotion("step", "character", 0.4f, MotionEnd.Commit);
-        editor.AddChannel("step", "CharSlot_Track_X", ChannelKind.Position);
-        editor.SetKeys("step", "CharSlot_Track_X", ChannelKind.Position, Axis.X, new[]
+        editor.AddChannel("step", "CharSlot_Track", ChannelKind.Position);
+        editor.SetKeys("step", "CharSlot_Track", ChannelKind.Position, Axis.X, new[]
         {
             Free(0f, 10f, 0f, 150f), Free(0.4f, 80f, 50f, 0f),
         });
 
         editor.AddMotion("grow", "character", 0.5f, MotionEnd.Commit);
-        editor.AddChannel("grow", "CharSlot_Scale", ChannelKind.Scale);
-        editor.SetKeys("grow", "CharSlot_Scale", ChannelKind.Scale, Axis.X, new[]
+        editor.AddChannel("grow", "CharacterPortrait_ActingScale", ChannelKind.Scale);
+        editor.SetKeys("grow", "CharacterPortrait_ActingScale", ChannelKind.Scale, Axis.X, new[]
         {
             Fixtures.Key(0f, 1f), Fixtures.Key(0.5f, 1.5f),
         });
-        editor.SetKeys("grow", "CharSlot_Scale", ChannelKind.Scale, Axis.Y, new[]
+        editor.SetKeys("grow", "CharacterPortrait_ActingScale", ChannelKind.Scale, Axis.Y, new[]
         {
             Fixtures.Key(0f, 1f), Fixtures.Key(0.25f, 0.9f), Fixtures.Key(0.5f, 1.2f),
         });

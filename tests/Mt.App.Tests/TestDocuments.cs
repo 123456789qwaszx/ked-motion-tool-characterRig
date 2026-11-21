@@ -8,13 +8,13 @@ internal static class TestDocuments
 {
     public static string FixturePath(string name) => Path.Combine(AppContext.BaseDirectory, "Fixtures", name);
 
-    /// <summary>재생 저장소의 nod(끄덕임): Track_Move_Y 위치 relative, y 0 → -18 → 0, restore 0.6s.</summary>
+    /// <summary>재생 저장소의 nod(끄덕임): Track_Move 위치 relative, y 0 → -18 → 0, restore 0.6s.</summary>
     public static MotionEditor Nod()
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("nod", "character", 0.6f, MotionEnd.Restore, MotionChannelMode.Relative);
-        editor.AddChannel("nod", "CharacterPortrait_Track_Move_Y", ChannelKind.Position);
-        editor.SetKeys("nod", "CharacterPortrait_Track_Move_Y", ChannelKind.Position, Axis.Y, new[]
+        editor.AddChannel("nod", "CharacterPortrait_Track_Move", ChannelKind.Position);
+        editor.SetKeys("nod", "CharacterPortrait_Track_Move", ChannelKind.Position, Axis.Y, new[]
         {
             Key(0f, 0f), Key(0.3f, -18f), Key(0.6f, 0f),
         });

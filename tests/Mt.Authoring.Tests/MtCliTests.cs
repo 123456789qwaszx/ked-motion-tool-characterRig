@@ -155,7 +155,7 @@ public class MtCliTests
         (int code, JsonNode? json, _, _) = Run("pose", document, "--motion", "nod", "--time", "0.3");
         Assert.Equal(0, code);
         Assert.Equal("s1", json!["object"]!.GetValue<string>());
-        Assert.Equal(-18.0, json["nodes"]!["CharacterPortrait_Track_Move_Y"]!["position"]![1]!.GetValue<double>(), 3);
+        Assert.Equal(-18.0, json["nodes"]!["CharacterPortrait_Track_Move"]!["position"]![1]!.GetValue<double>(), 3);
 
         // 재생 기준을 바꿔 읽는다: bow는 절대값 모션 — 끝에서 z = 8.
         (_, json, _, _) = Run("pose", document, "--motion", "bow", "--time", "9", "--mode", "relative", "--object", "s2");
@@ -167,7 +167,7 @@ public class MtCliTests
         (code, json, _, _) = Run("pose", document, "--clip", "greet", "--time", "0.8");
         Assert.Equal(0, code);
         Assert.Equal(8.0, json!["objects"]!["s1"]!["CharacterPortrait_SwayPivot"]!["euler"]![2]!.GetValue<double>(), 3);
-        Assert.Equal(-18.0, json["objects"]!["s2"]!["CharacterPortrait_Track_Move_Y"]!["position"]![1]!.GetValue<double>(), 3);
+        Assert.Equal(-18.0, json["objects"]!["s2"]!["CharacterPortrait_Track_Move"]!["position"]![1]!.GetValue<double>(), 3);
     }
 
     [Fact]
@@ -184,7 +184,7 @@ public class MtCliTests
         Assert.Null(MotionDocumentJson.Read(File.ReadAllText(document)).Find("greet_s2"));
         Assert.NotNull(MotionDocumentJson.Read(File.ReadAllText(target)).Find("greet_s2"));
         (_, json, _, _) = Run("pose", target, "--motion", "greet_s2", "--time", "0.8", "--object", "s2");
-        Assert.Equal(-18.0, json!["nodes"]!["CharacterPortrait_Track_Move_Y"]!["position"]![1]!.GetValue<double>(), 2);
+        Assert.Equal(-18.0, json!["nodes"]!["CharacterPortrait_Track_Move"]!["position"]![1]!.GetValue<double>(), 2);
         Assert.Equal(0, Run("validate", target).Code);
 
         // 이름이 겹치거나 구울 것이 없으면 1 — 문서는 안 바뀐다.
@@ -203,14 +203,14 @@ public class MtCliTests
         string path = Path.Combine(directory, "hand.motion-authoring.json");
         File.WriteAllText(path, """
             { "schema": "motion-authoring/3", "motions": [ { "name": "slide", "rig": "character", "duration": 1, "end": "commit",
-              "channels": [ { "node": "CharSlot_Track_X", "kind": "position",
+              "channels": [ { "node": "CharSlot_Track", "kind": "position",
                 "x": { "keys": [ { "t": 0, "v": 0, "tangent": "linear" }, { "t": 1, "v": 100, "tangent": "linear" } ] } } ] } ] }
             """);
 
         Assert.Equal(0, Run("validate", path).Code);
         (int code, JsonNode? json, _, _) = Run("pose", path, "--motion", "slide", "--time", "0.25");
         Assert.Equal(0, code);
-        Assert.Equal(25.0, json!["nodes"]!["CharSlot_Track_X"]!["position"]![0]!.GetValue<double>(), 2); // linear — 탄젠트 0이었다면 15.6쯤이 나온다
+        Assert.Equal(25.0, json!["nodes"]!["CharSlot_Track"]!["position"]![0]!.GetValue<double>(), 2); // linear — 탄젠트 0이었다면 15.6쯤이 나온다
 
         // 내보낸 파일에도 그 탄젠트 값이 실린다.
         string target = Path.Combine(directory, "motions.json");

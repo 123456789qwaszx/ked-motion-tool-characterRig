@@ -42,7 +42,7 @@
 | 단계 | 무엇 | 상태 |
 |---|---|---|
 | S1 | `stance` 컨트롤러와 씬의 배율을 걷는다 — 모델 · 편집 명령 · 직렬화 · 화면 · `mt` · 시험 · `AUTHORING-FILES.md` · 예시 | 끝 — Windows에서 기준선과 같다(Core 438 · App 144 · Authoring 332/334, §4의 둘만 실패). 예시 파일은 손으로 두 줄을 지웠다 — 빌더와 바이트가 같은지는 줄바꿈 실패에 가려 Windows에서 확인되지 않는다 |
-| S2 | 시험과 견본의 키를 남는 노드로 — `Track_Move_X` · `_Y` → `CharacterPortrait_Track_Move`의 x · y, `CharSlot_Track_X` · `_Y` → `CharSlot_Track`. `stage-parity` 견본을 다시 낸다 | 아직 |
+| S2 | 시험과 견본의 키를 남는 노드로 — `Track_Move_X` · `_Y` → `CharacterPortrait_Track_Move`의 x · y, `CharSlot_Track_X` · `_Y` → `CharSlot_Track`. `stage-parity` 견본을 다시 낸다 | 끝 — 기준선과 같다. `grow`는 `CharacterPortrait_ActingScale`로 옮겼다(값은 그대로, 노드 이름만). `nod` · `bow`는 런타임 `Assets/Dialogue/motions.json`의 것과 글자가 같다 |
 | S3 | 코어 전체 동기화 + 덤프 교체 + 소비자 적응 + 이름이 바뀐 노드 — 한 커밋(나누면 중간이 통과하지 않는다) | 아직 |
 | S4 | 문서 · `vendoring.md` · 그림 다시 뽑기 · 런타임에 넘길 견본(`motions.json` · `poses.json`) | 아직 |
 
