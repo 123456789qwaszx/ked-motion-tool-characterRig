@@ -92,6 +92,17 @@ public class LibraryTests
         Assert.True(rig["scale"]![1]!.GetValue<double>() > 0, rig.ToJsonString());
     }
 
+    [Fact]
+    public void 분함은_작은_김이_먼저_뜨고_생각은_거품_뒤에_구름이_뜬다()
+    {
+        // 원본(소유자 11-22): 분함은 김 둘 — 작은 김 a가 먼저, 큰 김 b가 2프레임 뒤. 생각은 거품 b1 → b2 → 구름.
+        Assert.True(EmojiRig("resentful", 1, "a")["alpha"]!.GetValue<double>() > 0.5);
+        Assert.Equal(0, EmojiRig("resentful", 1, "b")["alpha"]!.GetValue<double>(), 3);
+        Assert.True(EmojiRig("think", 2, "b1")["alpha"]!.GetValue<double>() > 0.5);
+        Assert.Equal(0, EmojiRig("think", 2, "cloud")["alpha"]!.GetValue<double>(), 3);
+        Assert.True(EmojiRig("think", 10, "cloud")["alpha"]!.GetValue<double>() > 0.9);
+    }
+
     private static double Pose(string motion, int frame, string axis)
     {
         string time = (frame / 30.0).ToString(System.Globalization.CultureInfo.InvariantCulture);
