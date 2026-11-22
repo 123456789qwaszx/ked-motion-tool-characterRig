@@ -81,6 +81,17 @@ public class LibraryTests
         Assert.Equal(0, at59["alpha"]!.GetValue<double>(), 3);
     }
 
+    [Theory]
+    [InlineData("talk")]
+    [InlineData("sigh")]
+    public void 반대쪽에_맞게_그려진_그림은_가로로_뒤집어_쓴다(string emoji)
+    {
+        // 원본에서 이 그림들은 PNG와 좌우가 반대로 섰다 — 그림의 가로 배율 키가 음수다(런타임 형식에 그림을 뒤집는 칸이 없다).
+        JsonNode rig = EmojiRig(emoji, 10, "a");
+        Assert.True(rig["scale"]![0]!.GetValue<double>() < 0, rig.ToJsonString());
+        Assert.True(rig["scale"]![1]!.GetValue<double>() > 0, rig.ToJsonString());
+    }
+
     private static double Pose(string motion, int frame, string axis)
     {
         string time = (frame / 30.0).ToString(System.Globalization.CultureInfo.InvariantCulture);

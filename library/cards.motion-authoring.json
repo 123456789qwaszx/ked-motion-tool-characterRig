@@ -497,7 +497,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.78, "tangent": "free", "inTangent": 8.07, "outTangent": 8.07 },
+                { "t": 0, "v": 0.78, "tangent": "free", "inTangent": 8.07, "outTangent": 8.07 },
                 { "t": 0.033333335, "v": 1.049, "tangent": "flat" },
                 { "t": 0.36666667, "v": 0.96, "tangent": "flat" },
                 { "t": 0.4, "v": 1, "tangent": "free", "inTangent": 1.2, "outTangent": 1.2 }
@@ -505,7 +505,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.78, "tangent": "free", "inTangent": 8.07, "outTangent": 8.07 },
+                { "t": 0, "v": 0.78, "tangent": "free", "inTangent": 8.07, "outTangent": 8.07 },
                 { "t": 0.033333335, "v": 1.049, "tangent": "flat" },
                 { "t": 0.36666667, "v": 0.96, "tangent": "flat" },
                 { "t": 0.4, "v": 1, "tangent": "free", "inTangent": 1.2, "outTangent": 1.2 }
@@ -517,7 +517,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.928, "tangent": "free", "inTangent": 2.16, "outTangent": 2.16 },
+                { "t": 0, "v": 0.928, "tangent": "free", "inTangent": 2.16, "outTangent": 2.16 },
                 { "t": 0.033333335, "v": 1, "tangent": "flat" },
                 { "t": 1.4, "v": 0.962, "tangent": "free", "inTangent": -0.054, "outTangent": -0.054 },
                 { "t": 1.4333333, "v": 0.909, "tangent": "flat" },
@@ -551,7 +551,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.854, "tangent": "free", "inTangent": 1.83, "outTangent": 1.83 },
+                { "t": 0, "v": 0.854, "tangent": "free", "inTangent": 1.83, "outTangent": 1.83 },
                 { "t": 0.033333335, "v": 0.915, "tangent": "free", "inTangent": 2.772, "outTangent": 2.772 },
                 { "t": 0.06666667, "v": 1.105, "tangent": "free", "inTangent": 1.242, "outTangent": 1.242 },
                 { "t": 0.2, "v": 1.198, "tangent": "flat" },
@@ -560,7 +560,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.854, "tangent": "free", "inTangent": 1.83, "outTangent": 1.83 },
+                { "t": 0, "v": 0.854, "tangent": "free", "inTangent": 1.83, "outTangent": 1.83 },
                 { "t": 0.033333335, "v": 0.915, "tangent": "free", "inTangent": 2.772, "outTangent": 2.772 },
                 { "t": 0.06666667, "v": 1.105, "tangent": "free", "inTangent": 1.242, "outTangent": 1.242 },
                 { "t": 0.2, "v": 1.198, "tangent": "flat" },
@@ -573,7 +573,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.569, "tangent": "free", "inTangent": 1.275, "outTangent": 1.275 },
+                { "t": 0, "v": 0.569, "tangent": "free", "inTangent": 1.275, "outTangent": 1.275 },
                 { "t": 0.06666667, "v": 0.654, "tangent": "free", "inTangent": 1.854, "outTangent": 1.854 },
                 { "t": 0.13333334, "v": 0.88, "tangent": "free", "inTangent": 0.894, "outTangent": 0.894 },
                 { "t": 0.36666667, "v": 1, "tangent": "flat" },
@@ -590,7 +590,7 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": -60.909, "tangent": "flat" },
+                { "t": 0, "v": -60.909, "tangent": "flat" },
                 { "t": 0.033333335, "v": -60.909, "tangent": "flat" },
                 { "t": 0.06666667, "v": -29.091, "tangent": "free", "inTangent": 404.178, "outTangent": 404.178 },
                 { "t": 0.13333334, "v": -12, "tangent": "flat" },
@@ -600,7 +600,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": -45.727, "tangent": "free", "inTangent": 113.181, "outTangent": 113.181 },
+                { "t": 0, "v": -45.727, "tangent": "free", "inTangent": 113.181, "outTangent": 113.181 },
                 { "t": 0.06666667, "v": -38.182, "tangent": "free", "inTangent": 165.165, "outTangent": 165.165 },
                 { "t": 0.16666667, "v": -7.636, "tangent": "free", "inTangent": 10.719, "outTangent": 10.719 },
                 { "t": 0.33333334, "v": -6.727, "tangent": "free", "inTangent": 8.238, "outTangent": 8.238 },
@@ -633,14 +633,14 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.449, "tangent": "free", "inTangent": 12.57, "outTangent": 12.57 },
+                { "t": 0, "v": 0.449, "tangent": "free", "inTangent": 12.57, "outTangent": 12.57 },
                 { "t": 0.033333335, "v": 0.868, "tangent": "free", "inTangent": 6.024, "outTangent": 6.024 },
                 { "t": 0.06666667, "v": 1, "tangent": "free", "inTangent": 3.96, "outTangent": 3.96 }
               ]
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.449, "tangent": "free", "inTangent": 12.57, "outTangent": 12.57 },
+                { "t": 0, "v": 0.449, "tangent": "free", "inTangent": 12.57, "outTangent": 12.57 },
                 { "t": 0.033333335, "v": 0.868, "tangent": "free", "inTangent": 6.024, "outTangent": 6.024 },
                 { "t": 0.06666667, "v": 1, "tangent": "free", "inTangent": 3.96, "outTangent": 3.96 }
               ]
@@ -651,7 +651,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.498, "tangent": "free", "inTangent": 3.765, "outTangent": 3.765 },
+                { "t": 0, "v": 0.498, "tangent": "free", "inTangent": 3.765, "outTangent": 3.765 },
                 { "t": 0.13333334, "v": 1, "tangent": "flat" },
                 { "t": 0.5, "v": 0.99, "tangent": "free", "inTangent": -0.054, "outTangent": -0.054 },
                 { "t": 0.53333336, "v": 0.871, "tangent": "free", "inTangent": -3.492, "outTangent": -3.492 },
@@ -666,7 +666,7 @@
             "kind": "position",
             "y": {
               "keys": [
-                { "t": 0.0, "v": -16.72, "tangent": "free", "inTangent": 204.456, "outTangent": 204.456 },
+                { "t": 0, "v": -16.72, "tangent": "free", "inTangent": 204.456, "outTangent": 204.456 },
                 { "t": 0.1, "v": 3.726, "tangent": "flat" },
                 { "t": 0.16666667, "v": 0, "tangent": "free", "inTangent": -55.884, "outTangent": -55.884 }
               ]
@@ -697,7 +697,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.679, "tangent": "free", "inTangent": 11.49, "outTangent": 11.49 },
+                { "t": 0, "v": 0.679, "tangent": "free", "inTangent": 11.49, "outTangent": 11.49 },
                 { "t": 0.033333335, "v": 1.062, "tangent": "free", "inTangent": 7.035, "outTangent": 7.035 },
                 { "t": 0.06666667, "v": 1.231, "tangent": "free", "inTangent": 1.959, "outTangent": 1.959 },
                 { "t": 0.13333334, "v": 1.312, "tangent": "flat" },
@@ -707,7 +707,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.679, "tangent": "free", "inTangent": 11.49, "outTangent": 11.49 },
+                { "t": 0, "v": 0.679, "tangent": "free", "inTangent": 11.49, "outTangent": 11.49 },
                 { "t": 0.033333335, "v": 1.062, "tangent": "free", "inTangent": 7.035, "outTangent": 7.035 },
                 { "t": 0.06666667, "v": 1.231, "tangent": "free", "inTangent": 1.959, "outTangent": 1.959 },
                 { "t": 0.13333334, "v": 1.312, "tangent": "flat" },
@@ -721,7 +721,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.655, "tangent": "free", "inTangent": 10.35, "outTangent": 10.35 },
+                { "t": 0, "v": 0.655, "tangent": "free", "inTangent": 10.35, "outTangent": 10.35 },
                 { "t": 0.033333335, "v": 1, "tangent": "flat" },
                 { "t": 0.5, "v": 0.98, "tangent": "free", "inTangent": -0.084, "outTangent": -0.084 },
                 { "t": 0.53333336, "v": 0.847, "tangent": "free", "inTangent": -4.161, "outTangent": -4.161 },
@@ -736,7 +736,7 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": -16.886, "tangent": "free", "inTangent": 312.351, "outTangent": 312.351 },
+                { "t": 0, "v": -16.886, "tangent": "free", "inTangent": 312.351, "outTangent": 312.351 },
                 { "t": 0.06666667, "v": 3.937, "tangent": "free", "inTangent": 148.167, "outTangent": 148.167 },
                 { "t": 0.1, "v": 7.174, "tangent": "flat" },
                 { "t": 0.2, "v": 0, "tangent": "free", "inTangent": -71.745, "outTangent": -71.745 }
@@ -744,7 +744,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": -12.687, "tangent": "free", "inTangent": 574.83, "outTangent": 574.83 },
+                { "t": 0, "v": -12.687, "tangent": "free", "inTangent": 574.83, "outTangent": 574.83 },
                 { "t": 0.033333335, "v": 6.474, "tangent": "free", "inTangent": 230.772, "outTangent": 230.772 },
                 { "t": 0.1, "v": 16.099, "tangent": "flat" },
                 { "t": 0.13333334, "v": 16.099, "tangent": "flat" },
@@ -794,7 +794,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -804,7 +804,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -818,7 +818,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
                 { "t": 0.033333335, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
                 { "t": 0.13333334, "v": 1, "tangent": "flat" },
                 { "t": 1.9, "v": 0.991, "tangent": "free", "inTangent": -0.009, "outTangent": -0.009 },
@@ -834,7 +834,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0, "v": 0.581, "tangent": "step" },
                 { "t": 0.33333334, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.36666667, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.4, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
@@ -845,7 +845,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0, "v": 0.581, "tangent": "step" },
                 { "t": 0.33333334, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.36666667, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.4, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
@@ -860,7 +860,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0, "v": 0, "tangent": "step" },
                 { "t": 0.33333334, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
                 { "t": 0.36666667, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
                 { "t": 0.46666667, "v": 1, "tangent": "flat" },
@@ -877,7 +877,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0, "v": 0.581, "tangent": "step" },
                 { "t": 0.6666667, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.7, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.73333335, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
@@ -888,7 +888,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0, "v": 0.581, "tangent": "step" },
                 { "t": 0.6666667, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.7, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.73333335, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
@@ -903,7 +903,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0, "v": 0, "tangent": "step" },
                 { "t": 0.6666667, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
                 { "t": 0.7, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
                 { "t": 0.8, "v": 1, "tangent": "flat" },
@@ -928,24 +928,21 @@
           "images": [ "art/o_flurry_1.png" ],
           "placeX": 0,
           "placeY": 0,
-          "scale": 0.752,
-          "upright": true
+          "scale": 0.752
         },
         {
           "name": "d2",
           "images": [ "art/o_flurry_2.png" ],
           "placeX": 0,
           "placeY": 0,
-          "scale": 0.752,
-          "upright": true
+          "scale": 0.752
         },
         {
           "name": "d3",
           "images": [ "art/o_flurry_3.png" ],
           "placeX": 0,
           "placeY": 0,
-          "scale": 0.752,
-          "upright": true
+          "scale": 0.752
         }
       ],
       "timeline": {
@@ -956,7 +953,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.5, "tangent": "free", "inTangent": 15, "outTangent": 15 },
+                { "t": 0, "v": 0.5, "tangent": "free", "inTangent": 15, "outTangent": 15 },
                 { "t": 0.033333335, "v": 1, "tangent": "flat" },
                 { "t": 0.2, "v": 1, "tangent": "flat" },
                 { "t": 0.23333333, "v": 0, "tangent": "free", "inTangent": -30, "outTangent": -30 }
@@ -968,13 +965,13 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": -36.104, "tangent": "free", "inTangent": 222.426, "outTangent": 222.426 },
+                { "t": 0, "v": -36.104, "tangent": "free", "inTangent": 222.426, "outTangent": 222.426 },
                 { "t": 0.23333333, "v": 15.795, "tangent": "free", "inTangent": 222.426, "outTangent": 222.426 }
               ]
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 41.369, "tangent": "free", "inTangent": 16.119, "outTangent": 16.119 },
+                { "t": 0, "v": 41.369, "tangent": "free", "inTangent": 16.119, "outTangent": 16.119 },
                 { "t": 0.23333333, "v": 45.13, "tangent": "free", "inTangent": 16.119, "outTangent": 16.119 }
               ]
             }
@@ -984,7 +981,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0, "v": 0, "tangent": "step" },
                 { "t": 0.06666667, "v": 0.5, "tangent": "free", "inTangent": 15, "outTangent": 15 },
                 { "t": 0.1, "v": 1, "tangent": "flat" },
                 { "t": 0.3, "v": 1, "tangent": "flat" },
@@ -997,14 +994,14 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0, "v": 0, "tangent": "step" },
                 { "t": 0.06666667, "v": 0, "tangent": "free", "inTangent": 129.747, "outTangent": 129.747 },
                 { "t": 0.33333334, "v": 34.6, "tangent": "free", "inTangent": 129.747, "outTangent": 129.747 }
               ]
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0, "v": 0, "tangent": "step" },
                 { "t": 0.06666667, "v": 0, "tangent": "free", "inTangent": -39.489, "outTangent": -39.489 },
                 { "t": 0.33333334, "v": -10.53, "tangent": "free", "inTangent": -39.489, "outTangent": -39.489 }
               ]
@@ -1015,7 +1012,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0, "v": 0, "tangent": "step" },
                 { "t": 0.16666667, "v": 0.5, "tangent": "free", "inTangent": 15, "outTangent": 15 },
                 { "t": 0.2, "v": 1, "tangent": "flat" },
                 { "t": 0.4, "v": 1, "tangent": "flat" },
@@ -1028,16 +1025,43 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": -23.317, "tangent": "step" },
+                { "t": 0, "v": -23.317, "tangent": "step" },
                 { "t": 0.16666667, "v": -23.317, "tangent": "free", "inTangent": 135.39, "outTangent": 135.39 },
                 { "t": 0.43333334, "v": 12.787, "tangent": "free", "inTangent": 135.39, "outTangent": 135.39 }
               ]
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": -25.574, "tangent": "step" },
+                { "t": 0, "v": -25.574, "tangent": "step" },
                 { "t": 0.16666667, "v": -25.574, "tangent": "free", "inTangent": -84.618, "outTangent": -84.618 },
                 { "t": 0.43333334, "v": -48.138, "tangent": "free", "inTangent": -84.618, "outTangent": -84.618 }
+              ]
+            }
+          },
+          {
+            "node": "d1/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0, "v": -1, "tangent": "flat" }
+              ]
+            }
+          },
+          {
+            "node": "d2/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0, "v": -1, "tangent": "flat" }
+              ]
+            }
+          },
+          {
+            "node": "d3/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0, "v": -1, "tangent": "flat" }
               ]
             }
           }
@@ -1045,7 +1069,7 @@
       }
     },
     {
-      "name": "happy",
+      "name": "talk",
       "offsetX": 119,
       "offsetY": -108,
       "rigs": [
@@ -1055,7 +1079,7 @@
           "placeX": 0,
           "placeY": 0,
           "scale": 0.526,
-          "upright": true
+          "rotation": 44
         }
       ],
       "timeline": {
@@ -1066,17 +1090,17 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
-                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
-                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
-                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
-                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
-                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+                { "t": 0, "v": -0.581, "tangent": "free", "inTangent": -7.965, "outTangent": -7.965 },
+                { "t": 0.033333335, "v": -0.846, "tangent": "free", "inTangent": -6.318, "outTangent": -6.318 },
+                { "t": 0.06666667, "v": -1.02, "tangent": "free", "inTangent": -2.118, "outTangent": -2.118 },
+                { "t": 0.13333334, "v": -1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": -1.101, "tangent": "free", "inTangent": 0.444, "outTangent": 0.444 },
+                { "t": 0.2, "v": -1, "tangent": "free", "inTangent": 3.03, "outTangent": 3.03 }
               ]
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -1090,7 +1114,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.498, "tangent": "free", "inTangent": 5.58, "outTangent": 5.58 },
+                { "t": 0, "v": 0.498, "tangent": "free", "inTangent": 5.58, "outTangent": 5.58 },
                 { "t": 0.033333335, "v": 0.684, "tangent": "free", "inTangent": 4.035, "outTangent": 4.035 },
                 { "t": 0.13333334, "v": 1, "tangent": "flat" },
                 { "t": 0.5, "v": 0.996, "tangent": "free", "inTangent": -0.021, "outTangent": -0.021 },
@@ -1106,7 +1130,7 @@
             "kind": "position",
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.457, "tangent": "free", "inTangent": -95.928, "outTangent": -95.928 },
+                { "t": 0, "v": 0.457, "tangent": "free", "inTangent": -95.928, "outTangent": -95.928 },
                 { "t": 0.13333334, "v": -12.333, "tangent": "flat" },
                 { "t": 0.2, "v": -8.862, "tangent": "free", "inTangent": 73.47, "outTangent": 73.47 },
                 { "t": 0.33333334, "v": 7.766, "tangent": "flat" },
@@ -1141,7 +1165,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.399, "tangent": "free", "inTangent": 12.75, "outTangent": 12.75 },
+                { "t": 0, "v": 0.399, "tangent": "free", "inTangent": 12.75, "outTangent": 12.75 },
                 { "t": 0.033333335, "v": 0.824, "tangent": "free", "inTangent": 8.802, "outTangent": 8.802 },
                 { "t": 0.06666667, "v": 1.048, "tangent": "free", "inTangent": 0.912, "outTangent": 0.912 },
                 { "t": 0.16666667, "v": 1.097, "tangent": "flat" },
@@ -1150,7 +1174,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.399, "tangent": "free", "inTangent": 12.75, "outTangent": 12.75 },
+                { "t": 0, "v": 0.399, "tangent": "free", "inTangent": 12.75, "outTangent": 12.75 },
                 { "t": 0.033333335, "v": 0.824, "tangent": "free", "inTangent": 8.802, "outTangent": 8.802 },
                 { "t": 0.06666667, "v": 1.048, "tangent": "free", "inTangent": 0.912, "outTangent": 0.912 },
                 { "t": 0.16666667, "v": 1.097, "tangent": "flat" },
@@ -1163,7 +1187,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.479, "tangent": "flat" },
+                { "t": 0, "v": 0.479, "tangent": "flat" },
                 { "t": 0.033333335, "v": 0.479, "tangent": "flat" },
                 { "t": 0.16666667, "v": 1, "tangent": "free", "inTangent": 3.909, "outTangent": 3.909 }
               ]
@@ -1174,14 +1198,14 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": -21.169, "tangent": "free", "inTangent": 416.436, "outTangent": 416.436 },
+                { "t": 0, "v": -21.169, "tangent": "free", "inTangent": 416.436, "outTangent": 416.436 },
                 { "t": 0.033333335, "v": -7.288, "tangent": "free", "inTangent": 173.172, "outTangent": 173.172 },
                 { "t": 0.1, "v": 0, "tangent": "free", "inTangent": 109.314, "outTangent": 109.314 }
               ]
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": -11.018, "tangent": "free", "inTangent": 123.63, "outTangent": 123.63 },
+                { "t": 0, "v": -11.018, "tangent": "free", "inTangent": 123.63, "outTangent": 123.63 },
                 { "t": 0.13333334, "v": 5.466, "tangent": "flat" },
                 { "t": 0.23333333, "v": 0, "tangent": "free", "inTangent": -54.657, "outTangent": -54.657 }
               ]
@@ -1212,7 +1236,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -1222,7 +1246,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -1236,7 +1260,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.533, "tangent": "free", "inTangent": 7.41, "outTangent": 7.41 },
+                { "t": 0, "v": 0.533, "tangent": "free", "inTangent": 7.41, "outTangent": 7.41 },
                 { "t": 0.033333335, "v": 0.78, "tangent": "free", "inTangent": 2.7, "outTangent": 2.7 },
                 { "t": 0.16666667, "v": 1, "tangent": "flat" },
                 { "t": 0.46666667, "v": 1, "tangent": "flat" },
@@ -1250,7 +1274,7 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": -119.966, "tangent": "free", "inTangent": 194.619, "outTangent": 194.619 },
+                { "t": 0, "v": -119.966, "tangent": "free", "inTangent": 194.619, "outTangent": 194.619 },
                 { "t": 0.06666667, "v": -106.992, "tangent": "free", "inTangent": 286.563, "outTangent": 286.563 },
                 { "t": 0.1, "v": -88.885, "tangent": "free", "inTangent": 359.535, "outTangent": 359.535 },
                 { "t": 0.16666667, "v": -70.973, "tangent": "free", "inTangent": 393.924, "outTangent": 393.924 },
@@ -1263,7 +1287,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": -65.841, "tangent": "free", "inTangent": 373.26, "outTangent": 373.26 },
+                { "t": 0, "v": -65.841, "tangent": "free", "inTangent": 373.26, "outTangent": 373.26 },
                 { "t": 0.06666667, "v": -40.957, "tangent": "free", "inTangent": 451.812, "outTangent": 451.812 },
                 { "t": 0.1, "v": -21.882, "tangent": "free", "inTangent": 229.203, "outTangent": 229.203 },
                 { "t": 0.2, "v": -7.552, "tangent": "free", "inTangent": 110.598, "outTangent": 110.598 },
@@ -1297,7 +1321,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -1307,7 +1331,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -1321,7 +1345,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.523, "tangent": "free", "inTangent": 1.56, "outTangent": 1.56 },
+                { "t": 0, "v": 0.523, "tangent": "free", "inTangent": 1.56, "outTangent": 1.56 },
                 { "t": 0.033333335, "v": 0.575, "tangent": "free", "inTangent": 2.442, "outTangent": 2.442 },
                 { "t": 0.1, "v": 0.949, "tangent": "free", "inTangent": 2.403, "outTangent": 2.403 },
                 { "t": 0.13333334, "v": 1, "tangent": "flat" },
@@ -1336,7 +1360,7 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": -120.788, "tangent": "free", "inTangent": 331.425, "outTangent": 331.425 },
+                { "t": 0, "v": -120.788, "tangent": "free", "inTangent": 331.425, "outTangent": 331.425 },
                 { "t": 0.33333334, "v": -10.313, "tangent": "free", "inTangent": 382.071, "outTangent": 382.071 },
                 { "t": 0.36666667, "v": 4.72, "tangent": "free", "inTangent": 282.657, "outTangent": 282.657 },
                 { "t": 0.5, "v": 32.164, "tangent": "free", "inTangent": 141.804, "outTangent": 141.804 },
@@ -1345,7 +1369,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": -12.061, "tangent": "free", "inTangent": -31.464, "outTangent": -31.464 },
+                { "t": 0, "v": -12.061, "tangent": "free", "inTangent": -31.464, "outTangent": -31.464 },
                 { "t": 0.06666667, "v": -14.159, "tangent": "flat" },
                 { "t": 0.13333334, "v": -2.36, "tangent": "free", "inTangent": 77.751, "outTangent": 77.751 },
                 { "t": 0.2, "v": 0.961, "tangent": "flat" },
@@ -1380,7 +1404,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.336, "tangent": "free", "inTangent": 5.31, "outTangent": 5.31 },
+                { "t": 0, "v": 0.336, "tangent": "free", "inTangent": 5.31, "outTangent": 5.31 },
                 { "t": 0.033333335, "v": 0.513, "tangent": "free", "inTangent": 6.036, "outTangent": 6.036 },
                 { "t": 0.1, "v": 0.979, "tangent": "free", "inTangent": 4.725, "outTangent": 4.725 },
                 { "t": 0.16666667, "v": 1.217, "tangent": "flat" },
@@ -1390,7 +1414,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.336, "tangent": "free", "inTangent": 5.31, "outTangent": 5.31 },
+                { "t": 0, "v": 0.336, "tangent": "free", "inTangent": 5.31, "outTangent": 5.31 },
                 { "t": 0.033333335, "v": 0.513, "tangent": "free", "inTangent": 6.036, "outTangent": 6.036 },
                 { "t": 0.1, "v": 0.979, "tangent": "free", "inTangent": 4.725, "outTangent": 4.725 },
                 { "t": 0.16666667, "v": 1.217, "tangent": "flat" },
@@ -1404,7 +1428,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.384, "tangent": "free", "inTangent": 11.4, "outTangent": 11.4 },
+                { "t": 0, "v": 0.384, "tangent": "free", "inTangent": 11.4, "outTangent": 11.4 },
                 { "t": 0.033333335, "v": 0.764, "tangent": "free", "inTangent": 7.41, "outTangent": 7.41 },
                 { "t": 0.06666667, "v": 0.947, "tangent": "free", "inTangent": 2.466, "outTangent": 2.466 },
                 { "t": 0.1, "v": 1, "tangent": "flat" },
@@ -1422,7 +1446,7 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": -28.414, "tangent": "free", "inTangent": 147.537, "outTangent": 147.537 },
+                { "t": 0, "v": -28.414, "tangent": "free", "inTangent": 147.537, "outTangent": 147.537 },
                 { "t": 0.033333335, "v": -23.496, "tangent": "free", "inTangent": 203.499, "outTangent": 203.499 },
                 { "t": 0.06666667, "v": -12.568, "tangent": "free", "inTangent": 367.488, "outTangent": 367.488 },
                 { "t": 0.13333334, "v": 15.3, "tangent": "free", "inTangent": 199.65, "outTangent": 199.65 },
@@ -1433,7 +1457,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": -45.445, "tangent": "free", "inTangent": 349.716, "outTangent": 349.716 },
+                { "t": 0, "v": -45.445, "tangent": "free", "inTangent": 349.716, "outTangent": 349.716 },
                 { "t": 0.13333334, "v": 1.184, "tangent": "free", "inTangent": 106.536, "outTangent": 106.536 },
                 { "t": 0.2, "v": 5.373, "tangent": "flat" },
                 { "t": 0.23333333, "v": 0, "tangent": "free", "inTangent": -161.196, "outTangent": -161.196 }
@@ -1453,8 +1477,7 @@
           "images": [ "art/o_resentful.png" ],
           "placeX": 0,
           "placeY": 0,
-          "scale": 0.679,
-          "upright": true
+          "scale": 0.679
         }
       ],
       "timeline": {
@@ -1465,7 +1488,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.331, "tangent": "free", "inTangent": 6.435, "outTangent": 6.435 },
+                { "t": 0, "v": 0.331, "tangent": "free", "inTangent": 6.435, "outTangent": 6.435 },
                 { "t": 0.06666667, "v": 0.76, "tangent": "free", "inTangent": 3.465, "outTangent": 3.465 },
                 { "t": 0.13333334, "v": 0.918, "tangent": "flat" },
                 { "t": 0.2, "v": 0.879, "tangent": "flat" },
@@ -1476,7 +1499,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.331, "tangent": "free", "inTangent": 6.435, "outTangent": 6.435 },
+                { "t": 0, "v": 0.331, "tangent": "free", "inTangent": 6.435, "outTangent": 6.435 },
                 { "t": 0.06666667, "v": 0.76, "tangent": "free", "inTangent": 3.465, "outTangent": 3.465 },
                 { "t": 0.13333334, "v": 0.918, "tangent": "flat" },
                 { "t": 0.2, "v": 0.879, "tangent": "flat" },
@@ -1491,7 +1514,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.881, "tangent": "free", "inTangent": 3.57, "outTangent": 3.57 },
+                { "t": 0, "v": 0.881, "tangent": "free", "inTangent": 3.57, "outTangent": 3.57 },
                 { "t": 0.033333335, "v": 1, "tangent": "flat" },
                 { "t": 0.76666665, "v": 1, "tangent": "flat" },
                 { "t": 0.8, "v": 0.925, "tangent": "free", "inTangent": -2.559, "outTangent": -2.559 },
@@ -1507,7 +1530,7 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": -88.876, "tangent": "free", "inTangent": 257.688, "outTangent": 257.688 },
+                { "t": 0, "v": -88.876, "tangent": "free", "inTangent": 257.688, "outTangent": 257.688 },
                 { "t": 0.06666667, "v": -71.697, "tangent": "free", "inTangent": 348.504, "outTangent": 348.504 },
                 { "t": 0.16666667, "v": -17.88, "tangent": "free", "inTangent": 268.425, "outTangent": 268.425 },
                 { "t": 0.26666668, "v": 0, "tangent": "free", "inTangent": 178.803, "outTangent": 178.803 }
@@ -1515,7 +1538,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": -31.378, "tangent": "free", "inTangent": 61.794, "outTangent": 61.794 },
+                { "t": 0, "v": -31.378, "tangent": "free", "inTangent": 61.794, "outTangent": 61.794 },
                 { "t": 0.2, "v": -19.02, "tangent": "free", "inTangent": 101.583, "outTangent": 101.583 },
                 { "t": 0.26666668, "v": 0, "tangent": "free", "inTangent": 285.297, "outTangent": 285.297 }
               ]
@@ -1546,7 +1569,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.52, "tangent": "free", "inTangent": 7.32, "outTangent": 7.32 },
+                { "t": 0, "v": 0.52, "tangent": "free", "inTangent": 7.32, "outTangent": 7.32 },
                 { "t": 0.033333335, "v": 0.764, "tangent": "free", "inTangent": 8.133, "outTangent": 8.133 },
                 { "t": 0.06666667, "v": 1.069, "tangent": "free", "inTangent": 7.668, "outTangent": 7.668 },
                 { "t": 0.1, "v": 1.289, "tangent": "flat" },
@@ -1556,7 +1579,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.52, "tangent": "free", "inTangent": 7.32, "outTangent": 7.32 },
+                { "t": 0, "v": 0.52, "tangent": "free", "inTangent": 7.32, "outTangent": 7.32 },
                 { "t": 0.033333335, "v": 0.764, "tangent": "free", "inTangent": 8.133, "outTangent": 8.133 },
                 { "t": 0.06666667, "v": 1.069, "tangent": "free", "inTangent": 7.668, "outTangent": 7.668 },
                 { "t": 0.1, "v": 1.289, "tangent": "flat" },
@@ -1570,7 +1593,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.56, "tangent": "free", "inTangent": 9.78, "outTangent": 9.78 },
+                { "t": 0, "v": 0.56, "tangent": "free", "inTangent": 9.78, "outTangent": 9.78 },
                 { "t": 0.033333335, "v": 0.886, "tangent": "free", "inTangent": 5.067, "outTangent": 5.067 },
                 { "t": 0.06666667, "v": 1, "tangent": "flat" },
                 { "t": 1.0666667, "v": 0.9, "tangent": "free", "inTangent": -0.189, "outTangent": -0.189 },
@@ -1587,7 +1610,7 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": -41.265, "tangent": "free", "inTangent": 678, "outTangent": 678 },
+                { "t": 0, "v": -41.265, "tangent": "free", "inTangent": 678, "outTangent": 678 },
                 { "t": 0.06666667, "v": 3.935, "tangent": "free", "inTangent": 148.674, "outTangent": 148.674 },
                 { "t": 0.13333334, "v": 9.501, "tangent": "flat" },
                 { "t": 0.16666667, "v": 0, "tangent": "free", "inTangent": -285.018, "outTangent": -285.018 }
@@ -1595,7 +1618,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": -35.22, "tangent": "free", "inTangent": 590.19, "outTangent": 590.19 },
+                { "t": 0, "v": -35.22, "tangent": "free", "inTangent": 590.19, "outTangent": 590.19 },
                 { "t": 0.06666667, "v": 4.127, "tangent": "free", "inTangent": 97.704, "outTangent": 97.704 },
                 { "t": 0.13333334, "v": 7.677, "tangent": "flat" },
                 { "t": 0.16666667, "v": 0, "tangent": "free", "inTangent": -230.319, "outTangent": -230.319 }
@@ -1651,7 +1674,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -1661,7 +1684,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -1675,7 +1698,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
                 { "t": 0.033333335, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
                 { "t": 0.13333334, "v": 1, "tangent": "flat" },
                 { "t": 1.2, "v": 0.991, "tangent": "free", "inTangent": -0.018, "outTangent": -0.018 },
@@ -1699,8 +1722,7 @@
           "images": [ "art/o_sigh_1.png" ],
           "placeX": 0,
           "placeY": 0,
-          "scale": 0.579,
-          "upright": true
+          "scale": 0.579
         }
       ],
       "timeline": {
@@ -1711,17 +1733,17 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
-                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
-                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
-                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
-                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
-                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+                { "t": 0, "v": -0.581, "tangent": "free", "inTangent": -7.965, "outTangent": -7.965 },
+                { "t": 0.033333335, "v": -0.846, "tangent": "free", "inTangent": -6.318, "outTangent": -6.318 },
+                { "t": 0.06666667, "v": -1.02, "tangent": "free", "inTangent": -2.118, "outTangent": -2.118 },
+                { "t": 0.13333334, "v": -1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": -1.101, "tangent": "free", "inTangent": 0.444, "outTangent": 0.444 },
+                { "t": 0.2, "v": -1, "tangent": "free", "inTangent": 3.03, "outTangent": 3.03 }
               ]
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -1735,7 +1757,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.52, "tangent": "free", "inTangent": 0.435, "outTangent": 0.435 },
+                { "t": 0, "v": 0.52, "tangent": "free", "inTangent": 0.435, "outTangent": 0.435 },
                 { "t": 0.06666667, "v": 0.549, "tangent": "free", "inTangent": 0.693, "outTangent": 0.693 },
                 { "t": 0.33333334, "v": 1, "tangent": "flat" },
                 { "t": 0.6666667, "v": 0.979, "tangent": "free", "inTangent": -0.126, "outTangent": -0.126 },
@@ -1749,7 +1771,7 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": -50.141, "tangent": "free", "inTangent": 192.795, "outTangent": 192.795 },
+                { "t": 0, "v": -50.141, "tangent": "free", "inTangent": 192.795, "outTangent": 192.795 },
                 { "t": 0.13333334, "v": -24.434, "tangent": "free", "inTangent": 136.113, "outTangent": 136.113 },
                 { "t": 0.3, "v": -6.903, "tangent": "free", "inTangent": 55.083, "outTangent": 55.083 },
                 { "t": 0.73333335, "v": 9.265, "tangent": "free", "inTangent": 37.311, "outTangent": 37.311 }
@@ -1757,7 +1779,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 18.349, "tangent": "free", "inTangent": -79.026, "outTangent": -79.026 },
+                { "t": 0, "v": 18.349, "tangent": "free", "inTangent": -79.026, "outTangent": -79.026 },
                 { "t": 0.13333334, "v": 7.812, "tangent": "free", "inTangent": -46.803, "outTangent": -46.803 },
                 { "t": 0.3, "v": 2.271, "tangent": "free", "inTangent": -17.58, "outTangent": -17.58 },
                 { "t": 0.73333335, "v": -2.907, "tangent": "free", "inTangent": -11.949, "outTangent": -11.949 }
@@ -1797,7 +1819,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0, "tangent": "free", "inTangent": 9.999, "outTangent": 9.999 },
+                { "t": 0, "v": 0, "tangent": "free", "inTangent": 9.999, "outTangent": 9.999 },
                 { "t": 0.1, "v": 1, "tangent": "flat" },
                 { "t": 1.5, "v": 1, "tangent": "flat" },
                 { "t": 1.7, "v": 0, "tangent": "free", "inTangent": -5.001, "outTangent": 0, "broken": true },
@@ -1817,7 +1839,7 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": -1.78, "tangent": "free", "inTangent": 36.702, "outTangent": 36.702 },
+                { "t": 0, "v": -1.78, "tangent": "free", "inTangent": 36.702, "outTangent": 36.702 },
                 { "t": 0.3, "v": 9.231, "tangent": "free", "inTangent": 15.729, "outTangent": 15.729 },
                 { "t": 0.5, "v": 11.233, "tangent": "flat" },
                 { "t": 0.7, "v": 0.222, "tangent": "free", "inTangent": -69.735, "outTangent": -69.735 },
@@ -1843,7 +1865,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": -62.616, "tangent": "free", "inTangent": 63.396, "outTangent": 63.396 },
+                { "t": 0, "v": -62.616, "tangent": "free", "inTangent": 63.396, "outTangent": 63.396 },
                 { "t": 0.3, "v": -43.598, "tangent": "free", "inTangent": 58.929, "outTangent": 58.929 },
                 { "t": 0.5, "v": -32.587, "tangent": "free", "inTangent": 61.659, "outTangent": 61.659 },
                 { "t": 0.7, "v": -18.574, "tangent": "free", "inTangent": 87.111, "outTangent": 87.111 },
@@ -1873,7 +1895,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 1, "tangent": "flat" },
+                { "t": 0, "v": 1, "tangent": "flat" },
                 { "t": 0.5, "v": 1, "tangent": "flat" },
                 { "t": 0.7, "v": 0, "tangent": "free", "inTangent": -5.001, "outTangent": 0, "broken": true },
                 { "t": 0.73333335, "v": 0, "tangent": "step" },
@@ -1892,7 +1914,7 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": -24.802, "tangent": "free", "inTangent": -60.057, "outTangent": -60.057 },
+                { "t": 0, "v": -24.802, "tangent": "free", "inTangent": -60.057, "outTangent": -60.057 },
                 { "t": 0.1, "v": -30.808, "tangent": "flat" },
                 { "t": 0.3, "v": -24.802, "tangent": "free", "inTangent": 51.477, "outTangent": 51.477 },
                 { "t": 0.5, "v": 11.233, "tangent": "free", "inTangent": 172.341, "outTangent": 172.341 },
@@ -1919,7 +1941,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 11.956, "tangent": "free", "inTangent": 75.072, "outTangent": 75.072 },
+                { "t": 0, "v": 11.956, "tangent": "free", "inTangent": 75.072, "outTangent": 75.072 },
                 { "t": 0.1, "v": 19.463, "tangent": "free", "inTangent": 77.493, "outTangent": 77.493 },
                 { "t": 0.3, "v": 35.479, "tangent": "free", "inTangent": 57.657, "outTangent": 57.657 },
                 { "t": 0.5, "v": 44.488, "tangent": "free", "inTangent": 45.045, "outTangent": 45.045 },
@@ -1950,7 +1972,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 1, "tangent": "flat" },
+                { "t": 0, "v": 1, "tangent": "flat" },
                 { "t": 4.3, "v": 0.991, "tangent": "free", "inTangent": -0.003, "outTangent": -0.003 },
                 { "t": 4.3333335, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
                 { "t": 4.366667, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
@@ -2008,7 +2030,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
                 { "t": 0.033333335, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
                 { "t": 0.13333334, "v": 1, "tangent": "flat" },
                 { "t": 1.3, "v": 0.991, "tangent": "free", "inTangent": -0.015, "outTangent": -0.015 },
@@ -2024,7 +2046,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0, "v": 0, "tangent": "step" },
                 { "t": 0.1, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
                 { "t": 0.13333334, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
                 { "t": 0.23333333, "v": 1, "tangent": "flat" },
@@ -2041,7 +2063,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0, "v": 0, "tangent": "step" },
                 { "t": 0.56666666, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
                 { "t": 0.6, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
                 { "t": 0.7, "v": 1, "tangent": "flat" },
@@ -2058,7 +2080,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0, "v": 0, "tangent": "step" },
                 { "t": 0.96666664, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
                 { "t": 1.0, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
                 { "t": 1.1, "v": 1, "tangent": "flat" },
@@ -2111,7 +2133,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -2121,7 +2143,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -2135,7 +2157,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
                 { "t": 0.033333335, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
                 { "t": 0.13333334, "v": 1, "tangent": "flat" },
                 { "t": 0.8, "v": 0.991, "tangent": "free", "inTangent": -0.027, "outTangent": -0.027 },
@@ -2151,7 +2173,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0, "v": 0.581, "tangent": "step" },
                 { "t": 0.13333334, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.16666667, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.2, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
@@ -2162,7 +2184,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0, "v": 0.581, "tangent": "step" },
                 { "t": 0.13333334, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.16666667, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.2, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
@@ -2177,7 +2199,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0, "v": 0, "tangent": "step" },
                 { "t": 0.13333334, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
                 { "t": 0.16666667, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
                 { "t": 0.26666668, "v": 1, "tangent": "flat" },
@@ -2194,7 +2216,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0, "v": 0.581, "tangent": "step" },
                 { "t": 0.26666668, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.3, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.33333334, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
@@ -2205,7 +2227,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0, "v": 0.581, "tangent": "step" },
                 { "t": 0.26666668, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.3, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.33333334, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
@@ -2220,7 +2242,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0, "v": 0, "tangent": "step" },
                 { "t": 0.26666668, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
                 { "t": 0.3, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
                 { "t": 0.4, "v": 1, "tangent": "flat" },
@@ -2257,7 +2279,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.641, "tangent": "free", "inTangent": 4.11, "outTangent": 4.11 },
+                { "t": 0, "v": 0.641, "tangent": "free", "inTangent": 4.11, "outTangent": 4.11 },
                 { "t": 0.033333335, "v": 0.778, "tangent": "free", "inTangent": 2.832, "outTangent": 2.832 },
                 { "t": 0.06666667, "v": 0.85, "tangent": "free", "inTangent": 1.272, "outTangent": 1.272 },
                 { "t": 0.13333334, "v": 0.91, "tangent": "flat" },
@@ -2267,7 +2289,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.641, "tangent": "free", "inTangent": 4.11, "outTangent": 4.11 },
+                { "t": 0, "v": 0.641, "tangent": "free", "inTangent": 4.11, "outTangent": 4.11 },
                 { "t": 0.033333335, "v": 0.778, "tangent": "free", "inTangent": 2.832, "outTangent": 2.832 },
                 { "t": 0.06666667, "v": 0.85, "tangent": "free", "inTangent": 1.272, "outTangent": 1.272 },
                 { "t": 0.13333334, "v": 0.91, "tangent": "flat" },
@@ -2281,7 +2303,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.417, "tangent": "free", "inTangent": 4.401, "outTangent": 4.401 },
+                { "t": 0, "v": 0.417, "tangent": "free", "inTangent": 4.401, "outTangent": 4.401 },
                 { "t": 0.1, "v": 0.857, "tangent": "free", "inTangent": 2.157, "outTangent": 2.157 },
                 { "t": 0.2, "v": 1, "tangent": "flat" },
                 { "t": 0.6666667, "v": 0.999, "tangent": "free", "inTangent": -0.003, "outTangent": -0.003 },
@@ -2298,7 +2320,7 @@
             "kind": "position",
             "y": {
               "keys": [
-                { "t": 0.0, "v": 24.626, "tangent": "free", "inTangent": -92.346, "outTangent": -92.346 },
+                { "t": 0, "v": 24.626, "tangent": "free", "inTangent": -92.346, "outTangent": -92.346 },
                 { "t": 0.26666668, "v": 0, "tangent": "free", "inTangent": -92.346, "outTangent": -92.346 }
               ]
             }
@@ -2337,7 +2359,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -2347,7 +2369,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -2361,7 +2383,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
                 { "t": 0.033333335, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
                 { "t": 0.13333334, "v": 1, "tangent": "flat" },
                 { "t": 0.7, "v": 0.991, "tangent": "free", "inTangent": -0.033, "outTangent": -0.033 },
@@ -2377,7 +2399,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0, "v": 0.581, "tangent": "step" },
                 { "t": 0.06666667, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.1, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.13333334, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
@@ -2388,7 +2410,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0, "v": 0.581, "tangent": "step" },
                 { "t": 0.06666667, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.1, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.13333334, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
@@ -2403,7 +2425,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0, "v": 0, "tangent": "step" },
                 { "t": 0.06666667, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
                 { "t": 0.1, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
                 { "t": 0.2, "v": 1, "tangent": "flat" },
@@ -2456,7 +2478,7 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -2466,7 +2488,7 @@
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
                 { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
                 { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
                 { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
@@ -2480,7 +2502,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
                 { "t": 0.033333335, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
                 { "t": 0.13333334, "v": 1, "tangent": "flat" },
                 { "t": 0.4, "v": 0.991, "tangent": "free", "inTangent": -0.066, "outTangent": -0.066 },
@@ -2505,6 +2527,7 @@
           "placeX": 0,
           "placeY": 0,
           "scale": 0.987,
+          "rotation": 28,
           "upright": true
         }
       ],
@@ -2516,17 +2539,17 @@
             "kind": "scale",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.723, "tangent": "free", "inTangent": 2.01, "outTangent": 2.01 },
-                { "t": 0.033333335, "v": 0.79, "tangent": "free", "inTangent": 1.104, "outTangent": 1.104 },
-                { "t": 0.13333334, "v": 0.866, "tangent": "free", "inTangent": 0.675, "outTangent": 0.675 },
-                { "t": 0.26666668, "v": 0.947, "tangent": "free", "inTangent": 0.039, "outTangent": 0.039 },
-                { "t": 0.36666667, "v": 0.949, "tangent": "free", "inTangent": 0.039, "outTangent": 0.039 },
-                { "t": 0.4, "v": 1, "tangent": "free", "inTangent": 1.53, "outTangent": 1.53 }
+                { "t": 0, "v": -0.723, "tangent": "free", "inTangent": -2.01, "outTangent": -2.01 },
+                { "t": 0.033333335, "v": -0.79, "tangent": "free", "inTangent": -1.104, "outTangent": -1.104 },
+                { "t": 0.13333334, "v": -0.866, "tangent": "free", "inTangent": -0.675, "outTangent": -0.675 },
+                { "t": 0.26666668, "v": -0.947, "tangent": "free", "inTangent": -0.039, "outTangent": -0.039 },
+                { "t": 0.36666667, "v": -0.949, "tangent": "free", "inTangent": -0.039, "outTangent": -0.039 },
+                { "t": 0.4, "v": -1, "tangent": "free", "inTangent": -1.53, "outTangent": -1.53 }
               ]
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": 0.723, "tangent": "free", "inTangent": 2.01, "outTangent": 2.01 },
+                { "t": 0, "v": 0.723, "tangent": "free", "inTangent": 2.01, "outTangent": 2.01 },
                 { "t": 0.033333335, "v": 0.79, "tangent": "free", "inTangent": 1.104, "outTangent": 1.104 },
                 { "t": 0.13333334, "v": 0.866, "tangent": "free", "inTangent": 0.675, "outTangent": 0.675 },
                 { "t": 0.26666668, "v": 0.947, "tangent": "free", "inTangent": 0.039, "outTangent": 0.039 },
@@ -2540,7 +2563,7 @@
             "kind": "alpha",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0.583, "tangent": "free", "inTangent": 5.085, "outTangent": 5.085 },
+                { "t": 0, "v": 0.583, "tangent": "free", "inTangent": 5.085, "outTangent": 5.085 },
                 { "t": 0.06666667, "v": 0.922, "tangent": "free", "inTangent": 1.902, "outTangent": 1.902 },
                 { "t": 0.13333334, "v": 1, "tangent": "flat" },
                 { "t": 0.9, "v": 1, "tangent": "flat" },
@@ -2556,7 +2579,7 @@
             "kind": "image",
             "x": {
               "keys": [
-                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0, "v": 0, "tangent": "step" },
                 { "t": 0.16666667, "v": 1, "tangent": "step" },
                 { "t": 0.33333334, "v": 0, "tangent": "step" },
                 { "t": 0.5, "v": 1, "tangent": "step" },
@@ -2571,14 +2594,14 @@
             "kind": "position",
             "x": {
               "keys": [
-                { "t": 0.0, "v": -10.011, "tangent": "free", "inTangent": -37.542, "outTangent": -37.542 },
+                { "t": 0, "v": -10.011, "tangent": "free", "inTangent": -37.542, "outTangent": -37.542 },
                 { "t": 0.06666667, "v": -12.514, "tangent": "flat" },
                 { "t": 0.33333334, "v": 0, "tangent": "free", "inTangent": 46.929, "outTangent": 46.929 }
               ]
             },
             "y": {
               "keys": [
-                { "t": 0.0, "v": -13.997, "tangent": "free", "inTangent": -23.637, "outTangent": -23.637 },
+                { "t": 0, "v": -13.997, "tangent": "free", "inTangent": -23.637, "outTangent": -23.637 },
                 { "t": 0.06666667, "v": -15.573, "tangent": "flat" },
                 { "t": 0.13333334, "v": -9.455, "tangent": "free", "inTangent": 24.567, "outTangent": 24.567 },
                 { "t": 0.8, "v": 0, "tangent": "free", "inTangent": 14.184, "outTangent": 14.184 }

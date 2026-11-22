@@ -18,6 +18,7 @@ clips.json이 `mirror`로 적은 것(G12)은 좌우를 뒤집은 `<이름>_m`을
 감정 아이콘 — 정의를 그대로 옮긴다(프레임 → 초, 프레임당 기울기 → 초당). 계단 키 하나만 저작본에 그대로 담기지 않는다:
 emojis/2의 계단 키는 들어오는 기울기를 가질 수 있지만 저작본의 step은 들어오는 쪽이 평평하다. 그런 키는 "그 기울기로 들어오는 free 키 +
 한 프레임 뒤 같은 값의 step 키"로 옮긴다 — 재생되는 값은 프레임마다 같다(sleepy의 Z가 사라지는 자리).
+이름은 RENAME대로 바꿔 단다 — 작업공간의 이름이 맞지 않는 것(happy는 말할 때의 효과선이다 — 소유자 11-22).
 """
 import json
 import math
@@ -30,6 +31,7 @@ OUT = HERE / "cards.motion-authoring.json"
 FPS = 30
 TOLERANCE = 2.0  # 몸짓 — 다시 지은 곡선이 잰 곡선에서 벗어나도 되는 만큼(px)
 GAP = 12  # 훑어보는 클립에서 몸짓 사이(프레임)
+RENAME = {"happy": "talk"}  # 작업공간의 이름 → 여기의 이름. 작업공간이 같은 이름으로 바꾸면 지운다
 MOVE = "CharacterPortrait_Track_Move"
 
 
@@ -186,7 +188,7 @@ def emoji_json(e):
             keys = emoji_keys(t["keys"])
         channel[axis] = {"keys": keys}
 
-    out = {"name": e["name"], "offsetX": number(e["offset"]["x"]), "offsetY": number(e["offset"]["y"])}
+    out = {"name": RENAME.get(e["name"], e["name"]), "offsetX": number(e["offset"]["x"]), "offsetY": number(e["offset"]["y"])}
     if e.get("fixedSide"):
         out["fixedSide"] = True
     out["rigs"] = []
@@ -234,6 +236,8 @@ def emoji_keys(keys):
 def seconds(t):
     """초를 float32로 — 툴이 읽는 값 그대로의 가장 짧은 글자(1/30 → 0.033333335)."""
     f = struct.unpack("f", struct.pack("f", t))[0]
+    if f == 0:
+        return 0
     for digits in range(1, 10):
         text = f"{f:.{digits}g}"
         if struct.unpack("f", struct.pack("f", float(text)))[0] == f:
@@ -322,7 +326,7 @@ def main() -> int:
         for e in emojis["emojis"]:
             c = by_emoji[e["name"]]
             length = e["clips"][0]["length"]
-            print(f"| `{e['name']}` | {c['id']} {c['name']} | {len(e['rigs'])} | {length}프레임({length / FPS:.2f}초) |")
+            print(f"| `{RENAME.get(e['name'], e['name'])}` | {c['id']} {c['name']} | {len(e['rigs'])} | {length}프레임({length / FPS:.2f}초) |")
     return 0
 
 

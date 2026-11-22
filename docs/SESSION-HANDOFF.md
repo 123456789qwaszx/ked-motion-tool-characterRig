@@ -8,7 +8,7 @@
 
 > **11-22:** 런타임이 캐릭터 리그를 25노드에서 20노드로 바꾼 것을 따라가는 일(R7)을 시작했다 — 같은 날 끝냈다(코어 전체 동기화 `b56a2ebc` · 덤프 · 컨트롤러 9개 · 별칭 걷기 · 줄바꿈). 테스트는 1,058건 — 코어 580 · 도메인 334 · 화면 144. 정한 것과 남은 것(초상의 크기)은 [`PLAN-rig-layers.md`](PLAN-rig-layers.md) §6.
 
-> **11-22(저녁):** `library/`를 연출 참고집의 지금 카드로 다시 지었다 — 몸짓 카드 G01~G16(+ G12의 좌우 반대)과 감정 아이콘 카드 I01~I22를 **저작본 하나**(`cards.motion-authoring.json`)에 둔다(앞의 `motions.*` · `emojis.*` 둘을 합쳤다 — 소유자 11-22). 다시 짓는 스크립트는 `library/from-catalog.py`, 지은 법 · 잰 곡선과의 차는 [`../library/README.md`](../library/README.md).
+> **11-22(저녁):** `library/`를 연출 참고집의 지금 카드로 다시 지었다 — 몸짓 카드 G01~G16(+ G12의 좌우 반대)과 감정 아이콘 카드 I01~I22를 **저작본 하나**(`cards.motion-authoring.json`)에 둔다(앞의 `motions.*` · `emojis.*` 둘을 합쳤다 — 소유자 11-22). 다시 짓는 스크립트는 `library/from-catalog.py`, 지은 법 · 잰 곡선과의 차는 [`../library/README.md`](../library/README.md). 같은 밤에 감정 아이콘 그림의 방향(한숨 · `talk` · 허둥 · 분함 · 답답함 — 뒤집힘 · 회전 · 쪽을 따름)을 작업공간에서 원본에 맞춰 다시 들였고, `happy`를 `talk`로 바꿔 달았다(소유자 — 말할 때의 효과선).
 
 ## 1. 한눈에
 
