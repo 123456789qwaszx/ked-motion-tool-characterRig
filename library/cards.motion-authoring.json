@@ -1,0 +1,2592 @@
+{
+  "schema": "motion-authoring/3",
+  "motions": [
+    {
+      "name": "g01_hop",
+      "rig": "character",
+      "duration": 0.3333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.033333335, "v": 15.6, "tangent": "free", "inTangent": 513.26, "outTangent": 513.26 },
+              { "t": 0.13333334, "v": 58.11, "tangent": "auto" },
+              { "t": 0.16666667, "v": 60.04, "tangent": "flat" },
+              { "t": 0.26666668, "v": 30.33, "tangent": "free", "inTangent": -533.56, "outTangent": -533.56 },
+              { "t": 0.3333, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g02_nod",
+      "rig": "character",
+      "duration": 0.5333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.06666667, "v": -29.69, "tangent": "free", "inTangent": -569.62, "outTangent": -569.62 },
+              { "t": 0.26666668, "v": -95.92, "tangent": "flat" },
+              { "t": 0.46666667, "v": -29.44, "tangent": "free", "inTangent": 568.58, "outTangent": 568.58 },
+              { "t": 0.5333, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g03_shake",
+      "rig": "character",
+      "duration": 0.3333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "x": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.033333335, "v": -11.49, "tangent": "flat" },
+              { "t": 0.06666667, "v": -11.46, "tangent": "auto" },
+              { "t": 0.1, "v": 6.05, "tangent": "auto" },
+              { "t": 0.13333334, "v": 17.77, "tangent": "flat" },
+              { "t": 0.16666667, "v": -0.15, "tangent": "auto" },
+              { "t": 0.2, "v": -15.56, "tangent": "flat" },
+              { "t": 0.23333333, "v": -5.88, "tangent": "auto" },
+              { "t": 0.26666668, "v": 15.56, "tangent": "flat" },
+              { "t": 0.3, "v": 11.29, "tangent": "auto" },
+              { "t": 0.3333, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g04_sway",
+      "rig": "character",
+      "duration": 1.4,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "x": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.033333335, "v": -5.17, "tangent": "auto" },
+              { "t": 0.16666667, "v": -17.01, "tangent": "flat" },
+              { "t": 0.53333336, "v": 17.1, "tangent": "flat" },
+              { "t": 0.8666667, "v": -17.06, "tangent": "flat" },
+              { "t": 0.96666664, "v": -13.04, "tangent": "auto" },
+              { "t": 1.1333333, "v": 12.66, "tangent": "auto" },
+              { "t": 1.2333333, "v": 16.95, "tangent": "flat" },
+              { "t": 1.3666667, "v": 5.97, "tangent": "auto" },
+              { "t": 1.4, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g05_flinch",
+      "rig": "character",
+      "duration": 0.2333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "x": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.033333335, "v": 5.14, "tangent": "flat" },
+              { "t": 0.1, "v": -5.98, "tangent": "flat" },
+              { "t": 0.13333334, "v": 3.03, "tangent": "flat" },
+              { "t": 0.2, "v": -5.13, "tangent": "flat" },
+              { "t": 0.2333, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g06_nod2",
+      "rig": "character",
+      "duration": 0.6,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.033333335, "v": -9.36, "tangent": "free", "inTangent": -306.55, "outTangent": -306.55 },
+              { "t": 0.16666667, "v": -35.74, "tangent": "flat" },
+              { "t": 0.26666668, "v": -15.01, "tangent": "auto" },
+              { "t": 0.3, "v": -3, "tangent": "flat" },
+              { "t": 0.36666667, "v": -10.18, "tangent": "auto" },
+              { "t": 0.46666667, "v": -17.84, "tangent": "flat" },
+              { "t": 0.56666666, "v": -7.66, "tangent": "auto" },
+              { "t": 0.6, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g07_bounce",
+      "rig": "character",
+      "duration": 0.6333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.033333335, "v": 8.02, "tangent": "auto" },
+              { "t": 0.06666667, "v": 35.33, "tangent": "auto" },
+              { "t": 0.1, "v": 45.57, "tangent": "flat" },
+              { "t": 0.13333334, "v": 23.02, "tangent": "auto" },
+              { "t": 0.16666667, "v": -0.03, "tangent": "free", "inTangent": -781.07, "outTangent": -781.07 },
+              { "t": 0.23333333, "v": -45.72, "tangent": "flat" },
+              { "t": 0.26666668, "v": -43.38, "tangent": "auto" },
+              { "t": 0.33333334, "v": 4.25, "tangent": "free", "inTangent": 595.73, "outTangent": 595.73 },
+              { "t": 0.4, "v": 22.68, "tangent": "flat" },
+              { "t": 0.43333334, "v": 14.7, "tangent": "auto" },
+              { "t": 0.46666667, "v": 7.7, "tangent": "auto" },
+              { "t": 0.5, "v": -17.76, "tangent": "auto" },
+              { "t": 0.53333336, "v": -21.83, "tangent": "flat" },
+              { "t": 0.56666666, "v": -20.03, "tangent": "auto" },
+              { "t": 0.6333, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g08_bow",
+      "rig": "character",
+      "duration": 0.7333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.06666667, "v": -13.36, "tangent": "free", "inTangent": -262.63, "outTangent": -262.63 },
+              { "t": 0.36666667, "v": -59.86, "tangent": "flat" },
+              { "t": 0.6, "v": -31.73, "tangent": "free", "inTangent": 208.1, "outTangent": 208.1 },
+              { "t": 0.7333, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g09_dip",
+      "rig": "character",
+      "duration": 0.3667,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.033333335, "v": -11.98, "tangent": "free", "inTangent": -399.75, "outTangent": -399.75 },
+              { "t": 0.16666667, "v": -53.4, "tangent": "auto" },
+              { "t": 0.2, "v": -53.42, "tangent": "flat" },
+              { "t": 0.33333334, "v": -11.98, "tangent": "free", "inTangent": 399.39, "outTangent": 399.39 },
+              { "t": 0.3667, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g10_bob",
+      "rig": "character",
+      "duration": 0.3,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.033333335, "v": -8.09, "tangent": "free", "inTangent": -230.24, "outTangent": -230.24 },
+              { "t": 0.16666667, "v": -23.7, "tangent": "flat" },
+              { "t": 0.26666668, "v": -8.06, "tangent": "auto" },
+              { "t": 0.3, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g11_lift",
+      "rig": "character",
+      "duration": 0.8,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.06666667, "v": 14.85, "tangent": "auto" },
+              { "t": 0.2, "v": 24.3, "tangent": "flat" },
+              { "t": 0.33333334, "v": 10.84, "tangent": "free", "inTangent": -189.84, "outTangent": -189.84 },
+              { "t": 0.4, "v": 3.23, "tangent": "flat" },
+              { "t": 0.5, "v": 18.46, "tangent": "auto" },
+              { "t": 0.6, "v": 24.34, "tangent": "flat" },
+              { "t": 0.76666665, "v": 6.22, "tangent": "auto" },
+              { "t": 0.8, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g12_lean",
+      "rig": "character",
+      "duration": 0.5333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "x": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.033333335, "v": 15.05, "tangent": "free", "inTangent": 479.5, "outTangent": 479.5 },
+              { "t": 0.13333334, "v": 48.04, "tangent": "flat" },
+              { "t": 0.2, "v": 39.12, "tangent": "free", "inTangent": -242.53, "outTangent": -242.53 },
+              { "t": 0.23333333, "v": 14.85, "tangent": "auto" },
+              { "t": 0.26666668, "v": 5.03, "tangent": "flat" },
+              { "t": 0.3, "v": 24.46, "tangent": "auto" },
+              { "t": 0.36666667, "v": 47.03, "tangent": "flat" },
+              { "t": 0.4, "v": 46.98, "tangent": "auto" },
+              { "t": 0.46666667, "v": 23.97, "tangent": "auto" },
+              { "t": 0.5, "v": 4.85, "tangent": "auto" },
+              { "t": 0.5333, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g12_lean_m",
+      "rig": "character",
+      "duration": 0.5333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "x": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.033333335, "v": -15.05, "tangent": "free", "inTangent": -479.5, "outTangent": -479.5 },
+              { "t": 0.13333334, "v": -48.04, "tangent": "flat" },
+              { "t": 0.2, "v": -39.12, "tangent": "free", "inTangent": 242.53, "outTangent": 242.53 },
+              { "t": 0.23333333, "v": -14.85, "tangent": "auto" },
+              { "t": 0.26666668, "v": -5.03, "tangent": "flat" },
+              { "t": 0.3, "v": -24.46, "tangent": "auto" },
+              { "t": 0.36666667, "v": -47.03, "tangent": "flat" },
+              { "t": 0.4, "v": -46.98, "tangent": "auto" },
+              { "t": 0.46666667, "v": -23.97, "tangent": "auto" },
+              { "t": 0.5, "v": -4.85, "tangent": "auto" },
+              { "t": 0.5333, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g13_heave",
+      "rig": "character",
+      "duration": 0.7667,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.033333335, "v": 22.86, "tangent": "auto" },
+              { "t": 0.06666667, "v": 49.2, "tangent": "free", "inTangent": 639.87, "outTangent": 639.87 },
+              { "t": 0.13333334, "v": 73.61, "tangent": "flat" },
+              { "t": 0.16666667, "v": 69.88, "tangent": "free", "inTangent": -196.66, "outTangent": -196.66 },
+              { "t": 0.23333333, "v": 15.16, "tangent": "free", "inTangent": -255.4, "outTangent": -255.4 },
+              { "t": 0.26666668, "v": 10.13, "tangent": "flat" },
+              { "t": 0.3, "v": 29.1, "tangent": "auto" },
+              { "t": 0.36666667, "v": 48.44, "tangent": "flat" },
+              { "t": 0.4, "v": 46.56, "tangent": "auto" },
+              { "t": 0.46666667, "v": 19.64, "tangent": "auto" },
+              { "t": 0.5, "v": 0.12, "tangent": "flat" },
+              { "t": 0.53333336, "v": 9.77, "tangent": "free", "inTangent": 273.18, "outTangent": 273.18 },
+              { "t": 0.6333333, "v": 24.34, "tangent": "flat" },
+              { "t": 0.7, "v": 14.05, "tangent": "auto" },
+              { "t": 0.7667, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g14_pip",
+      "rig": "character",
+      "duration": 0.3333,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.06666667, "v": 11.83, "tangent": "auto" },
+              { "t": 0.16666667, "v": 24.4, "tangent": "flat" },
+              { "t": 0.3, "v": 8.07, "tangent": "free", "inTangent": -235.16, "outTangent": -235.16 },
+              { "t": 0.3333, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g15_patter",
+      "rig": "character",
+      "duration": 0.4667,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.033333335, "v": 24.52, "tangent": "auto" },
+              { "t": 0.06666667, "v": 28.76, "tangent": "flat" },
+              { "t": 0.13333334, "v": -18.61, "tangent": "free", "inTangent": -489.34, "outTangent": -489.34 },
+              { "t": 0.16666667, "v": -30.32, "tangent": "flat" },
+              { "t": 0.2, "v": -16.18, "tangent": "auto" },
+              { "t": 0.26666668, "v": 29.29, "tangent": "flat" },
+              { "t": 0.3, "v": 22.94, "tangent": "free", "inTangent": -306.19, "outTangent": -306.19 },
+              { "t": 0.36666667, "v": -26.09, "tangent": "free", "inTangent": -183.21, "outTangent": -183.21 },
+              { "t": 0.4, "v": -29.61, "tangent": "flat" },
+              { "t": 0.43333334, "v": -5.28, "tangent": "auto" },
+              { "t": 0.4667, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "g16_quiver",
+      "rig": "character",
+      "duration": 0.5,
+      "end": "restore",
+      "channels": [
+        {
+          "node": "CharacterPortrait_Track_Move",
+          "kind": "position",
+          "y": {
+            "keys": [
+              { "t": 0, "v": 0, "tangent": "flat" },
+              { "t": 0.033333335, "v": 16.17, "tangent": "flat" },
+              { "t": 0.1, "v": -16.16, "tangent": "flat" },
+              { "t": 0.13333334, "v": 12.98, "tangent": "flat" },
+              { "t": 0.16666667, "v": -0.09, "tangent": "auto" },
+              { "t": 0.2, "v": -7.36, "tangent": "flat" },
+              { "t": 0.23333333, "v": 9.72, "tangent": "flat" },
+              { "t": 0.3, "v": -9.59, "tangent": "flat" },
+              { "t": 0.33333334, "v": 6.48, "tangent": "flat" },
+              { "t": 0.36666667, "v": 3.53, "tangent": "auto" },
+              { "t": 0.4, "v": -3.61, "tangent": "flat" },
+              { "t": 0.43333334, "v": 3.71, "tangent": "flat" },
+              { "t": 0.46666667, "v": -1.93, "tangent": "flat" },
+              { "t": 0.5, "v": 0, "tangent": "flat" }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "scene",
+      "objects": [
+        { "id": "s1", "rig": "character", "place": "center", "portrait": "art/Karin_a_02.png" }
+      ]
+    }
+  ],
+  "activeScene": "scene",
+  "clips": [
+    {
+      "name": "review",
+      "roles": [
+        { "name": "a", "rig": "character", "object": "s1" }
+      ],
+      "tracks": [
+        {
+          "role": "a",
+          "blocks": [
+            { "at": 0, "motion": "g01_hop" },
+            { "at": 0.7333, "motion": "g02_nod" },
+            { "at": 1.6667, "motion": "g03_shake" },
+            { "at": 2.4, "motion": "g04_sway" },
+            { "at": 4.2, "motion": "g05_flinch" },
+            { "at": 4.8333, "motion": "g06_nod2" },
+            { "at": 5.8333, "motion": "g07_bounce" },
+            { "at": 6.8667, "motion": "g08_bow" },
+            { "at": 8, "motion": "g09_dip" },
+            { "at": 8.7667, "motion": "g10_bob" },
+            { "at": 9.4667, "motion": "g11_lift" },
+            { "at": 10.6667, "motion": "g12_lean" },
+            { "at": 11.6, "motion": "g12_lean_m" },
+            { "at": 12.5333, "motion": "g13_heave" },
+            { "at": 13.7, "motion": "g14_pip" },
+            { "at": 14.4333, "motion": "g15_patter" },
+            { "at": 15.3, "motion": "g16_quiver" }
+          ]
+        }
+      ]
+    }
+  ],
+  "emojis": [
+    {
+      "name": "angry",
+      "offsetX": 147,
+      "offsetY": 33,
+      "rigs": [
+        {
+          "name": "a",
+          "images": [ "art/o_angry_4.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 1.45,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 1.5,
+        "channels": [
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.78, "tangent": "free", "inTangent": 8.07, "outTangent": 8.07 },
+                { "t": 0.033333335, "v": 1.049, "tangent": "flat" },
+                { "t": 0.36666667, "v": 0.96, "tangent": "flat" },
+                { "t": 0.4, "v": 1, "tangent": "free", "inTangent": 1.2, "outTangent": 1.2 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.78, "tangent": "free", "inTangent": 8.07, "outTangent": 8.07 },
+                { "t": 0.033333335, "v": 1.049, "tangent": "flat" },
+                { "t": 0.36666667, "v": 0.96, "tangent": "flat" },
+                { "t": 0.4, "v": 1, "tangent": "free", "inTangent": 1.2, "outTangent": 1.2 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.928, "tangent": "free", "inTangent": 2.16, "outTangent": 2.16 },
+                { "t": 0.033333335, "v": 1, "tangent": "flat" },
+                { "t": 1.4, "v": 0.962, "tangent": "free", "inTangent": -0.054, "outTangent": -0.054 },
+                { "t": 1.4333333, "v": 0.909, "tangent": "flat" },
+                { "t": 1.4666667, "v": 0.909, "tangent": "flat" },
+                { "t": 1.5, "v": 0.833, "tangent": "free", "inTangent": -2.28, "outTangent": -2.28 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "attention",
+      "offsetX": 157,
+      "offsetY": 120,
+      "rigs": [
+        {
+          "name": "a",
+          "images": [ "art/o_attention_4.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 1.187,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 0.73333335,
+        "channels": [
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.854, "tangent": "free", "inTangent": 1.83, "outTangent": 1.83 },
+                { "t": 0.033333335, "v": 0.915, "tangent": "free", "inTangent": 2.772, "outTangent": 2.772 },
+                { "t": 0.06666667, "v": 1.105, "tangent": "free", "inTangent": 1.242, "outTangent": 1.242 },
+                { "t": 0.2, "v": 1.198, "tangent": "flat" },
+                { "t": 0.26666668, "v": 1, "tangent": "free", "inTangent": -2.97, "outTangent": -2.97 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.854, "tangent": "free", "inTangent": 1.83, "outTangent": 1.83 },
+                { "t": 0.033333335, "v": 0.915, "tangent": "free", "inTangent": 2.772, "outTangent": 2.772 },
+                { "t": 0.06666667, "v": 1.105, "tangent": "free", "inTangent": 1.242, "outTangent": 1.242 },
+                { "t": 0.2, "v": 1.198, "tangent": "flat" },
+                { "t": 0.26666668, "v": 1, "tangent": "free", "inTangent": -2.97, "outTangent": -2.97 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.569, "tangent": "free", "inTangent": 1.275, "outTangent": 1.275 },
+                { "t": 0.06666667, "v": 0.654, "tangent": "free", "inTangent": 1.854, "outTangent": 1.854 },
+                { "t": 0.13333334, "v": 0.88, "tangent": "free", "inTangent": 0.894, "outTangent": 0.894 },
+                { "t": 0.36666667, "v": 1, "tangent": "flat" },
+                { "t": 0.6, "v": 0.992, "tangent": "free", "inTangent": -0.069, "outTangent": -0.069 },
+                { "t": 0.6333333, "v": 0.838, "tangent": "free", "inTangent": -3.831, "outTangent": -3.831 },
+                { "t": 0.6666667, "v": 0.729, "tangent": "free", "inTangent": -4.194, "outTangent": -4.194 },
+                { "t": 0.7, "v": 0.534, "tangent": "free", "inTangent": -5.379, "outTangent": -5.379 },
+                { "t": 0.73333335, "v": 0.368, "tangent": "free", "inTangent": -4.98, "outTangent": -4.98 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": -60.909, "tangent": "flat" },
+                { "t": 0.033333335, "v": -60.909, "tangent": "flat" },
+                { "t": 0.06666667, "v": -29.091, "tangent": "free", "inTangent": 404.178, "outTangent": 404.178 },
+                { "t": 0.13333334, "v": -12, "tangent": "flat" },
+                { "t": 0.33333334, "v": -17.455, "tangent": "flat" },
+                { "t": 0.73333335, "v": 0, "tangent": "free", "inTangent": 43.635, "outTangent": 43.635 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": -45.727, "tangent": "free", "inTangent": 113.181, "outTangent": 113.181 },
+                { "t": 0.06666667, "v": -38.182, "tangent": "free", "inTangent": 165.165, "outTangent": 165.165 },
+                { "t": 0.16666667, "v": -7.636, "tangent": "free", "inTangent": 10.719, "outTangent": 10.719 },
+                { "t": 0.33333334, "v": -6.727, "tangent": "free", "inTangent": 8.238, "outTangent": 8.238 },
+                { "t": 0.73333335, "v": 0, "tangent": "free", "inTangent": 16.818, "outTangent": 16.818 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "awkward",
+      "offsetX": 99,
+      "offsetY": -23,
+      "rigs": [
+        {
+          "name": "a",
+          "images": [ "art/o_awkward_1.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 1.008,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 0.6333333,
+        "channels": [
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.449, "tangent": "free", "inTangent": 12.57, "outTangent": 12.57 },
+                { "t": 0.033333335, "v": 0.868, "tangent": "free", "inTangent": 6.024, "outTangent": 6.024 },
+                { "t": 0.06666667, "v": 1, "tangent": "free", "inTangent": 3.96, "outTangent": 3.96 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.449, "tangent": "free", "inTangent": 12.57, "outTangent": 12.57 },
+                { "t": 0.033333335, "v": 0.868, "tangent": "free", "inTangent": 6.024, "outTangent": 6.024 },
+                { "t": 0.06666667, "v": 1, "tangent": "free", "inTangent": 3.96, "outTangent": 3.96 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.498, "tangent": "free", "inTangent": 3.765, "outTangent": 3.765 },
+                { "t": 0.13333334, "v": 1, "tangent": "flat" },
+                { "t": 0.5, "v": 0.99, "tangent": "free", "inTangent": -0.054, "outTangent": -0.054 },
+                { "t": 0.53333336, "v": 0.871, "tangent": "free", "inTangent": -3.492, "outTangent": -3.492 },
+                { "t": 0.56666666, "v": 0.757, "tangent": "free", "inTangent": -3.603, "outTangent": -3.603 },
+                { "t": 0.6, "v": 0.63, "tangent": "free", "inTangent": -4.074, "outTangent": -4.074 },
+                { "t": 0.6333333, "v": 0.484, "tangent": "free", "inTangent": -4.38, "outTangent": -4.38 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": -16.72, "tangent": "free", "inTangent": 204.456, "outTangent": 204.456 },
+                { "t": 0.1, "v": 3.726, "tangent": "flat" },
+                { "t": 0.16666667, "v": 0, "tangent": "free", "inTangent": -55.884, "outTangent": -55.884 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "exclamation",
+      "offsetX": 192,
+      "offsetY": 36,
+      "rigs": [
+        {
+          "name": "a",
+          "images": [ "art/o_exclamation.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.926,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 0.6333333,
+        "channels": [
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.679, "tangent": "free", "inTangent": 11.49, "outTangent": 11.49 },
+                { "t": 0.033333335, "v": 1.062, "tangent": "free", "inTangent": 7.035, "outTangent": 7.035 },
+                { "t": 0.06666667, "v": 1.231, "tangent": "free", "inTangent": 1.959, "outTangent": 1.959 },
+                { "t": 0.13333334, "v": 1.312, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.113, "tangent": "free", "inTangent": -4.323, "outTangent": -4.323 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.39, "outTangent": -3.39 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.679, "tangent": "free", "inTangent": 11.49, "outTangent": 11.49 },
+                { "t": 0.033333335, "v": 1.062, "tangent": "free", "inTangent": 7.035, "outTangent": 7.035 },
+                { "t": 0.06666667, "v": 1.231, "tangent": "free", "inTangent": 1.959, "outTangent": 1.959 },
+                { "t": 0.13333334, "v": 1.312, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.113, "tangent": "free", "inTangent": -4.323, "outTangent": -4.323 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.39, "outTangent": -3.39 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.655, "tangent": "free", "inTangent": 10.35, "outTangent": 10.35 },
+                { "t": 0.033333335, "v": 1, "tangent": "flat" },
+                { "t": 0.5, "v": 0.98, "tangent": "free", "inTangent": -0.084, "outTangent": -0.084 },
+                { "t": 0.53333336, "v": 0.847, "tangent": "free", "inTangent": -4.161, "outTangent": -4.161 },
+                { "t": 0.56666666, "v": 0.702, "tangent": "free", "inTangent": -4.578, "outTangent": -4.578 },
+                { "t": 0.6, "v": 0.541, "tangent": "free", "inTangent": -3.879, "outTangent": -3.879 },
+                { "t": 0.6333333, "v": 0.433, "tangent": "free", "inTangent": -3.24, "outTangent": -3.24 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": -16.886, "tangent": "free", "inTangent": 312.351, "outTangent": 312.351 },
+                { "t": 0.06666667, "v": 3.937, "tangent": "free", "inTangent": 148.167, "outTangent": 148.167 },
+                { "t": 0.1, "v": 7.174, "tangent": "flat" },
+                { "t": 0.2, "v": 0, "tangent": "free", "inTangent": -71.745, "outTangent": -71.745 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": -12.687, "tangent": "free", "inTangent": 574.83, "outTangent": 574.83 },
+                { "t": 0.033333335, "v": 6.474, "tangent": "free", "inTangent": 230.772, "outTangent": 230.772 },
+                { "t": 0.1, "v": 16.099, "tangent": "flat" },
+                { "t": 0.13333334, "v": 16.099, "tangent": "flat" },
+                { "t": 0.16666667, "v": 4.375, "tangent": "free", "inTangent": -191.154, "outTangent": -191.154 },
+                { "t": 0.2, "v": 0, "tangent": "free", "inTangent": -131.241, "outTangent": -131.241 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "flower",
+      "offsetX": 135,
+      "offsetY": 3,
+      "rigs": [
+        {
+          "name": "big",
+          "images": [ "art/o_flower2.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.465,
+          "upright": true
+        },
+        {
+          "name": "s1",
+          "images": [ "art/o_flower1.png" ],
+          "placeX": -56,
+          "placeY": 30,
+          "scale": 0.465,
+          "upright": true
+        },
+        {
+          "name": "s2",
+          "images": [ "art/o_flower1.png" ],
+          "placeX": 41,
+          "placeY": -43,
+          "scale": 0.372,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 2.0333333,
+        "channels": [
+          {
+            "node": "big/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            }
+          },
+          {
+            "node": "big/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0.033333335, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
+                { "t": 0.13333334, "v": 1, "tangent": "flat" },
+                { "t": 1.9, "v": 0.991, "tangent": "free", "inTangent": -0.009, "outTangent": -0.009 },
+                { "t": 1.9333333, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 1.9666667, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 2.0, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 2.0333333, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          },
+          {
+            "node": "s1/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0.33333334, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.36666667, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.4, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.46666667, "v": 1.109, "tangent": "flat" },
+                { "t": 0.5, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.53333336, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0.33333334, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.36666667, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.4, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.46666667, "v": 1.109, "tangent": "flat" },
+                { "t": 0.5, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.53333336, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            }
+          },
+          {
+            "node": "s1/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0.33333334, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0.36666667, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
+                { "t": 0.46666667, "v": 1, "tangent": "flat" },
+                { "t": 1.9, "v": 0.991, "tangent": "free", "inTangent": -0.012, "outTangent": -0.012 },
+                { "t": 1.9333333, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 1.9666667, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 2.0, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 2.0333333, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          },
+          {
+            "node": "s2/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0.6666667, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.7, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.73333335, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.8, "v": 1.109, "tangent": "flat" },
+                { "t": 0.8333333, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.8666667, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0.6666667, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.7, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.73333335, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.8, "v": 1.109, "tangent": "flat" },
+                { "t": 0.8333333, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.8666667, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            }
+          },
+          {
+            "node": "s2/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0.6666667, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0.7, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
+                { "t": 0.8, "v": 1, "tangent": "flat" },
+                { "t": 1.9, "v": 0.991, "tangent": "free", "inTangent": -0.015, "outTangent": -0.015 },
+                { "t": 1.9333333, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 1.9666667, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 2.0, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 2.0333333, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "flurry",
+      "offsetX": 132,
+      "offsetY": -115,
+      "rigs": [
+        {
+          "name": "d1",
+          "images": [ "art/o_flurry_1.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.752,
+          "upright": true
+        },
+        {
+          "name": "d2",
+          "images": [ "art/o_flurry_2.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.752,
+          "upright": true
+        },
+        {
+          "name": "d3",
+          "images": [ "art/o_flurry_3.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.752,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 0.43333334,
+        "channels": [
+          {
+            "node": "d1/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.5, "tangent": "free", "inTangent": 15, "outTangent": 15 },
+                { "t": 0.033333335, "v": 1, "tangent": "flat" },
+                { "t": 0.2, "v": 1, "tangent": "flat" },
+                { "t": 0.23333333, "v": 0, "tangent": "free", "inTangent": -30, "outTangent": -30 }
+              ]
+            }
+          },
+          {
+            "node": "d1/EmojiRig_Image",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": -36.104, "tangent": "free", "inTangent": 222.426, "outTangent": 222.426 },
+                { "t": 0.23333333, "v": 15.795, "tangent": "free", "inTangent": 222.426, "outTangent": 222.426 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 41.369, "tangent": "free", "inTangent": 16.119, "outTangent": 16.119 },
+                { "t": 0.23333333, "v": 45.13, "tangent": "free", "inTangent": 16.119, "outTangent": 16.119 }
+              ]
+            }
+          },
+          {
+            "node": "d2/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0.06666667, "v": 0.5, "tangent": "free", "inTangent": 15, "outTangent": 15 },
+                { "t": 0.1, "v": 1, "tangent": "flat" },
+                { "t": 0.3, "v": 1, "tangent": "flat" },
+                { "t": 0.33333334, "v": 0, "tangent": "free", "inTangent": -30, "outTangent": -30 }
+              ]
+            }
+          },
+          {
+            "node": "d2/EmojiRig_Image",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0.06666667, "v": 0, "tangent": "free", "inTangent": 129.747, "outTangent": 129.747 },
+                { "t": 0.33333334, "v": 34.6, "tangent": "free", "inTangent": 129.747, "outTangent": 129.747 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0.06666667, "v": 0, "tangent": "free", "inTangent": -39.489, "outTangent": -39.489 },
+                { "t": 0.33333334, "v": -10.53, "tangent": "free", "inTangent": -39.489, "outTangent": -39.489 }
+              ]
+            }
+          },
+          {
+            "node": "d3/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0.16666667, "v": 0.5, "tangent": "free", "inTangent": 15, "outTangent": 15 },
+                { "t": 0.2, "v": 1, "tangent": "flat" },
+                { "t": 0.4, "v": 1, "tangent": "flat" },
+                { "t": 0.43333334, "v": 0, "tangent": "free", "inTangent": -30, "outTangent": -30 }
+              ]
+            }
+          },
+          {
+            "node": "d3/EmojiRig_Image",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": -23.317, "tangent": "step" },
+                { "t": 0.16666667, "v": -23.317, "tangent": "free", "inTangent": 135.39, "outTangent": 135.39 },
+                { "t": 0.43333334, "v": 12.787, "tangent": "free", "inTangent": 135.39, "outTangent": 135.39 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": -25.574, "tangent": "step" },
+                { "t": 0.16666667, "v": -25.574, "tangent": "free", "inTangent": -84.618, "outTangent": -84.618 },
+                { "t": 0.43333334, "v": -48.138, "tangent": "free", "inTangent": -84.618, "outTangent": -84.618 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "happy",
+      "offsetX": 119,
+      "offsetY": -108,
+      "rigs": [
+        {
+          "name": "a",
+          "images": [ "art/o_happy_3.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.526,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 0.6333333,
+        "channels": [
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.498, "tangent": "free", "inTangent": 5.58, "outTangent": 5.58 },
+                { "t": 0.033333335, "v": 0.684, "tangent": "free", "inTangent": 4.035, "outTangent": 4.035 },
+                { "t": 0.13333334, "v": 1, "tangent": "flat" },
+                { "t": 0.5, "v": 0.996, "tangent": "free", "inTangent": -0.021, "outTangent": -0.021 },
+                { "t": 0.53333336, "v": 0.949, "tangent": "free", "inTangent": -2.04, "outTangent": -2.04 },
+                { "t": 0.56666666, "v": 0.826, "tangent": "free", "inTangent": -4.629, "outTangent": -4.629 },
+                { "t": 0.6, "v": 0.619, "tangent": "free", "inTangent": -2.415, "outTangent": -2.415 },
+                { "t": 0.6333333, "v": 0.569, "tangent": "free", "inTangent": -1.5, "outTangent": -1.5 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.457, "tangent": "free", "inTangent": -95.928, "outTangent": -95.928 },
+                { "t": 0.13333334, "v": -12.333, "tangent": "flat" },
+                { "t": 0.2, "v": -8.862, "tangent": "free", "inTangent": 73.47, "outTangent": 73.47 },
+                { "t": 0.33333334, "v": 7.766, "tangent": "flat" },
+                { "t": 0.5, "v": -14.526, "tangent": "flat" },
+                { "t": 0.56666666, "v": -5.938, "tangent": "free", "inTangent": 31.302, "outTangent": 31.302 },
+                { "t": 0.6333333, "v": -4.751, "tangent": "free", "inTangent": 17.814, "outTangent": 17.814 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idea",
+      "offsetX": 169,
+      "offsetY": 142,
+      "rigs": [
+        {
+          "name": "a",
+          "images": [ "art/o_idea_1.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.915,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 0.6333333,
+        "channels": [
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.399, "tangent": "free", "inTangent": 12.75, "outTangent": 12.75 },
+                { "t": 0.033333335, "v": 0.824, "tangent": "free", "inTangent": 8.802, "outTangent": 8.802 },
+                { "t": 0.06666667, "v": 1.048, "tangent": "free", "inTangent": 0.912, "outTangent": 0.912 },
+                { "t": 0.16666667, "v": 1.097, "tangent": "flat" },
+                { "t": 0.23333333, "v": 1, "tangent": "free", "inTangent": -1.455, "outTangent": -1.455 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.399, "tangent": "free", "inTangent": 12.75, "outTangent": 12.75 },
+                { "t": 0.033333335, "v": 0.824, "tangent": "free", "inTangent": 8.802, "outTangent": 8.802 },
+                { "t": 0.06666667, "v": 1.048, "tangent": "free", "inTangent": 0.912, "outTangent": 0.912 },
+                { "t": 0.16666667, "v": 1.097, "tangent": "flat" },
+                { "t": 0.23333333, "v": 1, "tangent": "free", "inTangent": -1.455, "outTangent": -1.455 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.479, "tangent": "flat" },
+                { "t": 0.033333335, "v": 0.479, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1, "tangent": "free", "inTangent": 3.909, "outTangent": 3.909 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": -21.169, "tangent": "free", "inTangent": 416.436, "outTangent": 416.436 },
+                { "t": 0.033333335, "v": -7.288, "tangent": "free", "inTangent": 173.172, "outTangent": 173.172 },
+                { "t": 0.1, "v": 0, "tangent": "free", "inTangent": 109.314, "outTangent": 109.314 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": -11.018, "tangent": "free", "inTangent": 123.63, "outTangent": 123.63 },
+                { "t": 0.13333334, "v": 5.466, "tangent": "flat" },
+                { "t": 0.23333333, "v": 0, "tangent": "free", "inTangent": -54.657, "outTangent": -54.657 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "love",
+      "offsetX": 240,
+      "offsetY": -20,
+      "rigs": [
+        {
+          "name": "a",
+          "images": [ "art/o_love_1.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.683,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 0.53333336,
+        "channels": [
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.533, "tangent": "free", "inTangent": 7.41, "outTangent": 7.41 },
+                { "t": 0.033333335, "v": 0.78, "tangent": "free", "inTangent": 2.7, "outTangent": 2.7 },
+                { "t": 0.16666667, "v": 1, "tangent": "flat" },
+                { "t": 0.46666667, "v": 1, "tangent": "flat" },
+                { "t": 0.5, "v": 0.844, "tangent": "free", "inTangent": -6.273, "outTangent": -6.273 },
+                { "t": 0.53333336, "v": 0.527, "tangent": "free", "inTangent": -9.51, "outTangent": -9.51 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": -119.966, "tangent": "free", "inTangent": 194.619, "outTangent": 194.619 },
+                { "t": 0.06666667, "v": -106.992, "tangent": "free", "inTangent": 286.563, "outTangent": 286.563 },
+                { "t": 0.1, "v": -88.885, "tangent": "free", "inTangent": 359.535, "outTangent": 359.535 },
+                { "t": 0.16666667, "v": -70.973, "tangent": "free", "inTangent": 393.924, "outTangent": 393.924 },
+                { "t": 0.2, "v": -46.379, "tangent": "free", "inTangent": 549.024, "outTangent": 549.024 },
+                { "t": 0.33333334, "v": 11.909, "tangent": "free", "inTangent": 563.619, "outTangent": 563.619 },
+                { "t": 0.36666667, "v": 38.343, "tangent": "free", "inTangent": 456.492, "outTangent": 456.492 },
+                { "t": 0.46666667, "v": 70.392, "tangent": "free", "inTangent": 157.689, "outTangent": 157.689 },
+                { "t": 0.53333336, "v": 77.363, "tangent": "free", "inTangent": 104.571, "outTangent": 104.571 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": -65.841, "tangent": "free", "inTangent": 373.26, "outTangent": 373.26 },
+                { "t": 0.06666667, "v": -40.957, "tangent": "free", "inTangent": 451.812, "outTangent": 451.812 },
+                { "t": 0.1, "v": -21.882, "tangent": "free", "inTangent": 229.203, "outTangent": 229.203 },
+                { "t": 0.2, "v": -7.552, "tangent": "free", "inTangent": 110.598, "outTangent": 110.598 },
+                { "t": 0.43333334, "v": 13.459, "tangent": "free", "inTangent": 117.366, "outTangent": 117.366 },
+                { "t": 0.53333336, "v": 30.306, "tangent": "free", "inTangent": 168.477, "outTangent": 168.477 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "music",
+      "offsetX": 209,
+      "offsetY": -51,
+      "rigs": [
+        {
+          "name": "a",
+          "images": [ "art/o_music.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.608,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 0.6333333,
+        "channels": [
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.523, "tangent": "free", "inTangent": 1.56, "outTangent": 1.56 },
+                { "t": 0.033333335, "v": 0.575, "tangent": "free", "inTangent": 2.442, "outTangent": 2.442 },
+                { "t": 0.1, "v": 0.949, "tangent": "free", "inTangent": 2.403, "outTangent": 2.403 },
+                { "t": 0.13333334, "v": 1, "tangent": "flat" },
+                { "t": 0.56666666, "v": 0.962, "tangent": "free", "inTangent": -0.174, "outTangent": -0.174 },
+                { "t": 0.6, "v": 0.713, "tangent": "free", "inTangent": -7.041, "outTangent": -7.041 },
+                { "t": 0.6333333, "v": 0.491, "tangent": "free", "inTangent": -6.66, "outTangent": -6.66 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": -120.788, "tangent": "free", "inTangent": 331.425, "outTangent": 331.425 },
+                { "t": 0.33333334, "v": -10.313, "tangent": "free", "inTangent": 382.071, "outTangent": 382.071 },
+                { "t": 0.36666667, "v": 4.72, "tangent": "free", "inTangent": 282.657, "outTangent": 282.657 },
+                { "t": 0.5, "v": 32.164, "tangent": "free", "inTangent": 141.804, "outTangent": 141.804 },
+                { "t": 0.6333333, "v": 46.585, "tangent": "free", "inTangent": 108.159, "outTangent": 108.159 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": -12.061, "tangent": "free", "inTangent": -31.464, "outTangent": -31.464 },
+                { "t": 0.06666667, "v": -14.159, "tangent": "flat" },
+                { "t": 0.13333334, "v": -2.36, "tangent": "free", "inTangent": 77.751, "outTangent": 77.751 },
+                { "t": 0.2, "v": 0.961, "tangent": "flat" },
+                { "t": 0.43333334, "v": -0.262, "tangent": "flat" },
+                { "t": 0.56666666, "v": 11.013, "tangent": "free", "inTangent": 114.168, "outTangent": 114.168 },
+                { "t": 0.6333333, "v": 22.724, "tangent": "free", "inTangent": 175.677, "outTangent": 175.677 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "question",
+      "offsetX": 218,
+      "offsetY": 37,
+      "rigs": [
+        {
+          "name": "a",
+          "images": [ "art/o_question.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.811,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 1.0333333,
+        "channels": [
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.336, "tangent": "free", "inTangent": 5.31, "outTangent": 5.31 },
+                { "t": 0.033333335, "v": 0.513, "tangent": "free", "inTangent": 6.036, "outTangent": 6.036 },
+                { "t": 0.1, "v": 0.979, "tangent": "free", "inTangent": 4.725, "outTangent": 4.725 },
+                { "t": 0.16666667, "v": 1.217, "tangent": "flat" },
+                { "t": 0.2, "v": 1.206, "tangent": "free", "inTangent": -0.597, "outTangent": -0.597 },
+                { "t": 0.26666668, "v": 1, "tangent": "free", "inTangent": -3.09, "outTangent": -3.09 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.336, "tangent": "free", "inTangent": 5.31, "outTangent": 5.31 },
+                { "t": 0.033333335, "v": 0.513, "tangent": "free", "inTangent": 6.036, "outTangent": 6.036 },
+                { "t": 0.1, "v": 0.979, "tangent": "free", "inTangent": 4.725, "outTangent": 4.725 },
+                { "t": 0.16666667, "v": 1.217, "tangent": "flat" },
+                { "t": 0.2, "v": 1.206, "tangent": "free", "inTangent": -0.597, "outTangent": -0.597 },
+                { "t": 0.26666668, "v": 1, "tangent": "free", "inTangent": -3.09, "outTangent": -3.09 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.384, "tangent": "free", "inTangent": 11.4, "outTangent": 11.4 },
+                { "t": 0.033333335, "v": 0.764, "tangent": "free", "inTangent": 7.41, "outTangent": 7.41 },
+                { "t": 0.06666667, "v": 0.947, "tangent": "free", "inTangent": 2.466, "outTangent": 2.466 },
+                { "t": 0.1, "v": 1, "tangent": "flat" },
+                { "t": 0.8666667, "v": 1, "tangent": "flat" },
+                { "t": 0.9, "v": 0.939, "tangent": "free", "inTangent": -2.298, "outTangent": -2.298 },
+                { "t": 0.93333334, "v": 0.836, "tangent": "free", "inTangent": -3.654, "outTangent": -3.654 },
+                { "t": 0.96666664, "v": 0.687, "tangent": "free", "inTangent": -4.149, "outTangent": -4.149 },
+                { "t": 1.0, "v": 0.558, "tangent": "free", "inTangent": -3.855, "outTangent": -3.855 },
+                { "t": 1.0333333, "v": 0.43, "tangent": "free", "inTangent": -3.84, "outTangent": -3.84 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": -28.414, "tangent": "free", "inTangent": 147.537, "outTangent": 147.537 },
+                { "t": 0.033333335, "v": -23.496, "tangent": "free", "inTangent": 203.499, "outTangent": 203.499 },
+                { "t": 0.06666667, "v": -12.568, "tangent": "free", "inTangent": 367.488, "outTangent": 367.488 },
+                { "t": 0.13333334, "v": 15.3, "tangent": "free", "inTangent": 199.65, "outTangent": 199.65 },
+                { "t": 0.16666667, "v": 19.671, "tangent": "flat" },
+                { "t": 0.2, "v": 19.671, "tangent": "flat" },
+                { "t": 0.26666668, "v": 0, "tangent": "free", "inTangent": -295.071, "outTangent": -295.071 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": -45.445, "tangent": "free", "inTangent": 349.716, "outTangent": 349.716 },
+                { "t": 0.13333334, "v": 1.184, "tangent": "free", "inTangent": 106.536, "outTangent": 106.536 },
+                { "t": 0.2, "v": 5.373, "tangent": "flat" },
+                { "t": 0.23333333, "v": 0, "tangent": "free", "inTangent": -161.196, "outTangent": -161.196 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "resentful",
+      "offsetX": 213,
+      "offsetY": 107,
+      "rigs": [
+        {
+          "name": "a",
+          "images": [ "art/o_resentful.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.679,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 0.93333334,
+        "channels": [
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.331, "tangent": "free", "inTangent": 6.435, "outTangent": 6.435 },
+                { "t": 0.06666667, "v": 0.76, "tangent": "free", "inTangent": 3.465, "outTangent": 3.465 },
+                { "t": 0.13333334, "v": 0.918, "tangent": "flat" },
+                { "t": 0.2, "v": 0.879, "tangent": "flat" },
+                { "t": 0.23333333, "v": 0.983, "tangent": "free", "inTangent": 0.657, "outTangent": 0.657 },
+                { "t": 0.36666667, "v": 1.032, "tangent": "flat" },
+                { "t": 0.4, "v": 1, "tangent": "free", "inTangent": -0.96, "outTangent": -0.96 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.331, "tangent": "free", "inTangent": 6.435, "outTangent": 6.435 },
+                { "t": 0.06666667, "v": 0.76, "tangent": "free", "inTangent": 3.465, "outTangent": 3.465 },
+                { "t": 0.13333334, "v": 0.918, "tangent": "flat" },
+                { "t": 0.2, "v": 0.879, "tangent": "flat" },
+                { "t": 0.23333333, "v": 0.983, "tangent": "free", "inTangent": 0.657, "outTangent": 0.657 },
+                { "t": 0.36666667, "v": 1.032, "tangent": "flat" },
+                { "t": 0.4, "v": 1, "tangent": "free", "inTangent": -0.96, "outTangent": -0.96 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.881, "tangent": "free", "inTangent": 3.57, "outTangent": 3.57 },
+                { "t": 0.033333335, "v": 1, "tangent": "flat" },
+                { "t": 0.76666665, "v": 1, "tangent": "flat" },
+                { "t": 0.8, "v": 0.925, "tangent": "free", "inTangent": -2.559, "outTangent": -2.559 },
+                { "t": 0.8333333, "v": 0.826, "tangent": "free", "inTangent": -3.114, "outTangent": -3.114 },
+                { "t": 0.8666667, "v": 0.717, "tangent": "free", "inTangent": -3.63, "outTangent": -3.63 },
+                { "t": 0.9, "v": 0.581, "tangent": "free", "inTangent": -3.972, "outTangent": -3.972 },
+                { "t": 0.93333334, "v": 0.452, "tangent": "free", "inTangent": -3.87, "outTangent": -3.87 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": -88.876, "tangent": "free", "inTangent": 257.688, "outTangent": 257.688 },
+                { "t": 0.06666667, "v": -71.697, "tangent": "free", "inTangent": 348.504, "outTangent": 348.504 },
+                { "t": 0.16666667, "v": -17.88, "tangent": "free", "inTangent": 268.425, "outTangent": 268.425 },
+                { "t": 0.26666668, "v": 0, "tangent": "free", "inTangent": 178.803, "outTangent": 178.803 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": -31.378, "tangent": "free", "inTangent": 61.794, "outTangent": 61.794 },
+                { "t": 0.2, "v": -19.02, "tangent": "free", "inTangent": 101.583, "outTangent": 101.583 },
+                { "t": 0.26666668, "v": 0, "tangent": "free", "inTangent": 285.297, "outTangent": 285.297 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "shock",
+      "offsetX": 160,
+      "offsetY": 148,
+      "rigs": [
+        {
+          "name": "a",
+          "images": [ "art/o_shock.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.958,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 1.2333333,
+        "channels": [
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.52, "tangent": "free", "inTangent": 7.32, "outTangent": 7.32 },
+                { "t": 0.033333335, "v": 0.764, "tangent": "free", "inTangent": 8.133, "outTangent": 8.133 },
+                { "t": 0.06666667, "v": 1.069, "tangent": "free", "inTangent": 7.668, "outTangent": 7.668 },
+                { "t": 0.1, "v": 1.289, "tangent": "flat" },
+                { "t": 0.13333334, "v": 1.207, "tangent": "free", "inTangent": -3.525, "outTangent": -3.525 },
+                { "t": 0.16666667, "v": 1, "tangent": "free", "inTangent": -6.21, "outTangent": -6.21 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.52, "tangent": "free", "inTangent": 7.32, "outTangent": 7.32 },
+                { "t": 0.033333335, "v": 0.764, "tangent": "free", "inTangent": 8.133, "outTangent": 8.133 },
+                { "t": 0.06666667, "v": 1.069, "tangent": "free", "inTangent": 7.668, "outTangent": 7.668 },
+                { "t": 0.1, "v": 1.289, "tangent": "flat" },
+                { "t": 0.13333334, "v": 1.207, "tangent": "free", "inTangent": -3.525, "outTangent": -3.525 },
+                { "t": 0.16666667, "v": 1, "tangent": "free", "inTangent": -6.21, "outTangent": -6.21 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.56, "tangent": "free", "inTangent": 9.78, "outTangent": 9.78 },
+                { "t": 0.033333335, "v": 0.886, "tangent": "free", "inTangent": 5.067, "outTangent": 5.067 },
+                { "t": 0.06666667, "v": 1, "tangent": "flat" },
+                { "t": 1.0666667, "v": 0.9, "tangent": "free", "inTangent": -0.189, "outTangent": -0.189 },
+                { "t": 1.1, "v": 0.848, "tangent": "free", "inTangent": -1.497, "outTangent": -1.497 },
+                { "t": 1.1333333, "v": 0.8, "tangent": "free", "inTangent": -1.599, "outTangent": -1.599 },
+                { "t": 1.1666666, "v": 0.74, "tangent": "free", "inTangent": -1.95, "outTangent": -1.95 },
+                { "t": 1.2, "v": 0.669, "tangent": "free", "inTangent": -2.481, "outTangent": -2.481 },
+                { "t": 1.2333333, "v": 0.57, "tangent": "free", "inTangent": -2.97, "outTangent": -2.97 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": -41.265, "tangent": "free", "inTangent": 678, "outTangent": 678 },
+                { "t": 0.06666667, "v": 3.935, "tangent": "free", "inTangent": 148.674, "outTangent": 148.674 },
+                { "t": 0.13333334, "v": 9.501, "tangent": "flat" },
+                { "t": 0.16666667, "v": 0, "tangent": "free", "inTangent": -285.018, "outTangent": -285.018 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": -35.22, "tangent": "free", "inTangent": 590.19, "outTangent": 590.19 },
+                { "t": 0.06666667, "v": 4.127, "tangent": "free", "inTangent": 97.704, "outTangent": 97.704 },
+                { "t": 0.13333334, "v": 7.677, "tangent": "flat" },
+                { "t": 0.16666667, "v": 0, "tangent": "free", "inTangent": -230.319, "outTangent": -230.319 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "shy",
+      "offsetX": 217,
+      "offsetY": 40,
+      "rigs": [
+        {
+          "name": "bubble",
+          "images": [ "art/o_shy_bubble.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.945,
+          "upright": true
+        },
+        {
+          "name": "p1",
+          "images": [ "art/o_shy_1.png" ],
+          "placeX": -30,
+          "placeY": 11,
+          "scale": 0.945,
+          "upright": true
+        },
+        {
+          "name": "p2",
+          "images": [ "art/o_shy_2.png" ],
+          "placeX": 0,
+          "placeY": 11,
+          "scale": 0.945,
+          "upright": true
+        },
+        {
+          "name": "p3",
+          "images": [ "art/o_shy_3.png" ],
+          "placeX": 30,
+          "placeY": 11,
+          "scale": 0.945,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 1.3333334,
+        "channels": [
+          {
+            "node": "Emoji_Offset",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0.033333335, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
+                { "t": 0.13333334, "v": 1, "tangent": "flat" },
+                { "t": 1.2, "v": 0.991, "tangent": "free", "inTangent": -0.018, "outTangent": -0.018 },
+                { "t": 1.2333333, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 1.2666667, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 1.3, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 1.3333334, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "sigh",
+      "offsetX": 136,
+      "offsetY": -150,
+      "rigs": [
+        {
+          "name": "a",
+          "images": [ "art/o_sigh_1.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.579,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 0.73333335,
+        "channels": [
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.52, "tangent": "free", "inTangent": 0.435, "outTangent": 0.435 },
+                { "t": 0.06666667, "v": 0.549, "tangent": "free", "inTangent": 0.693, "outTangent": 0.693 },
+                { "t": 0.33333334, "v": 1, "tangent": "flat" },
+                { "t": 0.6666667, "v": 0.979, "tangent": "free", "inTangent": -0.126, "outTangent": -0.126 },
+                { "t": 0.7, "v": 0.772, "tangent": "free", "inTangent": -6.915, "outTangent": -6.915 },
+                { "t": 0.73333335, "v": 0.512, "tangent": "free", "inTangent": -7.8, "outTangent": -7.8 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": -50.141, "tangent": "free", "inTangent": 192.795, "outTangent": 192.795 },
+                { "t": 0.13333334, "v": -24.434, "tangent": "free", "inTangent": 136.113, "outTangent": 136.113 },
+                { "t": 0.3, "v": -6.903, "tangent": "free", "inTangent": 55.083, "outTangent": 55.083 },
+                { "t": 0.73333335, "v": 9.265, "tangent": "free", "inTangent": 37.311, "outTangent": 37.311 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 18.349, "tangent": "free", "inTangent": -79.026, "outTangent": -79.026 },
+                { "t": 0.13333334, "v": 7.812, "tangent": "free", "inTangent": -46.803, "outTangent": -46.803 },
+                { "t": 0.3, "v": 2.271, "tangent": "free", "inTangent": -17.58, "outTangent": -17.58 },
+                { "t": 0.73333335, "v": -2.907, "tangent": "free", "inTangent": -11.949, "outTangent": -11.949 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "sleepy",
+      "offsetX": 140,
+      "offsetY": -35,
+      "rigs": [
+        {
+          "name": "z1",
+          "images": [ "art/o_sleepy.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.375,
+          "upright": true
+        },
+        {
+          "name": "z2",
+          "images": [ "art/o_sleepy.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.375,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 4.4333334,
+        "channels": [
+          {
+            "node": "z1/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0, "tangent": "free", "inTangent": 9.999, "outTangent": 9.999 },
+                { "t": 0.1, "v": 1, "tangent": "flat" },
+                { "t": 1.5, "v": 1, "tangent": "flat" },
+                { "t": 1.7, "v": 0, "tangent": "free", "inTangent": -5.001, "outTangent": 0, "broken": true },
+                { "t": 1.7333333, "v": 0, "tangent": "step" },
+                { "t": 2.0, "v": 0, "tangent": "free", "inTangent": 9.999, "outTangent": 9.999 },
+                { "t": 2.1, "v": 1, "tangent": "flat" },
+                { "t": 3.5, "v": 1, "tangent": "flat" },
+                { "t": 3.7, "v": 0, "tangent": "free", "inTangent": -5.001, "outTangent": 0, "broken": true },
+                { "t": 3.7333333, "v": 0, "tangent": "step" },
+                { "t": 4.0, "v": 0, "tangent": "free", "inTangent": 9.999, "outTangent": 9.999 },
+                { "t": 4.1, "v": 1, "tangent": "free", "inTangent": 9.999, "outTangent": 9.999 }
+              ]
+            }
+          },
+          {
+            "node": "z1/EmojiRig_Image",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": -1.78, "tangent": "free", "inTangent": 36.702, "outTangent": 36.702 },
+                { "t": 0.3, "v": 9.231, "tangent": "free", "inTangent": 15.729, "outTangent": 15.729 },
+                { "t": 0.5, "v": 11.233, "tangent": "flat" },
+                { "t": 0.7, "v": 0.222, "tangent": "free", "inTangent": -69.735, "outTangent": -69.735 },
+                { "t": 0.9, "v": -18.796, "tangent": "free", "inTangent": -73.62, "outTangent": -73.62 },
+                { "t": 1.1, "v": -30.808, "tangent": "flat" },
+                { "t": 1.3, "v": -24.802, "tangent": "free", "inTangent": 51.477, "outTangent": 51.477 },
+                { "t": 1.5, "v": 11.233, "tangent": "free", "inTangent": 172.341, "outTangent": 172.341 },
+                { "t": 1.7, "v": 44.265, "tangent": "free", "inTangent": 165.159, "outTangent": 0, "broken": true },
+                { "t": 1.7333333, "v": 44.265, "tangent": "step" },
+                { "t": 2.0, "v": -1.78, "tangent": "free", "inTangent": 36.702, "outTangent": 36.702 },
+                { "t": 2.3, "v": 9.231, "tangent": "free", "inTangent": 15.729, "outTangent": 15.729 },
+                { "t": 2.5, "v": 11.233, "tangent": "flat" },
+                { "t": 2.7, "v": 0.222, "tangent": "free", "inTangent": -69.735, "outTangent": -69.735 },
+                { "t": 2.9, "v": -18.796, "tangent": "free", "inTangent": -73.62, "outTangent": -73.62 },
+                { "t": 3.1, "v": -30.808, "tangent": "flat" },
+                { "t": 3.3, "v": -24.802, "tangent": "free", "inTangent": 51.477, "outTangent": 51.477 },
+                { "t": 3.5, "v": 11.233, "tangent": "free", "inTangent": 172.341, "outTangent": 172.341 },
+                { "t": 3.7, "v": 44.265, "tangent": "free", "inTangent": 165.159, "outTangent": 0, "broken": true },
+                { "t": 3.7333333, "v": 44.265, "tangent": "step" },
+                { "t": 4.0, "v": -1.78, "tangent": "free", "inTangent": 36.702, "outTangent": 36.702 },
+                { "t": 4.3, "v": 9.231, "tangent": "free", "inTangent": 36.702, "outTangent": 36.702 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": -62.616, "tangent": "free", "inTangent": 63.396, "outTangent": 63.396 },
+                { "t": 0.3, "v": -43.598, "tangent": "free", "inTangent": 58.929, "outTangent": 58.929 },
+                { "t": 0.5, "v": -32.587, "tangent": "free", "inTangent": 61.659, "outTangent": 61.659 },
+                { "t": 0.7, "v": -18.574, "tangent": "free", "inTangent": 87.111, "outTangent": 87.111 },
+                { "t": 0.9, "v": 4.449, "tangent": "free", "inTangent": 90.876, "outTangent": 90.876 },
+                { "t": 1.1, "v": 19.463, "tangent": "free", "inTangent": 77.493, "outTangent": 77.493 },
+                { "t": 1.3, "v": 35.479, "tangent": "free", "inTangent": 57.657, "outTangent": 57.657 },
+                { "t": 1.5, "v": 44.488, "tangent": "free", "inTangent": 45.045, "outTangent": 45.045 },
+                { "t": 1.7, "v": 53.496, "tangent": "free", "inTangent": 45.045, "outTangent": 0, "broken": true },
+                { "t": 1.7333333, "v": 53.496, "tangent": "step" },
+                { "t": 2.0, "v": -62.616, "tangent": "free", "inTangent": 63.396, "outTangent": 63.396 },
+                { "t": 2.3, "v": -43.598, "tangent": "free", "inTangent": 58.929, "outTangent": 58.929 },
+                { "t": 2.5, "v": -32.587, "tangent": "free", "inTangent": 61.659, "outTangent": 61.659 },
+                { "t": 2.7, "v": -18.574, "tangent": "free", "inTangent": 87.111, "outTangent": 87.111 },
+                { "t": 2.9, "v": 4.449, "tangent": "free", "inTangent": 90.876, "outTangent": 90.876 },
+                { "t": 3.1, "v": 19.463, "tangent": "free", "inTangent": 77.493, "outTangent": 77.493 },
+                { "t": 3.3, "v": 35.479, "tangent": "free", "inTangent": 57.657, "outTangent": 57.657 },
+                { "t": 3.5, "v": 44.488, "tangent": "free", "inTangent": 45.045, "outTangent": 45.045 },
+                { "t": 3.7, "v": 53.496, "tangent": "free", "inTangent": 45.045, "outTangent": 0, "broken": true },
+                { "t": 3.7333333, "v": 53.496, "tangent": "step" },
+                { "t": 4.0, "v": -62.616, "tangent": "free", "inTangent": 63.396, "outTangent": 63.396 },
+                { "t": 4.3, "v": -43.598, "tangent": "free", "inTangent": 63.396, "outTangent": 63.396 }
+              ]
+            }
+          },
+          {
+            "node": "z2/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 1, "tangent": "flat" },
+                { "t": 0.5, "v": 1, "tangent": "flat" },
+                { "t": 0.7, "v": 0, "tangent": "free", "inTangent": -5.001, "outTangent": 0, "broken": true },
+                { "t": 0.73333335, "v": 0, "tangent": "step" },
+                { "t": 1.0, "v": 0, "tangent": "free", "inTangent": 9.999, "outTangent": 9.999 },
+                { "t": 1.1, "v": 1, "tangent": "flat" },
+                { "t": 2.5, "v": 1, "tangent": "flat" },
+                { "t": 2.7, "v": 0, "tangent": "free", "inTangent": -5.001, "outTangent": 0, "broken": true },
+                { "t": 2.7333333, "v": 0, "tangent": "step" },
+                { "t": 3.0, "v": 0, "tangent": "free", "inTangent": 9.999, "outTangent": 9.999 },
+                { "t": 3.1, "v": 1, "tangent": "free", "inTangent": 9.999, "outTangent": 9.999 }
+              ]
+            }
+          },
+          {
+            "node": "z2/EmojiRig_Image",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": -24.802, "tangent": "free", "inTangent": -60.057, "outTangent": -60.057 },
+                { "t": 0.1, "v": -30.808, "tangent": "flat" },
+                { "t": 0.3, "v": -24.802, "tangent": "free", "inTangent": 51.477, "outTangent": 51.477 },
+                { "t": 0.5, "v": 11.233, "tangent": "free", "inTangent": 172.341, "outTangent": 172.341 },
+                { "t": 0.7, "v": 44.265, "tangent": "free", "inTangent": 165.159, "outTangent": 0, "broken": true },
+                { "t": 0.73333335, "v": 44.265, "tangent": "step" },
+                { "t": 1.0, "v": -1.78, "tangent": "free", "inTangent": 36.702, "outTangent": 36.702 },
+                { "t": 1.3, "v": 9.231, "tangent": "free", "inTangent": 15.729, "outTangent": 15.729 },
+                { "t": 1.5, "v": 11.233, "tangent": "flat" },
+                { "t": 1.7, "v": 0.222, "tangent": "free", "inTangent": -69.735, "outTangent": -69.735 },
+                { "t": 1.9, "v": -18.796, "tangent": "free", "inTangent": -73.62, "outTangent": -73.62 },
+                { "t": 2.1, "v": -30.808, "tangent": "flat" },
+                { "t": 2.3, "v": -24.802, "tangent": "free", "inTangent": 51.477, "outTangent": 51.477 },
+                { "t": 2.5, "v": 11.233, "tangent": "free", "inTangent": 172.341, "outTangent": 172.341 },
+                { "t": 2.7, "v": 44.265, "tangent": "free", "inTangent": 165.159, "outTangent": 0, "broken": true },
+                { "t": 2.7333333, "v": 44.265, "tangent": "step" },
+                { "t": 3.0, "v": -1.78, "tangent": "free", "inTangent": 36.702, "outTangent": 36.702 },
+                { "t": 3.3, "v": 9.231, "tangent": "free", "inTangent": 15.729, "outTangent": 15.729 },
+                { "t": 3.5, "v": 11.233, "tangent": "flat" },
+                { "t": 3.7, "v": 0.222, "tangent": "free", "inTangent": -69.735, "outTangent": -69.735 },
+                { "t": 3.9, "v": -18.796, "tangent": "free", "inTangent": -73.62, "outTangent": -73.62 },
+                { "t": 4.1, "v": -30.808, "tangent": "flat" },
+                { "t": 4.3, "v": -24.802, "tangent": "free", "inTangent": 30.03, "outTangent": 30.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 11.956, "tangent": "free", "inTangent": 75.072, "outTangent": 75.072 },
+                { "t": 0.1, "v": 19.463, "tangent": "free", "inTangent": 77.493, "outTangent": 77.493 },
+                { "t": 0.3, "v": 35.479, "tangent": "free", "inTangent": 57.657, "outTangent": 57.657 },
+                { "t": 0.5, "v": 44.488, "tangent": "free", "inTangent": 45.045, "outTangent": 45.045 },
+                { "t": 0.7, "v": 53.496, "tangent": "free", "inTangent": 45.045, "outTangent": 0, "broken": true },
+                { "t": 0.73333335, "v": 53.496, "tangent": "step" },
+                { "t": 1.0, "v": -62.616, "tangent": "free", "inTangent": 63.396, "outTangent": 63.396 },
+                { "t": 1.3, "v": -43.598, "tangent": "free", "inTangent": 58.929, "outTangent": 58.929 },
+                { "t": 1.5, "v": -32.587, "tangent": "free", "inTangent": 61.659, "outTangent": 61.659 },
+                { "t": 1.7, "v": -18.574, "tangent": "free", "inTangent": 87.111, "outTangent": 87.111 },
+                { "t": 1.9, "v": 4.449, "tangent": "free", "inTangent": 90.876, "outTangent": 90.876 },
+                { "t": 2.1, "v": 19.463, "tangent": "free", "inTangent": 77.493, "outTangent": 77.493 },
+                { "t": 2.3, "v": 35.479, "tangent": "free", "inTangent": 57.657, "outTangent": 57.657 },
+                { "t": 2.5, "v": 44.488, "tangent": "free", "inTangent": 45.045, "outTangent": 45.045 },
+                { "t": 2.7, "v": 53.496, "tangent": "free", "inTangent": 45.045, "outTangent": 0, "broken": true },
+                { "t": 2.7333333, "v": 53.496, "tangent": "step" },
+                { "t": 3.0, "v": -62.616, "tangent": "free", "inTangent": 63.396, "outTangent": 63.396 },
+                { "t": 3.3, "v": -43.598, "tangent": "free", "inTangent": 58.929, "outTangent": 58.929 },
+                { "t": 3.5, "v": -32.587, "tangent": "free", "inTangent": 61.659, "outTangent": 61.659 },
+                { "t": 3.7, "v": -18.574, "tangent": "free", "inTangent": 87.111, "outTangent": 87.111 },
+                { "t": 3.9, "v": 4.449, "tangent": "free", "inTangent": 90.876, "outTangent": 90.876 },
+                { "t": 4.1, "v": 19.463, "tangent": "free", "inTangent": 77.493, "outTangent": 77.493 },
+                { "t": 4.3, "v": 35.479, "tangent": "free", "inTangent": 80.079, "outTangent": 80.079 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 1, "tangent": "flat" },
+                { "t": 4.3, "v": 0.991, "tangent": "free", "inTangent": -0.003, "outTangent": -0.003 },
+                { "t": 4.3333335, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 4.366667, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 4.4, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 4.4333334, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "speechless",
+      "offsetX": 220,
+      "offsetY": 31,
+      "rigs": [
+        {
+          "name": "bubble",
+          "images": [ "art/o_speechless_bubble.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.541,
+          "upright": true
+        },
+        {
+          "name": "p1",
+          "images": [ "art/o_speechless_1.png" ],
+          "placeX": -23,
+          "placeY": 6,
+          "scale": 0.541,
+          "upright": true
+        },
+        {
+          "name": "p2",
+          "images": [ "art/o_speechless_2.png" ],
+          "placeX": 0,
+          "placeY": 6,
+          "scale": 0.541,
+          "upright": true
+        },
+        {
+          "name": "p3",
+          "images": [ "art/o_speechless_3.png" ],
+          "placeX": 23,
+          "placeY": 6,
+          "scale": 0.541,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 1.4333333,
+        "channels": [
+          {
+            "node": "bubble/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0.033333335, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
+                { "t": 0.13333334, "v": 1, "tangent": "flat" },
+                { "t": 1.3, "v": 0.991, "tangent": "free", "inTangent": -0.015, "outTangent": -0.015 },
+                { "t": 1.3333334, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 1.3666667, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 1.4, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 1.4333333, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          },
+          {
+            "node": "p1/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0.1, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0.13333334, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
+                { "t": 0.23333333, "v": 1, "tangent": "flat" },
+                { "t": 1.3, "v": 0.991, "tangent": "free", "inTangent": -0.018, "outTangent": -0.018 },
+                { "t": 1.3333334, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 1.3666667, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 1.4, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 1.4333333, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          },
+          {
+            "node": "p2/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0.56666666, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0.6, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
+                { "t": 0.7, "v": 1, "tangent": "flat" },
+                { "t": 1.3, "v": 0.991, "tangent": "free", "inTangent": -0.03, "outTangent": -0.03 },
+                { "t": 1.3333334, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 1.3666667, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 1.4, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 1.4333333, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          },
+          {
+            "node": "p3/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0.96666664, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 1.0, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
+                { "t": 1.1, "v": 1, "tangent": "flat" },
+                { "t": 1.3, "v": 0.991, "tangent": "free", "inTangent": -0.09, "outTangent": -0.09 },
+                { "t": 1.3333334, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 1.3666667, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 1.4, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 1.4333333, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "star",
+      "offsetX": 147,
+      "offsetY": -14,
+      "rigs": [
+        {
+          "name": "big",
+          "images": [ "art/o_star_1.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.627,
+          "upright": true
+        },
+        {
+          "name": "s1",
+          "images": [ "art/o_star_2.png" ],
+          "placeX": -41,
+          "placeY": -31,
+          "scale": 0.627,
+          "upright": true
+        },
+        {
+          "name": "s2",
+          "images": [ "art/o_star_2.png" ],
+          "placeX": 34,
+          "placeY": 36,
+          "scale": 0.407,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 0.93333334,
+        "channels": [
+          {
+            "node": "big/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            }
+          },
+          {
+            "node": "big/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0.033333335, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
+                { "t": 0.13333334, "v": 1, "tangent": "flat" },
+                { "t": 0.8, "v": 0.991, "tangent": "free", "inTangent": -0.027, "outTangent": -0.027 },
+                { "t": 0.8333333, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 0.8666667, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 0.9, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 0.93333334, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          },
+          {
+            "node": "s1/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0.13333334, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.16666667, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.2, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.26666668, "v": 1.109, "tangent": "flat" },
+                { "t": 0.3, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.33333334, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0.13333334, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.16666667, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.2, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.26666668, "v": 1.109, "tangent": "flat" },
+                { "t": 0.3, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.33333334, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            }
+          },
+          {
+            "node": "s1/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0.13333334, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0.16666667, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
+                { "t": 0.26666668, "v": 1, "tangent": "flat" },
+                { "t": 0.8, "v": 0.991, "tangent": "free", "inTangent": -0.033, "outTangent": -0.033 },
+                { "t": 0.8333333, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 0.8666667, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 0.9, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 0.93333334, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          },
+          {
+            "node": "s2/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0.26666668, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.3, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.33333334, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.4, "v": 1.109, "tangent": "flat" },
+                { "t": 0.43333334, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.46666667, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0.26666668, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.3, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.33333334, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.4, "v": 1.109, "tangent": "flat" },
+                { "t": 0.43333334, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.46666667, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            }
+          },
+          {
+            "node": "s2/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0.26666668, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0.3, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
+                { "t": 0.4, "v": 1, "tangent": "flat" },
+                { "t": 0.8, "v": 0.991, "tangent": "free", "inTangent": -0.045, "outTangent": -0.045 },
+                { "t": 0.8333333, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 0.8666667, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 0.9, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 0.93333334, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "sweaty",
+      "offsetX": 95,
+      "offsetY": -31,
+      "rigs": [
+        {
+          "name": "a",
+          "images": [ "art/o_sweaty_1.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.657,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 0.8333333,
+        "channels": [
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.641, "tangent": "free", "inTangent": 4.11, "outTangent": 4.11 },
+                { "t": 0.033333335, "v": 0.778, "tangent": "free", "inTangent": 2.832, "outTangent": 2.832 },
+                { "t": 0.06666667, "v": 0.85, "tangent": "free", "inTangent": 1.272, "outTangent": 1.272 },
+                { "t": 0.13333334, "v": 0.91, "tangent": "flat" },
+                { "t": 0.16666667, "v": 0.867, "tangent": "flat" },
+                { "t": 0.3, "v": 1, "tangent": "free", "inTangent": 0.999, "outTangent": 0.999 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.641, "tangent": "free", "inTangent": 4.11, "outTangent": 4.11 },
+                { "t": 0.033333335, "v": 0.778, "tangent": "free", "inTangent": 2.832, "outTangent": 2.832 },
+                { "t": 0.06666667, "v": 0.85, "tangent": "free", "inTangent": 1.272, "outTangent": 1.272 },
+                { "t": 0.13333334, "v": 0.91, "tangent": "flat" },
+                { "t": 0.16666667, "v": 0.867, "tangent": "flat" },
+                { "t": 0.3, "v": 1, "tangent": "free", "inTangent": 0.999, "outTangent": 0.999 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.417, "tangent": "free", "inTangent": 4.401, "outTangent": 4.401 },
+                { "t": 0.1, "v": 0.857, "tangent": "free", "inTangent": 2.157, "outTangent": 2.157 },
+                { "t": 0.2, "v": 1, "tangent": "flat" },
+                { "t": 0.6666667, "v": 0.999, "tangent": "free", "inTangent": -0.003, "outTangent": -0.003 },
+                { "t": 0.7, "v": 0.934, "tangent": "free", "inTangent": -2.346, "outTangent": -2.346 },
+                { "t": 0.73333335, "v": 0.836, "tangent": "free", "inTangent": -3.807, "outTangent": -3.807 },
+                { "t": 0.76666665, "v": 0.656, "tangent": "free", "inTangent": -4.164, "outTangent": -4.164 },
+                { "t": 0.8, "v": 0.543, "tangent": "free", "inTangent": -3.81, "outTangent": -3.81 },
+                { "t": 0.8333333, "v": 0.398, "tangent": "free", "inTangent": -4.35, "outTangent": -4.35 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 24.626, "tangent": "free", "inTangent": -92.346, "outTangent": -92.346 },
+                { "t": 0.26666668, "v": 0, "tangent": "free", "inTangent": -92.346, "outTangent": -92.346 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "symbol",
+      "offsetX": 204,
+      "offsetY": 22,
+      "rigs": [
+        {
+          "name": "ex",
+          "images": [ "art/o_symbol_1.png" ],
+          "placeX": -43,
+          "placeY": 0,
+          "scale": 0.825,
+          "upright": true
+        },
+        {
+          "name": "q",
+          "images": [ "art/o_symbol_2.png" ],
+          "placeX": 43,
+          "placeY": 0,
+          "scale": 0.825,
+          "rotation": -12,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 0.8333333,
+        "channels": [
+          {
+            "node": "ex/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            }
+          },
+          {
+            "node": "ex/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0.033333335, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
+                { "t": 0.13333334, "v": 1, "tangent": "flat" },
+                { "t": 0.7, "v": 0.991, "tangent": "free", "inTangent": -0.033, "outTangent": -0.033 },
+                { "t": 0.73333335, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 0.76666665, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 0.8, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 0.8333333, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          },
+          {
+            "node": "q/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0.06666667, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.1, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.13333334, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.2, "v": 1.109, "tangent": "flat" },
+                { "t": 0.23333333, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.26666668, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "step" },
+                { "t": 0.06666667, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.1, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.13333334, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.2, "v": 1.109, "tangent": "flat" },
+                { "t": 0.23333333, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.26666668, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            }
+          },
+          {
+            "node": "q/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0.06666667, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0.1, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
+                { "t": 0.2, "v": 1, "tangent": "flat" },
+                { "t": 0.7, "v": 0.991, "tangent": "free", "inTangent": -0.036, "outTangent": -0.036 },
+                { "t": 0.73333335, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 0.76666665, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 0.8, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 0.8333333, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "think",
+      "offsetX": 83,
+      "offsetY": -3,
+      "rigs": [
+        {
+          "name": "cloud",
+          "images": [ "art/o_think_3.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.637,
+          "upright": true
+        },
+        {
+          "name": "b2",
+          "images": [ "art/o_think_2.png" ],
+          "placeX": -45,
+          "placeY": 10,
+          "scale": 0.446,
+          "upright": true
+        },
+        {
+          "name": "b1",
+          "images": [ "art/o_think_1.png" ],
+          "placeX": -59,
+          "placeY": 19,
+          "scale": 0.319,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 0.53333336,
+        "channels": [
+          {
+            "node": "Emoji_Offset",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.581, "tangent": "free", "inTangent": 7.965, "outTangent": 7.965 },
+                { "t": 0.033333335, "v": 0.846, "tangent": "free", "inTangent": 6.318, "outTangent": 6.318 },
+                { "t": 0.06666667, "v": 1.02, "tangent": "free", "inTangent": 2.118, "outTangent": 2.118 },
+                { "t": 0.13333334, "v": 1.109, "tangent": "flat" },
+                { "t": 0.16666667, "v": 1.101, "tangent": "free", "inTangent": -0.444, "outTangent": -0.444 },
+                { "t": 0.2, "v": 1, "tangent": "free", "inTangent": -3.03, "outTangent": -3.03 }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.528, "tangent": "free", "inTangent": 5.88, "outTangent": 5.88 },
+                { "t": 0.033333335, "v": 0.724, "tangent": "free", "inTangent": 3.756, "outTangent": 3.756 },
+                { "t": 0.13333334, "v": 1, "tangent": "flat" },
+                { "t": 0.4, "v": 0.991, "tangent": "free", "inTangent": -0.066, "outTangent": -0.066 },
+                { "t": 0.43333334, "v": 0.859, "tangent": "free", "inTangent": -3.609, "outTangent": -3.609 },
+                { "t": 0.46666667, "v": 0.748, "tangent": "free", "inTangent": -3.507, "outTangent": -3.507 },
+                { "t": 0.5, "v": 0.625, "tangent": "free", "inTangent": -3.906, "outTangent": -3.906 },
+                { "t": 0.53333336, "v": 0.487, "tangent": "free", "inTangent": -4.11, "outTangent": -4.11 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "vexation",
+      "offsetX": 198,
+      "offsetY": -20,
+      "rigs": [
+        {
+          "name": "a",
+          "images": [ "art/o_vexation_1.png", "art/o_vexation_2.png" ],
+          "placeX": 0,
+          "placeY": 0,
+          "scale": 0.987,
+          "upright": true
+        }
+      ],
+      "timeline": {
+        "duration": 1.0333333,
+        "channels": [
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "scale",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.723, "tangent": "free", "inTangent": 2.01, "outTangent": 2.01 },
+                { "t": 0.033333335, "v": 0.79, "tangent": "free", "inTangent": 1.104, "outTangent": 1.104 },
+                { "t": 0.13333334, "v": 0.866, "tangent": "free", "inTangent": 0.675, "outTangent": 0.675 },
+                { "t": 0.26666668, "v": 0.947, "tangent": "free", "inTangent": 0.039, "outTangent": 0.039 },
+                { "t": 0.36666667, "v": 0.949, "tangent": "free", "inTangent": 0.039, "outTangent": 0.039 },
+                { "t": 0.4, "v": 1, "tangent": "free", "inTangent": 1.53, "outTangent": 1.53 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": 0.723, "tangent": "free", "inTangent": 2.01, "outTangent": 2.01 },
+                { "t": 0.033333335, "v": 0.79, "tangent": "free", "inTangent": 1.104, "outTangent": 1.104 },
+                { "t": 0.13333334, "v": 0.866, "tangent": "free", "inTangent": 0.675, "outTangent": 0.675 },
+                { "t": 0.26666668, "v": 0.947, "tangent": "free", "inTangent": 0.039, "outTangent": 0.039 },
+                { "t": 0.36666667, "v": 0.949, "tangent": "free", "inTangent": 0.039, "outTangent": 0.039 },
+                { "t": 0.4, "v": 1, "tangent": "free", "inTangent": 1.53, "outTangent": 1.53 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "alpha",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0.583, "tangent": "free", "inTangent": 5.085, "outTangent": 5.085 },
+                { "t": 0.06666667, "v": 0.922, "tangent": "free", "inTangent": 1.902, "outTangent": 1.902 },
+                { "t": 0.13333334, "v": 1, "tangent": "flat" },
+                { "t": 0.9, "v": 1, "tangent": "flat" },
+                { "t": 0.93333334, "v": 0.923, "tangent": "free", "inTangent": -2.541, "outTangent": -2.541 },
+                { "t": 0.96666664, "v": 0.829, "tangent": "free", "inTangent": -3.354, "outTangent": -3.354 },
+                { "t": 1.0, "v": 0.691, "tangent": "free", "inTangent": -4.509, "outTangent": -4.509 },
+                { "t": 1.0333333, "v": 0.526, "tangent": "free", "inTangent": -4.95, "outTangent": -4.95 }
+              ]
+            }
+          },
+          {
+            "node": "a/EmojiRig_Image",
+            "kind": "image",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": 0, "tangent": "step" },
+                { "t": 0.16666667, "v": 1, "tangent": "step" },
+                { "t": 0.33333334, "v": 0, "tangent": "step" },
+                { "t": 0.5, "v": 1, "tangent": "step" },
+                { "t": 0.6666667, "v": 0, "tangent": "step" },
+                { "t": 0.8333333, "v": 1, "tangent": "step" },
+                { "t": 1.0, "v": 0, "tangent": "step" }
+              ]
+            }
+          },
+          {
+            "node": "Emoji_Offset",
+            "kind": "position",
+            "x": {
+              "keys": [
+                { "t": 0.0, "v": -10.011, "tangent": "free", "inTangent": -37.542, "outTangent": -37.542 },
+                { "t": 0.06666667, "v": -12.514, "tangent": "flat" },
+                { "t": 0.33333334, "v": 0, "tangent": "free", "inTangent": 46.929, "outTangent": 46.929 }
+              ]
+            },
+            "y": {
+              "keys": [
+                { "t": 0.0, "v": -13.997, "tangent": "free", "inTangent": -23.637, "outTangent": -23.637 },
+                { "t": 0.06666667, "v": -15.573, "tangent": "flat" },
+                { "t": 0.13333334, "v": -9.455, "tangent": "free", "inTangent": 24.567, "outTangent": 24.567 },
+                { "t": 0.8, "v": 0, "tangent": "free", "inTangent": 14.184, "outTangent": 14.184 }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

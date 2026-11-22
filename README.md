@@ -58,7 +58,7 @@ dotnet run --project src/Mt.App/Mt.App.csproj
 | [`docs/guide/README.md`](docs/guide/README.md) | **그림으로 보는 사용 설명서** — 실제 화면에 번호를 얹어 따라 하는 순서대로. 처음이면 여기부터 |
 | [`docs/USER-GUIDE.md`](docs/USER-GUIDE.md) | 화면으로 만드는 법(조작 전부를 적은 글) — 캐릭터 모션 · 클립 · 이모지 |
 | [`docs/AUTHORING-FILES.md`](docs/AUTHORING-FILES.md) | 파일을 직접 써서 만드는 법(AI · 스크립트) — 형식 · 규칙 · `mt`. 예시는 [`examples/authoring/`](examples/authoring) |
-| [`library/README.md`](library/README.md) | **실제로 쓸 세트** — 캐릭터 모션 13(참고집 몸짓 G01~G12) · 이모지 44(22종 × 좌우). 그림(`library/art`)은 git 밖 |
+| [`library/README.md`](library/README.md) | **실제로 쓸 세트** — 연출 카드의 몸짓 17(G01~G16 + G12의 좌우 반대) · 감정 아이콘 22(I01~I22)를 저작본 하나에. 그림(`library/art`)은 git 밖 |
 | [`docs/HANDOFF.md`](docs/HANDOFF.md) | 일을 이어받는 사람이 먼저 읽는 것 — 무엇인가 · 구조 · 지켜야 하는 것 · 연관 저장소 |
 | [`docs/MAINTENANCE.md`](docs/MAINTENANCE.md) | 코드를 고치는 사람 — 코드 지도 · 불변식 · 자주 하는 작업 · 테스트 요령 · 함정 |
 | [`docs/PLAN-characterRig.md`](docs/PLAN-characterRig.md) | 이 저장소의 방향 |
