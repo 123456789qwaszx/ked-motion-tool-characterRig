@@ -74,6 +74,6 @@
 
 R8 밖에 남긴 것:
 
-- 소유자 PC의 커밋되지 않은 `library/cards.motion-authoring.json`(과 자동 저장본)에는 20노드의 스키마 지문이 있다 — 열면 "새 노드 둘 · 부모가 바뀐 노드 하나" 알림이 뜬다(막지 않는다). 받으려면 "지금의 스키마를 문서에 적기". 그 파일이 `LibraryTests`(emojis)의 실패 하나도 낸다.
+- ~~소유자 PC의 커밋되지 않은 `library/cards.motion-authoring.json`~~ — **걷었다(소유자, 11-23)**. 소유자가 앱에서 손으로 고친 것이었다(감정 아이콘 `attention`의 기본 자리 · 크기, `question`의 기본 자리 · 회전과 등장의 가로 키 · 흔들림). 걷은 파일과 자동 저장본은 `artifacts/r8-discarded/`(git 밖)에 있다. 이제 `LibraryTests`의 실패도 없다.
 - 새 노드를 모션에서 막아야 한다면 런타임이 `MotionRules.ForbiddenNodes`에 더한다(P1) — 다음 동기화로 하이어아키에 "키잉 금지"로 선다.
 - 씬의 자리를 `CharSlot_Track`(= `place`)에 푸는 쪽(R7 §6 P2) · 초상의 크기(R7 §6 P3) · 씬의 자리 콤보가 코어 `ScreenPointRatios.Names`를 부르는 것.
