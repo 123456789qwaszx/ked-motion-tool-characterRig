@@ -28,6 +28,27 @@ namespace Ked.Presentation.Tests
             Assert.That(units, Is.EqualTo(expected).Within(Eps));
         }
 
+        // ── 글: px → 대본의 u (화면 지점 덧그림 — docs/PLAN_move-axes.md §10) ─────────
+
+        [TestCase(460.8f, "11.52")]
+        [TestCase(585f, "14.625")]    // 폭 2340의 4분의 1
+        [TestCase(-480f, "-12")]
+        [TestCase(43.68f, "1.092")]
+        [TestCase(0.0001f, "0")]
+        [TestCase(-0.0001f, "0")]     // -0을 적지 않는다
+        [TestCase(1.23456f, "0.031")] // 셋째 자리까지
+        public void FormatUnits는_소수_셋째_자리까지_뒤의_0을_뗀다(float pixels, string expected)
+        {
+            Assert.That(UnitToken.FormatUnits(pixels, Fhd), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void FormatUnits는_기준_폭에서_센다()
+        {
+            Assert.That(UnitToken.FormatUnits(80f, Uhd), Is.EqualTo("1"));
+            Assert.That(UnitToken.FormatUnits(80f, Fhd), Is.EqualTo("2"));
+        }
+
         [TestCase((string)null)]
         [TestCase("")]
         [TestCase("   ")]

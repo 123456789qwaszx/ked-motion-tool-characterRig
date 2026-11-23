@@ -8,10 +8,11 @@ namespace Ked.Presentation.Core
     /// </summary>
     public static partial class StageReducer
     {
-        // SetAnchorCommandCharR의 리셋 목록(두 플래그 모두 켜진 경로 — cast가 쓴다).
+        // SetAnchorCommandCharR의 리셋 목록(두 플래그 모두 켜진 경로 — cast가 쓴다). 순서도 런타임과 같다.
+        // 슬롯의 움직임(Move_X · _Y)은 본래 자리와 함께 되돌린다(docs/PLAN_move-axes.md M7).
         private static readonly string[] SetAnchorResetPositionIds =
         {
-            "CharSlot_Track",
+            "CharSlot_Track", "CharSlot_Move_X", "CharSlot_Move_Y",
             "CharacterPortrait_Track", "CharacterPortrait_Track_Move",
             "CharacterPortrait_SwayPivot", "CharacterPortrait_Shake",
         };

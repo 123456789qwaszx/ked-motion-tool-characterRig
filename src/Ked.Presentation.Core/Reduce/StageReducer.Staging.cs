@@ -7,7 +7,9 @@ namespace Ked.Presentation.Core
     /// </summary>
     public static partial class StageReducer
     {
-        private static bool ApplyMoveBy(
+        // bg_move — 배경 슬롯의 본래 자리(Track)에 상대값. 캐릭터의 move_by는 걷었다(docs/PLAN_move-axes.md M4) —
+        // 배경은 본래 자리와 움직임을 가르는 쓰임이 없어 그대로 둔다(§4.1).
+        private static bool ApplyBackgroundMove(
             StageState state, in StageCommand cmd, StageReducerTuning tuning, out string reason)
         {
             if (!TryGetSpawnedSlot(state, cmd, out string slotKey, out reason))
@@ -24,53 +26,15 @@ namespace Ked.Presentation.Core
             return true;
         }
 
-        /// <summary>
-        /// 접는 것은 "위치를 바꾸지 않는다"는 사실 그 자체.
-        /// 접지 않으면 프리뷰가 이 커맨드를 영원히 "반영 안 된 연출"로 짚음.
-        /// </summary>
-        private static bool ApplySlideIn(
-            StageState state, in StageCommand cmd, StageReducerTuning tuning, out string reason)
-            => TryReadSlide(state, cmd, tuning, SlideMotion.DefaultInDirection, out _, out _, out reason);
-
-        private static bool ApplySlideOut(
-            StageState state, in StageCommand cmd, StageReducerTuning tuning, out string reason)
-        {
-            if (!TryReadSlide(state, cmd, tuning, SlideMotion.DefaultOutDirection,
-                    out string slotKey, out Vec2 offset, out reason))
-                return false;
-
-            ApplyMoveTarget(state, slotKey, "CharSlot_Track", relative: true, offset);
-            return true;
-        }
-
-        private static bool TryReadSlide(
-            StageState state, in StageCommand cmd, StageReducerTuning tuning,
-            string defaultDirection, out string slotKey, out Vec2 offset, out string reason)
-        {
-            offset = Vec2.Zero;
-
-            if (!TryGetSpawnedSlot(state, cmd, out slotKey, out reason))
-                return false;
-
-            string distanceToken = cmd.Arg(2, SlideMotion.DefaultDistanceToken);
-
-            if (!UnitToken.TryParsePixels(distanceToken, tuning.ReferenceStageWidth, out float pixels))
-            {
-                reason = $"거리 토큰을 읽지 못했다: '{distanceToken}'";
-                return false;
-            }
-
-            offset = SlideMotion.DirectionVector(cmd.Arg(1, defaultDirection)) * pixels;
-            return true;
-        }
-
         private static bool ApplyMoveReset(StageState state, in StageCommand cmd, out string reason)
         {
             if (!TryGetSpawnedSlot(state, cmd, out string slotKey, out reason))
                 return false;
 
-            // 브리지는 Track에 절대 0을 건다 — move_by가 쓰는 그 노드다. 포커스는 focus_reset이 걷는다.
-            ApplyMoveTarget(state, slotKey, "CharSlot_Track", relative: false, Vec2.Zero);
+            // 쌓인 움직임(Move_X · _Y)만 0으로 — 본래 자리(place의 Track)는 그대로다(docs/PLAN_move-axes.md M6).
+            // 브리지도 두 노드에 절대 0을 건다. 포커스는 focus_reset이 걷는다.
+            ApplyMoveTarget(state, slotKey, NodeTargets.SlotMoveXNodeId, relative: false, Vec2.Zero);
+            ApplyMoveTarget(state, slotKey, NodeTargets.SlotMoveYNodeId, relative: false, Vec2.Zero);
             return true;
         }
 

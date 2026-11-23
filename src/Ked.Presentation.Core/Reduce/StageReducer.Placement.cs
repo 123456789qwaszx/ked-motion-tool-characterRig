@@ -5,7 +5,8 @@ namespace Ked.Presentation.Core
     /// 결과가 인자에 적혀 있다. 여기는 토큰 해석과 배선만 맡는다.
     ///
     ///   포커스  focus_move · focus_rotate · focus_scale · focus_reset   CharFocus_Track · _Rotation · _Scale
-    ///   슬롯    place                                                   CharSlot_Track (move_by · slide와 같은 노드)
+    ///   슬롯    place                                                   CharSlot_Track — 본래 자리(절대)
+    ///   슬롯    left · right · up · down · move_reset                   CharSlot_Move_X · _Y — 본래 자리 위의 움직임(상대, 쌓인다)
     ///   초상    size · size_reset                                       CharacterPortrait_DepthOffset · _DepthScale
     /// </summary>
     public static partial class StageReducer
@@ -22,6 +23,38 @@ namespace Ked.Presentation.Core
                 return false;
 
             ApplyMoveTarget(state, slotKey, NodeTargets.SlotTrackNodeId, relative: false, position);
+            return true;
+        }
+
+        // left · right · up · down — 본래 자리 위의 움직임(docs/PLAN_move-axes.md §4). 노드와 방향은 NodeTargets.TryGetSlotMove.
+        // 거리에는 생략값이 없다 — 빠지면 접지 않는다(파서도 내지 않는다). 음수는 반대 방향이다(left -2u = right 2u).
+        private static bool ApplySlotMove(
+            StageState state, in StageCommand cmd, StageReducerTuning tuning, out string reason)
+        {
+            if (!TryGetSpawnedSlot(state, cmd, out string slotKey, out reason))
+                return false;
+
+            if (!NodeTargets.TryGetSlotMove(cmd.Name, out string nodeId, out Vec2 direction))
+            {
+                reason = $"'{cmd.Name}'은 슬롯의 움직임이 아니다";
+                return false;
+            }
+
+            string distanceToken = cmd.Arg(1);
+
+            if (distanceToken == null)
+            {
+                reason = "거리가 없다 — 거리는 꼭 적는다";
+                return false;
+            }
+
+            if (!UnitToken.TryParseSignedPixels(distanceToken, tuning.ReferenceStageWidth, out float distance))
+            {
+                reason = $"거리 토큰을 읽지 못했다: '{distanceToken}'";
+                return false;
+            }
+
+            ApplyMoveTarget(state, slotKey, nodeId, relative: true, direction * distance);
             return true;
         }
 
@@ -108,7 +141,7 @@ namespace Ked.Presentation.Core
 
         // ── 공용 ──────────────────────────────────────────────
 
-        // x · y(단위 토큰). 생략하면 0u — move_by와 같은 생략값이다.
+        // x · y(단위 토큰). 생략하면 0u.
         private static bool TryReadPosition(
             in StageCommand cmd, StageReducerTuning tuning, out Vec2 position, out string reason)
         {

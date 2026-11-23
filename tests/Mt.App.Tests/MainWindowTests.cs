@@ -821,7 +821,7 @@ public class MainWindowTests
                 window.Session.Editor.Undo();
                 Assert.Null(window.Session.Editor.Document.Find("nod_2"));
 
-                // "리그 노드 보기"면 덤프 노드 26단. 끄면 다시 컨트롤러.
+                // "리그 노드 보기"면 덤프의 노드 22단. 끄면 다시 컨트롤러.
                 window.ShowRigNodes = true;
                 Assert.Empty(window.HierarchyPathOfController("s1", "body"));
                 Assert.NotEmpty(window.HierarchyPathOf("s1", "CharacterPortrait_Track_Move"));
@@ -911,7 +911,7 @@ public class MainWindowTests
 
                 // 리그 노드는 연기/배치 폴더가 아니라 덤프의 parent 사슬이다. 오브젝트 항목이 곧 __root.
                 IReadOnlyList<string> path = window.HierarchyPathOf("s1", "CharacterPortrait_Track_Move");
-                Assert.Equal(new[] { "Scene  scene  ·  PresentataionUIRoot", "StageViewportLayer", "StageShot_Root", "StagePan_Root  ·  pan 0,0", "StageZoom_Root  ·  zoom 0", "Stage00_Root", "Stage00Mask_Root", "Stage00DepthSystem_Root", "Stage00Depth_Mid_Root", "Stage00Depth_Mid_FramingTransform", "Stage00Depth_Mid_FramingScale", "Stage00Depth_Mid_Content", "s1  ·  character", "CharFocus_Track", "CharSlot_Track", "CharFocus_Rotation", "CharFocus_Scale", "CharSlot_Rotation", "CharSlot_SwayPivot", "CharacterPortrait_DepthOffset", "CharacterPortrait_DepthScale", "CharacterPortrait_VisualOffset", "CharacterPortrait_Track", "CharacterPortrait_Rotation", "CharacterPortrait_Track_Move" }, path);
+                Assert.Equal(new[] { "Scene  scene  ·  PresentataionUIRoot", "StageViewportLayer", "StageShot_Root", "StagePan_Root  ·  pan 0,0", "StageZoom_Root  ·  zoom 0", "Stage00_Root", "Stage00Mask_Root", "Stage00DepthSystem_Root", "Stage00Depth_Mid_Root", "Stage00Depth_Mid_FramingTransform", "Stage00Depth_Mid_FramingScale", "Stage00Depth_Mid_Content", "s1  ·  character", "CharFocus_Track", "CharSlot_Track", "CharSlot_Move_X", "CharSlot_Move_Y", "CharFocus_Rotation", "CharFocus_Scale", "CharSlot_Rotation", "CharSlot_SwayPivot", "CharacterPortrait_DepthOffset", "CharacterPortrait_DepthScale", "CharacterPortrait_VisualOffset", "CharacterPortrait_Track", "CharacterPortrait_Rotation", "CharacterPortrait_Track_Move" }, path);
                 Assert.DoesNotContain("연기 축", window.HierarchyPathOf("s1", "CharacterPortrait_SwayPivot"));
 
                 // 노드 위에서 "만들기" = 그 오브젝트와 같은 무대·층(오브젝트끼리 부모·자식은 없다). 트리에서는 같은 Content 밑.

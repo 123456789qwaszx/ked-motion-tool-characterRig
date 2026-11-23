@@ -48,7 +48,7 @@ Ledger.Publish   DOTween 종점     target.ApplyTo(tree)
 public static partial class NodeTargets         // Reduce/NodeTargets.*.cs
 {
     public readonly struct XxxArgs { ... }      // 파싱된 스펙 값만. UnityEngine 타입 금지
-    public static NodeTarget Xxx(               // 순수 함수. 이름 = 대본 커맨드 (move_by → MoveBy)
+    public static NodeTarget Xxx(               // 순수 함수. 이름 = 실행 커맨드 (MoveByCommandCharR → MoveBy)
         string nodeKey,                         // 논리 노드 키
         in XxxArgs args,
         /* 필요한 현재 상태를 명시적 인자로 */ ...);
@@ -156,7 +156,7 @@ yarn 4묶음 기준. "이관 안 함"은 **조용히 버린 것이 아니라 판
 
 | 커맨드 | 처리 |
 |---|---|
-| `move_by` · `move_reset` · `place` | `NodeTargets.MoveBy` — 슬롯의 자리(`CharSlot_Track`). `place`는 절대값 |
+| `place` · `left` · `right` · `up` · `down` · `move_reset` | `NodeTargets.MoveBy` — 슬롯의 본래 자리(`CharSlot_Track` — `place`, 절대)와 그 위의 움직임(`CharSlot_Move_X` · `_Y` — 넷은 상대, `move_reset`은 둘을 0으로). 노드와 방향은 `NodeTargets.TryGetSlotMove`(docs/PLAN_move-axes.md) |
 | `focus_move` · `focus_rotate` · `focus_scale` · `focus_reset` | `NodeTargets.MoveBy` · `RotateTo` · `ScaleTo`(절대값) — 포커스 계층(`CharFocus_*`) |
 | `cast`(set_anchor) | `NodeTargets.SetAnchor` — 런타임 파서가 `cast`를 배역 → pose → face → SetAnchor로 팬아웃하므로 `cast`도 축 리셋 + 역할 앵커를 접는다(`StageReducer.ApplyRoleAnchor`) |
 | `fade_in` / `fade_out` | `NodeTargets.FadeIn` / `NodeTargets.FadeOut` (가시성 축) |
@@ -217,7 +217,7 @@ yarn 4묶음 기준. "이관 안 함"은 **조용히 버린 것이 아니라 판
 
 | 커맨드 | 스펙 클래스 | 처리 |
 |---|---|---|
-| `move_by` · `move_reset` | `MoveByCommandSpecCharR` | placement 목표 계산이 이미 덮는다 |
+| `left` · `right` · `up` · `down` · `move_reset` | `MoveByCommandSpecCharR` | placement 목표 계산이 이미 덮는다 (`move_by`는 2026-11-23에 걷었다) |
 | `rotate_by` · `rotate_reset` | `RotateToCommandSpecCharR` | `NodeTargets.RotateTo` |
 | `sibling_front` · `sibling_back` | — | **이관 안 함** (아래) |
 | `char_to` | — | **어휘에서 걷었다 (2026-11-06)** — 리그는 무대 · 층을 옮기지 않는다. 다른 자리는 fade_out 뒤 새 slot([stage-rig.md](../../Runtime/StageRig/Documentation~/stage-rig.md) §2.4). 무대를 이름에 박은 `char_to_s0/s1/s2`는 그 전 2026-11-03에 걷었다 |
@@ -260,7 +260,7 @@ CharacterPortrait_SwayPivot.localEulerAngles  접힘=(0,0,0) vs 캡처=(0,0,7.53
 | 캐릭터 비주얼 (`char_visual_*`) | 14 | 무대 상태 모델 밖 (머티리얼 축) |
 | 오디오 (`bgm` · `stop_bgm` · `sfx`) | 14 | 무대 상태 모델 밖 |
 | 무대 마스크 (그때 `stage_mask_*`, 지금 `stage_mask`) | 10 | 무대 상태 모델 밖 |
-| 캐릭터 리그 트랜스폼 (`slide_in`) | 2 | **이관 완료 (2026-08-24)** — 아래 참조 |
+| 캐릭터 리그 트랜스폼 (`slide_in`) | 2 | **이관 완료 (2026-08-24)** — 아래 참조. 2026-11-23에 어휘에서 걷었다 |
 | 대사창 (`surface_reset`) | 1 | 무대 상태 모델 밖 |
 
 즉 **캐릭터 리그의 좌표·가시성 축은 이제 전부 접힌다** — 마지막까지 남아 있던 `slide_in`을
@@ -287,6 +287,9 @@ fade·move·scale을 **같은 노드, 같은 목표 계산**으로 접는다. �
 같은 작업에서 **슬롯 재선언의 의미**를 런타임에 맞췄다. 런타임은 같은 키로 `slot`/`bg_spawn`을 다시 부르면
 새 리그를 짓고 옛 리그를 부순다. 폴드는 "재사용한다 — 좌표도 유지"로 접고 있었다(사실이 아니었다).
 배경을 합치며 같은 키의 `bg_spawn` 재선언을 검토하다 드러났다(배경 그림만 바꾸는 것은 `bg_sprite`). 지금은 노드·α가 스키마로 돌아가고 배역만 남는다.
+
+> 2026-11-23: `slide_in` · `slide_out` · `SlideMotion` · `SlideCommandCharR`을 걷었다(재생 저장소 `docs/PLAN_move-axes.md` M9) — 들고 나는 움직임은
+> `left` · `right` · `up` · `down`으로 적는다(움직임 노드를 밀어 두었다가 0으로 되돌린다 — 본래 자리가 바뀌지 않는다). 튐(punch)은 사라졌다. 아래는 걷기 전의 기록이다.
 
 **둘은 대칭이 아니다.** `SlideCommandCharR`(2026-11-06까지 `SlideCommandBase` + 파생 둘)가 등장·퇴장의 차이를 "현재 위치가 도착점이냐
 출발점이냐" 하나로 환원하기 때문이다:

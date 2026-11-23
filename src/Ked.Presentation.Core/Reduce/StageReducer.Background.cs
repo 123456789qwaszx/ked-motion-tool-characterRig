@@ -13,7 +13,7 @@ namespace Ked.Presentation.Core
     ///   bg_spawn             → SetupCharRig(stage00 · far 생략값, 배경) + 스프라이트 → 여기: SpawnSlot + 배역 풀기 + 사이징 (숨은 채)
     ///   bg_sprite            → 스프라이트 키 Spec(SourcePixels)              → 사이징
     ///   bg_fade_in/out       → FadeIn/Out(CharacterPortraitSprite_Root)       → ApplyFade (디스패치에서 직접)
-    ///   bg_move              → MoveBy(CharSlot_Track)                         → ApplyMoveBy (디스패치에서 직접)
+    ///   bg_move              → MoveBy(CharSlot_Track)                         → ApplyBackgroundMove (디스패치에서 직접)
     ///   bg_scale             → ScaleTo(CharacterPortrait_ActingScale)         → ApplyPortraitScaleTo (디스패치에서 직접)
     /// </summary>
     public static partial class StageReducer

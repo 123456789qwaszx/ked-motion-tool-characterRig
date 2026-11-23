@@ -9,7 +9,7 @@ namespace Ked.Presentation.Tests
     /// 하네스 부품 둘: 원문 추출기와 상태 비교기.
     ///
     /// 원문 표본은 실제 에피소드 모양 그대로다 — Setup 노드 + Story 노드,
-    /// 준비 커맨드 / 대사 / 꼬리 커맨드, 주석, BOM, 태그 없음.
+    /// 준비 커맨드(노드 끝) / 줄의 명령(<<at>>) / 대사 / 꼬리 커맨드, 주석, BOM, 태그 없음.
     /// </summary>
     public sealed class EquivalenceHarnessCoreTests
     {
@@ -26,16 +26,16 @@ namespace Ked.Presentation.Tests
             "title: Story_Sample\n" +
             "---\n" +
             "\n" +
-            "<<beat Setup_Sample>>\n" +
-            "<<cast c1 bandi a 3>>\n" +
-            "<<actor @4 c1>>\n" +
-            "//<<mirror @4>>\n" +
-            "<<move_by @4 2u 0u 24fr>>\n" +
+            "<<at start beat Setup_Sample>>\n" +
+            "<<at start cast c1 bandi a 3>>\n" +
+            "<<at start actor @4 c1>>\n" +
+            "//<<at start mirror @4>>\n" +
+            "<<at start right @4 2u 24fr>>\n" +
             "\n" +
             "첫 번째 대사다.\n" +
             "\n" +
-            "<<move_by @4 -3u 0u>>\n" +
-            "<<fade_in @4>>\n" +
+            "<<at start left @4 3u>>\n" +
+            "<<at start fade_in @4>>\n" +
             "\n" +
             "두 번째 대사다.\n" +
             "\n" +
@@ -87,41 +87,83 @@ namespace Ked.Presentation.Tests
 
             Assert.That(story.Groups[0].LineText, Is.EqualTo("첫 번째 대사다."));
             Assert.That(story.Groups[0].Commands.Select(c => c.Name),
-                Is.EqualTo(new[] { "beat", "cast", "actor", "move_by" }));
+                Is.EqualTo(new[] { "beat", "cast", "actor", "right" }));
 
             Assert.That(story.Groups[1].LineText, Is.EqualTo("두 번째 대사다."));
             Assert.That(story.Groups[1].Commands.Select(c => c.Name),
-                Is.EqualTo(new[] { "move_by", "fade_in" }));
+                Is.EqualTo(new[] { "left", "fade_in" }));
 
             Assert.That(story.Groups[2].LineText, Is.Null);
             Assert.That(story.Groups[2].Commands.Select(c => c.Name), Is.EqualTo(new[] { "shot_reset" }));
         }
 
         [Test]
-        public void 무대_스텝은_커맨드가_아니고_그룹을_가르지_않는다()
+        public void at_없는_명령은_대사_줄_앞이면_오류이고_접지_않는다()
         {
+            // 재생과 같다 — 실행하지 않는다(docs/PLAN_line-anchor.md §9 N5).
             const string yarn =
-                "title: Step_Sample\n" +
+                "title: Unanchored\n" +
                 "---\n" +
-                "<<fade_out c1>>\n" +
+                "<<at start fade_in c1>>\n" +
+                "<<face c1 02>>\n" +
                 "<<step>>\n" +
-                "<<fade_in c2>>\n" +
                 "대사다.\n" +
-                "<<fade_out c2>>\n" +
-                "<<step>>\n" +
                 "===\n";
 
             List<string> warnings = new();
-            List<YarnLineGroup> groups = YarnCommandTextExtractor.Extract(yarn, "step.yarn", warnings);
+            YarnLineGroup line = YarnCommandTextExtractor.Extract(yarn, "unanchored.yarn", warnings).Single();
+
+            Assert.That(line.Commands.Select(c => c.Name), Is.EqualTo(new[] { "fade_in" }));
+            Assert.That(line.Anchors.Select(a => a.Name), Is.EqualTo(new[] { "start", "end" }));
+
+            // 걷은 <<step>>도 at 없는 명령의 하나로 읽힌다 — 런타임에 등록이 없다.
+            Assert.That(warnings.Count, Is.EqualTo(2), string.Join("\n", warnings));
+            Assert.That(warnings[0], Does.StartWith("unanchored.yarn:4 <<face c1 02>>").And.Contain("at 없는 명령"));
+            Assert.That(warnings[1], Does.StartWith("unanchored.yarn:5 <<step>>"));
+        }
+
+        [Test]
+        public void 노드_끝의_at_없는_명령은_꼬리_그룹이다()
+        {
+            // 붙을 줄이 없이 남은 명령 — 노드 끝의 암묵 스텝 하나가 쓴 순서로 실행한다(A6).
+            const string yarn =
+                "title: Tail_Sample\n" +
+                "---\n" +
+                "대사다.\n" +
+                "<<fade_out c2>>\n" +
+                "<<pause 0.5s>>\n" +
+                "<<bg_fade_out bg 12fr>>\n" +
+                "===\n";
+
+            List<string> warnings = new();
+            List<YarnLineGroup> groups = YarnCommandTextExtractor.Extract(yarn, "tail.yarn", warnings);
 
             Assert.That(warnings, Is.Empty);
             Assert.That(groups.Count, Is.EqualTo(2));
+            Assert.That(groups[1].LineText, Is.Null, "노드 끝의 명령은 꼬리 그룹이다");
+            Assert.That(groups[1].Commands.Select(c => c.Name), Is.EqualTo(new[] { "fade_out", "pause", "bg_fade_out" }));
+        }
 
-            Assert.That(groups[0].LineText, Is.EqualTo("대사다."));
-            Assert.That(groups[0].Commands.Select(c => c.Name), Is.EqualTo(new[] { "fade_out", "fade_in" }));
+        [Test]
+        public void 바로_실행하는_명령과_Yarn의_문은_at_없이_쓰고_접지_않는다()
+        {
+            const string yarn =
+                "title: Immediate\n" +
+                "---\n" +
+                "<<surface_layout wide>>\n" +
+                "<<set $a to 1>>\n" +
+                "<<at start face c1 02>>\n" +
+                "대사다.\n" +
+                "<<surface_reset>>\n" +
+                "<<wait 1>>\n" +
+                "===\n";
 
-            Assert.That(groups[1].LineText, Is.Null, "노드 끝의 무대 스텝은 꼬리 그룹이다");
-            Assert.That(groups[1].Commands.Select(c => c.Name), Is.EqualTo(new[] { "fade_out" }));
+            List<string> warnings = new();
+            List<YarnLineGroup> groups = YarnCommandTextExtractor.Extract(yarn, "immediate.yarn", warnings);
+
+            Assert.That(warnings, Is.Empty, string.Join("\n", warnings));
+            Assert.That(groups.Count, Is.EqualTo(1), "무대 명령이 없는 노드 끝은 꼬리가 아니다");
+            Assert.That(groups[0].Commands.Select(c => c.Name), Is.EqualTo(new[] { "face" }));
         }
 
         [Test]
@@ -162,12 +204,12 @@ namespace Ked.Presentation.Tests
                 "---\n" +
                 "<<at end emoji s2 sweat>>\n" +
                 "<<at b face s2 06>>\n" +
-                "<<face s2 05>>\n" +
+                "<<at start face s2 05>>\n" +
                 "<<at a face_swap s2 03 0.3s>>\n" +
                 "<<at a motion s2 a008_s2>>\n" +
-                "<<fade_in s2>>\n" +
+                "<<at start fade_in s2>>\n" +
                 "세이나: 아, 음…… [beat=a/]이건 [beat=b/]비밀인데. #line:ln_at\n" +
-                "<<fade_out s2>>\n" +
+                "<<at start fade_out s2>>\n" +
                 "다음 대사다.\n" +
                 "===\n";
 
@@ -186,23 +228,24 @@ namespace Ked.Presentation.Tests
             Assert.That(groups[1].Commands.Select(c => c.Name), Is.EqualTo(new[] { "fade_out" }), "at은 다음 줄로 새지 않는다");
         }
 
-        [TestCase("-> 고른다", "선택지")]
-        public void at_다음이_대사_줄이_아니면_경고하고_그_스텝의_머리_뒤에_둔다(string next, string where)
+        [Test]
+        public void 선택지_앞의_at은_고른_갈래의_첫_줄의_것이다()
         {
-            string yarn =
+            // 재생과 같다 — 쌓인 <<at>>은 다음에 오는 대사 줄이 가져간다.
+            const string yarn =
                 "title: Stray\n" +
                 "---\n" +
                 "<<at a face s1 02>>\n" +
-                "<<fade_in s1>>\n" +
-                next + "\n" +
-                "다음 대사다.\n" +
+                "<<at start fade_in s1>>\n" +
+                "-> 고른다\n" +
+                "다음 [beat=a/]대사다.\n" +
                 "===\n";
 
             List<string> warnings = new();
             List<YarnLineGroup> groups = YarnCommandTextExtractor.Extract(yarn, "stray.yarn", warnings);
 
-            Assert.That(warnings.Any(w => w.Contains("<<at>>") && w.Contains(where)), Is.True, string.Join("\n", warnings));
-            Assert.That(groups[0].Commands.Select(c => c.Name), Is.EqualTo(new[] { "fade_in", "face" }));
+            Assert.That(warnings.Single(), Does.Contain("옵션"));
+            Assert.That(groups.Single().Commands.Select(c => c.Name), Is.EqualTo(new[] { "fade_in", "face" }));
         }
 
         [Test]
@@ -265,8 +308,6 @@ namespace Ked.Presentation.Tests
             YarnLineGroup line = node.Groups.Single();
 
             Assert.That(warnings, Is.Empty, "앞 앵커의 pause는 된다");
-            Assert.That(node.LegacySteps, Is.EqualTo(0));
-            Assert.That(node.BareCommands, Is.EqualTo(0));
 
             Assert.That(line.LineText, Is.EqualTo("세이나: 아, 음…… 이건 비밀인데."));
             Assert.That(line.Body, Is.EqualTo("아, 음…… 이건 비밀인데."));
@@ -284,78 +325,6 @@ namespace Ked.Presentation.Tests
             Assert.That(
                 Enumerable.Range(0, line.Anchors.Count).Select(i => LineBeatSchedule.Segment(line.Body, line.Anchors, i)),
                 Is.EqualTo(new[] { "", "아, 음…… ", "이건 비밀인데.", "" }));
-        }
-
-        [Test]
-        public void 옛_표기의_무대_스텝은_앞_앵커로_at_없는_명령은_start로_읽고_센다()
-        {
-            const string yarn =
-                "title: Legacy\n" +
-                "---\n" +
-                "<<fade_out c1>>\n" +
-                "<<pause 0.5s>>\n" +
-                "<<step>>\n" +
-                "<<step>>\n" +
-                "<<fade_in c2>>\n" +
-                "<<at a face c2 02>>\n" +
-                "하린: 여기[beat=a/]다.\n" +
-                "===\n";
-
-            List<string> warnings = new();
-            YarnNodeGroups node = YarnCommandTextExtractor.ExtractNodes(yarn, "legacy.yarn", warnings).Single();
-            YarnLineGroup line = node.Groups.Single();
-
-            Assert.That(warnings, Is.Empty);
-            Assert.That(node.LegacySteps, Is.EqualTo(2), "쓴 수 — 빈 스텝도 센다");
-            Assert.That(node.BareCommands, Is.EqualTo(3));
-
-            Assert.That(line.Anchors.Select(a => a.Name), Is.EqualTo(new[] { "~0", "start", "a", "end" }), "빈 스텝은 스텝이 아니다");
-            Assert.That(line.Anchors[0].Legacy, Is.True);
-            Assert.That(line.Anchors[0].Kind, Is.EqualTo(LineAnchorKind.Pre));
-            Assert.That(line.Commands.Select(c => c.Name), Is.EqualTo(new[] { "fade_out", "pause", "fade_in", "face" }));
-        }
-
-        [Test]
-        public void at은_무대_스텝보다_앞에_써도_그_줄의_앵커의_것이다()
-        {
-            // 옛 규칙(line-beat R1)은 이것을 떠도는 at으로 보았다 — 이제 <<step>>은 실행하지 않는 경계라, at은 다음 줄에 닿는다.
-            const string yarn =
-                "title: AtBeforeStep\n" +
-                "---\n" +
-                "<<at a face s1 02>>\n" +
-                "<<fade_in s1>>\n" +
-                "<<step>>\n" +
-                "하린: 여[beat=a/]기.\n" +
-                "===\n";
-
-            List<string> warnings = new();
-            YarnLineGroup line = YarnCommandTextExtractor.Extract(yarn, "atstep.yarn", warnings).Single();
-
-            Assert.That(warnings, Is.Empty);
-            Assert.That(line.Anchors.Select(a => a.Name), Is.EqualTo(new[] { "~0", "start", "a", "end" }));
-            Assert.That(line.Commands.Select(c => c.Name), Is.EqualTo(new[] { "fade_in", "face" }));
-        }
-
-        [Test]
-        public void start에는_at_없는_명령이_먼저이고_at_start가_그_뒤다()
-        {
-            // 재생이 그렇다 — at 없는 명령은 미리 풀려 머리 배치로 실행되고, start의 <<at>>은 그 바로 뒤에 덧붙는다.
-            const string yarn =
-                "title: StartOrder\n" +
-                "---\n" +
-                "<<at start emoji s1 note>>\n" +
-                "<<face s1 02>>\n" +
-                "<<at start motion s1 nod>>\n" +
-                "<<fade_in s1>>\n" +
-                "하린: 여기.\n" +
-                "===\n";
-
-            List<string> warnings = new();
-            YarnLineGroup line = YarnCommandTextExtractor.Extract(yarn, "startorder.yarn", warnings).Single();
-
-            Assert.That(warnings, Is.Empty);
-            Assert.That(line.Anchors.Select(a => a.Name), Is.EqualTo(new[] { "start", "end" }));
-            Assert.That(line.Commands.Select(c => c.Name), Is.EqualTo(new[] { "face", "fade_in", "emoji", "motion" }));
         }
 
         [Test]
@@ -449,17 +418,16 @@ namespace Ked.Presentation.Tests
             const string yarn =
                 "title: Waits\n" +
                 "---\n" +
-                "<<fade_out s1>>\n" +
-                "<<pause 12fr>>\n" +
-                "<<screen_cover black 0.5s>>\n" +
-                "<<step>>\n" +
-                "<<screen_cover_clear 0.5s>>\n" +
-                "<<pause 0.3s>>\n" +
-                "<<face s1 02>>\n" +
+                "<<at in fade_out s1>>\n" +
+                "<<at in pause 12fr>>\n" +
+                "<<at in screen_cover black 0.5s>>\n" +
+                "<<at start screen_cover_clear 0.5s>>\n" +
+                "<<at start pause 0.3s>>\n" +
+                "<<at start face s1 02>>\n" +
                 "<<at a pause 1s>>\n" +
                 "<<at a face s1 03>>\n" +
                 "<<at end screen_cover white 0.2s>>\n" +
-                "하린: 여[beat=a/]기.\n" +
+                "하린: [beat=in/]여[beat=a/]기.\n" +
                 "===\n";
 
             List<string> warnings = new();
@@ -472,7 +440,7 @@ namespace Ked.Presentation.Tests
             {
                 "fade_out", "pause", "screen_cover", "screen_cover_clear", "pause", "face", "pause", "face", "screen_cover",
             }));
-            Assert.That(line.Anchors.Select(a => a.Name), Is.EqualTo(new[] { "~0", "start", "a", "end" }));
+            Assert.That(line.Anchors.Select(a => a.Name), Is.EqualTo(new[] { "in", "start", "a", "end" }));
         }
 
         [TestCase("pause", true)]
@@ -525,8 +493,8 @@ namespace Ked.Presentation.Tests
         {
             StageCommand move = ExtractSample()[1].Groups[0].Commands[3];
 
-            Assert.That(move.Name, Is.EqualTo("move_by"));
-            Assert.That(move.Args, Is.EqualTo(new[] { "@4", "2u", "0u", "24fr" }));
+            Assert.That(move.Name, Is.EqualTo("right"));
+            Assert.That(move.Args, Is.EqualTo(new[] { "@4", "2u", "24fr" }));
         }
 
         // ── 추출기: 라인 ID ──────────────────────────────────────────
@@ -609,16 +577,16 @@ namespace Ked.Presentation.Tests
         }
 
         [Test]
-        public void set은_경고하지_않고_흘려보낸다()
+        public void set은_경고하지_않고_접지_않는다()
         {
-            // 무대 상태와 무관하고 분기하지도 않는다 — 리듀서의 Unhandled로 남으면 된다.
+            // 무대 상태와 무관하고 분기하지도 않는다 — at 없이 쓰는 것이 맞다.
             List<string> warnings = new();
 
             List<YarnLineGroup> groups = YarnCommandTextExtractor.Extract(
                 "title: N\n---\n<<set $a to 1>>\n대사.\n===\n", "s.yarn", warnings);
 
             Assert.That(warnings, Is.Empty);
-            Assert.That(groups[0].Commands[0].Name, Is.EqualTo("set"));
+            Assert.That(groups[0].Commands, Is.Empty);
         }
 
         // ── 비교기 ───────────────────────────────────────────────────
@@ -773,7 +741,9 @@ namespace Ked.Presentation.Tests
                 {
                     NodeDto("__root", ""),
                     NodeDto("CharSlot_Track", "__root"),
-                    NodeDto("CharacterPortraitSprite_Root", "CharSlot_Track"),
+                    NodeDto("CharSlot_Move_X", "CharSlot_Track"),
+                    NodeDto("CharSlot_Move_Y", "CharSlot_Move_X"),
+                    NodeDto("CharacterPortraitSprite_Root", "CharSlot_Move_Y"),
                 },
             };
 

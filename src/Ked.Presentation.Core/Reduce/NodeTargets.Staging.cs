@@ -2,7 +2,8 @@ namespace Ked.Presentation.Core
 {
     // ─────────────────────────────────────────────────────────────────
     // NodeTargets — 커맨드가 끝나면 노드가 어떤 값이어야 하는가(목표 계산).
-    // 메서드 이름은 대본 커맨드 이름을 따른다: move_by → MoveBy.
+    // 메서드 이름은 실행 커맨드를 따른다: MoveByCommandCharR → MoveBy(place · left · right · up · down · move_reset ·
+    // focus_move · bg_move가 이 하나를 지난다).
     //
     // 규약:
     // - 커맨드당 메서드 하나, 파싱된 인자는 XxxArgs 구조체.
@@ -18,7 +19,7 @@ namespace Ked.Presentation.Core
 
     public static partial class NodeTargets
     {
-        // ── move_by ──────────────────────────────────────────────────
+        // ── MoveBy — 이동 노드 하나를 상대 · 절대값으로 ───────────────────
 
         public readonly struct MoveByArgs
         {

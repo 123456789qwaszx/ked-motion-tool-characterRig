@@ -52,7 +52,9 @@ namespace Ked.Presentation.Tests
                     Node("__root", ""),
                     Node("CharFocus_Track", "__root"),
                     Node("CharSlot_Track", "CharFocus_Track"),
-                    Node("CharFocus_Rotation", "CharSlot_Track", bottomPivot: true),
+                    Node("CharSlot_Move_X", "CharSlot_Track"),
+                    Node("CharSlot_Move_Y", "CharSlot_Move_X"),
+                    Node("CharFocus_Rotation", "CharSlot_Move_Y", bottomPivot: true),
                     Node("CharFocus_Scale", "CharFocus_Rotation", bottomPivot: true),
                     Node("CharSlot_Rotation", "CharFocus_Scale"),
                     Node("CharSlot_SwayPivot", "CharSlot_Rotation", bottomPivot: true),
@@ -72,7 +74,7 @@ namespace Ked.Presentation.Tests
             };
         }
 
-        private const int RigNodeCount = 19;
+        private const int RigNodeCount = 21;
 
         private static StageReducerTuning NewTuning(bool withBackgroundDimensions = true)
         {
@@ -271,7 +273,7 @@ namespace Ked.Presentation.Tests
         [Test]
         public void bg_move는_CharSlot_Track을_상대로_민다()
         {
-            // 1u = 1920/48 = 40px. 브리지도 move_by와 같은 축(CharSlot_Track)에 건다.
+            // 1u = 1920/48 = 40px. 브리지도 같은 노드(CharSlot_Track — 본래 자리)에 상대값으로 건다.
             StageState state = Fold(
                 Cmd("bg_spawn", "bg_main", "class_day"),
                 Cmd("bg_move", "bg_main", "2u", "-1u", "10fr"),

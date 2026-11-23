@@ -16,7 +16,7 @@ namespace Ked.Presentation.Tests
         // 실제 캐릭터 리그의 리셋 목록 (SetAnchorCommandCharR의 두 플래그가 모두 켜진 경우).
         private static readonly string[] PositionKeys =
         {
-            "CharSlot_Track",
+            "CharSlot_Track", "CharSlot_Move_X", "CharSlot_Move_Y",
             "CharacterPortrait_Track", "CharacterPortrait_Track_Move",
             "CharacterPortrait_SwayPivot", "CharacterPortrait_Shake",
         };
@@ -47,7 +47,7 @@ namespace Ked.Presentation.Tests
             // 순서가 어긋나면 조용히 엉뚱한 노드에 값이 들어간다.
             NodeTarget[] targets = Reduce(NodeTargets.RoleAnchorTuning.Default);
 
-            Assert.That(targets.Length, Is.EqualTo(5 + 4 + 4 + 2));
+            Assert.That(targets.Length, Is.EqualTo(7 + 4 + 4 + 2));
 
             int i = 0;
 

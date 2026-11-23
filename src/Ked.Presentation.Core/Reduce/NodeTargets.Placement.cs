@@ -6,10 +6,18 @@ namespace Ked.Presentation.Core
     /// 화면 지점 프리셋의 rig-space 좌표. 초점을 무대 지점에 놓는 값을 도구가 풀 때 쓴다(NodeTargets.TrySolveFocusPlacement).
     ///
     /// 주의: 이 비율은 게임별 값이므로 원칙적으로는 tuning 데이터가 맞다(target-boundary.md 백로그).
-    /// 같은 값을 눈금으로 그리는 곳이 하나 있다(Samples의 ScreenFocusGridOverlay) — 함께 고친다.
+    /// 화면 지점 덧그림(Samples의 ScreenFocusGridOverlay)은 사본을 두지 않고 이 이름 · 좌표를 부른다.
     /// </summary>
     public static class ScreenPointRatios
     {
+        /// <summary>TryResolve가 아는 이름 전부 — 바깥 아홉(가운데 · 변 · 모서리)과 안 넷.</summary>
+        public static readonly string[] Names =
+        {
+            "center", "left", "right", "top", "bottom",
+            "tl", "tr", "bl", "br",
+            "inner_tl", "inner_tr", "inner_bl", "inner_br",
+        };
+
         public const float OuterXRatio = 0.24f;
         public const float OuterYRatio = 0.16f;
         public const float InnerXRatio = 0.14f;
@@ -89,8 +97,31 @@ namespace Ked.Presentation.Core
         public const string FocusRotationNodeId = "CharFocus_Rotation";
         public const string FocusScaleNodeId = "CharFocus_Scale";
 
-        /// <summary>슬롯 — 무대 위의 본래 자리. place(절대) · move_by(상대) · slide가 쓴다.</summary>
+        /// <summary>슬롯 — 무대 위의 본래 자리. place가 절대값으로 놓는다(배경 슬롯은 bg_move가 상대값으로 민다).</summary>
         public const string SlotTrackNodeId = "CharSlot_Track";
+
+        /// <summary>
+        /// 슬롯 — 본래 자리 위의 움직임(docs/PLAN_move-axes.md). 가로(Move_X)와 세로(Move_Y)가 다른 노드라 함께 돈다.
+        /// 회전 · 깊이보다 위라 어느 기울기 · 크기에서나 화면 값 그대로다.
+        /// </summary>
+        public const string SlotMoveXNodeId = "CharSlot_Move_X";
+        public const string SlotMoveYNodeId = "CharSlot_Move_Y";
+
+        /// <summary>
+        /// 슬롯의 움직임 커맨드(left · right · up · down) → 노드와 방향(단위 벡터). 넷이 아니면 false.
+        /// 값은 상대다 — 지금 값에서 방향 × 거리만큼 민다(쌓인다). 런타임 파서와 폴드가 이 표 하나를 본다.
+        /// </summary>
+        public static bool TryGetSlotMove(string commandName, out string nodeId, out Vec2 direction)
+        {
+            switch (commandName)
+            {
+                case "left": nodeId = SlotMoveXNodeId; direction = new Vec2(-1f, 0f); return true;
+                case "right": nodeId = SlotMoveXNodeId; direction = new Vec2(1f, 0f); return true;
+                case "up": nodeId = SlotMoveYNodeId; direction = new Vec2(0f, 1f); return true;
+                case "down": nodeId = SlotMoveYNodeId; direction = new Vec2(0f, -1f); return true;
+                default: nodeId = null; direction = Vec2.Zero; return false;
+            }
+        }
 
         /// <summary>초상의 깊이 — 그 사람의 크기. size가 놓는다.</summary>
         public const string DepthOffsetNodeId = "CharacterPortrait_DepthOffset";
@@ -130,6 +161,18 @@ namespace Ked.Presentation.Core
 
             return TrySolveFocusPlacement(state, slotKey, focusOffset, desired, moveNodeId, out anchoredPosition, out reason);
         }
+
+        /// <summary>
+        /// 초점을 무대 지점에 두는 <c>place</c> 값 — 쌓인 움직임을 걷고(<c>move_reset</c>) 다시 세울 때(docs/PLAN_move-axes.md §4.3 · §10).
+        /// 자리 노드(Track · Move_X · Move_Y)는 회전 · 깊이 · 포커스의 회전 · 배율보다 위라 자리를 옮기면 초점이 그대로 평행이동한다 —
+        /// 그래서 지금의 초점 하나로 답이 닫힌다. Track을 푸는 TrySolveFocusPlacement와 같은 답이다(시험이 고정한다).
+        /// </summary>
+        /// <param name="slotTrack">CharSlot_Track의 지금 값(정착값).</param>
+        /// <param name="slotMove">CharSlot_Move_X + CharSlot_Move_Y의 지금 값(정착값).</param>
+        /// <param name="focusInRigSpace">초점의 지금 무대 좌표(카메라 중립).</param>
+        /// <param name="desiredInRigSpace">초점을 둘 무대 지점.</param>
+        public static Vec2 PlaceForFocusAt(Vec2 slotTrack, Vec2 slotMove, Vec2 focusInRigSpace, Vec2 desiredInRigSpace)
+            => slotTrack + slotMove + (desiredInRigSpace - focusInRigSpace);
 
         /// <summary>초점의 로컬 오프셋과 무대 지점을 값으로 받는 꼴 — 좌우 반전처럼 호출부가 오프셋을 손본 뒤 부를 때.</summary>
         public static bool TrySolveFocusPlacement(
@@ -172,7 +215,7 @@ namespace Ked.Presentation.Core
         // ── size (depth) ────────────────────────────────────────
         //
         // size — 그 사람의 크기. 깊이의 Y(DepthOffset)와 배율(DepthScale)을 놓는다. 무대를 재지 않는다 —
-        // 커브가 낸 값(또는 적힌 배율)이 곧 목표다. 깊이는 초상만 곱한다: 슬롯의 자리(place · move_by)는 그대로다.
+        // 커브가 낸 값(또는 적힌 배율)이 곧 목표다. 깊이는 초상만 곱한다: 슬롯의 자리 · 움직임(place · left · right · up · down)은 그대로다.
 
         /// <param name="depthToken">레벨(숫자) · 라벨 · x배율(SizeToken).</param>
         /// <param name="keepY">true면 Y를 지금 값 그대로 둔다(타깃을 내지 않는다). x배율은 늘 Y를 건드리지 않는다.</param>

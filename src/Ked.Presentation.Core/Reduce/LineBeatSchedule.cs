@@ -34,22 +34,6 @@ namespace Ked.Presentation.Core
         public override string ToString() => $"<<at {Beat} {Command.Name} {string.Join(" ", Command.Args)}>>";
     }
 
-    /// <summary>줄의 실행 목록 한 칸 — 이 자리(글자)에 닿으면 실행한다.</summary>
-    public readonly struct ScheduledCommand
-    {
-        /// <summary>글자 자리. 타자기 끝(end · 자리를 잃은 것)은 LineBeatSchedule.LineEnd.</summary>
-        public readonly int Position;
-
-        /// <summary>대본에 쓴 &lt;&lt;at&gt;&gt; — 명령과 로그용 글.</summary>
-        public readonly AtCommand At;
-
-        public ScheduledCommand(int position, in AtCommand at)
-        {
-            Position = position;
-            At = at;
-        }
-    }
-
     /// <summary>앵커의 갈래 — 값의 차례가 줄 안에서 열리는 차례다(docs/PLAN_line-anchor.md AR1).</summary>
     public enum LineAnchorKind
     {
@@ -91,7 +75,7 @@ namespace Ked.Presentation.Core
     /// </summary>
     public sealed class LineAnchor
     {
-        /// <summary>표지 이름 · start · end. 옛 표기의 무대 스텝을 읽은 것은 LineBeatSchedule.LegacyStepName.</summary>
+        /// <summary>표지 이름 · start · end.</summary>
         public readonly string Name;
 
         public readonly LineAnchorKind Kind;
@@ -99,51 +83,38 @@ namespace Ked.Presentation.Core
         /// <summary>화자 이름을 뺀 글의 글자 자리. 앞 앵커 · start는 0, end는 LineBeatSchedule.LineEnd.</summary>
         public readonly int Position;
 
-        /// <summary>옛 표기의 무대 스텝(&lt;&lt;step&gt;&gt;)을 읽은 앞 앵커다 — 이행이 끝나면 없다(§9 N5).</summary>
-        public readonly bool Legacy;
-
         /// <summary>이 앵커가 열린 뒤 다음 앵커가 열리기까지의 최소 시간(초). 적지 않았으면 0.</summary>
         public float Gap;
 
         /// <summary>이 앵커의 명령 — &lt;&lt;at&gt;&gt;를 쓴 순서(AR2).</summary>
         public readonly List<AtCommand> Commands = new();
 
-        public LineAnchor(string name, LineAnchorKind kind, int position, bool legacy = false)
+        public LineAnchor(string name, LineAnchorKind kind, int position)
         {
             Name = name ?? string.Empty;
             Kind = kind;
             Position = position;
-            Legacy = legacy;
         }
 
         public override string ToString() => $"{Kind} {Name}({Commands.Count})";
     }
 
     /// <summary>
-    /// 대사 줄 하나의 실행 목록을 짓는다 — 표지와 &lt;&lt;at&gt;&gt;를 이어 실행 순서로 늘어놓는다(docs/PLAN_line-beat.md §4).
-    /// **재생(InlineCommandTrack)과 폴드(YarnCommandTextExtractor)가 같이 부른다** — 둘의 순서가 지어진 대로 같다.
-    ///
-    /// 순서(R2): 글자 자리 → 같은 자리면 글의 표지 순서 → 같은 표지면 &lt;&lt;at&gt;&gt;를 쓴 순서. 맨 끝에 end.
-    /// 줄 머리 명령(at 없는 것)은 여기에 들지 않는다 — 그 앞에 따로 실행된다.
-    ///
-    /// 실패를 로그로 흘리지 않는다 — 문제는 problems에 적고, 명령은 사라지지 않게 둔다:
-    ///   표지가 없는 at(R5 · 번역문이 빠뜨림)   줄 끝(end 자리)에서
-    ///   at이 없는 표지(R6)                     무시
-    ///   같은 표지 둘(R6)                       앞의 것
-    ///   꼴이 틀린 표지 이름(R7)                무시 — 그 이름의 at은 줄 끝에서
+    /// 대사 줄 하나의 앵커를 짓는다 — 글의 표지와 &lt;&lt;at&gt;&gt; · &lt;&lt;gap&gt;&gt;을 이어 열리는 차례로 늘어놓는다(docs/PLAN_line-anchor.md §5).
+    /// **재생(InlineCommandTrack) · 접힘(YarnCommandTextExtractor) · 줄 읽기(YarnLineReader)가 같이 부른다** — 셋의 차례가 지어진 대로 같다.
     /// </summary>
     public static class LineBeatSchedule
     {
         /// <summary>글 안 자리 표지의 이름 — [beat=a/].</summary>
         public const string MarkerName = "beat";
 
-        /// <summary>&lt;&lt;at&gt;&gt; 명령의 이름 — 대본 명령이 아니라 다음 줄로 넘기는 표시다.</summary>
+        /// <summary>&lt;&lt;at&gt;&gt; 명령의 이름 — 대본 명령이 아니라 다음 줄의 앵커에 명령을 두는 표시다.</summary>
         public const string AtCommandName = "at";
 
         /// <summary>예약된 자리 — 타자기 끝. 글에 표지를 두지 않는다.</summary>
         public const string EndBeat = "end";
 
-        /// <summary>예약된 자리 — 대사창이 열리는 때(지금의 줄 머리). 글에 표지를 두지 않는다(docs/PLAN_line-anchor.md A4).</summary>
+        /// <summary>예약된 자리 — 대사창이 열리는 때. 글에 표지를 두지 않는다(docs/PLAN_line-anchor.md A4).</summary>
         public const string StartBeat = "start";
 
         /// <summary>&lt;&lt;gap&gt;&gt; 명령의 이름 — 대본 명령이 아니라 다음 줄의 앵커에 간격을 적는 표시다.</summary>
@@ -151,12 +122,6 @@ namespace Ked.Presentation.Core
 
         /// <summary>타자기 끝의 자리. 글자 자리 어느 것보다 뒤다.</summary>
         public const int LineEnd = int.MaxValue;
-
-        /// <summary>
-        /// 옛 표기의 무대 스텝(&lt;&lt;step&gt;&gt;)을 읽은 앞 앵커의 이름 — 줄 앞의 몇 번째 스텝인가(0부터).
-        /// 표지 이름이 될 수 없는 꼴이라 글의 표지와 겹치지 않는다.
-        /// </summary>
-        public static string LegacyStepName(int index) => "~" + index.ToString(CultureInfo.InvariantCulture);
 
         /// <summary>표지 이름의 꼴(R7 · AR6) — 영문 소문자 · 숫자, 하나 이상. start · end는 예약이라 글에 둘 수 없다.</summary>
         public static bool IsValidBeatName(string name)
@@ -219,11 +184,10 @@ namespace Ked.Presentation.Core
         /// <summary>
         /// 줄의 앵커를 열리는 차례로 짓는다(docs/PLAN_line-anchor.md §5 · AR1) — **재생 · 접힘 · 도구가 같이 부른다.**
         ///
-        ///   앞 앵커(옛 무대 스텝 → 글의 표지 순서) → start → 글 표지(글자 자리 → 같은 자리면 글의 표지 순서) → end
+        ///   앞 앵커(글의 표지 순서) → start → 글 표지(글자 자리 → 같은 자리면 글의 표지 순서) → end
         ///
         /// markers는 글 순서이고 자리는 화자 이름을 뺀 글의 것이다 — 자리 0(첫 글자 앞)의 표지가 앞 앵커다(A5).
         /// ats · gaps는 쓴 순서. start · end는 명령이 없어도 언제나 있다(A4).
-        /// legacySteps는 옛 표기로 줄 앞에 닫힌 무대 스텝의 수 — 그 명령은 ats에 LegacyStepName으로 실려 온다.
         ///
         /// 실패를 로그로 흘리지 않는다 — 문제는 problems에 적고, 명령은 사라지지 않게 둔다:
         ///   표지가 없는 at(AR9 · 번역문이 빠뜨림)   end에서
@@ -235,20 +199,12 @@ namespace Ked.Presentation.Core
             IReadOnlyList<BeatMarker> markers,
             IReadOnlyList<AtCommand> ats,
             IReadOnlyList<GapCommand> gaps = null,
-            List<string> problems = null,
-            int legacySteps = 0)
+            List<string> problems = null)
         {
             Dictionary<string, LineAnchor> byName = new(StringComparer.Ordinal);
             List<LineAnchor> pre = new();
             List<LineAnchor> text = new();
             Dictionary<LineAnchor, int> textOrder = new();
-
-            for (int k = 0; k < legacySteps; k++)
-            {
-                LineAnchor step = new(LegacyStepName(k), LineAnchorKind.Pre, 0, legacy: true);
-                pre.Add(step);
-                byName.Add(step.Name, step);
-            }
 
             for (int k = 0; k < (markers?.Count ?? 0); k++)
             {
@@ -345,9 +301,7 @@ namespace Ked.Presentation.Core
                         continue;
                     }
 
-                    // 빈 무대 스텝은 스텝이 아니다(지금 그대로). 표지는 적어 둔다.
-                    if (!anchor.Legacy)
-                        problems?.Add($"[beat={anchor.Name}/]에 <<at {anchor.Name} …>>가 없다 — 무시한다");
+                    problems?.Add($"[beat={anchor.Name}/]에 <<at {anchor.Name} …>>가 없다 — 무시한다");
                 }
             }
 
@@ -397,105 +351,6 @@ namespace Ked.Presentation.Core
             }
 
             return from < to ? body.Substring(from, to - from) : string.Empty;
-        }
-
-        /// <summary>
-        /// markers는 글 순서, ats는 쓴 순서. 결과는 실행 순서다.
-        /// 재생(InlineCommandTrack)이 앵커(BuildAnchors)로 옮겨 가면 걷는다 — docs/PLAN_line-anchor.md N2.
-        /// </summary>
-        public static List<ScheduledCommand> Build(
-            IReadOnlyList<BeatMarker> markers,
-            IReadOnlyList<AtCommand> ats,
-            List<string> problems = null)
-        {
-            // 표지 이름 → (글자 자리, 글의 표지 순서). 같은 표지가 둘이면 앞의 것.
-            Dictionary<string, (int Position, int TextOrder)> beats = new(StringComparer.Ordinal);
-            HashSet<string> used = new(StringComparer.Ordinal);
-
-            for (int k = 0; k < (markers?.Count ?? 0); k++)
-            {
-                BeatMarker marker = markers[k];
-
-                if (!IsValidBeatName(marker.Name))
-                {
-                    problems?.Add(marker.Name == EndBeat
-                        ? "[beat=end/] — end는 타자기 끝의 예약 이름이라 글에 두지 않는다. 무시한다"
-                        : $"[beat={marker.Name}/] — 표지 이름은 영문 소문자 · 숫자다. 무시한다");
-                    continue;
-                }
-
-                if (beats.ContainsKey(marker.Name))
-                {
-                    problems?.Add($"[beat={marker.Name}/]가 한 줄에 둘이다 — 앞의 것을 쓴다");
-                    continue;
-                }
-
-                beats.Add(marker.Name, (marker.Position, k));
-            }
-
-            List<Keyed> keyed = new();
-
-            for (int w = 0; w < (ats?.Count ?? 0); w++)
-            {
-                AtCommand at = ats[w];
-
-                if (at.Beat == EndBeat)
-                {
-                    keyed.Add(new Keyed(LineEnd, int.MaxValue, w, new ScheduledCommand(LineEnd, at)));
-                    continue;
-                }
-
-                if (beats.TryGetValue(at.Beat, out var beat))
-                {
-                    used.Add(at.Beat);
-                    keyed.Add(new Keyed(beat.Position, beat.TextOrder, w, new ScheduledCommand(beat.Position, at)));
-                    continue;
-                }
-
-                problems?.Add($"{at} — 줄에 [beat={at.Beat}/]가 없다. 줄 끝에서 실행한다");
-                keyed.Add(new Keyed(LineEnd, int.MaxValue, w, new ScheduledCommand(LineEnd, at)));
-            }
-
-            foreach (string name in beats.Keys)
-            {
-                if (!used.Contains(name))
-                    problems?.Add($"[beat={name}/]에 <<at {name} …>>가 없다 — 무시한다");
-            }
-
-            // 열쇠가 모두 달라(쓴 순서가 가른다) 순서가 하나로 정해진다.
-            keyed.Sort((a, b) =>
-            {
-                int c = a.Position.CompareTo(b.Position);
-
-                if (c != 0)
-                    return c;
-
-                c = a.TextOrder.CompareTo(b.TextOrder);
-                return c != 0 ? c : a.Written.CompareTo(b.Written);
-            });
-
-            List<ScheduledCommand> schedule = new(keyed.Count);
-
-            foreach (Keyed item in keyed)
-                schedule.Add(item.Command);
-
-            return schedule;
-        }
-
-        private readonly struct Keyed
-        {
-            public readonly int Position;
-            public readonly int TextOrder;
-            public readonly int Written;
-            public readonly ScheduledCommand Command;
-
-            public Keyed(int position, int textOrder, int written, in ScheduledCommand command)
-            {
-                Position = position;
-                TextOrder = textOrder;
-                Written = written;
-                Command = command;
-            }
         }
     }
 }

@@ -19,7 +19,7 @@ public class RigSchemaFileTests
         Assert.Contains("CharacterPortrait_SwayPivot", rig.NodeIds["character"]);
         Assert.DoesNotContain("CharacterPortrait_SwayPivot", rig.NodeIds["screenEffect"]);
         Assert.True(rig.TryGetRig("character", out RigSchemaRigDto character));
-        Assert.Equal(21, character.nodes.Count);
+        Assert.Equal(23, character.nodes.Count);
     }
 
     [Fact]

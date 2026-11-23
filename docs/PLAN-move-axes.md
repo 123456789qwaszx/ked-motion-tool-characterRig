@@ -1,6 +1,6 @@
 # R8 — 런타임의 이동의 축을 따라간다 (리그 20노드 → 22노드)
 
-2026-11-23 · `dev` · 상태: **S1 끝(조사 — §4) · §3 정함(P1 ~ P3 제안대로) · S2 하는 중.** 런타임은 `dev` @ `ddee266e`(이동의 축이 합쳐지고 덤프를 다시 낸 커밋).
+2026-11-23 · `dev` · 상태: **S1 · S2 끝 · §3 정함(P1 ~ P3 제안대로) · S3 하는 중.** 런타임은 `dev` @ `ddee266e`(이동의 축이 합쳐지고 덤프를 다시 낸 커밋).
 읽을 것: 런타임 `ked-presentation-runtime` `docs/PLAN_move-axes.md`(무엇이 왜 바뀌나) → 이 저장소 `CLAUDE.md` · `docs/MAINTENANCE.md` · `src/Ked.Presentation.Core/vendoring.md`(동기화 절차) · 앞선 같은 일 [`PLAN-rig-layers.md`](PLAN-rig-layers.md)(R7).
 
 ## 0. 한 문장
@@ -60,3 +60,13 @@
 - 저작본의 변환 — 걷히는 노드가 없다.
 - 커맨드 넷의 미리보기 · 대본 읽기.
 - 초상의 크기(R7이 남긴 것 — `PLAN-rig-layers.md` §6 P3)는 이 일과 따로다.
+
+## 6. 단계별 기록
+
+테스트는 소유자가 PC에서 돌리고 세션이 기록(`artifacts/r8-*.log`, git 밖)을 읽는다 — 돌리는 줄은 `PLAN-rig-layers.md` §4와 같다.
+
+| 단계 | 한 것 | 확인 |
+|---|---|---|
+| 기준선 | `3bccedd`(S1 — 문서만) | 빌드 경고 0 · 오류 0. Core 580/580 · Authoring 338/339 · App 145/145. Authoring의 하나는 `LibraryTests.내보낸_것이_export에_둔_산출물과_같다`(emojis) — 소유자 PC의 커밋되지 않은 `library/cards.motion-authoring.json`이 낸 것이 커밋된 `library/export/emojis.json`과 다르다. R8과 무관하다 |
+| S2 | 코어를 `ddee266e`에서 `rsync --delete`로(살림 · `bin` · `obj` 빼고) — `SlideMotion.cs`가 지워지고 `Read/` · `Spec/` · `CommandSpecsFileDto.cs`가 든다. 순수 시험 30개(바뀐 7 · 새 3 · `SlideTargetTests` 지움). 덤프 다섯과 픽스처. 소비자 시험 두 곳(`RigSchemaFileTests` 21 → 23 · `MainWindowTests`의 하이어아키 경로에 두 단, 그 주석의 "26단" → "22단"). `vendoring.md`의 표 | `diff -r` 0줄. 빌드 경고 0 · 오류 0. Core 615/616(건너뜀 1 — `YarnLineReaderTests.예제_대본을_추출기와_같은_차례로_읽는다`) · Authoring 338/339(기준선의 그 하나) · App 145/145 — 기준선과 같다. 소비자 코드의 컴파일 적응은 없었다 |
+

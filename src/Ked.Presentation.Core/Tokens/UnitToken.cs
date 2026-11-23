@@ -84,6 +84,21 @@ namespace Ked.Presentation.Core
             return true;
         }
 
+        /// <summary>
+        /// px → 대본에 적는 u의 글("14.625" · "-12" · "0" — 단위 글자 없이). 소수 셋째 자리까지, 뒤의 0은 뗀다.
+        /// 화면 지점 덧그림(docs/PLAN_move-axes.md §10)과 도구가 같은 글을 내게 한 곳에 둔다.
+        /// </summary>
+        public static string FormatUnits(float pixels, float referenceStageWidth)
+        {
+            double units = Math.Round(pixels / PixelsPerUnit(referenceStageWidth), 3, MidpointRounding.AwayFromZero);
+
+            // -0은 0으로 — 대본에 "-0"이 적히지 않게.
+            if (units == 0d)
+                units = 0d;
+
+            return units.ToString("0.###", CultureInfo.InvariantCulture);
+        }
+
         private static float RequireReferenceStageWidth(float referenceStageWidth)
         {
             if (!(referenceStageWidth > 0f) || float.IsInfinity(referenceStageWidth))

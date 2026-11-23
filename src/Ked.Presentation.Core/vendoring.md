@@ -6,17 +6,17 @@
 
 | 항목 | 값 |
 |---|---|
-| 원본 | `ked-presentation-runtime` `dev` @ `b56a2ebc` — 리그의 계층(포커스 · 슬롯 · 초상, 25노드 → 20노드)까지. **전체 동기화**다 — 아래 검증의 `diff -r`가 0줄 |
-| 반입일 | 2026-11-22 (`docs/PLAN-rig-layers.md` S3) |
-| 뜬 방법 | 작업 트리가 아니라 **커밋**에서 — `git archive b56a2ebc Assets/Ked.Presentation/Core Assets/Ked.Presentation/Tests/EditMode ExportedTuning`. 그날 런타임의 작업 트리는 다른 가지(`feat/command-spec`)였고 커밋되지 않은 새 파일(`Core/Spec/` …)이 있었다 |
-| 범위 | `Ease/`·`Emoji/`·`Motion/`·`Primitives/`·`Reduce/`·`State/`·`Tokens/`·`Transforms/`·`Tuning/` 소스와 `Documentation~/` |
+| 원본 | `ked-presentation-runtime` `dev` @ `ddee266e` — 이동의 축(슬롯의 `Move_X` · `Move_Y`, 20노드 → 22노드 · `move_by` · `slide_in` · `slide_out`을 걷음)까지. **전체 동기화**다 — 아래 검증의 `diff -r`가 0줄 |
+| 반입일 | 2026-11-23 (`docs/PLAN-move-axes.md` S2). 앞의 전체 동기화는 2026-11-22 `b56a2ebc`(리그의 계층 — `docs/PLAN-rig-layers.md` S3) |
+| 뜬 방법 | 작업 트리가 아니라 **커밋**에서 — `git archive ddee266e Assets/Ked.Presentation/Core Assets/Ked.Presentation/Tests/EditMode ExportedTuning`. 저쪽 커밋의 파일은 LF다(작업 트리는 CRLF) |
+| 범위 | `Ease/`·`Emoji/`·`Motion/`·`Primitives/`·`Read/`·`Reduce/`·`Spec/`·`State/`·`Tokens/`·`Transforms/`·`Tuning/` 소스와 `Documentation~/`. `Read/`(줄 읽기) · `Spec/`(커맨드 명세 표)는 이 툴이 쓰지 않지만 코어의 일부라 함께 둔다(추출기가 명세 표를 부른다) |
 | 제외 | `Tests/`·`*.meta`·`*.asmdef` |
-| 테스트 | 순수 테스트 28개 파일을 **그대로**(이름공간도 저쪽 것) `tests/Ked.Presentation.Core.Tests/EditMode/`로. `EmojiPlaybackTests.cs`만 다르다 — 저쪽 파일은 유니티를 쓰므로, 유니티를 쓰지 않는 절(형식의 규칙 · 그 프레임의 모습 · 재생의 단계 · 좌우의 둘 · fps 30)만 떼어 둔 이쪽 판을 지킨다(`0faca847` 뒤로 저쪽에서 바뀐 것은 유니티 절의 노드 이름 한 줄뿐이다) |
-| 덤프 | `Mt.Authoring/Defaults/ExportedTuning/`의 `rig-schemas.json` · `export-report.json` · `base-resolution.json` · `presets/depth.json` · `presets/focus-tuning.json`과 시험 픽스처 `tests/Mt.Authoring.Tests/Fixtures/rig-schemas.json`은 같은 커밋의 `ExportedTuning/`에서(익스포트 2026-11-21). 픽스처의 `presets/depth.json` · `focus.json`은 손으로 줄인 것이다(커브의 값은 같다) |
+| 테스트 | 순수 테스트 30개 파일을 **그대로**(이름공간도 저쪽 것) `tests/Ked.Presentation.Core.Tests/EditMode/`로. `EmojiPlaybackTests.cs`만 다르다 — 저쪽 파일은 유니티를 쓰므로, 유니티를 쓰지 않는 절(형식의 규칙 · 그 프레임의 모습 · 재생의 단계 · 좌우의 둘 · fps 30)만 떼어 둔 이쪽 판을 지킨다(`0faca847` 뒤로 저쪽에서 바뀐 것은 유니티 절의 노드 이름 한 줄뿐이다). `StageCommandSpecTableParserTests`는 들이지 않는다 — using 없이 런타임의 `StageCommandParser` · `ScreenCoverPresetDBSO`를 쓰고 파서 표의 원문(`Stage/Grammar/`)을 읽는다. `YarnLineReaderTests`의 하나(예제 대본과 추출기의 대조)는 저쪽의 `Assets/Dialogue`가 없어 Ignore된다 |
+| 덤프 | `Mt.Authoring/Defaults/ExportedTuning/`의 `rig-schemas.json` · `export-report.json` · `base-resolution.json` · `presets/depth.json` · `presets/focus-tuning.json`과 시험 픽스처 `tests/Mt.Authoring.Tests/Fixtures/rig-schemas.json`은 같은 커밋의 `ExportedTuning/`에서(익스포트 2026-11-23). 저쪽이 함께 내는 나머지(`command-specs.json` · `portrait-dimensions.json` …)는 들이지 않는다 — 이 툴은 대본 · 커맨드를 모른다. 픽스처의 `presets/depth.json` · `focus.json`은 손으로 줄인 것이다(커브의 값은 같다) |
 | 견본 | 시험 픽스처 `runtime-emojis.json`(이모지 견본 셋)과 `stage-parity/`(무대 등가 견본)는 **이쪽이 원본**이다 — 런타임이 사본을 받는다(`docs/MAINTENANCE.md` §4.7) |
 | 이쪽 살림 | `Ked.Presentation.Core.csproj`·`vendoring.md` (동기화 때 유지) |
 
-선반영은 없다. 앞선 부분 반입(이모지 11-11 · 30fps 11-18)은 이 전체 동기화에 들어 있다.
+선반영은 없다. 앞선 부분 반입(이모지 11-11 · 30fps 11-18)은 11-22의 전체 동기화에 들어 있다.
 
 **소비자가 아직 따라가지 않은 것.** 런타임은 2026-11-09에 초상을 원본 픽셀 크기로 그리게 바꿨다(`NodeTargets.SourcePixelsSizing` — 그림 크기와 배역 앵커의 배율이 든다).
 이 툴의 미리보기(`Mt.Authoring/Preview/PortraitLayout.cs`)는 높이 맞춤 그대로다 — 사본에는 그 식이 없어 소비자 쪽에 한 줄로 남아 있다. 따로 정할 일이다(`docs/PLAN-rig-layers.md` §6).
@@ -31,7 +31,7 @@
    `Tests/EditMode/*.cs` 중 순수한 것만 `tests/Ked.Presentation.Core.Tests/EditMode/`로.
    기준: `UnityEngine`·`UnityEditor`·`DG.`·`Ked.Presentation.Runtime/Editor/Stage/Playback`·
    `Ked.CommandExecutor`·`Newtonsoft`·`LogAssert`를 참조하면 제외. using 없이 런타임의 형식을 쓰는
-   파일도 있다(2026-11-22: `CastRegistrySlotOnlyTests` · `CharacterRigRegistryOutsideFoldTests`) — 빌드가 알려 준다.
+   파일도 있다(2026-11-22: `CastRegistrySlotOnlyTests` · `CharacterRigRegistryOutsideFoldTests`, 2026-11-23: `StageCommandSpecTableParserTests`) — 빌드가 알려 준다.
 3. **보수** — 소비자(`Mt.Authoring`·`Mt.App`)의 컴파일·의미 적응은 **소비자 쪽에서** 고친다.
    이 사본의 파일을 고쳐 맞추지 않는다 — 사본을 고치는 순간 다음 동기화가 그 수정을
    조용히 지운다.
