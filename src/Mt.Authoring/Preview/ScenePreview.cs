@@ -60,7 +60,7 @@ public static class ScenePreview
             state.RegisterSlot(o.Id);
             PortraitLayout.ApplySizing(state.Nodes, aspectOf?.Invoke(o) ?? PortraitLayout.PlaceholderAspect, o.Prefix);
 
-            // 순서는 런타임 대본과 같이 slot → size(깊이) → place → 오프셋(move_by·rotate_by).
+            // 순서는 slot → size(깊이) → place(화면 지점을 푼다) → 오프셋(CharSlot_Track · SwayPivot).
             // place는 커맨드 순간 한 번 풀리는 것이라 그 뒤의 오프셋을 모른다 — 오프셋을 먼저 넣으면 place가 그만큼 되감아 오프셋이 안 보인다(버그였다).
             ApplyDepth(state, o, depth);
             ApplyPlace(state, o, focus);

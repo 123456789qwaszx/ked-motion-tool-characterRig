@@ -967,7 +967,7 @@ public class MainWindowTests
                 Mt.Authoring.Model.SceneObject s1 = window.Viewport.Scene!.Find("s1")!;
                 Assert.Equal("right", s1.Place);
                 Assert.Equal("face", s1.PlaceFocus);
-                // place는 오프셋을 모른다(런타임 대본 순서: place → move_by). focus 점이 화면 오른쪽 지점(0.24·1920)에 서고, 오프셋(move) 200은 그 위에 더해진다.
+                // place는 오프셋을 모른다(place를 푼 뒤에 오프셋을 더한다). focus 점이 화면 오른쪽 지점(0.24·1920)에 서고, 오프셋 200은 그 위에 더해진다.
                 Assert.Equal(0.24f * 1920f, window.Viewport.CurrentPose()!.GetState("s1/CharFocus_Track").AnchoredPosition.X, 1);
                 Assert.Equal(200f, window.Viewport.CurrentPose()!.GetState("s1/CharSlot_Track").AnchoredPosition.X, 1);
             }

@@ -95,7 +95,7 @@ public partial class MainWindow
                 new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { Small("오프셋 X"), _objX, Small("Y"), _objY, Small("Rot Z"), _objRot } },
             },
         };
-        ToolTip.SetTip(_placementExpander, "모션이 없을 때의 자리 — CharSlot_Track(move)·SwayPivot(rotate)에 그대로 들어간다. 채널 박스의 자리 키는 여기서 출발한다. 모션 키가 아니다");
+        ToolTip.SetTip(_placementExpander, "모션이 없을 때의 자리 — CharSlot_Track · CharSlot_SwayPivot에 그대로 들어간다. 채널 박스의 자리 키는 여기서 출발한다. 모션 키가 아니다");
         panel.Children.Add(_placementExpander);
 
         foreach (TextBox box in new[] { _objX, _objY, _objRot })
@@ -395,7 +395,7 @@ public partial class MainWindow
                 nodeItem.FontWeight = FontWeight.Normal;
                 nodeItem.Foreground = forbidden ? ForbiddenNodeBrush : PlacementNodes.IsPlacementAxis(node.id) ? PlacementNodeBrush : ActingNodeBrush;
                 nodeItem.FontStyle = forbidden ? FontStyle.Italic : FontStyle.Normal;
-                ToolTip.SetTip(nodeItem, forbidden ? "키잉 금지 노드(코어 규칙) — 채널을 둘 수 없다" : PlacementNodes.IsPlacementAxis(node.id) ? "배치 축 — 런타임 place/size가 움직인다. 모션 채널로 쓰면 겹칠 수 있다" : "연기 축 — 모션 채널의 자리");
+                ToolTip.SetTip(nodeItem, forbidden ? "키잉 금지 노드(코어 규칙) — 채널을 둘 수 없다" : PlacementNodes.IsPlacementAxis(node.id) ? "배치 축 — 대본의 자리 커맨드(place · left · right · up · down · rotate_by)가 움직인다. 모션 채널로 쓰면 겹칠 수 있다" : "연기 축 — 모션 채널의 자리");
                 Attach(nodeItem, nodeParent);
                 itemsByNode[node.id] = nodeItem;
 
