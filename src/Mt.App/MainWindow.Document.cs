@@ -117,6 +117,11 @@ public partial class MainWindow
                     return;
                 }
             }
+            else
+            {
+                // 버리기로 했다 — 이 세션이 써 둔 자동 저장본도 함께 버린다. 남기면 다음에 열 때 버린 것을 되살릴지 묻는다.
+                _session.DropOwnAutoSave();
+            }
 
             proceed();
         }

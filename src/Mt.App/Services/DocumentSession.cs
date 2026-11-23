@@ -346,6 +346,20 @@ public sealed class DocumentSession
         return path;
     }
 
+    /// <summary>
+    /// 이 세션이 쓴(또는 되살린) 자동 저장본을 지운다 — 저장했거나, 사람이 "저장하지 않고 계속"으로 고친 것을 버렸을 때.
+    /// 자동 저장본은 저장하지 못하고 끝났을 때를 위한 것이라 그 두 경우에는 할 일이 없다. 전부터 있던 것은 건드리지 않는다.
+    /// </summary>
+    public void DropOwnAutoSave()
+    {
+        if (_autoSaveMine && DocumentPath is not null)
+        {
+            File.Delete(AutoSavePathFor(DocumentPath));
+        }
+
+        _autoSaveMine = false;
+    }
+
     public static string AutoSavePathFor(string documentPath)
     {
         string directory = Path.GetDirectoryName(Path.GetFullPath(documentPath)) ?? ".";
@@ -362,13 +376,8 @@ public sealed class DocumentSession
         RecordSchemaIfMissing();
         File.WriteAllText(path, MotionDocumentJson.Write(Editor.Document));
 
-        // 이 세션이 쓴(또는 되살린) 자동 저장본은 저장하면 할 일을 다했다. 전부터 있던 것은 건드리지 않는다.
-        if (_autoSaveMine && DocumentPath is not null)
-        {
-            File.Delete(AutoSavePathFor(DocumentPath));
-            _autoSaveMine = false;
-        }
-
+        // 이 세션이 쓴(또는 되살린) 자동 저장본은 저장하면 할 일을 다했다.
+        DropOwnAutoSave();
         DocumentPath = path;
         _savedRevision = Editor.Revision;
         UnknownKeys = Array.Empty<string>();

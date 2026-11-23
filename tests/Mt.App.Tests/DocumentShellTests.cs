@@ -254,6 +254,41 @@ public class DocumentShellTests
     }
 
     [Fact]
+    public void 저장하지_않고_계속을_고르면_이_세션이_쓴_자동_저장본도_지우고_전부터_있던_것은_둔다()
+    {
+        Run((window, directory) =>
+        {
+            string path = Path.Combine(directory, "b.motion-authoring.json");
+            string autosave = Path.Combine(directory, "b.autosave.motion-authoring.json");
+            window.Session.Editor.AddMotion("b", "character", 1f);
+            window.Session.Save(path);
+
+            // 고쳤고 자동 저장이 돌았다. 새로를 눌러 "저장하지 않고 계속" — 버린 것을 다음에 되살릴지 묻지 않는다.
+            window.Session.Editor.SetDuration("b", 2f);
+            Assert.Equal(autosave, window.Session.AutoSave());
+            window.NewDocumentFromForm();
+            window.AnswerUnsavedFromForm("discard");
+            Dispatcher.UIThread.RunJobs();
+            Assert.False(File.Exists(autosave));
+
+            window.OpenDocument(path);
+            Assert.False(window.AutoSavePromptOpen);
+            Assert.Equal(1f, window.Session.Editor.Document.Find("b")!.Duration);
+
+            // 저장하지 못하고 끝난 자동 저장본(이 세션이 쓴 것이 아니다)은 "나중에"로 둔 채 버리기를 골라도 남는다.
+            string earlier = LeaveAutoSave(window, directory);
+            string earlierAutosave = Path.Combine(directory, "a.autosave.motion-authoring.json");
+            window.OpenDocument(earlier);
+            window.AnswerAutoSaveFromForm("later");
+            window.Session.Editor.SetDuration("a", 3f);
+            window.NewDocumentFromForm();
+            window.AnswerUnsavedFromForm("discard");
+            Dispatcher.UIThread.RunJobs();
+            Assert.True(File.Exists(earlierAutosave));
+        });
+    }
+
+    [Fact]
     public void 저장하면_이_세션이_쓴_자동_저장본을_지우고_문서보다_오래된_것은_묻지_않는다()
     {
         Run((window, directory) =>

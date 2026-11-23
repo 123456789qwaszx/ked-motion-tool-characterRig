@@ -13,3 +13,6 @@ TestResults/
 
 ### 실제 쓸 세트(library) — 그림은 원본이라 git 밖
 library/art/
+
+### 앱의 자동 저장본 — 저장하지 않은 작업의 사본(문서 옆). 저장하거나 버리면 앱이 지운다
+*.autosave.motion-authoring.json
