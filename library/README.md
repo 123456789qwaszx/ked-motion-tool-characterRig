@@ -8,6 +8,7 @@
 |---|---|
 | `cards.motion-authoring.json` | 몸짓 17개(G01~G16 + G12의 좌우 반대) · 몸짓을 차례로 늘어놓은 클립 `review`(훑어보기용 — 내보내지 않는다) · 감정 아이콘 22개 |
 | `export/motions.json` · `export/emojis.json` | 위에서 내보낸 것(`motions/2` · `emojis/2`). 런타임에 들일 때 이것을 쓴다 — 런타임의 형식이 둘이라 산출물은 둘이다 |
+| `export.cmd` · `export.sh` | 저작본에서 `export/`의 둘을 다시 낸다(아래 "고친 뒤") |
 | `from-catalog.py` | 저작본을 참고집에서 다시 짓는다(아래 "참고집에서 다시 짓기") |
 | `fetch-art.py` | `art/`를 채운다 — 원본 그림을 `ked-originals`에서 복사 |
 | `art/` | **git 밖**(`.gitignore`). 원본 이모지 그림 36장(`o_<이름>.png`)과 미리보기의 초상 하나 |
@@ -24,12 +25,15 @@ python library/fetch-art.py D:\어딘가\ked-originals
 
 ## 고친 뒤
 
-툴에서 열어 고치고 저장한 뒤 `export/`에 다시 내보낸다(테스트 `LibraryTests`가 저작본과 `export/`가 같은지 본다).
+툴에서 열어 고치고 저장한 뒤 `export/`에 **다시 내보내고 함께 커밋한다** — 한 줄이다.
 
 ```
-./mt export library/cards.motion-authoring.json library/export/motions.json
-./mt emojis library/cards.motion-authoring.json library/export/emojis.json
+library\export.cmd      # Windows
+library/export.sh       # bash
 ```
+
+저장만 하면 산출물은 옛것 그대로다 — 그때 테스트 `LibraryTests`가 깨지며 무엇이 다른지(몸짓 · 감정 아이콘의 이름)와 이 줄을 말한다.
+고친 것을 버리려면 저작본을 git으로 되돌린다(`git checkout -- library/cards.motion-authoring.json`).
 
 반대쪽(`flip`)은 따로 만들지 않는다 — 툴의 "⇄ 반대쪽 보기"로 반대쪽에 뜬 모습을 본다(`./mt pose … --emoji <이름> --side flip`도 같다).
 

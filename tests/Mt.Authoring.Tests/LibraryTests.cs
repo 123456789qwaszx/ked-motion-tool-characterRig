@@ -50,12 +50,30 @@ public class LibraryTests
         {
             string written = Path.Combine(directory, output);
             Assert.Equal(0, Run(command, Library(Document), written).Code);
-            Assert.Equal(File.ReadAllText(Library("export", output)), File.ReadAllText(written));
+            string committed = File.ReadAllText(Library("export", output));
+            string exported = File.ReadAllText(written);
+
+            if (committed != exported)
+            {
+                Assert.Fail(StaleExportMessage(output, committed, exported));
+            }
         }
         finally
         {
             Directory.Delete(directory, recursive: true);
         }
+    }
+
+    [Fact]
+    public void 산출물이_어긋나면_다른_이름과_다시_내보내는_길을_말한다()
+    {
+        const string committed = """{ "schema": "emojis/2", "emojis": [ { "name": "a", "v": 1 }, { "name": "b", "v": 1 }, { "name": "gone", "v": 1 } ] }""";
+        const string exported = """{ "schema": "emojis/2", "emojis": [ { "name": "a", "v": 1 }, { "name": "b", "v": 2 }, { "name": "new", "v": 1 } ] }""";
+
+        Assert.Equal(new[] { "b", "new(새로)", "gone(빠짐)" }, DifferingNames(committed, exported));
+        string message = StaleExportMessage("emojis.json", committed, exported);
+        Assert.Contains("b, new(새로), gone(빠짐)", message, StringComparison.Ordinal);
+        Assert.Contains(@"library\export.cmd", message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -101,6 +119,52 @@ public class LibraryTests
         Assert.True(EmojiRig("think", 2, "b1")["alpha"]!.GetValue<double>() > 0.5);
         Assert.Equal(0, EmojiRig("think", 2, "cloud")["alpha"]!.GetValue<double>(), 3);
         Assert.True(EmojiRig("think", 10, "cloud")["alpha"]!.GetValue<double>() > 0.9);
+    }
+
+    /// <summary>
+    /// 산출물이 저작본과 어긋났을 때의 말 — 무엇이 다른지(항목의 이름)와 무엇을 하면 되는지.
+    /// 앱에서 저작본을 고쳐 저장만 하면 산출물은 옛것 그대로라 여기서 깨진다(2026-11-23 — 그때는 글자의 자리만 말했다).
+    /// </summary>
+    private static string StaleExportMessage(string output, string committed, string exported)
+    {
+        IReadOnlyList<string> names = DifferingNames(committed, exported);
+        string what = names.Count > 0 ? $"다른 것: {string.Join(", ", names)}" : "항목은 같고 그 밖의 글자가 다르다";
+        return $"저작본(library/{Document})에서 내보낸 것이 커밋된 library/export/{output}과 다르다 — {what}. "
+            + @"앱에서 저작본을 고쳤다면 library\export.cmd(bash: library/export.sh)로 다시 내보내 함께 커밋한다. "
+            + "고친 것을 버리려면 저작본을 git으로 되돌린다.";
+    }
+
+    /// <summary>두 산출물(<c>motions/2</c> · <c>emojis/2</c>)에서 내용이 다른 항목의 이름 — 내보낸 쪽의 차례, 한쪽에만 있는 것은 표시를 붙인다.</summary>
+    private static IReadOnlyList<string> DifferingNames(string committed, string exported)
+    {
+        static List<(string Name, string Text)> Entries(string json)
+        {
+            JsonNode? root = JsonNode.Parse(json);
+            return (root?["motions"] ?? root?["emojis"]) is JsonArray items
+                ? items.Select(i => (Name: i?["name"]?.GetValue<string>() ?? "", Text: i?.ToJsonString() ?? "")).ToList()
+                : new List<(string Name, string Text)>();
+        }
+
+        List<(string Name, string Text)> before = Entries(committed);
+        List<(string Name, string Text)> after = Entries(exported);
+        var names = new List<string>();
+
+        foreach ((string name, string text) in after)
+        {
+            int i = before.FindIndex(b => b.Name == name);
+
+            if (i < 0)
+            {
+                names.Add($"{name}(새로)");
+            }
+            else if (before[i].Text != text)
+            {
+                names.Add(name);
+            }
+        }
+
+        names.AddRange(before.Where(b => after.All(a => a.Name != b.Name)).Select(b => $"{b.Name}(빠짐)"));
+        return names;
     }
 
     private static double Pose(string motion, int frame, string axis)
