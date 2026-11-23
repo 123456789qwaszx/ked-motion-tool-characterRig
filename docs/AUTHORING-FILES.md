@@ -184,7 +184,9 @@ mt pose     a.motion-authoring.json --clip greet --time 0.5
 | 자리 | 슬롯 기울기 | `CharSlot_SwayPivot` | `euler` | z(도) | 절대값 |
 
 - 자리의 노드는 "그 자리로 간다"는 뜻이라 대본에서 `absolute`로 재생해야 한다. 연기와 한 모션에 섞지 않는다(검증이 알린다).
-- 포커스 계층(`CharFocus_Track` · `CharFocus_Rotation` · `CharFocus_Scale`)은 키를 받지 않는다 — 대본의 `focus_*` 커맨드가 놓는 자리다. 그 밖의 노드는 리그 덤프(`rig-schemas.json`)에 있으면 쓸 수 있지만, 위 표에 없는 것은 쓰지 않는 편이 낫다.
+- 포커스 계층(`CharFocus_Track` · `CharFocus_Rotation` · `CharFocus_Scale`)은 키를 받지 않는다 — 대본의 `focus_*` 커맨드가 놓는 자리다.
+- 슬롯의 움직임(`CharSlot_Move_X` · `CharSlot_Move_Y`)은 키를 받지만 모션에 쓰지 않는다 — 대본의 `left` · `right` · `up` · `down`이 쌓는 자리다(본래 자리 `CharSlot_Track`의 바로 아래).
+- 그 밖의 노드는 리그 덤프(`rig-schemas.json`)에 있으면 쓸 수 있지만, 위 표에 없는 것은 쓰지 않는 편이 낫다.
 - **중립값**(아무것도 안 한 상태): 자리 · 회전 0, 배율 1.
 
 ### 키

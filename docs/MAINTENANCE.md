@@ -64,7 +64,7 @@ dotnet run     --project src/Mt.App/Mt.App.csproj
 
 ### 4.1 코어 재반입 (런타임의 코어가 바뀌었을 때)
 
-정본은 `ked-presentation-runtime`의 `Assets/Ked.Presentation/Core`다. 지금 사본은 `b56a2ebc`(2026-11-22)와 통째로 같다 — 어느 커밋에서 어떻게 떴는지는 `vendoring.md`의 표가 적는다.
+정본은 `ked-presentation-runtime`의 `Assets/Ked.Presentation/Core`다. 지금 사본은 `ddee266e`(2026-11-23 — 리그 22노드, `PLAN-move-axes.md`)와 통째로 같다 — 어느 커밋에서 어떻게 떴는지는 `vendoring.md`의 표가 적는다.
 
 1. `vendoring.md`의 절차대로 `diff -r`로 갈래를 가르고 저쪽 본으로 교체(`Tests/`·`*.meta`·`*.asmdef` 제외). 일부만 가져올 때는 가져온 파일과 원본 커밋을 표에 적는다.
 2. 순수 테스트만 `tests/Ked.Presentation.Core.Tests/EditMode/`로 복사(유니티·DOTween·Newtonsoft 참조는 제외).

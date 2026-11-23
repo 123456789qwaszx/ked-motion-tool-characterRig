@@ -1,6 +1,6 @@
 # R8 — 런타임의 이동의 축을 따라간다 (리그 20노드 → 22노드)
 
-2026-11-23 · `dev` · 상태: **S1 ~ S3 끝 · §3 정함(P1 ~ P3 제안대로) · S4 하는 중.** 런타임은 `dev` @ `ddee266e`(이동의 축이 합쳐지고 덤프를 다시 낸 커밋).
+2026-11-23 · `dev` · 상태: **끝(2026-11-23)** — §3은 제안대로 정했다. 남은 것은 아래 "R8 밖에 남긴 것". 런타임은 `dev` @ `ddee266e`(이동의 축이 합쳐지고 덤프를 다시 낸 커밋).
 읽을 것: 런타임 `ked-presentation-runtime` `docs/PLAN_move-axes.md`(무엇이 왜 바뀌나) → 이 저장소 `CLAUDE.md` · `docs/MAINTENANCE.md` · `src/Ked.Presentation.Core/vendoring.md`(동기화 절차) · 앞선 같은 일 [`PLAN-rig-layers.md`](PLAN-rig-layers.md)(R7).
 
 ## 0. 한 문장
@@ -70,3 +70,10 @@
 | 기준선 | `3bccedd`(S1 — 문서만) | 빌드 경고 0 · 오류 0. Core 580/580 · Authoring 338/339 · App 145/145. Authoring의 하나는 `LibraryTests.내보낸_것이_export에_둔_산출물과_같다`(emojis) — 소유자 PC의 커밋되지 않은 `library/cards.motion-authoring.json`이 낸 것이 커밋된 `library/export/emojis.json`과 다르다. R8과 무관하다 |
 | S2 | 코어를 `ddee266e`에서 `rsync --delete`로(살림 · `bin` · `obj` 빼고) — `SlideMotion.cs`가 지워지고 `Read/` · `Spec/` · `CommandSpecsFileDto.cs`가 든다. 순수 시험 30개(바뀐 7 · 새 3 · `SlideTargetTests` 지움). 덤프 다섯과 픽스처. 소비자 시험 두 곳(`RigSchemaFileTests` 21 → 23 · `MainWindowTests`의 하이어아키 경로에 두 단, 그 주석의 "26단" → "22단"). `vendoring.md`의 표 | `diff -r` 0줄. 빌드 경고 0 · 오류 0. Core 615/616(건너뜀 1 — `YarnLineReaderTests.예제_대본을_추출기와_같은_차례로_읽는다`) · Authoring 338/339(기준선의 그 하나) · App 145/145 — 기준선과 같다. 소비자 코드의 컴파일 적응은 없었다 |
 | S3 | 화면은 P1대로 그대로 — 새 노드는 컨트롤러 보기에 없고, 리그 노드 보기에서 `CharSlot_Track` 밑에 "배치 축"으로 선다(이름의 앞가지로 저절로). 낱말만: 채널 박스 "자리" 묶음의 도움말(`controllers.json` — "배치 커맨드(place · rotate_by)와 같은 노드 … left · right · up · down은 그 아래 `CharSlot_Move_X` · `_Y`에 쌓인다") · 하이어아키의 배치 축 도움말("대본의 자리 커맨드(place · left · right · up · down · rotate_by)가 움직인다") · 씬 탭 배치 칸의 도움말 · `SceneAsset` · `ScenePreview` · `MainWindowTests`의 주석에서 `move_by` · `(move)` · `place/size` · "고급으로 접는다"를 걷었다 | 그림 두 장(`artifacts/r8-shots/` — 커밋하지 않은 임시 장면으로 뽑고 지웠다): 노드 보기에서 매니퓰레이터가 `s1/CharSlot_Move_X`에 선다 · 컨트롤러 보기 · 채널 박스는 전과 같다. 그림 속 트리는 `s1`에서 접혀 있어 두 단은 보이지 않는다 — 차례는 `MainWindowTests`의 하이어아키 경로가 못 박는다. 빌드 경고 0 · 오류 0, Core 615/616 · Authoring 338/339 · App 145/145 — 기준선과 같다 |
+| S4 | `MAINTENANCE.md` · `HANDOFF.md`의 사본 커밋(`ddee266e`) · `AUTHORING-FILES.md`(슬롯의 움직임은 키를 받지만 모션에 쓰지 않는다) · `USER-GUIDE.md`(리그 노드 보기의 배치 축) · `SESSION-HANDOFF.md`에 한 줄. 이 문서들에는 리그의 노드 수 · 계층 그림이 없었다. **그림 설명서의 그림은 다시 뽑지 않는다** — 바뀐 화면은 도움말 글뿐이고 그림은 모두 컨트롤러 보기다(S3의 그림이 전과 같다). 웹 페이지의 사본도 그대로 | 문서만 — 코드 · 시험은 S3과 같다 |
+
+R8 밖에 남긴 것:
+
+- 소유자 PC의 커밋되지 않은 `library/cards.motion-authoring.json`(과 자동 저장본)에는 20노드의 스키마 지문이 있다 — 열면 "새 노드 둘 · 부모가 바뀐 노드 하나" 알림이 뜬다(막지 않는다). 받으려면 "지금의 스키마를 문서에 적기". 그 파일이 `LibraryTests`(emojis)의 실패 하나도 낸다.
+- 새 노드를 모션에서 막아야 한다면 런타임이 `MotionRules.ForbiddenNodes`에 더한다(P1) — 다음 동기화로 하이어아키에 "키잉 금지"로 선다.
+- 씬의 자리를 `CharSlot_Track`(= `place`)에 푸는 쪽(R7 §6 P2) · 초상의 크기(R7 §6 P3) · 씬의 자리 콤보가 코어 `ScreenPointRatios.Names`를 부르는 것.
